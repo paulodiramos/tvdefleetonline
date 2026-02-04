@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import Svg, { Path, Circle, G, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Path as SvgPath, Circle, G, Rect, Text as SvgText } from 'react-native-svg';
 
 const API_URL = 'https://fleet-inspect-11.preview.emergentagent.com/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -634,13 +634,16 @@ const RecibosGestaoScreen = ({ user }) => {
   );
 };
 
-// Ecrã de Resumo Semanal (Gestor/Parceiro) - CORRIGIDO
+// Ecrã de Resumo Semanal (Gestor/Parceiro) - COM DASHBOARD E DROPDOWN
 const ResumoSemanalGestaoScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [semana, setSemana] = useState(null);
   const [ano, setAno] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [totais, setTotais] = useState({ uber: 0, bolt: 0, viaverde: 0, abastecimentos: 0, extras: 0, liquido: 0 });
+  const [selectedMotorista, setSelectedMotorista] = useState(null);
+  const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -654,7 +657,25 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
     if (!semana || !ano) return;
     try {
       const data = await api.get(`/ponto/parceiro/resumo-semanal?semana=${semana}&ano=${ano}`);
-      setMotoristas(data.motoristas || []);
+      const lista = data.motoristas || [];
+      setMotoristas(lista);
+      
+      // Calcular totais da empresa
+      const totalUber = lista.reduce((acc, m) => acc + (m.ganhos_uber || 0), 0);
+      const totalBolt = lista.reduce((acc, m) => acc + (m.ganhos_bolt || 0), 0);
+      const totalViaVerde = lista.reduce((acc, m) => acc + (m.via_verde || 0), 0);
+      const totalAbastecimentos = lista.reduce((acc, m) => acc + (m.abastecimentos || 0), 0);
+      const totalExtras = lista.reduce((acc, m) => acc + (m.extras || 0), 0);
+      const totalLiquido = lista.reduce((acc, m) => acc + (m.liquido || 0), 0);
+      
+      setTotais({
+        uber: totalUber,
+        bolt: totalBolt,
+        viaverde: totalViaVerde,
+        abastecimentos: totalAbastecimentos,
+        extras: totalExtras,
+        liquido: totalLiquido
+      });
     } catch (e) { console.error('Erro ao carregar resumo:', e); }
     setLoading(false);
   };
@@ -669,6 +690,20 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
+  const getEstadoIcon = (estado) => {
+    switch (estado) {
+      case 'pendente': return '⏳';
+      case 'pago': return '💰';
+      case 'confirmado': return '✅';
+      default: return '📭';
+    }
+  };
+
+  // Filtrar motoristas se um estiver selecionado
+  const motoristasFiltrados = selectedMotorista 
+    ? motoristas.filter(m => m.id === selectedMotorista.id)
+    : motoristas;
+
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
   return (
@@ -682,9 +717,83 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
         <TouchableOpacity onPress={() => { setSemana(s => s < 52 ? s + 1 : 1); if (semana === 52) setAno(a => a + 1); }} style={styles.semanaBtn}><Text style={styles.semanaBtnText}>→</Text></TouchableOpacity>
       </View>
 
-      {motoristas.length === 0 ? (
+      {/* Dashboard Total da Empresa */}
+      <View style={[styles.card, { backgroundColor: '#1e293b', borderLeftWidth: 4, borderLeftColor: '#3b82f6' }]}>
+        <Text style={[styles.cardTitle, { color: '#fff', marginBottom: 12 }]}>🏢 Total da Empresa</Text>
+        <View style={styles.dashboardGrid}>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Uber</Text>
+            <Text style={[styles.dashboardValue, { color: '#22c55e' }]}>€{totais.uber.toFixed(2)}</Text>
+          </View>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Bolt</Text>
+            <Text style={[styles.dashboardValue, { color: '#22c55e' }]}>€{totais.bolt.toFixed(2)}</Text>
+          </View>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Via Verde</Text>
+            <Text style={[styles.dashboardValue, { color: '#ef4444' }]}>-€{totais.viaverde.toFixed(2)}</Text>
+          </View>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Abastecimentos</Text>
+            <Text style={[styles.dashboardValue, { color: '#ef4444' }]}>-€{totais.abastecimentos.toFixed(2)}</Text>
+          </View>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Extras</Text>
+            <Text style={[styles.dashboardValue, { color: totais.extras >= 0 ? '#22c55e' : '#ef4444' }]}>
+              {totais.extras >= 0 ? '+' : ''}€{totais.extras.toFixed(2)}
+            </Text>
+          </View>
+          <View style={[styles.dashboardItem, { borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 8 }]}>
+            <Text style={[styles.dashboardLabel, { fontWeight: 'bold' }]}>LÍQUIDO</Text>
+            <Text style={[styles.dashboardValue, { color: '#3b82f6', fontSize: 20, fontWeight: 'bold' }]}>€{totais.liquido.toFixed(2)}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Dropdown para filtrar por motorista */}
+      <TouchableOpacity 
+        style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+        onPress={() => setShowMotoristaPicker(true)}
+      >
+        <Text style={styles.cardTitle}>
+          {selectedMotorista ? `👤 ${selectedMotorista.nome}` : '👥 Todos os Motoristas'}
+        </Text>
+        <Text style={{ color: '#3b82f6' }}>▼ Filtrar</Text>
+      </TouchableOpacity>
+
+      {/* Modal Picker de Motorista */}
+      <Modal visible={showMotoristaPicker} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+            <Text style={styles.modalTitle}>Filtrar por Motorista</Text>
+            <ScrollView>
+              <TouchableOpacity 
+                style={[styles.pickerItem, !selectedMotorista && styles.pickerItemSelected]}
+                onPress={() => { setSelectedMotorista(null); setShowMotoristaPicker(false); }}
+              >
+                <Text style={styles.pickerItemText}>👥 Todos os Motoristas</Text>
+              </TouchableOpacity>
+              {motoristas.map(m => (
+                <TouchableOpacity 
+                  key={m.id} 
+                  style={[styles.pickerItem, selectedMotorista?.id === m.id && styles.pickerItemSelected]}
+                  onPress={() => { setSelectedMotorista(m); setShowMotoristaPicker(false); }}
+                >
+                  <Text style={styles.pickerItemText}>{m.nome}</Text>
+                  <Text style={styles.pickerItemSubtext}>{getEstadoIcon(m.estado)} {m.estado || 'sem_dados'}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowMotoristaPicker(false)}>
+              <Text style={styles.cancelBtnText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {motoristasFiltrados.length === 0 ? (
         <View style={styles.emptyState}><Text style={styles.emptyText}>Sem motoristas associados</Text></View>
-      ) : motoristas.map(m => (
+      ) : motoristasFiltrados.map(m => (
         <View key={m.id} style={styles.card}>
           <Text style={styles.cardTitle}>{m.nome}</Text>
           <Text style={styles.cardSubtitle}>{m.email}</Text>
@@ -701,11 +810,21 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
             <Text style={[styles.resumoValue, { color: '#ef4444' }]}>-€{m.via_verde?.toFixed(2) || '0.00'}</Text>
           </View>
           <View style={styles.resumoRow}>
-            <Text style={styles.resumoLabel}>Líquido:</Text>
-            <Text style={[styles.resumoValue, { color: '#22c55e', fontWeight: 'bold' }]}>€{m.liquido?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.resumoLabel}>Abastecimentos:</Text>
+            <Text style={[styles.resumoValue, { color: '#ef4444' }]}>-€{m.abastecimentos?.toFixed(2) || '0.00'}</Text>
+          </View>
+          <View style={styles.resumoRow}>
+            <Text style={styles.resumoLabel}>Extras:</Text>
+            <Text style={[styles.resumoValue, { color: (m.extras || 0) >= 0 ? '#22c55e' : '#ef4444' }]}>
+              {(m.extras || 0) >= 0 ? '+' : ''}€{m.extras?.toFixed(2) || '0.00'}
+            </Text>
+          </View>
+          <View style={[styles.resumoRow, { borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 8, marginTop: 8 }]}>
+            <Text style={[styles.resumoLabel, { fontWeight: 'bold' }]}>Líquido:</Text>
+            <Text style={[styles.resumoValue, { color: '#22c55e', fontWeight: 'bold', fontSize: 18 }]}>€{m.liquido?.toFixed(2) || '0.00'}</Text>
           </View>
           <View style={styles.estadoRow}>
-            <Text style={styles.estadoLabel}>Estado: {m.estado === 'sem_dados' ? '📭 Sem dados' : m.estado}</Text>
+            <Text style={styles.estadoLabel}>{getEstadoIcon(m.estado)} Estado: {m.estado || 'sem_dados'}</Text>
             <View style={styles.estadoBtns}>
               {['pendente', 'pago', 'confirmado'].map(e => (
                 <TouchableOpacity key={e} style={[styles.estadoBtn, m.estado === e && styles.estadoBtnActive]} onPress={() => handleAlterarEstado(m.id, e)}>
@@ -720,13 +839,14 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
   );
 };
 
-// Ecrã de Extras/Dívidas (Gestor/Parceiro)
+// Ecrã de Extras/Dívidas (Gestor/Parceiro) - MELHORADO
 const ExtrasGestaoScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedMotorista, setSelectedMotorista] = useState(null);
-  const [extraForm, setExtraForm] = useState({ tipo: 'debito', descricao: '', valor: '' });
+  const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
+  const [extraForm, setExtraForm] = useState({ tipo: 'debito', descricao: '', valor: '', email: '' });
 
   const loadMotoristas = async () => {
     try {
@@ -738,9 +858,20 @@ const ExtrasGestaoScreen = ({ user }) => {
 
   useEffect(() => { loadMotoristas(); }, []);
 
+  const handleSelectMotorista = (m) => {
+    setSelectedMotorista(m);
+    setExtraForm({ ...extraForm, email: m.email || '' });
+    setShowMotoristaPicker(false);
+    setShowModal(true);
+  };
+
   const handleAddExtra = async () => {
+    if (!selectedMotorista) {
+      Alert.alert('Erro', 'Selecione um motorista');
+      return;
+    }
     if (!extraForm.descricao || !extraForm.valor) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+      Alert.alert('Erro', 'Preencha descrição e valor');
       return;
     }
     try {
@@ -748,11 +879,13 @@ const ExtrasGestaoScreen = ({ user }) => {
         motorista_id: selectedMotorista.id,
         tipo: extraForm.tipo,
         descricao: extraForm.descricao,
-        valor: parseFloat(extraForm.valor)
+        valor: parseFloat(extraForm.valor),
+        email_notificacao: extraForm.email || null
       });
       Alert.alert('Sucesso', 'Extra adicionado');
       setShowModal(false);
-      setExtraForm({ tipo: 'debito', descricao: '', valor: '' });
+      setExtraForm({ tipo: 'debito', descricao: '', valor: '', email: '' });
+      setSelectedMotorista(null);
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
@@ -763,17 +896,51 @@ const ExtrasGestaoScreen = ({ user }) => {
       <Text style={styles.screenTitle}>💸 Extras / Dívidas</Text>
       <Text style={styles.cardSubtitle}>Adicionar débitos ou créditos aos motoristas</Text>
 
+      {/* Botão para selecionar motorista via dropdown */}
+      <TouchableOpacity 
+        style={[styles.card, { backgroundColor: '#3b82f6', alignItems: 'center' }]} 
+        onPress={() => setShowMotoristaPicker(true)}
+      >
+        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>+ Adicionar Extra a Motorista</Text>
+      </TouchableOpacity>
+
+      {/* Lista de motoristas como referência rápida */}
+      <Text style={[styles.cardSubtitle, { marginTop: 16 }]}>Ou selecione da lista:</Text>
       {motoristas.map(m => (
-        <TouchableOpacity key={m.id} style={styles.card} onPress={() => { setSelectedMotorista(m); setShowModal(true); }}>
+        <TouchableOpacity key={m.id} style={styles.card} onPress={() => handleSelectMotorista(m)}>
           <View style={styles.motoristaRow}>
             <View>
               <Text style={styles.cardTitle}>{m.name || m.nome}</Text>
-              <Text style={styles.cardSubtitle}>{m.email}</Text>
+              <Text style={styles.cardSubtitle}>{m.email || 'Sem email'}</Text>
             </View>
             <Text style={styles.addBtn}>+ Adicionar</Text>
           </View>
         </TouchableOpacity>
       ))}
+
+      {/* Modal Picker de Motorista */}
+      <Modal visible={showMotoristaPicker} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+            <Text style={styles.modalTitle}>Selecionar Motorista</Text>
+            <ScrollView>
+              {motoristas.map(m => (
+                <TouchableOpacity 
+                  key={m.id} 
+                  style={[styles.pickerItem, selectedMotorista?.id === m.id && styles.pickerItemSelected]}
+                  onPress={() => handleSelectMotorista(m)}
+                >
+                  <Text style={styles.pickerItemText}>{m.name || m.nome}</Text>
+                  <Text style={styles.pickerItemSubtext}>{m.email || 'Sem email'}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowMotoristaPicker(false)}>
+              <Text style={styles.cancelBtnText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal para adicionar extra */}
       <Modal visible={showModal} transparent animationType="slide">
@@ -811,6 +978,14 @@ const ExtrasGestaoScreen = ({ user }) => {
               keyboardType="numeric"
               value={extraForm.valor}
               onChangeText={(t) => setExtraForm({ ...extraForm, valor: t })}
+            />
+            <TextInput 
+              style={styles.input} 
+              placeholder="Email para notificação (opcional)" 
+              placeholderTextColor="#64748b"
+              keyboardType="email-address"
+              value={extraForm.email}
+              onChangeText={(t) => setExtraForm({ ...extraForm, email: t })}
             />
 
             <View style={styles.modalActions}>
@@ -1687,6 +1862,17 @@ const VistoriasScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [selectedMotorista, setSelectedMotorista] = useState(null);
   const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
+  const [searchMatricula, setSearchMatricula] = useState('');
+  const [showAssinaturaModal, setShowAssinaturaModal] = useState(false);
+  const [assinaturaPath, setAssinaturaPath] = useState([]);
+
+  // Filtrar motoristas pela matrícula
+  const motoristasFiltrados = searchMatricula 
+    ? motoristas.filter(m => 
+        (m.veiculo_matricula || '').toUpperCase().includes(searchMatricula.toUpperCase()) ||
+        (m.name || m.nome || '').toUpperCase().includes(searchMatricula.toUpperCase())
+      )
+    : motoristas;
 
   const loadVistorias = async () => {
     try {
@@ -1726,7 +1912,7 @@ const VistoriasScreen = ({ user }) => {
     setShowNovaVistoria(true);
   };
 
-  const tirarFoto = async (fotoId) => {
+  const tirarFoto = async (fotoId, adicional = false) => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Erro', 'Permissão de câmara necessária'); return; }
     
@@ -1737,13 +1923,72 @@ const VistoriasScreen = ({ user }) => {
     });
     
     if (!result.canceled && result.assets[0]) {
-      setFotos(prev => ({ ...prev, [fotoId]: result.assets[0] }));
+      if (adicional) {
+        // Adicionar foto extra ao array
+        setFotos(prev => {
+          const atual = prev[fotoId];
+          if (Array.isArray(atual)) {
+            return { ...prev, [fotoId]: [...atual, result.assets[0]] };
+          } else if (atual) {
+            return { ...prev, [fotoId]: [atual, result.assets[0]] };
+          } else {
+            return { ...prev, [fotoId]: [result.assets[0]] };
+          }
+        });
+      } else {
+        // Se já existe foto e não é adicional, pergunta se quer substituir ou adicionar
+        if (fotos[fotoId]) {
+          Alert.alert(
+            'Foto Existente',
+            'O que deseja fazer?',
+            [
+              { text: 'Substituir', onPress: () => setFotos(prev => ({ ...prev, [fotoId]: result.assets[0] })) },
+              { text: 'Adicionar', onPress: () => {
+                setFotos(prev => {
+                  const atual = prev[fotoId];
+                  if (Array.isArray(atual)) {
+                    return { ...prev, [fotoId]: [...atual, result.assets[0]] };
+                  } else {
+                    return { ...prev, [fotoId]: [atual, result.assets[0]] };
+                  }
+                });
+              }},
+              { text: 'Cancelar', style: 'cancel' }
+            ]
+          );
+        } else {
+          setFotos(prev => ({ ...prev, [fotoId]: result.assets[0] }));
+        }
+      }
     }
+  };
+
+  const removerFotoExtra = (fotoId, index) => {
+    setFotos(prev => {
+      const atual = prev[fotoId];
+      if (Array.isArray(atual)) {
+        const novoArray = atual.filter((_, i) => i !== index);
+        return { ...prev, [fotoId]: novoArray.length === 1 ? novoArray[0] : (novoArray.length === 0 ? null : novoArray) };
+      }
+      return { ...prev, [fotoId]: null };
+    });
+  };
+
+  const getFotoCount = (fotoId) => {
+    const foto = fotos[fotoId];
+    if (!foto) return 0;
+    if (Array.isArray(foto)) return foto.length;
+    return 1;
   };
 
   const fotosCompletas = () => {
     const obrigatorias = ['frente', 'traseira', 'lateral_esq', 'lateral_dir', 'km'];
-    return obrigatorias.every(id => fotos[id]);
+    return obrigatorias.every(id => {
+      const foto = fotos[id];
+      if (!foto) return false;
+      if (Array.isArray(foto)) return foto.length > 0;
+      return true;
+    });
   };
 
   const enviarVistoria = async () => {
@@ -1829,7 +2074,53 @@ const VistoriasScreen = ({ user }) => {
           {step === 0 && user.role !== 'motorista' && (
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>👤 Selecionar Motorista</Text>
-              <Text style={styles.stepSubtitle}>Escolha o motorista e veículo para a vistoria</Text>
+              <Text style={styles.stepSubtitle}>Pesquise por matrícula ou escolha da lista</Text>
+              
+              {/* Campo de pesquisa por matrícula */}
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="🔍 Pesquisar por matrícula..."
+                  placeholderTextColor="#64748b"
+                  value={searchMatricula}
+                  onChangeText={setSearchMatricula}
+                  autoCapitalize="characters"
+                />
+                {/* Botão de OCR - Tirar foto da matrícula */}
+                <TouchableOpacity 
+                  style={styles.ocrBtn}
+                  onPress={async () => {
+                    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                    if (status !== 'granted') { Alert.alert('Erro', 'Permissão de câmara necessária'); return; }
+                    
+                    const result = await ImagePicker.launchCameraAsync({
+                      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                      quality: 0.8,
+                      base64: true,
+                    });
+                    
+                    if (!result.canceled && result.assets[0]) {
+                      // Enviar para OCR no backend
+                      try {
+                        Alert.alert('A processar', 'A ler matrícula da foto...');
+                        const ocrResult = await api.post('/vistorias/ocr-matricula', {
+                          imagem_base64: result.assets[0].base64
+                        });
+                        if (ocrResult.matricula) {
+                          setSearchMatricula(ocrResult.matricula);
+                          Alert.alert('Sucesso', `Matrícula lida: ${ocrResult.matricula}`);
+                        } else {
+                          Alert.alert('Aviso', 'Não foi possível ler a matrícula. Tente novamente ou escreva manualmente.');
+                        }
+                      } catch (e) {
+                        Alert.alert('Erro', 'Falha no reconhecimento. Escreva a matrícula manualmente.');
+                      }
+                    }
+                  }}
+                >
+                  <Text style={styles.ocrBtnText}>📷 OCR</Text>
+                </TouchableOpacity>
+              </View>
               
               {selectedMotorista ? (
                 <View style={styles.selectedMotoristaCard}>
@@ -1849,10 +2140,12 @@ const VistoriasScreen = ({ user }) => {
                 </View>
               ) : (
                 <View style={styles.motoristasListContainer}>
-                  {motoristas.length === 0 ? (
-                    <Text style={styles.noMotoristasText}>Nenhum motorista encontrado</Text>
+                  {motoristasFiltrados.length === 0 ? (
+                    <Text style={styles.noMotoristasText}>
+                      {searchMatricula ? 'Nenhum veículo encontrado com essa matrícula' : 'Nenhum motorista encontrado'}
+                    </Text>
                   ) : (
-                    motoristas.map(m => (
+                    motoristasFiltrados.map(m => (
                       <TouchableOpacity 
                         key={m.id} 
                         style={styles.motoristaSelectCard}
@@ -1883,29 +2176,46 @@ const VistoriasScreen = ({ user }) => {
           {step === 1 && (
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>📷 Fotografar Veículo</Text>
-              <Text style={styles.stepSubtitle}>Tire as fotos obrigatórias (*) do veículo</Text>
+              <Text style={styles.stepSubtitle}>Tire as fotos obrigatórias (*). Pode adicionar mais fotos em cada campo.</Text>
               
               <View style={styles.fotosGrid}>
                 {FOTOS_OBRIGATORIAS.map(foto => {
-                  const tirada = fotos[foto.id];
+                  const fotoData = fotos[foto.id];
+                  const temFoto = fotoData && (Array.isArray(fotoData) ? fotoData.length > 0 : true);
+                  const fotoCount = getFotoCount(foto.id);
                   const obrigatoria = ['frente', 'traseira', 'lateral_esq', 'lateral_dir', 'km'].includes(foto.id);
+                  const primeiraFoto = Array.isArray(fotoData) ? fotoData[0] : fotoData;
                   
                   return (
-                    <TouchableOpacity 
-                      key={foto.id} 
-                      style={[styles.fotoCard, tirada && styles.fotoCardDone]}
-                      onPress={() => tirarFoto(foto.id)}
-                    >
-                      {tirada ? (
-                        <Image source={{ uri: tirada.uri }} style={styles.fotoThumb} />
-                      ) : (
-                        <Text style={styles.fotoIcon}>{foto.icon}</Text>
+                    <View key={foto.id} style={styles.fotoCardContainer}>
+                      <TouchableOpacity 
+                        style={[styles.fotoCard, temFoto && styles.fotoCardDone]}
+                        onPress={() => tirarFoto(foto.id)}
+                      >
+                        {temFoto ? (
+                          <Image source={{ uri: primeiraFoto.uri }} style={styles.fotoThumb} />
+                        ) : (
+                          <Text style={styles.fotoIcon}>{foto.icon}</Text>
+                        )}
+                        <Text style={styles.fotoLabel}>
+                          {foto.label}{obrigatoria ? ' *' : ''}
+                        </Text>
+                        {fotoCount > 0 && (
+                          <View style={styles.fotoCountBadge}>
+                            <Text style={styles.fotoCountText}>{fotoCount}</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                      {/* Botão para adicionar mais fotos */}
+                      {temFoto && (
+                        <TouchableOpacity 
+                          style={styles.addMoreFotoBtn}
+                          onPress={() => tirarFoto(foto.id, true)}
+                        >
+                          <Text style={styles.addMoreFotoBtnText}>+ Mais</Text>
+                        </TouchableOpacity>
                       )}
-                      <Text style={styles.fotoLabel}>
-                        {foto.label}{obrigatoria ? ' *' : ''}
-                      </Text>
-                      {tirada && <Text style={styles.fotoCheck}>✓</Text>}
-                    </TouchableOpacity>
+                    </View>
                   );
                 })}
               </View>
@@ -2016,7 +2326,7 @@ const VistoriasScreen = ({ user }) => {
           {step === 4 && (
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>✍️ Assinatura</Text>
-              <Text style={styles.stepSubtitle}>Assine para confirmar a vistoria</Text>
+              <Text style={styles.stepSubtitle}>Assine com o dedo no campo abaixo</Text>
               
               <View style={styles.assinaturaBox}>
                 {assinatura ? (
@@ -2029,20 +2339,7 @@ const VistoriasScreen = ({ user }) => {
                 ) : (
                   <TouchableOpacity 
                     style={styles.assinaturaBtn}
-                    onPress={async () => {
-                      // Simular assinatura com foto (em produção usaria biblioteca de signature)
-                      Alert.alert(
-                        'Assinatura',
-                        'Em produção, aqui apareceria uma área para desenhar. Por agora, tire uma foto da sua assinatura.',
-                        [
-                          { text: 'Cancelar' },
-                          { text: 'Fotografar', onPress: async () => {
-                            const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.5, base64: true });
-                            if (!result.canceled) setAssinatura(result.assets[0]);
-                          }}
-                        ]
-                      );
-                    }}
+                    onPress={() => setShowAssinaturaModal(true)}
                   >
                     <Text style={styles.assinaturaBtnIcon}>✍️</Text>
                     <Text style={styles.assinaturaBtnText}>Toque para assinar</Text>
@@ -2055,6 +2352,84 @@ const VistoriasScreen = ({ user }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Modal de Assinatura - Canvas com dedo */}
+          <Modal visible={showAssinaturaModal} transparent animationType="slide">
+            <View style={styles.assinaturaModalOverlay}>
+              <View style={styles.assinaturaModalContent}>
+                <Text style={styles.assinaturaModalTitle}>Assine com o dedo</Text>
+                <View 
+                  style={styles.assinaturaCanvas}
+                  onTouchStart={(e) => {
+                    const touch = e.nativeEvent;
+                    setAssinaturaPath(prev => [...prev, { x: touch.locationX, y: touch.locationY, new: true }]);
+                  }}
+                  onTouchMove={(e) => {
+                    const touch = e.nativeEvent;
+                    setAssinaturaPath(prev => [...prev, { x: touch.locationX, y: touch.locationY }]);
+                  }}
+                >
+                  {/* Renderizar linhas da assinatura */}
+                  <Svg width="100%" height="100%">
+                    <SvgPath
+                      d={assinaturaPath.reduce((acc, point, i) => {
+                        if (point.new || i === 0) {
+                          return acc + `M${point.x},${point.y} `;
+                        }
+                        return acc + `L${point.x},${point.y} `;
+                      }, '')}
+                      stroke="#000"
+                      strokeWidth="3"
+                      fill="none"
+                    />
+                  </Svg>
+                </View>
+                <View style={styles.assinaturaModalActions}>
+                  <TouchableOpacity 
+                    style={[styles.cancelBtn, { flex: 1 }]} 
+                    onPress={() => {
+                      setAssinaturaPath([]);
+                      setShowAssinaturaModal(false);
+                    }}
+                  >
+                    <Text style={styles.cancelBtnText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.cancelBtn, { flex: 1, marginHorizontal: 8 }]} 
+                    onPress={() => setAssinaturaPath([])}
+                  >
+                    <Text style={styles.cancelBtnText}>Limpar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.btn, { flex: 1 }]} 
+                    onPress={async () => {
+                      if (assinaturaPath.length > 5) {
+                        // Capturar como imagem (simulado - em produção usaria react-native-view-shot)
+                        // Por enquanto, tirar foto como fallback
+                        const result = await ImagePicker.launchCameraAsync({ 
+                          mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+                          quality: 0.5, 
+                          base64: true 
+                        });
+                        if (!result.canceled) {
+                          setAssinatura(result.assets[0]);
+                        }
+                        setShowAssinaturaModal(false);
+                        setAssinaturaPath([]);
+                      } else {
+                        Alert.alert('Atenção', 'Por favor, assine no campo acima');
+                      }
+                    }}
+                  >
+                    <Text style={styles.btnText}>Confirmar</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={{ color: '#64748b', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+                  Nota: Após assinar, será solicitada uma foto da assinatura para confirmação
+                </Text>
+              </View>
+            </View>
+          </Modal>
 
           {/* Step 5: Resumo */}
           {step === 5 && (
@@ -2863,4 +3238,31 @@ const styles = StyleSheet.create({
   alertaPrioridade: { color: '#ef4444', fontSize: 10, fontWeight: 'bold', backgroundColor: '#1e293b', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   alertaMotorista: { color: '#94a3b8', fontSize: 12, marginTop: 8 },
   alertaData: { color: '#f59e0b', fontSize: 12, marginTop: 4 },
+  // Novos estilos para pesquisa e OCR
+  searchContainer: { flexDirection: 'row', marginBottom: 16, gap: 8 },
+  searchInput: { flex: 1, backgroundColor: '#1e293b', borderRadius: 12, padding: 14, color: '#fff', fontSize: 15 },
+  ocrBtn: { backgroundColor: '#8b5cf6', paddingHorizontal: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  ocrBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
+  // Picker Dropdown
+  pickerItem: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#334155' },
+  pickerItemSelected: { backgroundColor: '#334155' },
+  pickerItemText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  pickerItemSubtext: { color: '#64748b', fontSize: 12, marginTop: 2 },
+  // Dashboard
+  dashboardGrid: { gap: 8 },
+  dashboardItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
+  dashboardLabel: { color: '#94a3b8', fontSize: 13 },
+  dashboardValue: { fontSize: 14, fontWeight: '600' },
+  // Fotos múltiplas
+  fotoCardContainer: { width: (SCREEN_WIDTH - 56) / 2 },
+  fotoCountBadge: { position: 'absolute', top: 6, left: 6, backgroundColor: '#3b82f6', width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  fotoCountText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  addMoreFotoBtn: { backgroundColor: '#334155', padding: 6, borderRadius: 6, alignItems: 'center', marginTop: 4 },
+  addMoreFotoBtnText: { color: '#94a3b8', fontSize: 11 },
+  // Modal de Assinatura
+  assinaturaModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', padding: 16 },
+  assinaturaModalContent: { backgroundColor: '#1e293b', borderRadius: 16, padding: 16 },
+  assinaturaModalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 },
+  assinaturaCanvas: { backgroundColor: '#fff', height: 200, borderRadius: 12, marginBottom: 16 },
+  assinaturaModalActions: { flexDirection: 'row', gap: 8 },
 });
