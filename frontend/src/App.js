@@ -755,6 +755,16 @@ function App() {
             }
           />
           <Route
+            path="/minha-configuracao-uber"
+            element={
+              user && user.role === 'parceiro' ? (
+                <ConfiguracaoUberParceiro user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/importar-dados"
             element={
               user ? (
