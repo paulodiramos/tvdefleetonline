@@ -2008,7 +2008,13 @@ export default function App() {
   const { isMoving } = useGPS(
     status === 'working',
     () => { if (status === 'off' && !shown.current.start) { shown.current.start = true; setGps({ visible: true, type: 'start' }); } },
-    () => { if (status === 'working' && !shown.current.stop) { shown.current.stop = true; setGps({ visible: true, type: 'stop' }); } }
+    () => { 
+      // Só mostrar popup de parar se NÃO estiver em modo "não incomodar"
+      if (status === 'working' && !shown.current.stop && !doNotDisturb) { 
+        shown.current.stop = true; 
+        setGps({ visible: true, type: 'stop' }); 
+      } 
+    }
   );
 
   const handleGPS = async (confirm) => {
@@ -2018,6 +2024,18 @@ export default function App() {
       else { await api.post('/ponto/check-out', {}); setStatus('off'); }
     }
     setTimeout(() => { shown.current = { start: false, stop: false }; }, 300000);
+  };
+
+  // Ativar modo "não incomodar" por 30 minutos
+  const handleDoNotDisturb = () => {
+    setGps({ visible: false, type: null });
+    setDoNotDisturb(true);
+    Alert.alert('Não Incomodar', 'Não será interrompido durante 30 minutos.\n\nÚtil quando está no trânsito.');
+    // Desativar após 30 minutos
+    setTimeout(() => {
+      setDoNotDisturb(false);
+      shown.current = { start: false, stop: false };
+    }, 30 * 60 * 1000); // 30 minutos
   };
 
   // Quando user faz login, definir tab inicial baseado no role
@@ -2041,6 +2059,7 @@ export default function App() {
     if (user.role === 'inspetor') return '🔍 Inspetor';
     if (user.role === 'gestao') return '👔 Gestor';
     if (user.role === 'parceiro') return '🏢 Parceiro';
+    if (doNotDisturb) return '🔕 Não Incomodar';
     return '🚗 Motorista';
   };
 
