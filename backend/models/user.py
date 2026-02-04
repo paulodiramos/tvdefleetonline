@@ -11,6 +11,7 @@ class UserRole:
     GESTAO = "gestao"  # Gestor Associado - pode gerir múltiplos parceiros
     PARCEIRO = "parceiro"
     OPERACIONAL = "operacional"  # Parceiro com gestão de frota própria
+    INSPETOR = "inspetor"  # Apenas faz vistorias, associado a parceiro(s)
     MOTORISTA = "motorista"
 
 
