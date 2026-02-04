@@ -460,6 +460,11 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>⚙️ Configurações Relatórios</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracao-uber" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🚗 Configuração Uber</span>
+                        </Link>
+                      </DropdownMenuItem>
                       {itemPermitido('📥 Importação Dados') && (
                         <DropdownMenuItem asChild>
                           <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-6">
