@@ -317,6 +317,9 @@ const GestaoInspetores = ({ user, onLogout }) => {
                       <Button variant="ghost" size="sm" onClick={() => viewDetails(inspetor.id)}>
                         <Eye className="h-4 w-4" />
                       </Button>
+                      <Button variant="ghost" size="sm" onClick={() => openEditDialog(inspetor)}>
+                        <Edit className="h-4 w-4 text-blue-500" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -335,6 +338,69 @@ const GestaoInspetores = ({ user, onLogout }) => {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5" />
+                Editar Inspetor
+              </DialogTitle>
+              <DialogDescription>
+                Altere os dados do inspetor. Deixe a nova password em branco para manter a atual.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <Label>Nome *</Label>
+                <Input
+                  value={editData.name}
+                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                  placeholder="Nome completo"
+                />
+              </div>
+              <div>
+                <Label>Email *</Label>
+                <Input
+                  type="email"
+                  value={editData.email}
+                  onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              <div>
+                <Label>Telefone</Label>
+                <Input
+                  value={editData.phone}
+                  onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                  placeholder="+351 912 345 678"
+                />
+              </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  Nova Password (opcional)
+                </Label>
+                <Input
+                  type="password"
+                  value={editData.newPassword}
+                  onChange={(e) => setEditData({ ...editData, newPassword: e.target.value })}
+                  placeholder="Deixe em branco para manter"
+                />
+                <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres se preenchido</p>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setShowEditDialog(false)} className="flex-1">
+                  Cancelar
+                </Button>
+                <Button onClick={handleEdit} disabled={submitting} className="flex-1">
+                  {submitting ? 'A guardar...' : 'Guardar Alterações'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Create Dialog */}
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
