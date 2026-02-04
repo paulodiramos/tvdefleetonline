@@ -1981,7 +1981,12 @@ const VistoriasScreen = ({ user }) => {
 
   const fotosCompletas = () => {
     const obrigatorias = ['frente', 'traseira', 'lateral_esq', 'lateral_dir', 'km'];
-    return obrigatorias.every(id => fotos[id]);
+    return obrigatorias.every(id => {
+      const foto = fotos[id];
+      if (!foto) return false;
+      if (Array.isArray(foto)) return foto.length > 0;
+      return true;
+    });
   };
 
   const enviarVistoria = async () => {
