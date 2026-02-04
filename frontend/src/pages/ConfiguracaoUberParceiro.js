@@ -64,6 +64,16 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
       if (statusRes.data?.valida) {
         setLoginStep(2);
       }
+      
+      // Carregar histórico de importações
+      try {
+        const histRes = await axios.get(`${API}/rpa/uber/meu-historico`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setHistorico(histRes.data || []);
+      } catch (e) {
+        setHistorico([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
