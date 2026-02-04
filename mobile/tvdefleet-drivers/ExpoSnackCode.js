@@ -1796,33 +1796,93 @@ const VistoriasScreen = ({ user }) => {
 
   // Modal de Nova Vistoria
   if (showNovaVistoria) {
+    const minStep = user.role === 'motorista' ? 1 : 0;
+    const totalSteps = user.role === 'motorista' ? 5 : 6;
+    
     return (
       <View style={styles.screen}>
         {/* Header */}
         <View style={styles.vistoriaHeader}>
-          <TouchableOpacity onPress={() => { if (step > 1) setStep(step - 1); else setShowNovaVistoria(false); }}>
+          <TouchableOpacity onPress={() => { if (step > minStep) setStep(step - 1); else setShowNovaVistoria(false); }}>
             <Text style={styles.vistoriaBack}>← Voltar</Text>
           </TouchableOpacity>
           <Text style={styles.vistoriaHeaderTitle}>
             {tipoVistoria === 'entrada' ? '📥 Vistoria de Entrada' : '📤 Vistoria de Saída'}
           </Text>
-          <Text style={styles.vistoriaStep}>Passo {step}/5</Text>
+          <Text style={styles.vistoriaStep}>Passo {step}/{totalSteps - 1}</Text>
         </View>
 
         {/* Progresso - Clicável para navegar entre passos */}
         <View style={styles.progressBar}>
-          {[1,2,3,4,5].map(s => (
-            <TouchableOpacity 
-              key={s} 
-              style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} 
-              onPress={() => s < step && setStep(s)}
-            >
-              <Text style={styles.progressDotText}>{s}</Text>
-            </TouchableOpacity>
-          ))}
+          {[...Array(totalSteps - 1)].map((_, i) => {
+            const s = minStep + i;
+            return (
+              <TouchableOpacity 
+                key={s} 
+                style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} 
+                onPress={() => s < step && setStep(s)}
+              >
+                <Text style={styles.progressDotText}>{i + 1}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <ScrollView style={{ flex: 1 }}>
+          {/* Step 0: Seleção de Motorista (apenas para inspetor/parceiro/gestor) */}
+          {step === 0 && user.role !== 'motorista' && (
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>👤 Selecionar Motorista</Text>
+              <Text style={styles.stepSubtitle}>Escolha o motorista e veículo para a vistoria</Text>
+              
+              {selectedMotorista ? (
+                <View style={styles.selectedMotoristaCard}>
+                  <View style={styles.selectedMotoristaInfo}>
+                    <Text style={styles.selectedMotoristaName}>{selectedMotorista.name || selectedMotorista.nome}</Text>
+                    <Text style={styles.selectedMotoristaEmail}>{selectedMotorista.email}</Text>
+                    {selectedMotorista.veiculo_matricula && (
+                      <Text style={styles.selectedMotoristaVeiculo}>🚗 {selectedMotorista.veiculo_matricula}</Text>
+                    )}
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.changeMotoristaBtn}
+                    onPress={() => setSelectedMotorista(null)}
+                  >
+                    <Text style={styles.changeMotoristaBtnText}>Alterar</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.motoristasListContainer}>
+                  {motoristas.length === 0 ? (
+                    <Text style={styles.noMotoristasText}>Nenhum motorista encontrado</Text>
+                  ) : (
+                    motoristas.map(m => (
+                      <TouchableOpacity 
+                        key={m.id} 
+                        style={styles.motoristaSelectCard}
+                        onPress={() => setSelectedMotorista(m)}
+                      >
+                        <View>
+                          <Text style={styles.motoristaSelectName}>{m.name || m.nome}</Text>
+                          <Text style={styles.motoristaSelectEmail}>{m.email}</Text>
+                        </View>
+                        {m.veiculo_matricula && (
+                          <Text style={styles.motoristaSelectVeiculo}>🚗 {m.veiculo_matricula}</Text>
+                        )}
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
+              )}
+              
+              {selectedMotorista && (
+                <TouchableOpacity style={styles.stepNextBtn} onPress={() => setStep(1)}>
+                  <Text style={styles.stepNextBtnText}>Continuar →</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+          
           {/* Step 1: Fotos */}
           {step === 1 && (
             <View style={styles.stepContent}>
