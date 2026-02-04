@@ -234,10 +234,16 @@ const PontoScreen = ({ user, status, setStatus }) => {
   const submitEdit = async () => {
     if (!editForm.horaInicio || !editForm.horaFim || !editForm.justificacao) { Alert.alert('Erro', 'Preencha todos os campos'); return; }
     try {
-      await api.post(`/ponto/registos/${editingRegisto.id}/editar`, { hora_inicio_real: editForm.horaInicio, hora_fim_real: editForm.horaFim, justificacao: editForm.justificacao });
+      await api.post(`/ponto/registos/${editingRegisto.id}/editar`, { 
+        hora_inicio_real: editForm.horaInicio, 
+        hora_fim_real: editForm.horaFim, 
+        justificacao: editForm.justificacao,
+        tipo: editForm.tipo
+      });
       Alert.alert('Sucesso', 'Registo atualizado');
       setShowEditModal(false);
       loadDiaRegistos(selectedDate);
+      loadData();
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
