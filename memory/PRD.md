@@ -9,6 +9,32 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 - **Database**: MongoDB (`tvdefleet_db`)
 - **App Móvel**: React Native via Expo Snack (prototipagem)
 
+## ✅ Correções App Móvel (04/02/2026) - Sessão 2
+
+### Bugs Corrigidos
+1. **Extras - Botão Voltar**: Adicionado botão voltar quando motorista selecionado
+2. **Extras - Apenas motoristas ativos**: Filtro para mostrar só motoristas ativos
+3. **Extras - Interface simplificada**: Removida lista completa, apenas dropdown
+4. **Roteamento Backend**: Corrigido ordem de rotas para `/frota` funcionar
+
+### Novas Funcionalidades
+| Funcionalidade | Descrição |
+|----------------|-----------|
+| **Vistorias Frota (Parceiro)** | Nova tab "Frota" com todas as vistorias da empresa |
+| **Detalhe Vistoria Frota** | Ver fotos, danos, assinatura e dados completos |
+| **Fotos no Motorista** | Motorista vê fotos da vistoria antes de aceitar |
+| **Filtros de Vistorias** | Filtrar por pendentes/aprovadas/todas |
+
+### Novo Endpoint Backend
+- `GET /api/vistorias/frota` - Lista todas as vistorias da frota do parceiro
+
+### Tabs Atualizadas (Parceiro)
+- 📥 Nova (criar vistoria)
+- 📋 Frota (consultar vistorias)
+- 📊 Resumo
+- 💸 Extras  
+- 📄 Recibos
+
 ---
 
 ## ✅ Correções e Melhorias App Móvel (04/02/2026)
