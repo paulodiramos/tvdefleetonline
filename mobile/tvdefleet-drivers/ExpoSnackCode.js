@@ -1011,6 +1011,521 @@ const TurnosScreen = ({ user }) => {
   );
 };
 
+// ===== VISTORIAS SCREEN (Tipo WeProov) =====
+const FOTOS_OBRIGATORIAS = [
+  { id: 'frente', label: 'Frente do Veículo', icon: '🚗', instrucao: 'Fotografe a frente completa do veículo' },
+  { id: 'traseira', label: 'Traseira', icon: '🚙', instrucao: 'Fotografe a traseira completa' },
+  { id: 'lateral_esq', label: 'Lateral Esquerda', icon: '◀️', instrucao: 'Fotografe o lado esquerdo completo' },
+  { id: 'lateral_dir', label: 'Lateral Direita', icon: '▶️', instrucao: 'Fotografe o lado direito completo' },
+  { id: 'interior_frente', label: 'Interior Frente', icon: '🪑', instrucao: 'Fotografe o painel e bancos dianteiros' },
+  { id: 'interior_tras', label: 'Interior Traseiro', icon: '🛋️', instrucao: 'Fotografe os bancos traseiros' },
+  { id: 'km', label: 'Quilometragem', icon: '📊', instrucao: 'Fotografe o conta-quilómetros claramente' },
+  { id: 'combustivel', label: 'Nível Combustível', icon: '⛽', instrucao: 'Fotografe o indicador de combustível' },
+];
+
+const TIPOS_DANO = [
+  { id: 'risco', label: 'Risco', color: '#f59e0b' },
+  { id: 'amolgadela', label: 'Amolgadela', color: '#ef4444' },
+  { id: 'vidro_partido', label: 'Vidro Partido', color: '#dc2626' },
+  { id: 'falta_peca', label: 'Falta Peça', color: '#7c3aed' },
+  { id: 'sujidade', label: 'Sujidade', color: '#6b7280' },
+  { id: 'outro', label: 'Outro', color: '#3b82f6' },
+];
+
+// Componente do diagrama do carro para marcar danos
+const CarDiagram = ({ danos, onAddDano, onRemoveDano }) => {
+  const [selectedTipo, setSelectedTipo] = useState('risco');
+  
+  const handlePress = (evt) => {
+    const { locationX, locationY } = evt.nativeEvent;
+    const newDano = {
+      id: Date.now().toString(),
+      x: locationX,
+      y: locationY,
+      tipo: selectedTipo,
+      descricao: ''
+    };
+    onAddDano(newDano);
+  };
+
+  return (
+    <View style={styles.diagramContainer}>
+      <Text style={styles.diagramTitle}>📍 Toque para marcar danos</Text>
+      
+      {/* Seletor de tipo de dano */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tiposDanoScroll}>
+        {TIPOS_DANO.map(tipo => (
+          <TouchableOpacity
+            key={tipo.id}
+            style={[styles.tipoDanoBtn, selectedTipo === tipo.id && { backgroundColor: tipo.color }]}
+            onPress={() => setSelectedTipo(tipo.id)}
+          >
+            <View style={[styles.tipoDanoDot, { backgroundColor: tipo.color }]} />
+            <Text style={[styles.tipoDanoText, selectedTipo === tipo.id && { color: '#fff' }]}>{tipo.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      
+      {/* Diagrama do carro */}
+      <TouchableOpacity 
+        style={styles.carDiagramArea}
+        onPress={handlePress}
+        activeOpacity={1}
+      >
+        <View style={styles.carShape}>
+          {/* Vista de cima do carro simplificada */}
+          <View style={styles.carBody}>
+            <View style={styles.carFront} />
+            <View style={styles.carMiddle}>
+              <Text style={styles.carLabel}>TOPO</Text>
+            </View>
+            <View style={styles.carRear} />
+          </View>
+          <Text style={styles.carSideLabel}>ESQ</Text>
+          <Text style={[styles.carSideLabel, styles.carSideLabelRight]}>DIR</Text>
+        </View>
+        
+        {/* Marcadores de danos */}
+        {danos.map((dano, idx) => {
+          const tipoInfo = TIPOS_DANO.find(t => t.id === dano.tipo) || TIPOS_DANO[0];
+          return (
+            <TouchableOpacity
+              key={dano.id}
+              style={[styles.danoMarker, { left: dano.x - 12, top: dano.y - 12, backgroundColor: tipoInfo.color }]}
+              onPress={() => onRemoveDano(dano.id)}
+            >
+              <Text style={styles.danoMarkerText}>{idx + 1}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </TouchableOpacity>
+      
+      {/* Lista de danos */}
+      {danos.length > 0 && (
+        <View style={styles.danosLista}>
+          <Text style={styles.danosListaTitle}>Danos marcados ({danos.length}):</Text>
+          {danos.map((dano, idx) => {
+            const tipoInfo = TIPOS_DANO.find(t => t.id === dano.tipo) || TIPOS_DANO[0];
+            return (
+              <View key={dano.id} style={styles.danoItem}>
+                <View style={[styles.danoItemDot, { backgroundColor: tipoInfo.color }]} />
+                <Text style={styles.danoItemText}>{idx + 1}. {tipoInfo.label}</Text>
+                <TouchableOpacity onPress={() => onRemoveDano(dano.id)}>
+                  <Text style={styles.danoItemRemove}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+};
+
+const VistoriasScreen = ({ user }) => {
+  const [loading, setLoading] = useState(true);
+  const [vistorias, setVistorias] = useState([]);
+  const [showNovaVistoria, setShowNovaVistoria] = useState(false);
+  const [vistoriaAtual, setVistoriaAtual] = useState(null);
+  const [step, setStep] = useState(0); // 0: tipo, 1: fotos, 2: danos, 3: obs, 4: assinatura, 5: resumo
+  const [tipoVistoria, setTipoVistoria] = useState('entrada'); // entrada, saida
+  const [fotos, setFotos] = useState({});
+  const [danos, setDanos] = useState([]);
+  const [observacoes, setObservacoes] = useState('');
+  const [km, setKm] = useState('');
+  const [combustivel, setCombustivel] = useState('50');
+  const [assinatura, setAssinatura] = useState(null);
+  const [enviando, setEnviando] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadVistorias = async () => {
+    try {
+      const data = await api.get('/vistorias/minhas');
+      setVistorias(data.vistorias || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadVistorias(); }, []);
+
+  const iniciarVistoria = (tipo) => {
+    setTipoVistoria(tipo);
+    setFotos({});
+    setDanos([]);
+    setObservacoes('');
+    setKm('');
+    setCombustivel('50');
+    setAssinatura(null);
+    setStep(1);
+    setShowNovaVistoria(true);
+  };
+
+  const tirarFoto = async (fotoId) => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Erro', 'Permissão de câmara necessária'); return; }
+    
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      base64: true,
+    });
+    
+    if (!result.canceled && result.assets[0]) {
+      setFotos(prev => ({ ...prev, [fotoId]: result.assets[0] }));
+    }
+  };
+
+  const fotosCompletas = () => {
+    const obrigatorias = ['frente', 'traseira', 'lateral_esq', 'lateral_dir', 'km'];
+    return obrigatorias.every(id => fotos[id]);
+  };
+
+  const enviarVistoria = async () => {
+    if (!fotosCompletas()) { Alert.alert('Erro', 'Complete todas as fotos obrigatórias'); return; }
+    if (!km) { Alert.alert('Erro', 'Introduza a quilometragem'); return; }
+    
+    setEnviando(true);
+    try {
+      const fotosBase64 = {};
+      Object.keys(fotos).forEach(key => {
+        if (fotos[key]?.base64) {
+          fotosBase64[key] = fotos[key].base64;
+        }
+      });
+
+      await api.post('/vistorias/criar', {
+        tipo: tipoVistoria,
+        fotos: fotosBase64,
+        danos: danos,
+        km: parseInt(km),
+        nivel_combustivel: parseInt(combustivel),
+        observacoes: observacoes,
+        assinatura: assinatura?.base64 || null
+      });
+      
+      Alert.alert('Sucesso', 'Vistoria enviada com sucesso!');
+      setShowNovaVistoria(false);
+      loadVistorias();
+    } catch (e) { 
+      Alert.alert('Erro', e.message); 
+    }
+    setEnviando(false);
+  };
+
+  const addDano = (dano) => setDanos(prev => [...prev, dano]);
+  const removeDano = (id) => setDanos(prev => prev.filter(d => d.id !== id));
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  // Modal de Nova Vistoria
+  if (showNovaVistoria) {
+    return (
+      <View style={styles.screen}>
+        {/* Header */}
+        <View style={styles.vistoriaHeader}>
+          <TouchableOpacity onPress={() => { if (step > 1) setStep(step - 1); else setShowNovaVistoria(false); }}>
+            <Text style={styles.vistoriaBack}>← Voltar</Text>
+          </TouchableOpacity>
+          <Text style={styles.vistoriaHeaderTitle}>
+            {tipoVistoria === 'entrada' ? '📥 Vistoria de Entrada' : '📤 Vistoria de Saída'}
+          </Text>
+          <Text style={styles.vistoriaStep}>Passo {step}/5</Text>
+        </View>
+
+        {/* Progresso */}
+        <View style={styles.progressBar}>
+          {[1,2,3,4,5].map(s => (
+            <View key={s} style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} />
+          ))}
+        </View>
+
+        <ScrollView style={{ flex: 1 }}>
+          {/* Step 1: Fotos */}
+          {step === 1 && (
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>📷 Fotografar Veículo</Text>
+              <Text style={styles.stepSubtitle}>Tire as fotos obrigatórias (*) do veículo</Text>
+              
+              <View style={styles.fotosGrid}>
+                {FOTOS_OBRIGATORIAS.map(foto => {
+                  const tirada = fotos[foto.id];
+                  const obrigatoria = ['frente', 'traseira', 'lateral_esq', 'lateral_dir', 'km'].includes(foto.id);
+                  
+                  return (
+                    <TouchableOpacity 
+                      key={foto.id} 
+                      style={[styles.fotoCard, tirada && styles.fotoCardDone]}
+                      onPress={() => tirarFoto(foto.id)}
+                    >
+                      {tirada ? (
+                        <Image source={{ uri: tirada.uri }} style={styles.fotoThumb} />
+                      ) : (
+                        <Text style={styles.fotoIcon}>{foto.icon}</Text>
+                      )}
+                      <Text style={styles.fotoLabel}>
+                        {foto.label}{obrigatoria ? ' *' : ''}
+                      </Text>
+                      {tirada && <Text style={styles.fotoCheck}>✓</Text>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Km e Combustível */}
+              <View style={styles.kmCombustivelRow}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputGroupLabel}>Quilometragem *</Text>
+                  <TextInput
+                    style={styles.kmInput}
+                    value={km}
+                    onChangeText={setKm}
+                    placeholder="Ex: 45000"
+                    placeholderTextColor="#64748b"
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputGroupLabel}>Combustível %</Text>
+                  <TextInput
+                    style={styles.kmInput}
+                    value={combustivel}
+                    onChangeText={setCombustivel}
+                    placeholder="50"
+                    placeholderTextColor="#64748b"
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                style={[styles.nextBtn, !fotosCompletas() && styles.nextBtnDisabled]}
+                onPress={() => fotosCompletas() ? setStep(2) : Alert.alert('Atenção', 'Complete as fotos obrigatórias')}
+              >
+                <Text style={styles.nextBtnText}>Próximo: Marcar Danos →</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Step 2: Danos */}
+          {step === 2 && (
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>🔍 Marcar Danos</Text>
+              <Text style={styles.stepSubtitle}>Toque no diagrama para marcar danos existentes</Text>
+              
+              <CarDiagram danos={danos} onAddDano={addDano} onRemoveDano={removeDano} />
+
+              {/* Fotos de danos */}
+              {danos.length > 0 && (
+                <View style={styles.fotosDanosSection}>
+                  <Text style={styles.fotosDanosTitle}>📸 Fotografar cada dano</Text>
+                  {danos.map((dano, idx) => {
+                    const tipoInfo = TIPOS_DANO.find(t => t.id === dano.tipo);
+                    return (
+                      <View key={dano.id} style={styles.fotosDanoItem}>
+                        <Text style={styles.fotosDanoLabel}>{idx + 1}. {tipoInfo?.label}</Text>
+                        <TouchableOpacity 
+                          style={styles.fotosDanoBtn}
+                          onPress={async () => {
+                            const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7, base64: true });
+                            if (!result.canceled) {
+                              setDanos(prev => prev.map(d => d.id === dano.id ? { ...d, foto: result.assets[0] } : d));
+                            }
+                          }}
+                        >
+                          {dano.foto ? (
+                            <Image source={{ uri: dano.foto.uri }} style={styles.fotosDanoThumb} />
+                          ) : (
+                            <Text style={styles.fotosDanoBtnText}>📷</Text>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+              <TouchableOpacity style={styles.nextBtn} onPress={() => setStep(3)}>
+                <Text style={styles.nextBtnText}>Próximo: Observações →</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Step 3: Observações */}
+          {step === 3 && (
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>📝 Observações</Text>
+              <Text style={styles.stepSubtitle}>Adicione notas relevantes sobre o estado do veículo</Text>
+              
+              <TextInput
+                style={styles.obsInput}
+                value={observacoes}
+                onChangeText={setObservacoes}
+                placeholder="Ex: Veículo limpo, sem danos visíveis no interior. Pneus em bom estado..."
+                placeholderTextColor="#64748b"
+                multiline
+                numberOfLines={8}
+                textAlignVertical="top"
+              />
+
+              <TouchableOpacity style={styles.nextBtn} onPress={() => setStep(4)}>
+                <Text style={styles.nextBtnText}>Próximo: Assinatura →</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Step 4: Assinatura */}
+          {step === 4 && (
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>✍️ Assinatura</Text>
+              <Text style={styles.stepSubtitle}>Assine para confirmar a vistoria</Text>
+              
+              <View style={styles.assinaturaBox}>
+                {assinatura ? (
+                  <View>
+                    <Image source={{ uri: assinatura.uri }} style={styles.assinaturaPreview} />
+                    <TouchableOpacity style={styles.assinaturaRedo} onPress={() => setAssinatura(null)}>
+                      <Text style={styles.assinaturaRedoText}>🔄 Refazer assinatura</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.assinaturaBtn}
+                    onPress={async () => {
+                      // Simular assinatura com foto (em produção usaria biblioteca de signature)
+                      Alert.alert(
+                        'Assinatura',
+                        'Em produção, aqui apareceria uma área para desenhar. Por agora, tire uma foto da sua assinatura.',
+                        [
+                          { text: 'Cancelar' },
+                          { text: 'Fotografar', onPress: async () => {
+                            const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.5, base64: true });
+                            if (!result.canceled) setAssinatura(result.assets[0]);
+                          }}
+                        ]
+                      );
+                    }}
+                  >
+                    <Text style={styles.assinaturaBtnIcon}>✍️</Text>
+                    <Text style={styles.assinaturaBtnText}>Toque para assinar</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity style={styles.nextBtn} onPress={() => setStep(5)}>
+                <Text style={styles.nextBtnText}>Próximo: Resumo →</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Step 5: Resumo */}
+          {step === 5 && (
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>📋 Resumo da Vistoria</Text>
+              <Text style={styles.stepSubtitle}>Confirme os dados antes de enviar</Text>
+              
+              <View style={styles.resumoCard}>
+                <View style={styles.resumoRow}>
+                  <Text style={styles.resumoLabel}>Tipo:</Text>
+                  <Text style={styles.resumoValue}>{tipoVistoria === 'entrada' ? '📥 Entrada' : '📤 Saída'}</Text>
+                </View>
+                <View style={styles.resumoRow}>
+                  <Text style={styles.resumoLabel}>Km:</Text>
+                  <Text style={styles.resumoValue}>{km} km</Text>
+                </View>
+                <View style={styles.resumoRow}>
+                  <Text style={styles.resumoLabel}>Combustível:</Text>
+                  <Text style={styles.resumoValue}>{combustivel}%</Text>
+                </View>
+                <View style={styles.resumoRow}>
+                  <Text style={styles.resumoLabel}>Fotos:</Text>
+                  <Text style={styles.resumoValue}>{Object.keys(fotos).length} / {FOTOS_OBRIGATORIAS.length}</Text>
+                </View>
+                <View style={styles.resumoRow}>
+                  <Text style={styles.resumoLabel}>Danos:</Text>
+                  <Text style={styles.resumoValue}>{danos.length} marcados</Text>
+                </View>
+                <View style={styles.resumoRow}>
+                  <Text style={styles.resumoLabel}>Assinatura:</Text>
+                  <Text style={styles.resumoValue}>{assinatura ? '✓ Assinado' : '✗ Não assinado'}</Text>
+                </View>
+                {observacoes && (
+                  <View style={styles.resumoObs}>
+                    <Text style={styles.resumoLabel}>Observações:</Text>
+                    <Text style={styles.resumoObsText}>{observacoes}</Text>
+                  </View>
+                )}
+              </View>
+
+              <TouchableOpacity 
+                style={[styles.submitBtn, enviando && styles.submitBtnDisabled]}
+                onPress={enviarVistoria}
+                disabled={enviando}
+              >
+                <Text style={styles.submitBtnText}>
+                  {enviando ? '⏳ A enviar...' : '✅ Confirmar e Enviar Vistoria'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Lista de Vistorias
+  return (
+    <ScrollView 
+      style={styles.screen}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadVistorias(); setRefreshing(false); }} />}
+    >
+      <Text style={styles.screenTitle}>Vistorias</Text>
+
+      {/* Botões Nova Vistoria */}
+      <View style={styles.novaVistoriaBtns}>
+        <TouchableOpacity style={[styles.novaVistoriaBtn, styles.novaVistoriaBtnEntrada]} onPress={() => iniciarVistoria('entrada')}>
+          <Text style={styles.novaVistoriaBtnIcon}>📥</Text>
+          <Text style={styles.novaVistoriaBtnText}>Vistoria de Entrada</Text>
+          <Text style={styles.novaVistoriaBtnHint}>Ao receber o veículo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.novaVistoriaBtn, styles.novaVistoriaBtnSaida]} onPress={() => iniciarVistoria('saida')}>
+          <Text style={styles.novaVistoriaBtnIcon}>📤</Text>
+          <Text style={styles.novaVistoriaBtnText}>Vistoria de Saída</Text>
+          <Text style={styles.novaVistoriaBtnHint}>Ao devolver o veículo</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Histórico */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>📜 Histórico de Vistorias</Text>
+        {vistorias.length === 0 ? (
+          <View style={styles.emptyVistorias}>
+            <Text style={styles.emptyVistoriasIcon}>🔍</Text>
+            <Text style={styles.emptyVistoriasText}>Sem vistorias registadas</Text>
+            <Text style={styles.emptyVistoriasHint}>Faça a sua primeira vistoria acima</Text>
+          </View>
+        ) : (
+          vistorias.map((v, idx) => (
+            <TouchableOpacity key={idx} style={styles.vistoriaItem} onPress={() => setVistoriaAtual(v)}>
+              <View style={styles.vistoriaItemHeader}>
+                <Text style={styles.vistoriaItemTipo}>
+                  {v.tipo === 'entrada' ? '📥' : '📤'} {v.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                </Text>
+                <Text style={styles.vistoriaItemData}>{v.data}</Text>
+              </View>
+              <View style={styles.vistoriaItemInfo}>
+                <Text style={styles.vistoriaItemKm}>🚗 {v.km} km</Text>
+                <Text style={styles.vistoriaItemDanos}>
+                  {v.total_danos > 0 ? `⚠️ ${v.total_danos} danos` : '✓ Sem danos'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
+      </View>
+    </ScrollView>
+  );
+};
+
 // ===== CONFIG SCREEN =====
 const ConfigScreen = ({ user, onLogout }) => {
   const [defs, setDefs] = useState(null);
