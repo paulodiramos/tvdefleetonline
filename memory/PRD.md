@@ -7,27 +7,29 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ### Separação de Responsabilidades (Segurança)
 
-**Parceiro** → Nova página `/minha-configuracao-uber`:
+**Admin** → Página `/configuracao-uber` (Monitorização):
+- Dashboard: Total parceiros, sessões ativas, sessões expiradas
+- Lista de todos os parceiros com estado da sessão
+- Apenas visualização - contactar parceiros com sessão expirada
+
+**Parceiro** → Página `/minha-configuracao-uber` (Utilização):
 - Configurar credenciais Uber (email, password, telefone)
 - Fazer login manual quando houver CAPTCHA
-- Ver status da sessão (ativa/expirada)
-- Testar sessão
+- Selecionar semana e extrair rendimentos CSV
+- Ver histórico das suas importações
 
-**Admin** → Página `/configuracao-uber`:
-- Ver todos os parceiros e status das sessões
-- Executar extração de rendimentos (CSV)
-- Ver histórico de importações
+### Endpoints Backend
+**Para Admin:**
+- `GET /api/rpa/uber/sessao-status/{parceiro_id}` - Estado da sessão
+- `GET /api/rpa/uber/historico/{parceiro_id}` - Histórico de importações
 
-### Endpoints Backend para Parceiros
+**Para Parceiro:**
 - `GET /api/rpa/uber/minhas-credenciais` - Obtém credenciais próprias
 - `POST /api/rpa/uber/minhas-credenciais` - Guarda credenciais
 - `GET /api/rpa/uber/minha-sessao-status` - Estado da sessão
 - `POST /api/rpa/uber/meu-login` - Iniciar login
-- `POST /api/rpa/uber/meu-confirmar-sms` - Confirmar SMS
-- `POST /api/rpa/uber/meu-testar` - Testar sessão
-
-### Ficheiros Criados
-- `/app/frontend/src/pages/ConfiguracaoUberParceiro.js` - Nova página parceiros
+- `POST /api/rpa/uber/minha-extracao` - Extrair rendimentos
+- `GET /api/rpa/uber/meu-historico` - Histórico próprio
 
 ## ✅ Correção Menu Configuração Uber (04/02/2026)
 
