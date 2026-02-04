@@ -997,6 +997,206 @@ const ExtrasGestaoScreen = ({ user }) => {
   );
 };
 
+// Ecrã de Vistorias da Frota (Parceiro/Gestor) - NOVO
+const VistoriasFrotaScreen = ({ user }) => {
+  const [vistorias, setVistorias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedVistoria, setSelectedVistoria] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState('todas');
+
+  const loadVistorias = async () => {
+    try {
+      const data = await api.get('/vistorias/frota');
+      setVistorias(data.vistorias || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadVistorias(); }, []);
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'aprovada': return { text: '✅ Aprovada', color: '#22c55e' };
+      case 'pendente': return { text: '⏳ Pendente', color: '#f59e0b' };
+      case 'rejeitada': return { text: '❌ Rejeitada', color: '#ef4444' };
+      default: return { text: status || 'N/A', color: '#64748b' };
+    }
+  };
+
+  const vistoriasFiltradas = filtroStatus === 'todas' 
+    ? vistorias 
+    : vistorias.filter(v => v.status === filtroStatus);
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  // Detalhe de uma vistoria selecionada
+  if (selectedVistoria) {
+    const v = selectedVistoria;
+    const badge = getStatusBadge(v.status);
+    const API_BASE = 'https://fleet-inspect-11.preview.emergentagent.com';
+    
+    return (
+      <ScrollView style={styles.screen}>
+        <TouchableOpacity onPress={() => setSelectedVistoria(null)}>
+          <Text style={styles.backBtn}>← Voltar</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.screenTitle}>📋 Relatório de Vistoria</Text>
+        
+        {/* Info básica */}
+        <View style={styles.card}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.cardTitle}>
+              {v.tipo === 'entrada' ? '📥 Entrada' : '📤 Saída'}
+            </Text>
+            <View style={{ backgroundColor: badge.color, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
+              <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>{badge.text}</Text>
+            </View>
+          </View>
+          <Text style={styles.cardSubtitle}>{v.data}</Text>
+        </View>
+
+        {/* Veículo e Motorista */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>🚗 Veículo</Text>
+          <Text style={styles.vistoriaDetalhe}>Matrícula: {v.veiculo_matricula || 'N/A'}</Text>
+          <Text style={styles.vistoriaDetalhe}>Km: {v.km?.toLocaleString() || 'N/A'} km</Text>
+          <Text style={styles.vistoriaDetalhe}>Combustível: {v.nivel_combustivel || 'N/A'}%</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>👤 Motorista</Text>
+          <Text style={styles.vistoriaDetalhe}>{v.motorista_nome || 'N/A'}</Text>
+          {v.motorista_aceite !== null && (
+            <Text style={{ color: v.motorista_aceite ? '#22c55e' : '#ef4444', marginTop: 4 }}>
+              {v.motorista_aceite ? '✓ Aceite pelo motorista' : '✗ Rejeitado pelo motorista'}
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>👷 Inspetor</Text>
+          <Text style={styles.vistoriaDetalhe}>{v.inspetor_nome || 'N/A'}</Text>
+        </View>
+
+        {/* Fotos */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📷 Fotos ({Object.keys(v.fotos || {}).length})</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+            {Object.entries(v.fotos || {}).map(([tipo, foto]) => (
+              <View key={tipo} style={{ marginRight: 12, alignItems: 'center' }}>
+                <Image 
+                  source={{ uri: `${API_BASE}${foto.url}` }} 
+                  style={{ width: 120, height: 90, borderRadius: 8 }} 
+                />
+                <Text style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>{tipo}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Danos */}
+        {(v.danos?.length > 0 || v.danos_ia?.length > 0) && (
+          <View style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#ef4444' }]}>
+            <Text style={styles.cardTitle}>⚠️ Danos Registados</Text>
+            {v.danos?.map((d, i) => (
+              <Text key={i} style={styles.vistoriaDetalhe}>• {d.tipo}: {d.descricao || 'Sem descrição'}</Text>
+            ))}
+            {v.danos_ia?.map((d, i) => (
+              <Text key={`ia-${i}`} style={[styles.vistoriaDetalhe, { color: '#8b5cf6' }]}>
+                🤖 IA: {d.tipo} - {d.descricao}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {/* Observações */}
+        {v.observacoes && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📝 Observações</Text>
+            <Text style={styles.vistoriaDetalhe}>{v.observacoes}</Text>
+          </View>
+        )}
+
+        {/* Assinatura */}
+        {v.assinatura_url && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>✍️ Assinatura</Text>
+            <Image 
+              source={{ uri: `${API_BASE}${v.assinatura_url}` }} 
+              style={{ width: 200, height: 80, borderRadius: 8, marginTop: 8 }} 
+            />
+          </View>
+        )}
+      </ScrollView>
+    );
+  }
+
+  // Lista de vistorias
+  return (
+    <ScrollView 
+      style={styles.screen}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadVistorias(); setRefreshing(false); }} />}
+    >
+      <Text style={styles.screenTitle}>🔍 Vistorias da Frota</Text>
+      <Text style={styles.cardSubtitle}>Consulte todas as vistorias realizadas</Text>
+
+      {/* Filtros */}
+      <View style={styles.filtrosRow}>
+        {[
+          { id: 'todas', label: 'Todas' },
+          { id: 'pendente', label: 'Pendentes' },
+          { id: 'aprovada', label: 'Aprovadas' },
+        ].map(f => (
+          <TouchableOpacity 
+            key={f.id}
+            style={[styles.filtroBtn, filtroStatus === f.id && styles.filtroBtnActive]}
+            onPress={() => setFiltroStatus(f.id)}
+          >
+            <Text style={[styles.filtroBtnText, filtroStatus === f.id && styles.filtroBtnTextActive]}>{f.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Contador */}
+      <Text style={{ color: '#64748b', marginBottom: 12 }}>{vistoriasFiltradas.length} vistoria(s)</Text>
+
+      {vistoriasFiltradas.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>Sem vistorias registadas</Text>
+        </View>
+      ) : vistoriasFiltradas.map(v => {
+        const badge = getStatusBadge(v.status);
+        return (
+          <TouchableOpacity 
+            key={v.id} 
+            style={styles.card}
+            onPress={() => setSelectedVistoria(v)}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>
+                  {v.tipo === 'entrada' ? '📥' : '📤'} {v.veiculo_matricula || 'Veículo'}
+                </Text>
+                <Text style={styles.cardSubtitle}>{v.motorista_nome || 'Motorista'}</Text>
+                <Text style={{ color: '#64748b', fontSize: 12, marginTop: 4 }}>{v.data}</Text>
+              </View>
+              <View style={{ backgroundColor: badge.color, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
+                <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{v.status}</Text>
+              </View>
+            </View>
+            {v.danos?.length > 0 && (
+              <Text style={{ color: '#f59e0b', fontSize: 12, marginTop: 8 }}>⚠️ {v.danos.length} dano(s) registado(s)</Text>
+            )}
+            <Text style={{ color: '#3b82f6', fontSize: 12, marginTop: 4 }}>Toque para ver detalhes →</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
+};
+
 // Ecrã de Alertas (Gestor/Parceiro)
 const AlertasGestaoScreen = ({ user }) => {
   const [alertas, setAlertas] = useState([]);
