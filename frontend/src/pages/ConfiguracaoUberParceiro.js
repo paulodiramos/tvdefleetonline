@@ -10,8 +10,15 @@ import { toast } from 'sonner';
 import { 
   Car, CheckCircle, AlertCircle, RefreshCw, 
   Key, Clock, ExternalLink, Loader2,
-  Shield, Smartphone, Lock
+  Shield, Smartphone, Lock, Download, Users, DollarSign, FileText, Calendar
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
@@ -21,6 +28,12 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
   const [smsCode, setSmsCode] = useState('');
   const [executando, setExecutando] = useState(false);
   const [loginWindow, setLoginWindow] = useState(null);
+  
+  // Estados para extração
+  const [extraindo, setExtraindo] = useState(false);
+  const [semanaIndex, setSemanaIndex] = useState("0");
+  const [resultadoExtracao, setResultadoExtracao] = useState(null);
+  const [historico, setHistorico] = useState([]);
 
   useEffect(() => {
     carregarDados();
