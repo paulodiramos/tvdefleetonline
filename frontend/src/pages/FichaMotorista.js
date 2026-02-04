@@ -322,6 +322,125 @@ const FichaMotorista = ({ user }) => {
     }
   }, [motoristaId]);
 
+  // Funções para App Config, Ponto e Turnos
+  const fetchConfigApp = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/ponto/definicoes/${motoristaId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setConfigApp(response.data);
+    } catch (error) {
+      setConfigApp({
+        limite_horas_diarias: 10,
+        periodo_descanso_minimo: 8,
+        permitir_edicao_registos: true,
+        pode_alterar_limite: false
+      });
+    }
+  }, [motoristaId]);
+
+  const fetchDadosPonto = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/ponto/resumo-motorista/${motoristaId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDadosPonto(response.data);
+    } catch (error) {
+      console.log('Dados de ponto não disponíveis');
+    }
+  }, [motoristaId]);
+
+  const fetchTurnos = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/turnos/motorista/${motoristaId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTurnos(response.data);
+      setTurnosForm(response.data.turnos || []);
+      setTurnoVeiculoId(response.data.veiculo_id || '');
+    } catch (error) {
+      setTurnos({ turnos: [] });
+      setTurnosForm([]);
+    }
+  }, [motoristaId]);
+
+  const fetchVeiculosDisponiveis = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/vehicles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVeiculosDisponiveis(response.data.vehicles || response.data || []);
+    } catch (error) {
+      console.log('Veículos não disponíveis');
+    }
+  }, []);
+
+  const handleSaveConfigApp = async () => {
+    setSavingConfig(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/api/ponto/parceiro/configurar-permissoes`,
+        {
+          motorista_id: motoristaId,
+          limite_horas_diarias: configApp.limite_horas_diarias,
+          periodo_descanso_minimo: configApp.periodo_descanso_minimo,
+          permitir_edicao_registos: configApp.permitir_edicao_registos,
+          pode_alterar_limite: configApp.pode_alterar_limite
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Configurações guardadas!');
+    } catch (error) {
+      console.error('Error saving config:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao guardar configurações');
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
+  const handleSaveTurnos = async () => {
+    setSavingTurnos(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/api/turnos/configurar`,
+        {
+          motorista_id: motoristaId,
+          turnos: turnosForm.filter(t => t.hora_inicio && t.hora_fim),
+          veiculo_id: turnoVeiculoId || null
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Turnos guardados!');
+      fetchTurnos();
+    } catch (error) {
+      console.error('Error saving turnos:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao guardar turnos');
+    } finally {
+      setSavingTurnos(false);
+    }
+  };
+
+  const toggleDiaTurno = (diaIndex) => {
+    const exists = turnosForm.find(t => t.dia_semana === diaIndex);
+    if (exists) {
+      setTurnosForm(turnosForm.filter(t => t.dia_semana !== diaIndex));
+    } else {
+      setTurnosForm([...turnosForm, { dia_semana: diaIndex, hora_inicio: '08:00', hora_fim: '18:00', ativo: true }]);
+    }
+  };
+
+  const updateTurnoHora = (diaIndex, field, value) => {
+    setTurnosForm(turnosForm.map(t => 
+      t.dia_semana === diaIndex ? { ...t, [field]: value } : t
+    ));
+  };
+
   // Funções para Extras/Dívidas
   const fetchExtras = useCallback(async () => {
     setExtrasLoading(true);
