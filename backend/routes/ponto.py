@@ -16,14 +16,16 @@ router = APIRouter(prefix="/ponto", tags=["Relógio de Ponto"])
 logger = logging.getLogger(__name__)
 db = get_database()
 
-# Configuração padrão de alertas
-DEFAULT_ALERTA_HORAS = 10  # 10 horas por defeito
+# Configuração padrão
+DEFAULT_HORAS_MAXIMAS = 10  # 10 horas por defeito
+DEFAULT_ESPACAMENTO_HORAS = 24  # 24 horas de espaçamento
 
 
 class CheckInRequest(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     hora: Optional[str] = None
+    matricula: Optional[str] = None  # Matrícula do veículo (opcional)
 
 
 class CheckOutRequest(BaseModel):
@@ -38,14 +40,105 @@ class PausaRequest(BaseModel):
 
 
 class DefinicoesPontoRequest(BaseModel):
-    alerta_horas_maximas: Optional[int] = None  # Horas máximas antes de alerta
-    permitir_edicao_registos: Optional[bool] = None  # Se motorista pode editar
+    alerta_horas_maximas: Optional[int] = None
+    espacamento_horas: Optional[int] = None  # Período de descanso obrigatório
 
 
 class EditarRegistoRequest(BaseModel):
     hora_inicio_real: str  # HH:MM
     hora_fim_real: str  # HH:MM
-    justificacao: str  # Motivo da edição
+    justificacao: str
+
+
+# ============ FUNÇÕES AUXILIARES ============
+
+async def calcular_horas_ultimas_24h(motorista_id: str) -> dict:
+    """
+    Calcula o tempo trabalhado nas últimas 24 horas (período rolante).
+    Retorna tempo trabalhado e se pode iniciar novo turno.
+    """
+    now = datetime.now(timezone.utc)
+    limite_24h = now - timedelta(hours=24)
+    
+    # Buscar todos os registos das últimas 24h
+    registos = await db.registos_ponto.find({
+        "user_id": motorista_id,
+        "check_in": {"$gte": limite_24h.isoformat()}
+    }, {"_id": 0}).to_list(100)
+    
+    total_minutos = 0
+    primeiro_check_in = None
+    
+    for reg in registos:
+        check_in = datetime.fromisoformat(reg["check_in"].replace("Z", "+00:00"))
+        
+        if primeiro_check_in is None or check_in < primeiro_check_in:
+            primeiro_check_in = check_in
+        
+        if reg.get("check_out"):
+            # Usar tempo editado se existir
+            tempo = reg.get("tempo_trabalho_minutos_editado") or reg.get("tempo_trabalho_minutos", 0)
+        else:
+            # Turno em curso
+            tempo = (now - check_in).total_seconds() / 60
+            pausas = reg.get("total_pausas_minutos", 0)
+            tempo -= pausas
+        
+        total_minutos += tempo
+    
+    return {
+        "total_minutos": int(total_minutos),
+        "total_formatado": f"{int(total_minutos // 60)}h {int(total_minutos % 60)}m",
+        "primeiro_check_in": primeiro_check_in.isoformat() if primeiro_check_in else None,
+        "registos_count": len(registos)
+    }
+
+
+async def verificar_pode_iniciar_turno(motorista_id: str) -> dict:
+    """
+    Verifica se o motorista pode iniciar um novo turno baseado nas regras:
+    - Horas máximas em 24h
+    - Espaçamento obrigatório após atingir o limite
+    """
+    # Buscar definições do motorista
+    definicoes = await db.definicoes_motorista.find_one(
+        {"motorista_id": motorista_id}, {"_id": 0}
+    )
+    
+    horas_maximas = definicoes.get("horas_maximas", DEFAULT_HORAS_MAXIMAS) if definicoes else DEFAULT_HORAS_MAXIMAS
+    espacamento = definicoes.get("espacamento_horas", DEFAULT_ESPACAMENTO_HORAS) if definicoes else DEFAULT_ESPACAMENTO_HORAS
+    
+    # Calcular horas nas últimas 24h
+    horas_24h = await calcular_horas_ultimas_24h(motorista_id)
+    total_minutos = horas_24h["total_minutos"]
+    limite_minutos = horas_maximas * 60
+    
+    # Verificar se excedeu o limite
+    if total_minutos >= limite_minutos:
+        # Verificar quando pode voltar a trabalhar
+        if horas_24h["primeiro_check_in"]:
+            primeiro = datetime.fromisoformat(horas_24h["primeiro_check_in"].replace("Z", "+00:00"))
+            pode_iniciar_em = primeiro + timedelta(hours=espacamento)
+            now = datetime.now(timezone.utc)
+            
+            if now < pode_iniciar_em:
+                tempo_restante = (pode_iniciar_em - now).total_seconds() / 60
+                return {
+                    "pode_iniciar": False,
+                    "motivo": "limite_atingido",
+                    "mensagem": f"Atingiu o limite de {horas_maximas}h. Pode iniciar novamente às {pode_iniciar_em.strftime('%H:%M')}",
+                    "tempo_restante_minutos": int(tempo_restante),
+                    "pode_iniciar_em": pode_iniciar_em.isoformat(),
+                    "horas_trabalhadas_24h": horas_24h["total_formatado"],
+                    "limite_horas": horas_maximas
+                }
+    
+    return {
+        "pode_iniciar": True,
+        "horas_trabalhadas_24h": horas_24h["total_formatado"],
+        "horas_restantes": f"{int((limite_minutos - total_minutos) // 60)}h {int((limite_minutos - total_minutos) % 60)}m",
+        "limite_horas": horas_maximas
+    }
 
 
 @router.get("/estado-atual")
