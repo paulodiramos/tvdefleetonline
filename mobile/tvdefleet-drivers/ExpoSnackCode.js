@@ -839,19 +839,21 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
   );
 };
 
-// Ecrã de Extras/Dívidas (Gestor/Parceiro) - MELHORADO
+// Ecrã de Extras/Dívidas (Gestor/Parceiro) - CORRIGIDO
 const ExtrasGestaoScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedMotorista, setSelectedMotorista] = useState(null);
-  const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
   const [extraForm, setExtraForm] = useState({ tipo: 'debito', descricao: '', valor: '', email: '' });
 
   const loadMotoristas = async () => {
     try {
       const data = await api.get('/motoristas/meus');
-      setMotoristas(data.motoristas || data || []);
+      // Filtrar apenas motoristas ativos
+      const lista = data.motoristas || data || [];
+      const ativos = lista.filter(m => m.status === 'ativo' || m.ativo !== false);
+      setMotoristas(ativos);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
@@ -860,9 +862,7 @@ const ExtrasGestaoScreen = ({ user }) => {
 
   const handleSelectMotorista = (m) => {
     setSelectedMotorista(m);
-    setExtraForm({ ...extraForm, email: m.email || '' });
-    setShowMotoristaPicker(false);
-    setShowModal(true);
+    setExtraForm({ tipo: 'debito', descricao: '', valor: '', email: m.email || '' });
   };
 
   const handleAddExtra = async () => {
@@ -889,85 +889,113 @@ const ExtrasGestaoScreen = ({ user }) => {
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
+  const handleVoltar = () => {
+    setSelectedMotorista(null);
+    setExtraForm({ tipo: 'debito', descricao: '', valor: '', email: '' });
+  };
+
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
+  // Se motorista selecionado, mostrar formulário de extra
+  if (selectedMotorista) {
+    return (
+      <ScrollView style={styles.screen}>
+        {/* Botão Voltar */}
+        <TouchableOpacity onPress={handleVoltar} style={{ marginBottom: 16 }}>
+          <Text style={styles.backBtn}>← Voltar</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.screenTitle}>💸 Adicionar Extra</Text>
+        
+        {/* Info do motorista selecionado */}
+        <View style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#3b82f6' }]}>
+          <Text style={styles.cardTitle}>{selectedMotorista.name || selectedMotorista.nome}</Text>
+          <Text style={styles.cardSubtitle}>{selectedMotorista.email || 'Sem email'}</Text>
+          {selectedMotorista.veiculo_matricula && (
+            <Text style={{ color: '#3b82f6', marginTop: 4 }}>🚗 {selectedMotorista.veiculo_matricula}</Text>
+          )}
+        </View>
+
+        {/* Tipo de Extra */}
+        <Text style={[styles.cardSubtitle, { marginBottom: 8 }]}>Tipo de movimento:</Text>
+        <View style={styles.tipoSelector}>
+          <TouchableOpacity 
+            style={[styles.tipoBtn, extraForm.tipo === 'debito' && styles.tipoBtnDebito]} 
+            onPress={() => setExtraForm({ ...extraForm, tipo: 'debito' })}
+          >
+            <Text style={styles.tipoBtnText}>➖ Débito</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tipoBtn, extraForm.tipo === 'credito' && styles.tipoBtnCredito]} 
+            onPress={() => setExtraForm({ ...extraForm, tipo: 'credito' })}
+          >
+            <Text style={styles.tipoBtnText}>➕ Crédito</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TextInput 
+          style={styles.input} 
+          placeholder="Descrição do extra" 
+          placeholderTextColor="#64748b"
+          value={extraForm.descricao}
+          onChangeText={(t) => setExtraForm({ ...extraForm, descricao: t })}
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Valor (€)" 
+          placeholderTextColor="#64748b"
+          keyboardType="numeric"
+          value={extraForm.valor}
+          onChangeText={(t) => setExtraForm({ ...extraForm, valor: t })}
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Email para notificação (opcional)" 
+          placeholderTextColor="#64748b"
+          keyboardType="email-address"
+          value={extraForm.email}
+          onChangeText={(t) => setExtraForm({ ...extraForm, email: t })}
+        />
+
+        <TouchableOpacity style={styles.btn} onPress={handleAddExtra}>
+          <Text style={styles.btnText}>Adicionar Extra</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  }
+
+  // Ecrã principal - apenas dropdown para selecionar motorista
   return (
     <ScrollView style={styles.screen}>
       <Text style={styles.screenTitle}>💸 Extras / Dívidas</Text>
-      <Text style={styles.cardSubtitle}>Adicionar débitos ou créditos aos motoristas</Text>
+      <Text style={styles.cardSubtitle}>Selecione um motorista para adicionar extras</Text>
 
-      {/* Botão para selecionar motorista via dropdown */}
-      <TouchableOpacity 
-        style={[styles.card, { backgroundColor: '#3b82f6', alignItems: 'center' }]} 
-        onPress={() => setShowMotoristaPicker(true)}
-      >
-        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>+ Adicionar Extra a Motorista</Text>
-      </TouchableOpacity>
-
-      {/* Lista de motoristas como referência rápida */}
-      <Text style={[styles.cardSubtitle, { marginTop: 16 }]}>Ou selecione da lista:</Text>
-      {motoristas.map(m => (
-        <TouchableOpacity key={m.id} style={styles.card} onPress={() => handleSelectMotorista(m)}>
-          <View style={styles.motoristaRow}>
-            <View>
-              <Text style={styles.cardTitle}>{m.name || m.nome}</Text>
-              <Text style={styles.cardSubtitle}>{m.email || 'Sem email'}</Text>
-            </View>
-            <Text style={styles.addBtn}>+ Adicionar</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
-
-      {/* Modal Picker de Motorista */}
-      <Modal visible={showMotoristaPicker} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
-            <Text style={styles.modalTitle}>Selecionar Motorista</Text>
-            <ScrollView>
-              {motoristas.map(m => (
-                <TouchableOpacity 
-                  key={m.id} 
-                  style={[styles.pickerItem, selectedMotorista?.id === m.id && styles.pickerItemSelected]}
-                  onPress={() => handleSelectMotorista(m)}
-                >
+      {/* Dropdown de motoristas ativos */}
+      <View style={[styles.card, { marginTop: 16 }]}>
+        <Text style={[styles.cardSubtitle, { marginBottom: 12 }]}>Motoristas Ativos ({motoristas.length}):</Text>
+        {motoristas.length === 0 ? (
+          <Text style={{ color: '#64748b', textAlign: 'center', padding: 20 }}>Nenhum motorista ativo</Text>
+        ) : (
+          motoristas.map(m => (
+            <TouchableOpacity 
+              key={m.id} 
+              style={[styles.pickerItem, { borderRadius: 8, marginBottom: 8, backgroundColor: '#1e293b' }]}
+              onPress={() => handleSelectMotorista(m)}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View>
                   <Text style={styles.pickerItemText}>{m.name || m.nome}</Text>
                   <Text style={styles.pickerItemSubtext}>{m.email || 'Sem email'}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowMotoristaPicker(false)}>
-              <Text style={styles.cancelBtnText}>Cancelar</Text>
+                </View>
+                <Text style={{ color: '#3b82f6', fontSize: 20 }}>→</Text>
+              </View>
             </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal para adicionar extra */}
-      <Modal visible={showModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Adicionar Extra</Text>
-            <Text style={styles.modalSubtitle}>{selectedMotorista?.name || selectedMotorista?.nome}</Text>
-            
-            <View style={styles.tipoSelector}>
-              <TouchableOpacity 
-                style={[styles.tipoBtn, extraForm.tipo === 'debito' && styles.tipoBtnDebito]} 
-                onPress={() => setExtraForm({ ...extraForm, tipo: 'debito' })}
-              >
-                <Text style={styles.tipoBtnText}>Débito (-)</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.tipoBtn, extraForm.tipo === 'credito' && styles.tipoBtnCredito]} 
-                onPress={() => setExtraForm({ ...extraForm, tipo: 'credito' })}
-              >
-                <Text style={styles.tipoBtnText}>Crédito (+)</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TextInput 
-              style={styles.input} 
-              placeholder="Descrição" 
-              placeholderTextColor="#64748b"
+          ))
+        )}
+      </View>
+    </ScrollView>
+  );
+};
               value={extraForm.descricao}
               onChangeText={(t) => setExtraForm({ ...extraForm, descricao: t })}
             />
