@@ -456,6 +456,11 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/minha-configuracao-uber" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🚗 Configuração Uber</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/configuracoes-parceiro?tab=sincronizacao" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>🔄 Sincronização Auto</span>
                         </Link>
