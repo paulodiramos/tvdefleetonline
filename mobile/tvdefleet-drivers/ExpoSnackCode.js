@@ -2004,7 +2004,53 @@ const VistoriasScreen = ({ user }) => {
           {step === 0 && user.role !== 'motorista' && (
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>👤 Selecionar Motorista</Text>
-              <Text style={styles.stepSubtitle}>Escolha o motorista e veículo para a vistoria</Text>
+              <Text style={styles.stepSubtitle}>Pesquise por matrícula ou escolha da lista</Text>
+              
+              {/* Campo de pesquisa por matrícula */}
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="🔍 Pesquisar por matrícula..."
+                  placeholderTextColor="#64748b"
+                  value={searchMatricula}
+                  onChangeText={setSearchMatricula}
+                  autoCapitalize="characters"
+                />
+                {/* Botão de OCR - Tirar foto da matrícula */}
+                <TouchableOpacity 
+                  style={styles.ocrBtn}
+                  onPress={async () => {
+                    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                    if (status !== 'granted') { Alert.alert('Erro', 'Permissão de câmara necessária'); return; }
+                    
+                    const result = await ImagePicker.launchCameraAsync({
+                      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                      quality: 0.8,
+                      base64: true,
+                    });
+                    
+                    if (!result.canceled && result.assets[0]) {
+                      // Enviar para OCR no backend
+                      try {
+                        Alert.alert('A processar', 'A ler matrícula da foto...');
+                        const ocrResult = await api.post('/vistorias/ocr-matricula', {
+                          imagem_base64: result.assets[0].base64
+                        });
+                        if (ocrResult.matricula) {
+                          setSearchMatricula(ocrResult.matricula);
+                          Alert.alert('Sucesso', `Matrícula lida: ${ocrResult.matricula}`);
+                        } else {
+                          Alert.alert('Aviso', 'Não foi possível ler a matrícula. Tente novamente ou escreva manualmente.');
+                        }
+                      } catch (e) {
+                        Alert.alert('Erro', 'Falha no reconhecimento. Escreva a matrícula manualmente.');
+                      }
+                    }
+                  }}
+                >
+                  <Text style={styles.ocrBtnText}>📷 OCR</Text>
+                </TouchableOpacity>
+              </View>
               
               {selectedMotorista ? (
                 <View style={styles.selectedMotoristaCard}>
