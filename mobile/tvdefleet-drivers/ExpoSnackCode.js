@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import Svg, { Path, Circle, G, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Path as SvgPath, Circle, G, Rect, Text as SvgText } from 'react-native-svg';
 
 const API_URL = 'https://fleet-inspect-11.preview.emergentagent.com/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
