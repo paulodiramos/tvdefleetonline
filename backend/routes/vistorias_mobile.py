@@ -93,6 +93,50 @@ async def get_minhas_vistorias(
     }
 
 
+class OcrMatriculaRequest(BaseModel):
+    imagem_base64: str
+
+
+@router.post("/ocr-matricula")
+async def ocr_matricula(
+    data: OcrMatriculaRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Fazer OCR de uma imagem para ler a matrícula do veículo"""
+    
+    try:
+        from services.vistoria_ia import ler_matricula_imagem
+        resultado = await ler_matricula_imagem(data.imagem_base64)
+        
+        matricula = resultado.get("matricula")
+        if matricula:
+            # Procurar veículo e motorista com esta matrícula
+            veiculo = await db.vehicles.find_one(
+                {"matricula": {"$regex": matricula.replace("-", "").replace(" ", ""), "$options": "i"}},
+                {"_id": 0, "id": 1, "matricula": 1}
+            )
+            
+            motorista = None
+            if veiculo:
+                motorista = await db.motoristas.find_one(
+                    {"veiculo_atribuido": veiculo["id"]},
+                    {"_id": 0, "id": 1, "name": 1, "email": 1, "veiculo_matricula": 1}
+                )
+            
+            return {
+                "matricula": matricula,
+                "confianca": resultado.get("confianca", 0),
+                "veiculo": veiculo,
+                "motorista": motorista
+            }
+        
+        return {"matricula": None, "confianca": 0, "message": "Não foi possível ler a matrícula"}
+        
+    except Exception as e:
+        logger.error(f"Erro no OCR: {e}")
+        return {"matricula": None, "error": str(e)}
+
+
 @router.get("/pendentes-aceitacao")
 async def listar_vistorias_pendentes_aceitacao(
     current_user: dict = Depends(get_current_user)
