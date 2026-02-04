@@ -226,3 +226,68 @@ async def eliminar_extra_motorista(
     except Exception as e:
         logger.error(f"Erro ao eliminar extra: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Endpoint simplificado para app móvel
+from pydantic import BaseModel
+
+class ExtraSimplificado(BaseModel):
+    motorista_id: str
+    tipo: str  # debito ou credito
+    descricao: str
+    valor: float
+
+
+@router.post("/adicionar")
+async def adicionar_extra_mobile(
+    data: ExtraSimplificado,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Endpoint simplificado para app móvel adicionar extras"""
+    try:
+        # Decode JWT
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get('user_id')
+        
+        user = await db.users.find_one({'id': user_id}, {'_id': 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="Utilizador não encontrado")
+        
+        if user['role'] not in ['admin', 'gestao', 'parceiro']:
+            raise HTTPException(status_code=403, detail="Sem permissão para adicionar extras")
+        
+        # Verificar motorista
+        motorista = await db.motoristas.find_one({'id': data.motorista_id})
+        if not motorista:
+            raise HTTPException(status_code=404, detail="Motorista não encontrado")
+        
+        now = datetime.now(timezone.utc)
+        extra_id = str(uuid.uuid4())
+        
+        extra_doc = {
+            'id': extra_id,
+            'motorista_id': data.motorista_id,
+            'parceiro_id': user_id if user['role'] == 'parceiro' else None,
+            'tipo': data.tipo,
+            'descricao': data.descricao,
+            'valor': data.valor if data.tipo == 'credito' else -abs(data.valor),
+            'data': now.strftime('%Y-%m-%d'),
+            'pago': False,
+            'created_by': user_id,
+            'created_at': now.isoformat()
+        }
+        
+        await db.extras_motorista.insert_one(extra_doc)
+        extra_doc.pop('_id', None)
+        
+        return {'success': True, 'id': extra_id, 'extra': extra_doc}
+        
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao adicionar extra: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
