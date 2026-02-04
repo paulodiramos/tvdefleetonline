@@ -1021,6 +1021,7 @@ const CATEGORIAS = [
 
 const TicketsScreen = ({ user }) => {
   const [tickets, setTickets] = useState([]);
+  const [vistoriasPendentes, setVistoriasPendentes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ titulo: '', categoria: 'esclarecimentos', descricao: '', fotos: [] });
@@ -1028,8 +1029,27 @@ const TicketsScreen = ({ user }) => {
   const [msg, setMsg] = useState('');
   const [showCategorias, setShowCategorias] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [vistoriaSelecionada, setVistoriaSelecionada] = useState(null);
+  const [activeSection, setActiveSection] = useState('tickets'); // 'tickets' ou 'vistorias'
 
-  useEffect(() => { (async () => { setTickets(await api.get('/tickets/meus')); setLoading(false); })(); }, []);
+  useEffect(() => { 
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const ticketsData = await api.get('/tickets/meus');
+      setTickets(ticketsData || []);
+      // Carregar vistorias pendentes de aceitação para motorista
+      if (user.role === 'motorista') {
+        try {
+          const vistoriasData = await api.get('/vistorias/pendentes-aceitacao');
+          setVistoriasPendentes(vistoriasData.vistorias || []);
+        } catch (e) { console.log('Sem vistorias pendentes'); }
+      }
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
 
   const tirarFoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
