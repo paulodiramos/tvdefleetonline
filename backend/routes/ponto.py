@@ -622,6 +622,19 @@ async def get_ganhos_semana(
     total_despesas = via_verde_total + combustivel_total + eletrico_total + valor_aluguer
     valor_liquido = total_ganhos - total_despesas
     
+    # Buscar status do recibo semanal
+    recibo = await db.recibos_semanais.find_one({
+        "motorista_id": motorista_id,
+        "semana": semana,
+        "ano": ano
+    }, {"_id": 0})
+    
+    recibo_status = "nao_enviado"
+    recibo_motivo = None
+    if recibo:
+        recibo_status = recibo.get("status", "pendente")
+        recibo_motivo = recibo.get("motivo_rejeicao")
+    
     return {
         "semana": semana,
         "ano": ano,
@@ -649,7 +662,9 @@ async def get_ganhos_semana(
         "veiculo": {
             "matricula": veiculo.get("matricula") if veiculo else None,
             "marca_modelo": f"{veiculo.get('marca')} {veiculo.get('modelo')}" if veiculo else None
-        } if veiculo else None
+        } if veiculo else None,
+        "recibo_status": recibo_status,
+        "recibo_motivo": recibo_motivo
     }
 
 
