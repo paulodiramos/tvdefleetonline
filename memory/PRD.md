@@ -845,21 +845,73 @@ Expansão da app móvel TVDEFleet Drivers com novas funcionalidades para motoris
 
 ---
 
+## ✅ Sistema de Vistorias Móveis com IA (04/02/2026)
+
+### Descrição
+Sistema completo de vistorias de veículos realizadas pelos motoristas na app móvel, com análise automática por IA (GPT-4 Vision) para deteção de danos e OCR de matrículas.
+
+### Backend Implementado
+- **Serviço de IA** (`/app/backend/services/vistoria_ia.py`):
+  - `analisar_danos_imagem()` - Analisa fotos e deteta danos
+  - `ler_matricula_imagem()` - OCR de matrículas portuguesas
+  - `comparar_vistorias()` - Compara com vistorias anteriores
+  - `gerar_relatorio_vistoria()` - Gera relatório formatado para WhatsApp
+
+- **Endpoints Mobile** (`/app/backend/routes/vistorias_mobile.py`):
+  - `POST /api/vistorias/criar` - Criar vistoria com análise IA
+  - `GET /api/vistorias/minhas` - Listar vistorias do motorista
+  - `GET /api/vistorias/{id}` - Detalhes da vistoria
+  - `GET /api/vistorias/pendentes/lista` - Pendentes para aprovação
+  - `GET /api/vistorias/todas` - Todas as vistorias
+  - `GET /api/vistorias/aprovadas` - Vistorias aprovadas
+  - `GET /api/vistorias/rejeitadas` - Vistorias rejeitadas
+  - `POST /api/vistorias/{id}/aprovar` - Aprovar vistoria
+  - `POST /api/vistorias/{id}/rejeitar` - Rejeitar vistoria
+
+### WebApp Implementada
+- **Página VistoriasMobile** (`/app/frontend/src/pages/VistoriasMobile.js`):
+  - Cards de estatísticas (Pendentes, Aprovadas, Rejeitadas, Total)
+  - Filtros por tabs e pesquisa por motorista/matrícula
+  - Lista de vistorias com detalhes
+  - Modal de detalhes com:
+    - Análise IA (danos detetados, OCR matrícula)
+    - Comparação com vistoria anterior
+    - Fotos do veículo
+    - Danos marcados manualmente
+    - Assinatura digital
+    - Ações de aprovação/rejeição
+
+### App Móvel
+- Interface completa em `ExpoSnackCode.js` com:
+  - Fluxo guiado de 5 passos
+  - Captura de fotos obrigatórias (frente, traseira, laterais, km, combustível)
+  - Diagrama interativo para marcar danos
+  - Campo de observações
+  - Assinatura digital
+  - Envio com análise IA automática
+
+### Menu
+- Veículos → Vistorias Móveis (`/vistorias-mobile`)
+
+---
+
 ## 📋 Tarefas Pendentes
 
 ### P0 - Críticas
-1. **Via Verde RPA - Filtragem de Datas**: Ainda não filtra por semana específica (descarrega tudo)
+1. ~~**Via Verde RPA - Filtragem de Datas**~~: ✅ Implementada filtragem via Pandas após download
 
 ### P1 - Importantes
-2. **UI Desativação de Motorista**: Adicionar botão e modal na página de motoristas
+2. ~~**UI Desativação de Motorista**~~: ✅ Já implementada na página de motoristas
 3. **API Uber**: Aguarda aprovação de scopes pela Uber
 
 ### P2 - Próximas
 4. **WebApp - Página de Tickets**: Interface para parceiros/admins gerirem tickets
 5. **WebApp - Histórico Documentos**: Visualizar histórico de documentos dos motoristas
-6. **Vistorias de Veículos na App Móvel**
+6. ~~**Vistorias de Veículos na App Móvel**~~: ✅ Implementado com IA
 
 ### Backlog
-- Integração Ifthenpay
-- Integração Moloni
+- Integração Ifthenpay (processamento real de pagamentos)
+- Integração Moloni (faturação automática)
 - Simulação CSV para Admins
+- Envio de relatórios de vistoria via WhatsApp
+- Perfil de "Inspetor" na webapp
