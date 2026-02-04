@@ -121,6 +121,11 @@ const PontoScreen = ({ user, status, setStatus }) => {
     try {
       const estado = await api.get('/ponto/estado-atual');
       setStatus(estado.ativo ? (estado.em_pausa ? 'paused' : 'working') : 'off');
+      if (estado.ativo && estado.inicio_turno) {
+        setTurnoStartTime(new Date(estado.inicio_turno).getTime());
+      } else {
+        setTurnoStartTime(null);
+      }
       const r = await api.get('/ponto/resumo-semanal');
       setResumo(r);
       const d = await api.get('/ponto/definicoes');
@@ -128,6 +133,30 @@ const PontoScreen = ({ user, status, setStatus }) => {
       const p = await api.get('/ponto/pode-iniciar');
       setPodeIniciar(p);
     } catch (e) { console.error(e); }
+  };
+
+  // Timer em tempo real
+  useEffect(() => {
+    if (status === 'working' && turnoStartTime) {
+      const updateTimer = () => {
+        const now = Date.now();
+        const elapsed = Math.floor((now - turnoStartTime) / 1000);
+        setCurrentTime(elapsed);
+      };
+      updateTimer();
+      timerRef.current = setInterval(updateTimer, 1000);
+    } else {
+      setCurrentTime(0);
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [status, turnoStartTime]);
+
+  const formatTimer = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const checkAlert = async () => {
