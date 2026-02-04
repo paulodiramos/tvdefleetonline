@@ -12641,6 +12641,7 @@ app.include_router(whatsapp_router, prefix="/api")
 # RPA Simplificado removido - usar apenas rpa_automacao e rpa_designer
 app.include_router(rpa_automacao_router, prefix="/api")
 app.include_router(rpa_designer_router, prefix="/api")
+app.include_router(rpa_uber_config_router, prefix="/api")
 app.include_router(credenciais_router, prefix="/api")
 app.include_router(admin_servicos_router, prefix="/api")
 app.include_router(importacao_rpa_router, prefix="/api")
