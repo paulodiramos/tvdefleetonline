@@ -3,17 +3,39 @@
 ## Visão Geral
 Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro, automações RPA, sistema de permissões granular, e **App Móvel para Motoristas**.
 
+## ✅ Extração CSV Rendimentos Uber (04/02/2026)
+
+### Funcionalidades Implementadas
+1. **Página ConfiguracaoUber.js atualizada**
+   - Dropdown para selecionar semana (atual, passada, 2-4 semanas atrás)
+   - Botão "Extrair Rendimentos Uber" 
+   - Exibição de resultados: total motoristas, valor total, lista detalhada
+   - Histórico das últimas 5 importações
+
+2. **Novo Endpoint Backend**
+   - `POST /api/rpa/uber/extrair-rendimentos/{parceiro_id}` 
+   - Parâmetros: data_inicio, data_fim, semana_index
+   - Navega para página Rendimentos, clica no botão "Fazer o download do relatório"
+   - Processa CSV e guarda na coleção `importacoes_uber`
+
+3. **Endpoint de Histórico**
+   - `GET /api/rpa/uber/historico/{parceiro_id}` - últimas 20 importações
+
+### Fluxo de Uso
+1. Admin acede a Configuração Uber
+2. Seleciona parceiro (ex: Conde Fernando)
+3. Faz login manual se sessão expirada
+4. Seleciona semana desejada
+5. Clica "Extrair Rendimentos Uber"
+6. Sistema navega no portal, descarrega CSV, processa dados
+7. Resultados mostrados na interface
+
 ## ✅ Correção Menu Configuração Uber (04/02/2026)
 
 ### Bug Corrigido
 - **Issue:** Link "Configuração Uber" não aparecia no menu admin
-- **Causa:** O link estava incorretamente colocado dentro da secção de parceiros com condição impossível (`user.role === 'parceiro'` E `user.role === 'admin'`)
-- **Solução:** Movido para a secção correta de admin em `Layout.js`, após "RPA Designer"
-
-### Estado Atual
-- ✅ Menu visível para utilizadores admin
-- ✅ Página `/configuracao-uber` carrega corretamente
-- ✅ Lista de parceiros com status de sessão exibida
+- **Causa:** O link estava incorretamente colocado dentro da secção de parceiros
+- **Solução:** Movido para a secção correta de admin em `Layout.js`
 
 ## Arquitetura
 - **Frontend Web**: React (porta 3000)
