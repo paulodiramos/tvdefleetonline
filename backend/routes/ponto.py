@@ -1296,7 +1296,7 @@ async def editar_registo_ponto(
 ):
     """
     Editar horários reais de um registo de ponto.
-    Apenas permitido se o parceiro autorizou esta funcionalidade.
+    AUTORIZADO por defeito - parceiro pode BLOQUEAR.
     """
     
     motorista_id = current_user["id"]
@@ -1314,10 +1314,10 @@ async def editar_registo_ponto(
     if not registo.get("check_out"):
         raise HTTPException(status_code=400, detail="Não é possível editar um turno em curso")
     
-    # Verificar se o parceiro autorizou edição
+    # Verificar se o parceiro BLOQUEOU a edição (por defeito é permitido)
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     
-    pode_editar = False
+    pode_editar = True  # Autorizado por defeito
     
     if motorista and motorista.get("parceiro_atribuido"):
         parceiro = await db.parceiros.find_one(
@@ -1325,12 +1325,13 @@ async def editar_registo_ponto(
             {"_id": 0}
         )
         if parceiro:
-            pode_editar = parceiro.get("permitir_edicao_ponto_motoristas", False)
+            # permitir_edicao_ponto: True = permitido (defeito), False = bloqueado
+            pode_editar = parceiro.get("permitir_edicao_ponto", True)
     
     if not pode_editar:
         raise HTTPException(
             status_code=403, 
-            detail="Edição de registos não autorizada pelo seu parceiro. Contacte o parceiro para solicitar esta permissão."
+            detail="O seu parceiro bloqueou a edição de registos."
         )
     
     # Validar horas
@@ -1339,10 +1340,6 @@ async def editar_registo_ponto(
         hora_fim = datetime.strptime(data.hora_fim_real, "%H:%M")
     except ValueError:
         raise HTTPException(status_code=400, detail="Formato de hora inválido. Use HH:MM")
-    
-    if hora_fim <= hora_inicio:
-        # Pode ser que o turno passou da meia-noite
-        pass
     
     # Calcular novo tempo de trabalho
     check_in_original = datetime.fromisoformat(registo["check_in"].replace("Z", "+00:00"))
