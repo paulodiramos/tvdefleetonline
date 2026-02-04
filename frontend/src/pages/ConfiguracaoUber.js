@@ -31,6 +31,12 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
   const [smsCode, setSmsCode] = useState('');
   const [executando, setExecutando] = useState(false);
   const [loginWindow, setLoginWindow] = useState(null);
+  
+  // Estados para extração de rendimentos
+  const [extraindo, setExtraindo] = useState(false);
+  const [semanaIndex, setSemanaIndex] = useState("0");
+  const [resultadoExtracao, setResultadoExtracao] = useState(null);
+  const [historico, setHistorico] = useState([]);
 
   useEffect(() => {
     fetchParceiros();
