@@ -400,6 +400,85 @@ async def criar_vistoria(
     }
 
 
+@router.get("/frota")
+async def listar_vistorias_frota(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar todas as vistorias da frota do parceiro com fotos e dados completos"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro", "inspetor"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    query = {}
+    
+    if current_user["role"] in ["parceiro", "inspetor"]:
+        # Buscar motoristas associados ao parceiro
+        if current_user["role"] == "parceiro":
+            parceiro_id = current_user["id"]
+        else:
+            # Inspetor - buscar parceiros associados
+            parceiros_associados = current_user.get("parceiros_associados", [])
+            if not parceiros_associados:
+                return {"vistorias": [], "total": 0}
+            parceiro_id = {"$in": parceiros_associados}
+        
+        motoristas = await db.motoristas.find(
+            {"parceiro_atribuido": parceiro_id},
+            {"_id": 0, "id": 1}
+        ).to_list(500)
+        motorista_ids = [m["id"] for m in motoristas]
+        query["motorista_id"] = {"$in": motorista_ids}
+    
+    vistorias = await db.vistorias_mobile.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    
+    resultado = []
+    for v in vistorias:
+        try:
+            created = datetime.fromisoformat(v.get("created_at", "").replace("Z", "+00:00"))
+            data_str = created.strftime("%d/%m/%Y %H:%M")
+        except:
+            data_str = v.get("created_at", "N/A")
+        
+        # Construir URLs completas das fotos
+        fotos_formatadas = {}
+        for foto_tipo, foto_data in v.get("fotos", {}).items():
+            if isinstance(foto_data, dict):
+                fotos_formatadas[foto_tipo] = {
+                    "url": foto_data.get("url", ""),
+                    "filename": foto_data.get("filename", "")
+                }
+        
+        resultado.append({
+            "id": v["id"],
+            "tipo": v.get("tipo"),
+            "status": v.get("status"),
+            "data": data_str,
+            "motorista_id": v.get("motorista_id"),
+            "motorista_nome": v.get("motorista_nome"),
+            "veiculo_id": v.get("veiculo_id"),
+            "veiculo_matricula": v.get("veiculo_matricula"),
+            "km": v.get("km"),
+            "nivel_combustivel": v.get("nivel_combustivel"),
+            "danos": v.get("danos", []),
+            "danos_ia": v.get("danos_ia", []),
+            "observacoes": v.get("observacoes"),
+            "fotos": fotos_formatadas,
+            "assinatura_url": v.get("assinatura_url"),
+            "inspetor_nome": v.get("inspetor_nome"),
+            "motorista_aceite": v.get("motorista_aceite"),
+            "motorista_aceite_em": v.get("motorista_aceite_em"),
+            "created_at": v.get("created_at")
+        })
+    
+    return {
+        "vistorias": resultado,
+        "total": len(resultado)
+    }
+
+
 @router.get("/{vistoria_id}")
 async def get_vistoria(
     vistoria_id: str,
