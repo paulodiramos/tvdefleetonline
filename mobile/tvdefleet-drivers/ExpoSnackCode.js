@@ -2959,9 +2959,10 @@ export default function App() {
       return null;
     }
     
-    // GESTOR/PARCEIRO: Vistorias, Recibos, Resumo, Extras, Alertas
+    // GESTOR/PARCEIRO: Vistorias, Frota, Resumo, Extras, Recibos
     if (role === 'gestao' || role === 'parceiro') {
       if (tab === 'vistorias') return <VistoriasScreen user={user} canCreate={true} />;
+      if (tab === 'frota') return <VistoriasFrotaScreen user={user} />;
       if (tab === 'recibos') return <RecibosGestaoScreen user={user} />;
       if (tab === 'resumo') return <ResumoSemanalGestaoScreen user={user} />;
       if (tab === 'extras') return <ExtrasGestaoScreen user={user} />;
