@@ -132,14 +132,14 @@ const getTabsForRole = (role) => {
       { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
     ];
   }
-  // Gestor/Parceiro: Vistorias (podem fazer), Recibos, Resumo Semanal, Extras, Alertas
+  // Gestor/Parceiro: Vistorias (podem fazer), Consulta Frota, Recibos, Resumo Semanal, Extras, Alertas
   if (role === 'gestao' || role === 'parceiro') {
     return [
-      { id: 'vistorias', icon: '🔍', label: 'Vistorias' },
-      { id: 'recibos', icon: '📄', label: 'Recibos' },
+      { id: 'vistorias', icon: '🔍', label: 'Nova' },
+      { id: 'frota', icon: '📋', label: 'Frota' },
       { id: 'resumo', icon: '📊', label: 'Resumo' },
       { id: 'extras', icon: '💸', label: 'Extras' },
-      { id: 'alertas', icon: '🔔', label: 'Alertas' },
+      { id: 'recibos', icon: '📄', label: 'Recibos' },
     ];
   }
   // Default para outros roles
