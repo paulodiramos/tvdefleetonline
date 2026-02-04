@@ -1132,8 +1132,8 @@ const Motoristas = ({ user, onLogout }) => {
           </>
         )}
 
-        {/* Detail Dialog */}
-        <Dialog open={showDetailDialog && selectedMotorista !== null} onOpenChange={(open) => {
+        {/* Detail Dialog - DESATIVADO, agora usa MotoristaDetailDialog */}
+        <Dialog open={false && showDetailDialog && selectedMotorista !== null} onOpenChange={(open) => {
           setShowDetailDialog(open);
           if (!open) {
             setIsEditing(false);
