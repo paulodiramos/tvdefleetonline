@@ -914,4 +914,54 @@ Sistema completo de vistorias de veículos realizadas pelos motoristas na app m�
 - Integração Moloni (faturação automática)
 - Simulação CSV para Admins
 - Envio de relatórios de vistoria via WhatsApp
-- Perfil de "Inspetor" na webapp
+
+---
+
+## ✅ Sistema de Perfis Múltiplos na App Móvel (04/02/2026)
+
+### Descrição
+App móvel agora suporta 4 perfis diferentes com funcionalidades específicas para cada um.
+
+### Perfis Implementados
+
+| Perfil | Tabs Disponíveis | Funcionalidades |
+|--------|-----------------|-----------------|
+| **Motorista** | Ponto, Turnos, Vistorias, Ganhos, Suporte | Consulta vistorias, aceita entrada/saída |
+| **Inspetor** | Vistorias | Apenas realiza vistorias de veículos |
+| **Gestor** | Vistorias, Recibos, Resumo, Extras, Alertas | Gestão completa + pode fazer vistorias |
+| **Parceiro** | Vistorias, Recibos, Resumo, Extras, Alertas | Gestão completa + pode fazer vistorias |
+
+### Backend - Gestão de Inspetores
+- **Endpoints** (`/app/backend/routes/inspetores.py`):
+  - `POST /api/inspetores/criar` - Criar inspetor
+  - `GET /api/inspetores/lista` - Listar inspetores
+  - `GET /api/inspetores/{id}` - Detalhes do inspetor
+  - `PUT /api/inspetores/{id}` - Atualizar inspetor
+  - `DELETE /api/inspetores/{id}` - Desativar inspetor
+
+### WebApp - Página de Inspetores
+- **Página** (`/app/frontend/src/pages/GestaoInspetores.js`):
+  - Cards de estatísticas
+  - Lista de inspetores com parceiros associados
+  - Modal para criar novo inspetor
+  - Detalhes e ações (ativar/desativar)
+  - Menu: Veículos → Inspetores
+
+### Regras de Associação
+- **Parceiro cria inspetor**: Associado apenas a esse parceiro
+- **Gestor cria inspetor**: Associado a TODOS os parceiros do gestor
+- **Admin**: Pode associar manualmente a qualquer parceiro
+
+### App Móvel - Novos Ecrãs (Gestor/Parceiro)
+- **RecibosGestaoScreen**: Verificar e aprovar/rejeitar recibos
+- **ResumoSemanalGestaoScreen**: Ver resumo e alterar estados
+- **ExtrasGestaoScreen**: Adicionar débitos/créditos aos motoristas
+- **AlertasGestaoScreen**: Ver alertas pendentes
+
+### Ficheiros Atualizados
+- `/app/backend/models/user.py` - Adicionado role INSPETOR
+- `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js` - TabBar dinâmica + novos ecrãs
+- `/app/frontend/public/ExpoSnackCode.txt` - Versão atualizada
+
+### Credenciais de Teste
+- **Inspetor**: inspetor1@teste.com / inspetor123
