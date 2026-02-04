@@ -895,10 +895,35 @@ Sistema completo de vistorias de veículos realizadas pelos motoristas na app m�
 
 ---
 
+## ✅ Correção de Bug - Ficheiro ponto.py (04/02/2026)
+
+### Problema
+O backend não iniciava devido a um erro de sintaxe no ficheiro `/app/backend/routes/ponto.py` - faltava fechar um parêntesis numa exceção HTTPException.
+
+### Correção
+- Corrigido `raise HTTPException` sem parêntesis de fecho na linha 1063-1066
+- Removido código duplicado órfão nas linhas 1289-1311
+
+### Verificação de Endpoints App Móvel
+Todos os endpoints necessários para a app móvel foram testados e estão funcionais:
+
+| Endpoint | Perfis | Status |
+|----------|--------|--------|
+| `GET /api/motoristas/meus` | inspetor, parceiro, gestor | ✅ OK |
+| `GET /api/ponto/parceiro/resumo-semanal` | parceiro, gestor | ✅ OK |
+| `GET /api/ponto/parceiro/recibos-pendentes` | parceiro, gestor | ✅ OK |
+| `POST /api/extras-motorista/adicionar` | parceiro, gestor | ✅ OK |
+| `GET /api/ponto/ganhos-semana` | motorista | ✅ OK |
+| `GET /api/vistorias/pendentes-aceitacao` | motorista | ✅ OK |
+| `POST /api/vistorias/criar` | inspetor, parceiro, gestor | ✅ OK |
+
+---
+
 ## 📋 Tarefas Pendentes
 
 ### P0 - Críticas
 1. ~~**Via Verde RPA - Filtragem de Datas**~~: ✅ Implementada filtragem via Pandas após download
+2. ~~**Endpoints App Móvel**~~: ✅ Todos os endpoints funcionais (04/02/2026)
 
 ### P1 - Importantes
 2. ~~**UI Desativação de Motorista**~~: ✅ Já implementada na página de motoristas
