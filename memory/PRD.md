@@ -1,12 +1,57 @@
 # TVDEFleet - Product Requirements Document
 
 ## Visão Geral
-Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro, automações RPA e sistema de permissões granular.
+Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro, automações RPA, sistema de permissões granular, e **App Móvel para Motoristas**.
 
 ## Arquitetura
-- **Frontend**: React (porta 3000)
+- **Frontend Web**: React (porta 3000)
 - **Backend**: FastAPI (porta 8001)
 - **Database**: MongoDB (`tvdefleet_db`)
+- **App Móvel**: React Native via Expo Snack (prototipagem)
+
+---
+
+## ✅ App Móvel TVDEFleet Drivers - EM DESENVOLVIMENTO (04/02/2026)
+
+### Descrição
+Aplicação móvel para motoristas TVDE com funcionalidades de relógio de ponto, ganhos, suporte e configurações.
+
+### Funcionalidades Implementadas
+1. **Relógio de Ponto**
+   - Check-in/Check-out com matrícula opcional
+   - Timer em tempo real (HH:MM:SS) durante turno
+   - Barra de progresso visual das 24h trabalhadas
+   - Sistema de pausas
+   - Histórico diário com navegação por data
+   - Edição de registos (com permissão do parceiro)
+   - Limite de horas em janela de 24h rolante
+   - Bloqueio automático ao atingir limite
+
+2. **Ganhos**
+   - Visualização semanal de ganhos (Uber/Bolt)
+   - Despesas (Via Verde, Combustível)
+   - Seletor de semanas
+
+3. **Suporte (Tickets)**
+   - Criação de tickets por categoria
+   - Botões rápidos para Acidente/Avaria
+   - Chat com mensagens
+
+4. **Configurações**
+   - Perfil do utilizador
+   - Limite de horas (configurável com permissão)
+   - Período de descanso
+   - Estado de permissões
+
+### Ficheiros
+- `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js` - Código fonte
+- `/app/frontend/public/ExpoSnackCode.txt` - Versão para copiar
+
+### Como Testar
+1. Aceder a: https://fleetmanager-38.preview.emergentagent.com/ExpoSnackCode.txt
+2. Copiar todo o conteúdo
+3. Colar em: https://snack.expo.dev
+4. Testar na preview ou no dispositivo
 
 ---
 
