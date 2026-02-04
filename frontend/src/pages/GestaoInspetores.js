@@ -77,6 +77,50 @@ const GestaoInspetores = ({ user, onLogout }) => {
     setSubmitting(false);
   };
 
+  const openEditDialog = (inspetor) => {
+    setSelectedInspetor(inspetor);
+    setEditData({
+      name: inspetor.name || '',
+      email: inspetor.email || '',
+      phone: inspetor.phone || '',
+      newPassword: ''
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleEdit = async () => {
+    if (!editData.name || !editData.email) {
+      toast.error('Nome e email são obrigatórios');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const updateData = {
+        name: editData.name,
+        email: editData.email,
+        phone: editData.phone
+      };
+      
+      // Se nova password foi fornecida, incluir
+      if (editData.newPassword && editData.newPassword.length >= 6) {
+        updateData.password = editData.newPassword;
+      }
+
+      await axios.put(`${API}/inspetores/${selectedInspetor.id}/editar`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Inspetor atualizado com sucesso');
+      setShowEditDialog(false);
+      setEditData({ name: '', email: '', phone: '', newPassword: '' });
+      fetchInspetores();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao atualizar inspetor');
+    }
+    setSubmitting(false);
+  };
+
   const handleToggleAtivo = async (inspetor) => {
     try {
       const token = localStorage.getItem('token');
