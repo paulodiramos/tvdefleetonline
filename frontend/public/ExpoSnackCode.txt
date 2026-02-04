@@ -1021,6 +1021,7 @@ const CATEGORIAS = [
 
 const TicketsScreen = ({ user }) => {
   const [tickets, setTickets] = useState([]);
+  const [vistoriasPendentes, setVistoriasPendentes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ titulo: '', categoria: 'esclarecimentos', descricao: '', fotos: [] });
@@ -1028,8 +1029,27 @@ const TicketsScreen = ({ user }) => {
   const [msg, setMsg] = useState('');
   const [showCategorias, setShowCategorias] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [vistoriaSelecionada, setVistoriaSelecionada] = useState(null);
+  const [activeSection, setActiveSection] = useState('tickets'); // 'tickets' ou 'vistorias'
 
-  useEffect(() => { (async () => { setTickets(await api.get('/tickets/meus')); setLoading(false); })(); }, []);
+  useEffect(() => { 
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const ticketsData = await api.get('/tickets/meus');
+      setTickets(ticketsData || []);
+      // Carregar vistorias pendentes de aceitação para motorista
+      if (user.role === 'motorista') {
+        try {
+          const vistoriasData = await api.get('/vistorias/pendentes-aceitacao');
+          setVistoriasPendentes(vistoriasData.vistorias || []);
+        } catch (e) { console.log('Sem vistorias pendentes'); }
+      }
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
 
   const tirarFoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -1124,6 +1144,109 @@ const TicketsScreen = ({ user }) => {
     </KeyboardAvoidingView>
   );
 
+  // Aceitar ou rejeitar vistoria
+  const handleAceitarVistoria = async (vistoriaId, aceitar) => {
+    try {
+      await api.post(`/vistorias/${vistoriaId}/confirmar-motorista`, { aceitar });
+      Alert.alert('Sucesso', aceitar ? 'Vistoria aceite!' : 'Vistoria rejeitada');
+      setVistoriaSelecionada(null);
+      loadData();
+    } catch (e) { Alert.alert('Erro', e.message); }
+  };
+
+  // Modal de detalhe da vistoria para aceitar
+  if (vistoriaSelecionada) {
+    return (
+      <ScrollView style={styles.screen}>
+        <TouchableOpacity onPress={() => setVistoriaSelecionada(null)}>
+          <Text style={styles.backBtn}>← Voltar</Text>
+        </TouchableOpacity>
+        
+        <Text style={styles.screenTitle}>📋 Relatório de Vistoria</Text>
+        <Text style={styles.vistoriaInfo}>
+          {vistoriaSelecionada.tipo === 'entrada' ? '📥 Entrada' : '📤 Saída'} - {vistoriaSelecionada.data}
+        </Text>
+        
+        {/* Info do Veículo */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>🚗 Veículo</Text>
+          <Text style={styles.vistoriaDetalhe}>Matrícula: {vistoriaSelecionada.veiculo_matricula || 'N/A'}</Text>
+          <Text style={styles.vistoriaDetalhe}>Quilometragem: {vistoriaSelecionada.km?.toLocaleString()} km</Text>
+          <Text style={styles.vistoriaDetalhe}>Combustível: {vistoriaSelecionada.nivel_combustivel}%</Text>
+        </View>
+        
+        {/* Danos Detetados */}
+        {vistoriaSelecionada.danos && vistoriaSelecionada.danos.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>⚠️ Danos Registados ({vistoriaSelecionada.danos.length})</Text>
+            {vistoriaSelecionada.danos.map((d, i) => (
+              <View key={i} style={styles.danoItem}>
+                <Text style={styles.danoTipo}>{d.tipo}</Text>
+                <Text style={styles.danoDesc}>{d.descricao || 'Sem descrição'}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        
+        {/* Análise IA */}
+        {vistoriaSelecionada.analise_ia && (
+          <View style={[styles.card, { borderLeftWidth: 3, borderLeftColor: '#8b5cf6' }]}>
+            <Text style={styles.cardTitle}>🤖 Análise Automática (IA)</Text>
+            {vistoriaSelecionada.analise_ia.danos_detetados?.length > 0 ? (
+              vistoriaSelecionada.analise_ia.danos_detetados.map((d, i) => (
+                <Text key={i} style={styles.vistoriaDetalhe}>• {d.tipo}: {d.descricao}</Text>
+              ))
+            ) : (
+              <Text style={[styles.vistoriaDetalhe, { color: '#22c55e' }]}>✅ Sem danos detetados</Text>
+            )}
+          </View>
+        )}
+        
+        {/* Observações */}
+        {vistoriaSelecionada.observacoes && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📝 Observações</Text>
+            <Text style={styles.vistoriaDetalhe}>{vistoriaSelecionada.observacoes}</Text>
+          </View>
+        )}
+        
+        {/* Inspetor */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>👤 Inspetor</Text>
+          <Text style={styles.vistoriaDetalhe}>{vistoriaSelecionada.inspetor_nome || 'N/A'}</Text>
+          <Text style={styles.vistoriaDetalhe}>{vistoriaSelecionada.created_at}</Text>
+        </View>
+        
+        {/* Botões de Ação */}
+        <View style={styles.vistoriaActions}>
+          <TouchableOpacity 
+            style={[styles.actionBtnLarge, { backgroundColor: '#ef4444' }]}
+            onPress={() => Alert.alert(
+              'Rejeitar Vistoria',
+              'Tem a certeza que deseja rejeitar esta vistoria? Será notificado o parceiro.',
+              [
+                { text: 'Cancelar', style: 'cancel' },
+                { text: 'Rejeitar', style: 'destructive', onPress: () => handleAceitarVistoria(vistoriaSelecionada.id, false) }
+              ]
+            )}
+          >
+            <Text style={styles.actionBtnLargeText}>✗ Rejeitar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.actionBtnLarge, { backgroundColor: '#22c55e' }]}
+            onPress={() => handleAceitarVistoria(vistoriaSelecionada.id, true)}
+          >
+            <Text style={styles.actionBtnLargeText}>✓ Aceitar</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <Text style={styles.aceitarAviso}>
+          Ao aceitar, confirma que concorda com os dados da vistoria. O relatório será enviado para o seu email.
+        </Text>
+      </ScrollView>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
@@ -1131,50 +1254,106 @@ const TicketsScreen = ({ user }) => {
         <TouchableOpacity style={styles.addBtn} onPress={() => setModal(true)}><Text style={styles.addBtnText}>+ Novo</Text></TouchableOpacity>
       </View>
       
-      {/* Botões Urgentes */}
-      <View style={styles.urgentBtns}>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ titulo: 'Acidente', categoria: 'acidente', descricao: '', fotos: [] }); setModal(true); }}>
-          <Text style={styles.urgentBtnText}>🚨 Acidente</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ titulo: 'Avaria', categoria: 'avaria', descricao: '', fotos: [] }); setModal(true); }}>
-          <Text style={styles.urgentBtnText}>🛠️ Avaria</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {/* Categorias Rápidas */}
-      <View style={styles.categoriasGrid}>
-        {CATEGORIAS.filter(c => !['acidente', 'avaria'].includes(c.id)).map(cat => (
+      {/* Tabs para Motorista: Vistorias Pendentes / Tickets */}
+      {user.role === 'motorista' && vistoriasPendentes.length > 0 && (
+        <View style={styles.sectionTabs}>
           <TouchableOpacity 
-            key={cat.id} 
-            style={[styles.categoriaQuick, { borderColor: cat.color }]}
-            onPress={() => { setForm({ ...form, categoria: cat.id }); setModal(true); }}
+            style={[styles.sectionTab, activeSection === 'vistorias' && styles.sectionTabActive]}
+            onPress={() => setActiveSection('vistorias')}
           >
-            <Text style={styles.categoriaQuickIcon}>{cat.icon}</Text>
-            <Text style={styles.categoriaQuickLabel}>{cat.label}</Text>
+            <Text style={[styles.sectionTabText, activeSection === 'vistorias' && styles.sectionTabTextActive]}>
+              🔍 Vistorias ({vistoriasPendentes.length})
+            </Text>
           </TouchableOpacity>
-        ))}
-      </View>
+          <TouchableOpacity 
+            style={[styles.sectionTab, activeSection === 'tickets' && styles.sectionTabActive]}
+            onPress={() => setActiveSection('tickets')}
+          >
+            <Text style={[styles.sectionTabText, activeSection === 'tickets' && styles.sectionTabTextActive]}>
+              🎫 Tickets ({tickets.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
       
-      {/* Lista de Tickets */}
-      <Text style={styles.ticketListTitle}>Meus Tickets</Text>
-      <ScrollView>
-        {tickets.length === 0 && <Text style={styles.emptyText}>Sem tickets</Text>}
-        {tickets.map(t => {
-          const cat = getCategoriaInfo(t.categoria);
-          return (
-            <TouchableOpacity key={t.id} style={styles.ticketCard} onPress={() => setSel(t)}>
-              <View style={styles.ticketHeader}>
-                <View style={[styles.ticketCategoria, { backgroundColor: cat.color }]}>
-                  <Text style={styles.ticketCategoriaText}>{cat.icon} {cat.label}</Text>
+      {/* Vistorias Pendentes de Aceitação */}
+      {user.role === 'motorista' && activeSection === 'vistorias' && vistoriasPendentes.length > 0 && (
+        <View style={styles.vistoriasPendentesSection}>
+          <Text style={styles.vistoriasPendentesTitle}>⚠️ Vistorias a Confirmar</Text>
+          <Text style={styles.vistoriasPendentesSubtitle}>Reveja e aceite as vistorias realizadas ao seu veículo</Text>
+          <ScrollView>
+            {vistoriasPendentes.map(v => (
+              <TouchableOpacity 
+                key={v.id} 
+                style={styles.vistoriaPendenteCard}
+                onPress={() => setVistoriaSelecionada(v)}
+              >
+                <View style={styles.vistoriaPendenteHeader}>
+                  <Text style={styles.vistoriaPendenteTipo}>
+                    {v.tipo === 'entrada' ? '📥 Entrada' : '📤 Saída'}
+                  </Text>
+                  <Text style={styles.vistoriaPendenteData}>{v.data}</Text>
                 </View>
-                <Text style={styles.ticketNumero}>#{t.numero}</Text>
-              </View>
-              <Text style={styles.ticketTitulo}>{t.titulo}</Text>
-              {t.tem_anexos && <Text style={styles.ticketAnexos}>📎 Com anexos</Text>}
+                <Text style={styles.vistoriaPendenteVeiculo}>🚗 {v.veiculo_matricula || 'Veículo'}</Text>
+                {v.danos && v.danos.length > 0 && (
+                  <Text style={styles.vistoriaPendenteDanos}>⚠️ {v.danos.length} dano(s) registado(s)</Text>
+                )}
+                <Text style={styles.vistoriaPendenteAction}>Toque para ver relatório →</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+      
+      {/* Conteúdo de Tickets (apenas se secção ativa for tickets ou não houver vistorias) */}
+      {(activeSection === 'tickets' || vistoriasPendentes.length === 0) && (
+        <>
+          {/* Botões Urgentes */}
+          <View style={styles.urgentBtns}>
+            <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ titulo: 'Acidente', categoria: 'acidente', descricao: '', fotos: [] }); setModal(true); }}>
+              <Text style={styles.urgentBtnText}>🚨 Acidente</Text>
             </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+            <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ titulo: 'Avaria', categoria: 'avaria', descricao: '', fotos: [] }); setModal(true); }}>
+              <Text style={styles.urgentBtnText}>🛠️ Avaria</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Categorias Rápidas */}
+          <View style={styles.categoriasGrid}>
+            {CATEGORIAS.filter(c => !['acidente', 'avaria'].includes(c.id)).map(cat => (
+              <TouchableOpacity 
+                key={cat.id} 
+                style={[styles.categoriaQuick, { borderColor: cat.color }]}
+                onPress={() => { setForm({ ...form, categoria: cat.id }); setModal(true); }}
+              >
+                <Text style={styles.categoriaQuickIcon}>{cat.icon}</Text>
+                <Text style={styles.categoriaQuickLabel}>{cat.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          
+          {/* Lista de Tickets */}
+          <Text style={styles.ticketListTitle}>Meus Tickets</Text>
+          <ScrollView>
+            {tickets.length === 0 && <Text style={styles.emptyText}>Sem tickets</Text>}
+            {tickets.map(t => {
+              const cat = getCategoriaInfo(t.categoria);
+              return (
+                <TouchableOpacity key={t.id} style={styles.ticketCard} onPress={() => setSel(t)}>
+                  <View style={styles.ticketHeader}>
+                    <View style={[styles.ticketCategoria, { backgroundColor: cat.color }]}>
+                      <Text style={styles.ticketCategoriaText}>{cat.icon} {cat.label}</Text>
+                    </View>
+                    <Text style={styles.ticketNumero}>#{t.numero}</Text>
+                  </View>
+                  <Text style={styles.ticketTitulo}>{t.titulo}</Text>
+                  {t.tem_anexos && <Text style={styles.ticketAnexos}>📎 Com anexos</Text>}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </>
+      )}
       
       {/* Modal Novo Ticket */}
       <Modal visible={modal} animationType="slide" transparent={true}>
@@ -1895,6 +2074,24 @@ const VistoriasScreen = ({ user }) => {
                   {v.total_danos > 0 ? `⚠️ ${v.total_danos} danos` : '✓ Sem danos'}
                 </Text>
               </View>
+              {/* Estado de aceitação do motorista */}
+              <View style={styles.vistoriaAceitacaoStatus}>
+                {v.motorista_aceite === true && (
+                  <View style={[styles.aceitacaoBadge, { backgroundColor: '#22c55e' }]}>
+                    <Text style={styles.aceitacaoBadgeText}>✓ Motorista Aceitou</Text>
+                  </View>
+                )}
+                {v.motorista_aceite === false && (
+                  <View style={[styles.aceitacaoBadge, { backgroundColor: '#ef4444' }]}>
+                    <Text style={styles.aceitacaoBadgeText}>✗ Motorista Rejeitou</Text>
+                  </View>
+                )}
+                {v.motorista_aceite === null || v.motorista_aceite === undefined && (
+                  <View style={[styles.aceitacaoBadge, { backgroundColor: '#f59e0b' }]}>
+                    <Text style={styles.aceitacaoBadgeText}>⏳ Aguarda Aceitação</Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           ))
         )}
@@ -2089,20 +2286,42 @@ export default function App() {
       return null;
     }
     
-    // MOTORISTA: Ponto, Turnos, Vistorias (consulta), Ganhos, Tickets
+    // MOTORISTA: Ponto, Turnos, Ganhos, Tickets (com vistorias pendentes)
     if (tab === 'ponto') return <PontoScreen user={user} status={status} setStatus={setStatus} />;
     if (tab === 'turnos') return <TurnosScreen user={user} />;
-    if (tab === 'vistorias') return <VistoriasScreen user={user} canCreate={false} />;
     if (tab === 'ganhos') return <GanhosScreen />;
     if (tab === 'tickets') return <TicketsScreen user={user} />;
     return null;
+  };
+
+  // Função de logout
+  const handleLogout = () => {
+    Alert.alert(
+      'Terminar Sessão',
+      'Tem a certeza que deseja sair?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sair', style: 'destructive', onPress: () => {
+          api.setToken(null);
+          setUser(null);
+          setStatus('off');
+          setDoNotDisturb(false);
+        }}
+      ]
+    );
   };
 
   return (
     <View style={styles.appContainer}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>TVDEFleet {getRoleTitle()}</Text>
-        {isMoving && <Text>📍</Text>}
+        <View style={styles.headerRight}>
+          {isMoving && <Text style={styles.gpsIndicator}>📍</Text>}
+          {doNotDisturb && <Text style={styles.dndIndicator}>🔕</Text>}
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+            <Text style={styles.logoutIcon}>🚪</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={{ flex: 1 }}>
         {renderScreen()}
@@ -2118,6 +2337,11 @@ const styles = StyleSheet.create({
   appContainer: { flex: 1, backgroundColor: '#0f172a' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingTop: 50, backgroundColor: '#1e293b' },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  gpsIndicator: { fontSize: 16 },
+  dndIndicator: { fontSize: 16 },
+  logoutBtn: { padding: 8 },
+  logoutIcon: { fontSize: 20 },
   container: { flex: 1, backgroundColor: '#0f172a' },
   loginBox: { flex: 1, justifyContent: 'center', padding: 24 },
   title: { fontSize: 32, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 8 },
@@ -2265,6 +2489,37 @@ const styles = StyleSheet.create({
   logoutBtn: { backgroundColor: '#ef4444', padding: 16, borderRadius: 12, marginTop: 16, alignItems: 'center' },
   logoutBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   emptyText: { color: '#64748b', textAlign: 'center', padding: 20 },
+  // Secção Tabs (Tickets/Vistorias)
+  sectionTabs: { flexDirection: 'row', marginBottom: 16, backgroundColor: '#1e293b', borderRadius: 12, padding: 4 },
+  sectionTab: { flex: 1, padding: 12, borderRadius: 10, alignItems: 'center' },
+  sectionTabActive: { backgroundColor: '#3b82f6' },
+  sectionTabText: { color: '#64748b', fontWeight: '600' },
+  sectionTabTextActive: { color: '#fff' },
+  // Vistorias Pendentes Motorista
+  vistoriasPendentesSection: { flex: 1 },
+  vistoriasPendentesTitle: { fontSize: 18, fontWeight: 'bold', color: '#f59e0b', marginBottom: 4 },
+  vistoriasPendentesSubtitle: { color: '#94a3b8', fontSize: 13, marginBottom: 16 },
+  vistoriaPendenteCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#f59e0b' },
+  vistoriaPendenteHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  vistoriaPendenteTipo: { color: '#fff', fontWeight: '600' },
+  vistoriaPendenteData: { color: '#64748b', fontSize: 12 },
+  vistoriaPendenteVeiculo: { color: '#94a3b8', marginBottom: 4 },
+  vistoriaPendenteDanos: { color: '#ef4444', fontSize: 13, marginBottom: 8 },
+  vistoriaPendenteAction: { color: '#3b82f6', fontSize: 13, fontWeight: '600' },
+  // Detalhe Vistoria para Aceitar
+  vistoriaInfo: { color: '#94a3b8', fontSize: 14, marginBottom: 16 },
+  vistoriaDetalhe: { color: '#fff', fontSize: 14, marginBottom: 4 },
+  danoItem: { backgroundColor: '#0f172a', padding: 12, borderRadius: 8, marginBottom: 8 },
+  danoTipo: { color: '#f59e0b', fontWeight: '600', marginBottom: 4 },
+  danoDesc: { color: '#94a3b8', fontSize: 13 },
+  vistoriaActions: { flexDirection: 'row', gap: 12, marginTop: 20 },
+  actionBtnLarge: { flex: 1, padding: 16, borderRadius: 12, alignItems: 'center' },
+  actionBtnLargeText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  aceitarAviso: { color: '#64748b', fontSize: 12, textAlign: 'center', marginTop: 16, marginBottom: 32 },
+  // Estado Aceitação na lista
+  vistoriaAceitacaoStatus: { marginTop: 8 },
+  aceitacaoBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start' },
+  aceitacaoBadgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
   modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
