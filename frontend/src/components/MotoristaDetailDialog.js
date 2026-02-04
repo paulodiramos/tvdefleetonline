@@ -7,8 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { FileText, Download, UserCircle, Shield, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Download, UserCircle, Shield, AlertCircle, CheckCircle, Clock, Calendar, Settings, Car } from 'lucide-react';
+
+const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
 const MotoristaDetailDialog = ({ open, onClose, motoristaId, userRole }) => {
   const [motorista, setMotorista] = useState(null);
@@ -17,10 +21,24 @@ const MotoristaDetailDialog = ({ open, onClose, motoristaId, userRole }) => {
   const [editValue, setEditValue] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [editingObservacoes, setEditingObservacoes] = useState(false);
+  
+  // Estados para novas funcionalidades
+  const [configApp, setConfigApp] = useState(null);
+  const [dadosPonto, setDadosPonto] = useState(null);
+  const [turnos, setTurnos] = useState(null);
+  const [veiculos, setVeiculos] = useState([]);
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [savingTurnos, setSavingTurnos] = useState(false);
+  const [turnosForm, setTurnosForm] = useState([]);
+  const [turnoVeiculoId, setTurnoVeiculoId] = useState('');
 
   useEffect(() => {
     if (open && motoristaId) {
       fetchMotoristaData();
+      fetchConfigApp();
+      fetchDadosPonto();
+      fetchTurnos();
+      fetchVeiculos();
     }
   }, [open, motoristaId]);
 
