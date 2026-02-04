@@ -1408,15 +1408,91 @@ async def get_historico_edicoes(
     }
 
 
-# ============ AUTORIZAÇÃO DE EDIÇÃO (PARA PARCEIROS) ============
+# ============ CONFIGURAÇÕES DO PARCEIRO ============
 
+class ConfiguracoesPontoParceiroRequest(BaseModel):
+    permitir_edicao_ponto: Optional[bool] = None  # Permitir motoristas editarem registos (default: True)
+    permitir_alterar_horas_maximas: Optional[bool] = None  # Permitir motoristas alterarem limite de horas (default: False)
+    permitir_alterar_espacamento: Optional[bool] = None  # Permitir motoristas alterarem período de descanso (default: False)
+    horas_maximas_motoristas: Optional[int] = None  # Definir limite de horas para todos os motoristas
+
+
+@router.get("/parceiro/configuracoes")
+async def get_configuracoes_parceiro(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter configurações de ponto do parceiro"""
+    
+    if current_user["role"] != "parceiro":
+        raise HTTPException(status_code=403, detail="Apenas parceiros")
+    
+    parceiro = await db.parceiros.find_one({"id": current_user["id"]}, {"_id": 0})
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    return {
+        "permitir_edicao_ponto": parceiro.get("permitir_edicao_ponto", True),  # Default: permitido
+        "permitir_alterar_horas_maximas": parceiro.get("permitir_alterar_horas_maximas", False),  # Default: bloqueado
+        "permitir_alterar_espacamento": parceiro.get("permitir_alterar_espacamento", False),  # Default: bloqueado
+        "horas_maximas_motoristas": parceiro.get("horas_maximas_motoristas", DEFAULT_HORAS_MAXIMAS)
+    }
+
+
+@router.post("/parceiro/configuracoes")
+async def atualizar_configuracoes_parceiro(
+    data: ConfiguracoesPontoParceiroRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Parceiro configura permissões de ponto para os seus motoristas.
+    
+    - permitir_edicao_ponto: True (default) permite, False bloqueia
+    - permitir_alterar_horas_maximas: False (default) bloqueia, True permite
+    - permitir_alterar_espacamento: False (default) bloqueia, True permite
+    """
+    
+    if current_user["role"] != "parceiro":
+        raise HTTPException(status_code=403, detail="Apenas parceiros")
+    
+    parceiro_id = current_user["id"]
+    now = datetime.now(timezone.utc)
+    
+    update_data = {"updated_at": now.isoformat()}
+    
+    if data.permitir_edicao_ponto is not None:
+        update_data["permitir_edicao_ponto"] = data.permitir_edicao_ponto
+    
+    if data.permitir_alterar_horas_maximas is not None:
+        update_data["permitir_alterar_horas_maximas"] = data.permitir_alterar_horas_maximas
+    
+    if data.permitir_alterar_espacamento is not None:
+        update_data["permitir_alterar_espacamento"] = data.permitir_alterar_espacamento
+    
+    if data.horas_maximas_motoristas is not None:
+        if data.horas_maximas_motoristas < 1 or data.horas_maximas_motoristas > 24:
+            raise HTTPException(status_code=400, detail="Horas máximas deve ser entre 1 e 24")
+        update_data["horas_maximas_motoristas"] = data.horas_maximas_motoristas
+    
+    await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": update_data}
+    )
+    
+    logger.info(f"Configurações de ponto atualizadas pelo parceiro {parceiro_id}")
+    
+    return {"success": True, "message": "Configurações atualizadas"}
+
+
+# Endpoint legacy para compatibilidade
 @router.post("/parceiro/autorizar-edicao")
 async def autorizar_edicao_motoristas(
     autorizar: bool,
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Parceiro autoriza ou desautoriza os seus motoristas a editarem registos de ponto.
+    Parceiro autoriza ou BLOQUEIA os seus motoristas de editarem registos de ponto.
+    (Por defeito é autorizado - este endpoint serve para BLOQUEAR)
     """
     
     if current_user["role"] != "parceiro":
@@ -1427,12 +1503,12 @@ async def autorizar_edicao_motoristas(
     await db.parceiros.update_one(
         {"id": parceiro_id},
         {"$set": {
-            "permitir_edicao_ponto_motoristas": autorizar,
+            "permitir_edicao_ponto": autorizar,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
     
-    estado = "autorizada" if autorizar else "desautorizada"
+    estado = "permitida" if autorizar else "bloqueada"
     logger.info(f"Edição de ponto {estado} pelo parceiro {parceiro_id}")
     
     return {
