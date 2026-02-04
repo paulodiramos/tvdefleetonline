@@ -1654,9 +1654,9 @@ export default function App() {
       <View style={{ flex: 1 }}>
         {tab === 'ponto' && <PontoScreen user={user} status={status} setStatus={setStatus} />}
         {tab === 'turnos' && <TurnosScreen user={user} />}
+        {tab === 'vistorias' && <VistoriasScreen user={user} />}
         {tab === 'ganhos' && <GanhosScreen />}
         {tab === 'tickets' && <TicketsScreen user={user} />}
-        {tab === 'config' && <ConfigScreen user={user} onLogout={() => { setUser(null); api.setToken(null); }} />}
       </View>
       <TabBar activeTab={tab} onTabChange={setTab} />
       <GPSPopup visible={gps.visible} type={gps.type} onYes={() => handleGPS(true)} onNo={() => handleGPS(false)} />
