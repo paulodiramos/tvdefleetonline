@@ -516,7 +516,7 @@ const GanhosScreen = () => {
   const enviarRecibo = async () => {
     setEnviandoRecibo(true);
     try {
-      await api.post('/documentos/recibo-semanal', { 
+      await api.post('/documentos-motorista/recibo-semanal', { 
         semana: sel.semana, 
         ano: sel.ano,
         valor_liquido: ganhos.valor_liquido
