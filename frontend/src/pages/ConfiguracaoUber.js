@@ -10,8 +10,16 @@ import { toast } from 'sonner';
 import { 
   Car, Settings, CheckCircle, AlertCircle, RefreshCw, 
   Key, Clock, User, Building, ExternalLink, Loader2,
-  Shield, Smartphone, Lock
+  Shield, Smartphone, Lock, Download, Calendar, FileText, 
+  DollarSign, Users, TrendingUp
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ConfiguracaoUber = ({ user, onLogout }) => {
   const [parceiros, setParceiros] = useState([]);
