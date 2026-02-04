@@ -2079,10 +2079,12 @@ const VistoriasScreen = ({ user }) => {
                 </View>
               ) : (
                 <View style={styles.motoristasListContainer}>
-                  {motoristas.length === 0 ? (
-                    <Text style={styles.noMotoristasText}>Nenhum motorista encontrado</Text>
+                  {motoristasFiltrados.length === 0 ? (
+                    <Text style={styles.noMotoristasText}>
+                      {searchMatricula ? 'Nenhum veículo encontrado com essa matrícula' : 'Nenhum motorista encontrado'}
+                    </Text>
                   ) : (
-                    motoristas.map(m => (
+                    motoristasFiltrados.map(m => (
                       <TouchableOpacity 
                         key={m.id} 
                         style={styles.motoristaSelectCard}
