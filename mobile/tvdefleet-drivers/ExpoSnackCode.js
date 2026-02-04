@@ -1,17 +1,20 @@
-// TVDEFleet Drivers - App Móvel v6
-// COM: Período 24h rolante, permissões parceiro, matrícula opcional, fotos tickets, turnos
+// TVDEFleet Drivers - App Móvel v7
+// COM: Vistorias tipo WeProov, período 24h rolante, permissões, fotos tickets, turnos
 // Cole este código em https://snack.expo.dev
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
   Alert, ScrollView, ActivityIndicator, RefreshControl,
-  Modal, Platform, KeyboardAvoidingView, Vibration, Image
+  Modal, Platform, KeyboardAvoidingView, Vibration, Image,
+  Dimensions, PanResponder
 } from 'react-native';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
+import Svg, { Path, Circle, G, Rect, Text as SvgText } from 'react-native-svg';
 
 const API_URL = 'https://fleetmanager-38.preview.emergentagent.com/api';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ===== API SERVICE =====
 const api = {
