@@ -634,13 +634,16 @@ const RecibosGestaoScreen = ({ user }) => {
   );
 };
 
-// Ecrã de Resumo Semanal (Gestor/Parceiro) - CORRIGIDO
+// Ecrã de Resumo Semanal (Gestor/Parceiro) - COM DASHBOARD E DROPDOWN
 const ResumoSemanalGestaoScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [semana, setSemana] = useState(null);
   const [ano, setAno] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [totais, setTotais] = useState({ uber: 0, bolt: 0, viaverde: 0, abastecimentos: 0, extras: 0, liquido: 0 });
+  const [selectedMotorista, setSelectedMotorista] = useState(null);
+  const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -654,7 +657,25 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
     if (!semana || !ano) return;
     try {
       const data = await api.get(`/ponto/parceiro/resumo-semanal?semana=${semana}&ano=${ano}`);
-      setMotoristas(data.motoristas || []);
+      const lista = data.motoristas || [];
+      setMotoristas(lista);
+      
+      // Calcular totais da empresa
+      const totalUber = lista.reduce((acc, m) => acc + (m.ganhos_uber || 0), 0);
+      const totalBolt = lista.reduce((acc, m) => acc + (m.ganhos_bolt || 0), 0);
+      const totalViaVerde = lista.reduce((acc, m) => acc + (m.via_verde || 0), 0);
+      const totalAbastecimentos = lista.reduce((acc, m) => acc + (m.abastecimentos || 0), 0);
+      const totalExtras = lista.reduce((acc, m) => acc + (m.extras || 0), 0);
+      const totalLiquido = lista.reduce((acc, m) => acc + (m.liquido || 0), 0);
+      
+      setTotais({
+        uber: totalUber,
+        bolt: totalBolt,
+        viaverde: totalViaVerde,
+        abastecimentos: totalAbastecimentos,
+        extras: totalExtras,
+        liquido: totalLiquido
+      });
     } catch (e) { console.error('Erro ao carregar resumo:', e); }
     setLoading(false);
   };
@@ -669,6 +690,20 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
+  const getEstadoIcon = (estado) => {
+    switch (estado) {
+      case 'pendente': return '⏳';
+      case 'pago': return '💰';
+      case 'confirmado': return '✅';
+      default: return '📭';
+    }
+  };
+
+  // Filtrar motoristas se um estiver selecionado
+  const motoristasFiltrados = selectedMotorista 
+    ? motoristas.filter(m => m.id === selectedMotorista.id)
+    : motoristas;
+
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
   return (
@@ -682,9 +717,83 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
         <TouchableOpacity onPress={() => { setSemana(s => s < 52 ? s + 1 : 1); if (semana === 52) setAno(a => a + 1); }} style={styles.semanaBtn}><Text style={styles.semanaBtnText}>→</Text></TouchableOpacity>
       </View>
 
-      {motoristas.length === 0 ? (
+      {/* Dashboard Total da Empresa */}
+      <View style={[styles.card, { backgroundColor: '#1e293b', borderLeftWidth: 4, borderLeftColor: '#3b82f6' }]}>
+        <Text style={[styles.cardTitle, { color: '#fff', marginBottom: 12 }]}>🏢 Total da Empresa</Text>
+        <View style={styles.dashboardGrid}>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Uber</Text>
+            <Text style={[styles.dashboardValue, { color: '#22c55e' }]}>€{totais.uber.toFixed(2)}</Text>
+          </View>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Bolt</Text>
+            <Text style={[styles.dashboardValue, { color: '#22c55e' }]}>€{totais.bolt.toFixed(2)}</Text>
+          </View>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Via Verde</Text>
+            <Text style={[styles.dashboardValue, { color: '#ef4444' }]}>-€{totais.viaverde.toFixed(2)}</Text>
+          </View>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Abastecimentos</Text>
+            <Text style={[styles.dashboardValue, { color: '#ef4444' }]}>-€{totais.abastecimentos.toFixed(2)}</Text>
+          </View>
+          <View style={styles.dashboardItem}>
+            <Text style={styles.dashboardLabel}>Extras</Text>
+            <Text style={[styles.dashboardValue, { color: totais.extras >= 0 ? '#22c55e' : '#ef4444' }]}>
+              {totais.extras >= 0 ? '+' : ''}€{totais.extras.toFixed(2)}
+            </Text>
+          </View>
+          <View style={[styles.dashboardItem, { borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 8 }]}>
+            <Text style={[styles.dashboardLabel, { fontWeight: 'bold' }]}>LÍQUIDO</Text>
+            <Text style={[styles.dashboardValue, { color: '#3b82f6', fontSize: 20, fontWeight: 'bold' }]}>€{totais.liquido.toFixed(2)}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Dropdown para filtrar por motorista */}
+      <TouchableOpacity 
+        style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+        onPress={() => setShowMotoristaPicker(true)}
+      >
+        <Text style={styles.cardTitle}>
+          {selectedMotorista ? `👤 ${selectedMotorista.nome}` : '👥 Todos os Motoristas'}
+        </Text>
+        <Text style={{ color: '#3b82f6' }}>▼ Filtrar</Text>
+      </TouchableOpacity>
+
+      {/* Modal Picker de Motorista */}
+      <Modal visible={showMotoristaPicker} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+            <Text style={styles.modalTitle}>Filtrar por Motorista</Text>
+            <ScrollView>
+              <TouchableOpacity 
+                style={[styles.pickerItem, !selectedMotorista && styles.pickerItemSelected]}
+                onPress={() => { setSelectedMotorista(null); setShowMotoristaPicker(false); }}
+              >
+                <Text style={styles.pickerItemText}>👥 Todos os Motoristas</Text>
+              </TouchableOpacity>
+              {motoristas.map(m => (
+                <TouchableOpacity 
+                  key={m.id} 
+                  style={[styles.pickerItem, selectedMotorista?.id === m.id && styles.pickerItemSelected]}
+                  onPress={() => { setSelectedMotorista(m); setShowMotoristaPicker(false); }}
+                >
+                  <Text style={styles.pickerItemText}>{m.nome}</Text>
+                  <Text style={styles.pickerItemSubtext}>{getEstadoIcon(m.estado)} {m.estado || 'sem_dados'}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowMotoristaPicker(false)}>
+              <Text style={styles.cancelBtnText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {motoristasFiltrados.length === 0 ? (
         <View style={styles.emptyState}><Text style={styles.emptyText}>Sem motoristas associados</Text></View>
-      ) : motoristas.map(m => (
+      ) : motoristasFiltrados.map(m => (
         <View key={m.id} style={styles.card}>
           <Text style={styles.cardTitle}>{m.nome}</Text>
           <Text style={styles.cardSubtitle}>{m.email}</Text>
@@ -701,11 +810,21 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
             <Text style={[styles.resumoValue, { color: '#ef4444' }]}>-€{m.via_verde?.toFixed(2) || '0.00'}</Text>
           </View>
           <View style={styles.resumoRow}>
-            <Text style={styles.resumoLabel}>Líquido:</Text>
-            <Text style={[styles.resumoValue, { color: '#22c55e', fontWeight: 'bold' }]}>€{m.liquido?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.resumoLabel}>Abastecimentos:</Text>
+            <Text style={[styles.resumoValue, { color: '#ef4444' }]}>-€{m.abastecimentos?.toFixed(2) || '0.00'}</Text>
+          </View>
+          <View style={styles.resumoRow}>
+            <Text style={styles.resumoLabel}>Extras:</Text>
+            <Text style={[styles.resumoValue, { color: (m.extras || 0) >= 0 ? '#22c55e' : '#ef4444' }]}>
+              {(m.extras || 0) >= 0 ? '+' : ''}€{m.extras?.toFixed(2) || '0.00'}
+            </Text>
+          </View>
+          <View style={[styles.resumoRow, { borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 8, marginTop: 8 }]}>
+            <Text style={[styles.resumoLabel, { fontWeight: 'bold' }]}>Líquido:</Text>
+            <Text style={[styles.resumoValue, { color: '#22c55e', fontWeight: 'bold', fontSize: 18 }]}>€{m.liquido?.toFixed(2) || '0.00'}</Text>
           </View>
           <View style={styles.estadoRow}>
-            <Text style={styles.estadoLabel}>Estado: {m.estado === 'sem_dados' ? '📭 Sem dados' : m.estado}</Text>
+            <Text style={styles.estadoLabel}>{getEstadoIcon(m.estado)} Estado: {m.estado || 'sem_dados'}</Text>
             <View style={styles.estadoBtns}>
               {['pendente', 'pago', 'confirmado'].map(e => (
                 <TouchableOpacity key={e} style={[styles.estadoBtn, m.estado === e && styles.estadoBtnActive]} onPress={() => handleAlterarEstado(m.id, e)}>
