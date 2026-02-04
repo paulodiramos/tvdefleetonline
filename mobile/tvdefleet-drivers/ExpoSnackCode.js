@@ -2089,20 +2089,42 @@ export default function App() {
       return null;
     }
     
-    // MOTORISTA: Ponto, Turnos, Vistorias (consulta), Ganhos, Tickets
+    // MOTORISTA: Ponto, Turnos, Ganhos, Tickets (com vistorias pendentes)
     if (tab === 'ponto') return <PontoScreen user={user} status={status} setStatus={setStatus} />;
     if (tab === 'turnos') return <TurnosScreen user={user} />;
-    if (tab === 'vistorias') return <VistoriasScreen user={user} canCreate={false} />;
     if (tab === 'ganhos') return <GanhosScreen />;
     if (tab === 'tickets') return <TicketsScreen user={user} />;
     return null;
+  };
+
+  // Função de logout
+  const handleLogout = () => {
+    Alert.alert(
+      'Terminar Sessão',
+      'Tem a certeza que deseja sair?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sair', style: 'destructive', onPress: () => {
+          api.setToken(null);
+          setUser(null);
+          setStatus('off');
+          setDoNotDisturb(false);
+        }}
+      ]
+    );
   };
 
   return (
     <View style={styles.appContainer}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>TVDEFleet {getRoleTitle()}</Text>
-        {isMoving && <Text>📍</Text>}
+        <View style={styles.headerRight}>
+          {isMoving && <Text style={styles.gpsIndicator}>📍</Text>}
+          {doNotDisturb && <Text style={styles.dndIndicator}>🔕</Text>}
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+            <Text style={styles.logoutIcon}>🚪</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={{ flex: 1 }}>
         {renderScreen()}
