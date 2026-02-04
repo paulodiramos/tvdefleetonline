@@ -117,23 +117,22 @@ const LoginScreen = ({ onLogin }) => {
 
 // ===== TAB BAR DINÂMICA =====
 const getTabsForRole = (role) => {
-  // Motorista: Ponto, Turnos, Vistorias (consulta), Ganhos, Suporte
+  // Motorista: Ponto, Turnos, Ganhos, Suporte (SEM VISTORIAS - apenas consulta na webapp)
   if (role === 'motorista') {
     return [
       { id: 'ponto', icon: '⏱️', label: 'Ponto' }, 
       { id: 'turnos', icon: '📅', label: 'Turnos' },
-      { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
       { id: 'ganhos', icon: '💰', label: 'Ganhos' }, 
       { id: 'tickets', icon: '🎫', label: 'Suporte' }, 
     ];
   }
-  // Inspetor: Apenas Vistorias (fazer)
+  // Inspetor: Apenas Vistorias (fazer até ao final)
   if (role === 'inspetor') {
     return [
       { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
     ];
   }
-  // Gestor/Parceiro: Vistorias, Recibos, Resumo Semanal, Extras, Alertas, Ganhos
+  // Gestor/Parceiro: Vistorias (podem fazer), Recibos, Resumo Semanal, Extras, Alertas
   if (role === 'gestao' || role === 'parceiro') {
     return [
       { id: 'vistorias', icon: '🔍', label: 'Vistorias' },
@@ -145,7 +144,7 @@ const getTabsForRole = (role) => {
   }
   // Default para outros roles
   return [
-    { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
+    { id: 'ponto', icon: '⏱️', label: 'Ponto' },
   ];
 };
 
