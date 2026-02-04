@@ -417,13 +417,17 @@ const PontoScreen = ({ user, status, setStatus }) => {
             <ScrollView style={{ maxHeight: 400 }}>
               {diaRegistos?.registos?.length === 0 && <Text style={styles.emptyText}>Sem registos</Text>}
               {diaRegistos?.registos?.map((reg, idx) => (
-                <View key={idx} style={styles.registoItem}>
+                <View key={idx} style={[styles.registoItem, reg.tipo === 'pessoal' && styles.registoItemPessoal]}>
                   <View style={styles.registoHeader}>
                     <Text style={styles.registoHoras}>{reg.hora_inicio} - {reg.hora_fim}</Text>
+                    {reg.tipo === 'pessoal' && <View style={[styles.badge, styles.badgePessoal]}><Text style={styles.badgeText}>Pessoal</Text></View>}
                     {reg.editado && <View style={styles.badge}><Text style={styles.badgeText}>Editado</Text></View>}
                     {reg.matricula && <Text style={styles.registoMatricula}>🚗 {reg.matricula}</Text>}
                   </View>
-                  <Text style={styles.registoTempo}>{reg.tempo_trabalho_formatado}</Text>
+                  <Text style={styles.registoTempo}>
+                    {reg.tempo_trabalho_formatado}
+                    {reg.tipo === 'pessoal' && <Text style={styles.registoPessoalNote}> (não conta)</Text>}
+                  </Text>
                   {reg.editado && <Text style={styles.registoEdit}>Real: {reg.hora_inicio_real} - {reg.hora_fim_real}</Text>}
                   {!reg.em_curso && definicoes?.permitir_edicao_registos && (
                     <TouchableOpacity style={styles.editBtn} onPress={() => handleEditRegisto(reg)}>
