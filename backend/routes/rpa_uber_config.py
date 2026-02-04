@@ -518,3 +518,253 @@ async def get_historico_importacoes(
     
     importacoes = await cursor.to_list(length=20)
     return importacoes
+
+
+# ========== ENDPOINTS PARA PARCEIROS ==========
+
+@router.get("/minhas-credenciais")
+async def get_minhas_credenciais_uber(
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro obtém as suas próprias credenciais Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    cred = await db.credenciais_plataforma.find_one(
+        {"parceiro_id": parceiro_id, "plataforma": "uber"},
+        {"_id": 0, "password": 0}
+    )
+    
+    if not cred:
+        return None
+    
+    return {
+        "email": cred.get("email"),
+        "telefone": cred.get("telefone"),
+        "ativo": cred.get("ativo", False)
+    }
+
+
+@router.post("/minhas-credenciais")
+async def salvar_minhas_credenciais_uber(
+    data: CredenciaisUber,
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro guarda as suas próprias credenciais Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    now = datetime.now(timezone.utc)
+    
+    await db.credenciais_plataforma.update_one(
+        {"parceiro_id": parceiro_id, "plataforma": "uber"},
+        {"$set": {
+            "email": data.email,
+            "password": data.password,
+            "telefone": data.telefone,
+            "ativo": True,
+            "updated_at": now.isoformat()
+        },
+        "$setOnInsert": {
+            "parceiro_id": parceiro_id,
+            "plataforma": "uber",
+            "created_at": now.isoformat()
+        }},
+        upsert=True
+    )
+    
+    return {"sucesso": True, "mensagem": "Credenciais guardadas"}
+
+
+@router.get("/minha-sessao-status")
+async def get_minha_sessao_status(
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro verifica o estado da sua sessão Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    sessao_path = f"/tmp/uber_sessao_{parceiro_id}.json"
+    
+    if os.path.exists(sessao_path):
+        mtime = os.path.getmtime(sessao_path)
+        idade_dias = (datetime.now().timestamp() - mtime) / 86400
+        
+        if idade_dias < 30:
+            expira = datetime.fromtimestamp(mtime + (30 * 86400))
+            return {
+                "valida": True,
+                "expira": expira.isoformat(),
+                "idade_dias": round(idade_dias, 1)
+            }
+    
+    return {"valida": False}
+
+
+@router.post("/meu-login")
+async def iniciar_meu_login_uber(
+    data: LoginRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro inicia o login Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    try:
+        from services.rpa_uber import UberRPA
+        
+        rpa = UberRPA(
+            email=data.email,
+            password=data.password,
+            sms_code=None
+        )
+        
+        await rpa.iniciar_browser(headless=True, usar_sessao=False)
+        
+        login_ok = await rpa.fazer_login()
+        
+        if login_ok:
+            await rpa.context.storage_state(path=f"/tmp/uber_sessao_{parceiro_id}.json")
+            await rpa.fechar_browser(guardar=False)
+            return {"sucesso": True, "mensagem": "Login realizado com sucesso"}
+        
+        page_content = await rpa.page.content()
+        
+        if "4 dígitos" in page_content or "Mais opções" in page_content:
+            await rpa.fechar_browser(guardar=False)
+            return {"sucesso": False, "precisa_sms": True}
+        
+        if "Proteger a sua conta" in page_content or "Iniciar desafio" in page_content:
+            await rpa.fechar_browser(guardar=False)
+            return {"sucesso": False, "precisa_captcha": True}
+        
+        await rpa.fechar_browser(guardar=False)
+        return {"sucesso": False, "erro": "Login falhou - verifique credenciais"}
+        
+    except Exception as e:
+        logger.error(f"Erro no login Uber: {e}")
+        return {"sucesso": False, "erro": str(e)}
+
+
+@router.post("/meu-confirmar-sms")
+async def confirmar_meu_sms_uber(
+    data: SMSConfirmRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro confirma código SMS"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    cred = await db.credenciais_plataforma.find_one(
+        {"parceiro_id": parceiro_id, "plataforma": "uber"}
+    )
+    
+    if not cred:
+        raise HTTPException(status_code=404, detail="Credenciais não encontradas")
+    
+    try:
+        from services.rpa_uber import UberRPA
+        
+        rpa = UberRPA(
+            email=cred["email"],
+            password=cred["password"],
+            sms_code=data.codigo
+        )
+        
+        await rpa.iniciar_browser(headless=True, usar_sessao=False)
+        login_ok = await rpa.fazer_login()
+        
+        if login_ok:
+            await rpa.context.storage_state(path=f"/tmp/uber_sessao_{parceiro_id}.json")
+            await rpa.fechar_browser(guardar=False)
+            return {"sucesso": True, "mensagem": "Login com SMS realizado"}
+        
+        await rpa.fechar_browser(guardar=False)
+        return {"sucesso": False, "erro": "Código inválido ou expirado"}
+        
+    except Exception as e:
+        logger.error(f"Erro na confirmação SMS Uber: {e}")
+        return {"sucesso": False, "erro": str(e)}
+
+
+@router.post("/meu-capturar-sessao")
+async def capturar_minha_sessao_manual(
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro confirma login manual"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Marcar sessão como potencialmente ativa
+    # O utilizador fez login manual - assumimos que funcionou
+    return {
+        "sucesso": True, 
+        "mensagem": "Login manual confirmado. Teste a sessão para verificar."
+    }
+
+
+@router.post("/meu-testar")
+async def testar_minha_sessao_uber(
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro testa a sua sessão Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    cred = await db.credenciais_plataforma.find_one(
+        {"parceiro_id": parceiro_id, "plataforma": "uber"}
+    )
+    
+    if not cred:
+        return {"sucesso": False, "erro": "Credenciais não configuradas"}
+    
+    try:
+        from services.rpa_uber import UberRPA
+        
+        rpa = UberRPA(
+            email=cred["email"],
+            password=cred["password"]
+        )
+        
+        await rpa.iniciar_browser(headless=True, usar_sessao=True)
+        
+        await rpa.page.goto("https://fleet.uber.com/", wait_until="domcontentloaded", timeout=30000)
+        await rpa.page.wait_for_timeout(5000)
+        
+        url = rpa.page.url
+        
+        if "fleet.uber.com" in url and "auth" not in url:
+            await rpa.context.storage_state(path=f"/tmp/uber_sessao_{parceiro_id}.json")
+            await rpa.fechar_browser(guardar=False)
+            return {"sucesso": True, "mensagem": "Sessão Uber ativa!"}
+        
+        login_ok = await rpa.fazer_login()
+        
+        if login_ok:
+            await rpa.context.storage_state(path=f"/tmp/uber_sessao_{parceiro_id}.json")
+            await rpa.fechar_browser(guardar=False)
+            return {"sucesso": True, "mensagem": "Login bem sucedido"}
+        
+        await rpa.fechar_browser(guardar=False)
+        return {"sucesso": False, "erro": "Sessão expirada - reconfigure o login"}
+        
+    except Exception as e:
+        logger.error(f"Erro no teste Uber: {e}")
+        return {"sucesso": False, "erro": str(e)}
