@@ -501,11 +501,36 @@ const GanhosScreen = () => {
   const [ganhos, setGanhos] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [enviandoRecibo, setEnviandoRecibo] = useState(false);
+
+  const loadGanhos = async () => {
+    if (sel) {
+      const g = await api.get(`/ponto/ganhos-semana?semana=${sel.semana}&ano=${sel.ano}`);
+      setGanhos(g);
+    }
+  };
 
   useEffect(() => { (async () => { const d = await api.get('/ponto/semanas-disponiveis?num_semanas=12'); setSemanas(d.semanas); if (d.semanas.length) setSel(d.semanas[0]); })(); }, []);
-  useEffect(() => { if (sel) { setLoading(true); (async () => { const g = await api.get(`/ponto/ganhos-semana?semana=${sel.semana}&ano=${sel.ano}`); setGanhos(g); setLoading(false); })(); } }, [sel]);
+  useEffect(() => { if (sel) { setLoading(true); loadGanhos().then(() => setLoading(false)); } }, [sel]);
+
+  const enviarRecibo = async () => {
+    setEnviandoRecibo(true);
+    try {
+      await api.post('/documentos/recibo-semanal', { 
+        semana: sel.semana, 
+        ano: sel.ano,
+        valor_liquido: ganhos.valor_liquido
+      });
+      Alert.alert('Sucesso', 'Recibo enviado para aprovação!');
+      loadGanhos();
+    } catch (e) { Alert.alert('Erro', e.message); }
+    setEnviandoRecibo(false);
+  };
 
   if (loading && !ganhos) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  const reciboStatus = ganhos?.recibo_status || 'nao_enviado';
+  const podeMudar = reciboStatus === 'nao_enviado' || reciboStatus === 'rejeitado';
 
   return (
     <ScrollView style={styles.screen}>
@@ -515,22 +540,73 @@ const GanhosScreen = () => {
         <Text style={styles.semanaSelectorArrow}>▼</Text>
       </TouchableOpacity>
       {ganhos && (
-        <View style={styles.card}>
-          <View style={styles.ganhoBox}>
-            <Text style={styles.ganhoLabel}>Líquido</Text>
-            <Text style={[styles.ganhoValor, ganhos.valor_liquido >= 0 ? styles.positive : styles.negative]}>€{ganhos.valor_liquido.toFixed(2)}</Text>
+        <>
+          <View style={styles.card}>
+            <View style={styles.ganhoBox}>
+              <Text style={styles.ganhoLabel}>Líquido</Text>
+              <Text style={[styles.ganhoValor, ganhos.valor_liquido >= 0 ? styles.positive : styles.negative]}>€{ganhos.valor_liquido.toFixed(2)}</Text>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>💰 Ganhos: €{ganhos.ganhos.total.toFixed(2)}</Text>
+              <View style={styles.row}><Text style={styles.label}>Uber</Text><Text style={styles.value}>€{ganhos.ganhos.uber.toFixed(2)}</Text></View>
+              <View style={styles.row}><Text style={styles.label}>Bolt</Text><Text style={styles.value}>€{ganhos.ganhos.bolt.toFixed(2)}</Text></View>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>📉 Despesas: €{ganhos.despesas.total.toFixed(2)}</Text>
+              <View style={styles.row}><Text style={styles.label}>Via Verde</Text><Text style={styles.value}>€{ganhos.despesas.via_verde.toFixed(2)}</Text></View>
+              <View style={styles.row}><Text style={styles.label}>Combustível</Text><Text style={styles.value}>€{ganhos.despesas.combustivel.toFixed(2)}</Text></View>
+            </View>
           </View>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💰 Ganhos: €{ganhos.ganhos.total.toFixed(2)}</Text>
-            <View style={styles.row}><Text style={styles.label}>Uber</Text><Text style={styles.value}>€{ganhos.ganhos.uber.toFixed(2)}</Text></View>
-            <View style={styles.row}><Text style={styles.label}>Bolt</Text><Text style={styles.value}>€{ganhos.ganhos.bolt.toFixed(2)}</Text></View>
+          
+          {/* Secção Recibo */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📄 Recibo Semanal</Text>
+            
+            {reciboStatus === 'nao_enviado' && (
+              <View style={styles.reciboSection}>
+                <Text style={styles.reciboInfo}>Envie o recibo para confirmação do parceiro</Text>
+                <TouchableOpacity 
+                  style={[styles.reciboBtn, enviandoRecibo && styles.btnDisabled]} 
+                  onPress={enviarRecibo}
+                  disabled={enviandoRecibo}
+                >
+                  <Text style={styles.reciboBtnText}>{enviandoRecibo ? 'A enviar...' : '📤 Enviar Recibo'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
+            {reciboStatus === 'pendente' && (
+              <View style={[styles.reciboStatus, styles.reciboStatusPendente]}>
+                <Text style={styles.reciboStatusIcon}>⏳</Text>
+                <Text style={styles.reciboStatusText}>Recibo enviado - Aguarda aprovação</Text>
+              </View>
+            )}
+            
+            {reciboStatus === 'aprovado' && (
+              <View style={[styles.reciboStatus, styles.reciboStatusAprovado]}>
+                <Text style={styles.reciboStatusIcon}>✅</Text>
+                <Text style={styles.reciboStatusText}>Recibo aprovado e pago</Text>
+              </View>
+            )}
+            
+            {reciboStatus === 'rejeitado' && (
+              <View style={styles.reciboSection}>
+                <View style={[styles.reciboStatus, styles.reciboStatusRejeitado]}>
+                  <Text style={styles.reciboStatusIcon}>❌</Text>
+                  <Text style={styles.reciboStatusText}>Recibo rejeitado</Text>
+                </View>
+                {ganhos.recibo_motivo && <Text style={styles.reciboMotivo}>Motivo: {ganhos.recibo_motivo}</Text>}
+                <TouchableOpacity 
+                  style={[styles.reciboBtn, enviandoRecibo && styles.btnDisabled]} 
+                  onPress={enviarRecibo}
+                  disabled={enviandoRecibo}
+                >
+                  <Text style={styles.reciboBtnText}>{enviandoRecibo ? 'A enviar...' : '🔄 Reenviar Recibo'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📉 Despesas: €{ganhos.despesas.total.toFixed(2)}</Text>
-            <View style={styles.row}><Text style={styles.label}>Via Verde</Text><Text style={styles.value}>€{ganhos.despesas.via_verde.toFixed(2)}</Text></View>
-            <View style={styles.row}><Text style={styles.label}>Combustível</Text><Text style={styles.value}>€{ganhos.despesas.combustivel.toFixed(2)}</Text></View>
-          </View>
-        </View>
+        </>
       )}
       <Modal visible={showModal} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
