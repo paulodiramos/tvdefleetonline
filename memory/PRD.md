@@ -11,6 +11,30 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ---
 
+## ✅ WebApp - Ficha de Motorista Expandida (04/02/2026)
+
+### Novas Tabs na Ficha de Motorista
+
+1. **Tab App (Permissões)**
+   - Limite de Horas (24h rolante)
+   - Período de Descanso Mínimo
+   - Switch: Permitir Edição de Registos
+   - Switch: Permitir Alterar Limite de Horas
+   - Botão Guardar Configurações
+
+2. **Tab Ponto (Relógio de Ponto)**
+   - Cards: Últimas 24h e Esta Semana
+   - Estado Atual (Online/Offline/Em Pausa)
+   - Tabela de Últimos Registos (Data, Início, Fim, Duração, Tipo)
+
+3. **Tab Turnos (Horário de Trabalho)**
+   - Seletor de veículo atribuído
+   - 7 dias da semana com toggle ativo/folga
+   - Inputs de hora início e fim para cada dia
+   - Botão Guardar Turnos
+
+---
+
 ## ✅ App Móvel TVDEFleet Drivers - EM DESENVOLVIMENTO (04/02/2026)
 
 ### Descrição
