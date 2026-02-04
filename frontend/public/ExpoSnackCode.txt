@@ -63,6 +63,7 @@ const LoginScreen = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const handleLogin = async () => {
     if (!email || !password) { Alert.alert('Erro', 'Preencha os campos'); return; }
     setLoading(true);
@@ -93,7 +94,19 @@ const LoginScreen = ({ onLogin }) => {
         <Text style={styles.title}>🚗 TVDEFleet</Text>
         <Text style={styles.subtitle}>App Móvel</Text>
         <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#64748b" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-        <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#64748b" value={password} onChangeText={setPassword} secureTextEntry />
+        <View style={styles.passwordContainer}>
+          <TextInput 
+            style={styles.passwordInput} 
+            placeholder="Password" 
+            placeholderTextColor="#64748b" 
+            value={password} 
+            onChangeText={setPassword} 
+            secureTextEntry={!showPassword} 
+          />
+          <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPassword(!showPassword)}>
+            <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleLogin} disabled={loading}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Entrar</Text>}
         </TouchableOpacity>
@@ -104,23 +117,22 @@ const LoginScreen = ({ onLogin }) => {
 
 // ===== TAB BAR DINÂMICA =====
 const getTabsForRole = (role) => {
-  // Motorista: Ponto, Turnos, Vistorias (consulta), Ganhos, Suporte
+  // Motorista: Ponto, Turnos, Ganhos, Suporte (SEM VISTORIAS - apenas consulta na webapp)
   if (role === 'motorista') {
     return [
       { id: 'ponto', icon: '⏱️', label: 'Ponto' }, 
       { id: 'turnos', icon: '📅', label: 'Turnos' },
-      { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
       { id: 'ganhos', icon: '💰', label: 'Ganhos' }, 
       { id: 'tickets', icon: '🎫', label: 'Suporte' }, 
     ];
   }
-  // Inspetor: Apenas Vistorias (fazer)
+  // Inspetor: Apenas Vistorias (fazer até ao final)
   if (role === 'inspetor') {
     return [
       { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
     ];
   }
-  // Gestor/Parceiro: Vistorias, Recibos, Resumo Semanal, Extras, Alertas, Ganhos
+  // Gestor/Parceiro: Vistorias (podem fazer), Recibos, Resumo Semanal, Extras, Alertas
   if (role === 'gestao' || role === 'parceiro') {
     return [
       { id: 'vistorias', icon: '🔍', label: 'Vistorias' },
@@ -132,7 +144,7 @@ const getTabsForRole = (role) => {
   }
   // Default para outros roles
   return [
-    { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
+    { id: 'ponto', icon: '⏱️', label: 'Ponto' },
   ];
 };
 
@@ -1591,10 +1603,16 @@ const VistoriasScreen = ({ user }) => {
           <Text style={styles.vistoriaStep}>Passo {step}/5</Text>
         </View>
 
-        {/* Progresso */}
+        {/* Progresso - Clicável para navegar entre passos */}
         <View style={styles.progressBar}>
           {[1,2,3,4,5].map(s => (
-            <View key={s} style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} />
+            <TouchableOpacity 
+              key={s} 
+              style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} 
+              onPress={() => s < step && setStep(s)}
+            >
+              <Text style={styles.progressDotText}>{s}</Text>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -1963,7 +1981,7 @@ const ConfigScreen = ({ user, onLogout }) => {
 };
 
 // ===== GPS POPUP =====
-const GPSPopup = ({ visible, type, onYes, onNo }) => visible ? (
+const GPSPopup = ({ visible, type, onYes, onNo, onDoNotDisturb }) => visible ? (
   <Modal visible={visible} animationType="fade" transparent={true}>
     <View style={styles.gpsOverlay}>
       <View style={styles.gpsBox}>
@@ -1974,6 +1992,11 @@ const GPSPopup = ({ visible, type, onYes, onNo }) => visible ? (
           <TouchableOpacity style={styles.gpsNo} onPress={onNo}><Text style={styles.gpsNoText}>Não</Text></TouchableOpacity>
           <TouchableOpacity style={styles.gpsYes} onPress={onYes}><Text style={styles.gpsYesText}>Sim</Text></TouchableOpacity>
         </View>
+        {type === 'stop' && (
+          <TouchableOpacity style={styles.dndBtn} onPress={onDoNotDisturb}>
+            <Text style={styles.dndText}>🔕 Não incomodar (30 min)</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   </Modal>
@@ -1985,12 +2008,19 @@ export default function App() {
   const [tab, setTab] = useState('ponto');
   const [status, setStatus] = useState('off');
   const [gps, setGps] = useState({ visible: false, type: null });
+  const [doNotDisturb, setDoNotDisturb] = useState(false);
   const shown = useRef({ start: false, stop: false });
 
   const { isMoving } = useGPS(
     status === 'working',
     () => { if (status === 'off' && !shown.current.start) { shown.current.start = true; setGps({ visible: true, type: 'start' }); } },
-    () => { if (status === 'working' && !shown.current.stop) { shown.current.stop = true; setGps({ visible: true, type: 'stop' }); } }
+    () => { 
+      // Só mostrar popup de parar se NÃO estiver em modo "não incomodar"
+      if (status === 'working' && !shown.current.stop && !doNotDisturb) { 
+        shown.current.stop = true; 
+        setGps({ visible: true, type: 'stop' }); 
+      } 
+    }
   );
 
   const handleGPS = async (confirm) => {
@@ -2000,6 +2030,18 @@ export default function App() {
       else { await api.post('/ponto/check-out', {}); setStatus('off'); }
     }
     setTimeout(() => { shown.current = { start: false, stop: false }; }, 300000);
+  };
+
+  // Ativar modo "não incomodar" por 30 minutos
+  const handleDoNotDisturb = () => {
+    setGps({ visible: false, type: null });
+    setDoNotDisturb(true);
+    Alert.alert('Não Incomodar', 'Não será interrompido durante 30 minutos.\n\nÚtil quando está no trânsito.');
+    // Desativar após 30 minutos
+    setTimeout(() => {
+      setDoNotDisturb(false);
+      shown.current = { start: false, stop: false };
+    }, 30 * 60 * 1000); // 30 minutos
   };
 
   // Quando user faz login, definir tab inicial baseado no role
@@ -2023,6 +2065,7 @@ export default function App() {
     if (user.role === 'inspetor') return '🔍 Inspetor';
     if (user.role === 'gestao') return '👔 Gestor';
     if (user.role === 'parceiro') return '🏢 Parceiro';
+    if (doNotDisturb) return '🔕 Não Incomodar';
     return '🚗 Motorista';
   };
 
@@ -2065,7 +2108,7 @@ export default function App() {
         {renderScreen()}
       </View>
       <TabBar activeTab={tab} onTabChange={setTab} userRole={user.role} />
-      <GPSPopup visible={gps.visible} type={gps.type} onYes={() => handleGPS(true)} onNo={() => handleGPS(false)} />
+      <GPSPopup visible={gps.visible} type={gps.type} onYes={() => handleGPS(true)} onNo={() => handleGPS(false)} onDoNotDisturb={handleDoNotDisturb} />
     </View>
   );
 }
@@ -2080,6 +2123,10 @@ const styles = StyleSheet.create({
   title: { fontSize: 32, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 16, color: '#94a3b8', textAlign: 'center', marginBottom: 32 },
   input: { backgroundColor: '#1e293b', padding: 16, borderRadius: 12, marginBottom: 16, fontSize: 16, color: '#fff', borderWidth: 1, borderColor: '#334155' },
+  passwordContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e293b', borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: '#334155' },
+  passwordInput: { flex: 1, padding: 16, fontSize: 16, color: '#fff' },
+  eyeBtn: { padding: 16 },
+  eyeIcon: { fontSize: 20 },
   inputLabel: { color: '#94a3b8', fontSize: 12, marginBottom: 4 },
   btn: { backgroundColor: '#3b82f6', padding: 16, borderRadius: 12, marginTop: 8 },
   btnDisabled: { opacity: 0.5 },
@@ -2240,6 +2287,8 @@ const styles = StyleSheet.create({
   gpsNoText: { color: '#94a3b8', fontWeight: '600' },
   gpsYes: { flex: 1, padding: 16, borderRadius: 12, backgroundColor: '#3b82f6', alignItems: 'center' },
   gpsYesText: { color: '#fff', fontWeight: '600' },
+  dndBtn: { marginTop: 16, padding: 12, borderRadius: 8, backgroundColor: '#1e293b', alignItems: 'center', width: '100%' },
+  dndText: { color: '#94a3b8', fontSize: 13 },
   // Tipo selector styles
   tipoSelector: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   tipoBtn: { flex: 1, padding: 14, borderRadius: 12, backgroundColor: '#0f172a', alignItems: 'center', borderWidth: 2, borderColor: '#334155' },
@@ -2348,9 +2397,10 @@ const styles = StyleSheet.create({
   vistoriaHeaderTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   vistoriaStep: { color: '#64748b', fontSize: 12 },
   progressBar: { flexDirection: 'row', justifyContent: 'center', gap: 8, padding: 12, backgroundColor: '#1e293b' },
-  progressDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#334155' },
+  progressDot: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#334155', alignItems: 'center', justifyContent: 'center' },
   progressDotActive: { backgroundColor: '#22c55e' },
-  progressDotCurrent: { width: 12, height: 12, borderRadius: 6 },
+  progressDotCurrent: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: '#fff' },
+  progressDotText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   stepContent: { padding: 16 },
   stepTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
   stepSubtitle: { color: '#94a3b8', fontSize: 13, marginBottom: 16 },
