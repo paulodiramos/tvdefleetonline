@@ -77,7 +77,18 @@ Aplicação móvel para motoristas TVDE com funcionalidades de relógio de ponto
    - Informação do veículo atribuído
    - Histórico de horários anteriores
 
-5. **Configurações**
+5. **Vistorias (NOVO - Tipo WeProov)**
+   - Vistoria de Entrada (ao receber veículo)
+   - Vistoria de Saída (ao devolver veículo)
+   - Fotos obrigatórias: frente, traseira, laterais, km, combustível
+   - Diagrama interativo para marcar danos
+   - Tipos de dano: Risco, Amolgadela, Vidro partido, Falta peça, Sujidade
+   - Campo de observações
+   - Assinatura digital
+   - Resumo final antes de enviar
+   - Histórico de vistorias
+
+6. **Configurações**
    - Perfil do utilizador
    - Limite de horas (configurável com permissão)
    - Período de descanso
