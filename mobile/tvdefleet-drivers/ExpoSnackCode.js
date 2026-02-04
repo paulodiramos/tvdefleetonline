@@ -121,8 +121,8 @@ const PontoScreen = ({ user, status, setStatus }) => {
     try {
       const estado = await api.get('/ponto/estado-atual');
       setStatus(estado.ativo ? (estado.em_pausa ? 'paused' : 'working') : 'off');
-      if (estado.ativo && estado.inicio_turno) {
-        setTurnoStartTime(new Date(estado.inicio_turno).getTime());
+      if (estado.ativo && estado.hora_inicio) {
+        setTurnoStartTime(new Date(estado.hora_inicio).getTime());
       } else {
         setTurnoStartTime(null);
       }
