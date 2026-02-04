@@ -222,7 +222,12 @@ const PontoScreen = ({ user, status, setStatus }) => {
       return;
     }
     setEditingRegisto(reg);
-    setEditForm({ horaInicio: reg.hora_inicio, horaFim: reg.hora_fim === 'Em curso' ? '' : reg.hora_fim, justificacao: '' });
+    setEditForm({ 
+      horaInicio: reg.hora_inicio, 
+      horaFim: reg.hora_fim === 'Em curso' ? '' : reg.hora_fim, 
+      justificacao: '',
+      tipo: reg.tipo || 'trabalho'
+    });
     setShowEditModal(true);
   };
 
