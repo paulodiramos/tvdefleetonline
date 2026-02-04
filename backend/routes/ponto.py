@@ -1071,60 +1071,62 @@ async def verificar_alerta_horas(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Verificar se o motorista excedeu o limite de horas configurado.
-    Retorna informação de alerta se excedido.
+    Verificar se o motorista excedeu o limite de horas nas últimas 24h (período rolante).
     """
     
     motorista_id = current_user["id"]
     
     # Buscar definições
-    definicoes = await db.definicoes_ponto.find_one(
+    definicoes = await db.definicoes_motorista.find_one(
         {"motorista_id": motorista_id}, 
         {"_id": 0}
     )
     
-    limite_horas = definicoes.get("alerta_horas_maximas", DEFAULT_ALERTA_HORAS) if definicoes else DEFAULT_ALERTA_HORAS
+    limite_horas = definicoes.get("horas_maximas", DEFAULT_HORAS_MAXIMAS) if definicoes else DEFAULT_HORAS_MAXIMAS
     limite_minutos = limite_horas * 60
     
-    # Buscar registo atual ativo
+    # Calcular horas nas últimas 24h (período rolante)
+    horas_24h = await calcular_horas_ultimas_24h(motorista_id)
+    total_minutos = horas_24h["total_minutos"]
+    
+    # Verificar se tem turno ativo
     registo_ativo = await db.registos_ponto.find_one({
         "user_id": motorista_id,
         "check_out": None
     }, {"_id": 0})
     
-    if not registo_ativo:
-        return {
-            "em_turno": False,
-            "alerta": False,
-            "limite_horas": limite_horas
-        }
+    em_turno = registo_ativo is not None
+    excedeu = total_minutos >= limite_minutos
+    tempo_excedido = max(0, total_minutos - limite_minutos)
+    horas_restantes = max(0, limite_minutos - total_minutos)
     
-    # Calcular tempo trabalhado
-    check_in = datetime.fromisoformat(registo_ativo["check_in"].replace("Z", "+00:00"))
-    now = datetime.now(timezone.utc)
-    
-    tempo_total = (now - check_in).total_seconds() / 60  # em minutos
-    
-    # Subtrair pausas
-    total_pausas = registo_ativo.get("total_pausas_minutos", 0)
-    if registo_ativo.get("em_pausa") and registo_ativo.get("pausa_iniciada"):
-        pausa_inicio = datetime.fromisoformat(registo_ativo["pausa_iniciada"].replace("Z", "+00:00"))
-        total_pausas += (now - pausa_inicio).total_seconds() / 60
-    
-    tempo_trabalho = tempo_total - total_pausas
-    
-    excedeu = tempo_trabalho >= limite_minutos
-    tempo_excedido = max(0, tempo_trabalho - limite_minutos)
+    # Calcular quando pode trabalhar novamente se excedeu
+    pode_iniciar_em = None
+    if excedeu and horas_24h["primeiro_check_in"]:
+        primeiro = datetime.fromisoformat(horas_24h["primeiro_check_in"].replace("Z", "+00:00"))
+        espacamento = definicoes.get("espacamento_horas", DEFAULT_ESPACAMENTO_HORAS) if definicoes else DEFAULT_ESPACAMENTO_HORAS
+        pode_iniciar_em = (primeiro + timedelta(hours=espacamento)).isoformat()
     
     return {
-        "em_turno": True,
+        "em_turno": em_turno,
         "alerta": excedeu,
         "limite_horas": limite_horas,
-        "tempo_trabalho_minutos": int(tempo_trabalho),
-        "tempo_trabalho_formatado": f"{int(tempo_trabalho // 60)}h {int(tempo_trabalho % 60)}m",
+        "tempo_trabalho_24h_minutos": total_minutos,
+        "tempo_trabalho_24h_formatado": horas_24h["total_formatado"],
+        "horas_restantes_minutos": int(horas_restantes),
+        "horas_restantes_formatado": f"{int(horas_restantes // 60)}h {int(horas_restantes % 60)}m",
         "tempo_excedido_minutos": int(tempo_excedido) if excedeu else 0,
-        "mensagem": f"⚠️ Excedeu o limite de {limite_horas}h por {int(tempo_excedido // 60)}h {int(tempo_excedido % 60)}m" if excedeu else None
+        "pode_iniciar_em": pode_iniciar_em,
+        "mensagem": f"⚠️ Atingiu o limite de {limite_horas}h nas últimas 24h. Excedido por {int(tempo_excedido // 60)}h {int(tempo_excedido % 60)}m" if excedeu else None
     }
+
+
+@router.get("/pode-iniciar")
+async def verificar_pode_iniciar(
+    current_user: dict = Depends(get_current_user)
+):
+    """Verificar se o motorista pode iniciar um novo turno"""
+    return await verificar_pode_iniciar_turno(current_user["id"])
 
 
 # ============ CONSULTA DETALHADA DE REGISTOS ============
