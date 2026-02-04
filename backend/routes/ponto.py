@@ -1063,6 +1063,29 @@ async def atualizar_definicoes_ponto(
             raise HTTPException(
                 status_code=403, 
                 detail="O seu parceiro não autorizou a alteração do período de descanso. Contacte-o para solicitar permissão."
+            )
+        if data.espacamento_horas < 12 or data.espacamento_horas > 48:
+            raise HTTPException(status_code=400, detail="Espaçamento deve ser entre 12 e 48 horas")
+        update_data["espacamento_horas"] = data.espacamento_horas
+    
+    # Atualizar ou criar definições
+    await db.definicoes_motorista.update_one(
+        {"motorista_id": motorista_id},
+        {
+            "$set": update_data,
+            "$setOnInsert": {
+                "motorista_id": motorista_id,
+                "horas_maximas": DEFAULT_HORAS_MAXIMAS,
+                "espacamento_horas": DEFAULT_ESPACAMENTO_HORAS,
+                "created_at": now.isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    logger.info(f"Definições de ponto atualizadas para motorista {motorista_id}")
+    
+    return {"success": True, "message": "Definições atualizadas"}
 
 
 # ============ ENDPOINTS PARA APP MÓVEL PARCEIRO/GESTOR ============
