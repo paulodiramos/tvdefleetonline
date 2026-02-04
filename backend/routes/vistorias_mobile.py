@@ -176,6 +176,17 @@ async def listar_vistorias_pendentes_aceitacao(
         except:
             data_str = v.get("created_at", "N/A")
         
+        # Formatar fotos
+        fotos_formatadas = {}
+        for foto_tipo, foto_data in v.get("fotos", {}).items():
+            if isinstance(foto_data, dict):
+                fotos_formatadas[foto_tipo] = {
+                    "url": foto_data.get("url", ""),
+                    "filename": foto_data.get("filename", "")
+                }
+            elif isinstance(foto_data, str):
+                fotos_formatadas[foto_tipo] = {"url": foto_data}
+        
         resultado.append({
             "id": v["id"],
             "tipo": v["tipo"],
@@ -187,6 +198,8 @@ async def listar_vistorias_pendentes_aceitacao(
             "observacoes": v.get("observacoes"),
             "analise_ia": v.get("analise_ia"),
             "inspetor_nome": v.get("inspetor_nome"),
+            "fotos": fotos_formatadas,
+            "assinatura_url": v.get("assinatura_url"),
             "created_at": v.get("created_at")
         })
     
