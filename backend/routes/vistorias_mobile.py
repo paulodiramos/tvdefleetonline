@@ -168,8 +168,29 @@ async def criar_vistoria(
         except Exception as e:
             logger.warning(f"Erro ao salvar assinatura: {e}")
     
-    # Processar danos
+    # Processar danos (manuais + IA)
     danos_processados = [d.dict() for d in data.danos]
+    
+    # Buscar vistoria anterior para comparação
+    comparacao = None
+    vistoria_anterior = await db.vistorias_mobile.find_one(
+        {"veiculo_id": veiculo_id, "id": {"$ne": vistoria_id}},
+        {"_id": 0}
+    )
+    if vistoria_anterior:
+        try:
+            from services.vistoria_ia import comparar_vistorias
+            comparacao = await comparar_vistorias(vistoria_anterior, {
+                "km": data.km,
+                "nivel_combustivel": data.nivel_combustivel,
+                "danos": danos_processados,
+                "analise_ia": analise_ia
+            })
+        except Exception as e:
+            logger.warning(f"Erro na comparação: {e}")
+    
+    # Gerar token de confirmação
+    token_confirmacao = str(uuid.uuid4())[:8]
     
     # Criar vistoria
     vistoria = {
@@ -177,14 +198,21 @@ async def criar_vistoria(
         "tipo": data.tipo,
         "motorista_id": motorista_id,
         "motorista_nome": motorista.get("name") if motorista else None,
+        "motorista_telefone": motorista.get("telefone") if motorista else None,
         "veiculo_id": veiculo_id,
         "veiculo_matricula": veiculo_matricula,
         "km": data.km,
         "nivel_combustivel": data.nivel_combustivel,
         "fotos": fotos_salvas,
         "danos": danos_processados,
+        "danos_ia": analise_ia.get('danos_detetados', []),
+        "matricula_ocr": analise_ia.get('matricula_lida'),
+        "analise_ia": analise_ia,
+        "comparacao_anterior": comparacao,
         "observacoes": data.observacoes,
         "assinatura_url": assinatura_url,
+        "token_confirmacao": token_confirmacao,
+        "confirmado": False,
         "status": "pendente",
         "created_at": now.isoformat(),
         "updated_at": now.isoformat()
@@ -192,12 +220,28 @@ async def criar_vistoria(
     
     await db.vistorias_mobile.insert_one(vistoria)
     
+    # Gerar relatório para WhatsApp/Email
+    relatorio = None
+    try:
+        from services.vistoria_ia import gerar_relatorio_vistoria
+        vistoria_relatorio = {**vistoria, "data": now.strftime("%d/%m/%Y %H:%M")}
+        relatorio = await gerar_relatorio_vistoria(vistoria_relatorio, comparacao)
+        # Substituir placeholder do link
+        link_confirmacao = f"https://fleetmanager-38.preview.emergentagent.com/confirmar-vistoria/{vistoria_id}?token={token_confirmacao}"
+        relatorio = relatorio.replace("[LINK_CONFIRMACAO]", link_confirmacao)
+    except Exception as e:
+        logger.warning(f"Erro ao gerar relatório: {e}")
+    
     logger.info(f"Vistoria mobile {vistoria_id} criada por motorista {motorista_id}")
     
     return {
         "success": True,
         "message": "Vistoria criada com sucesso",
-        "vistoria_id": vistoria_id
+        "vistoria_id": vistoria_id,
+        "analise_ia": analise_ia,
+        "comparacao": comparacao,
+        "relatorio_whatsapp": relatorio,
+        "link_confirmacao": f"https://fleetmanager-38.preview.emergentagent.com/confirmar-vistoria/{vistoria_id}?token={token_confirmacao}"
     }
 
 
