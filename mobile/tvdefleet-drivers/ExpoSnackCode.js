@@ -113,6 +113,9 @@ const PontoScreen = ({ user, status, setStatus }) => {
   const [editingRegisto, setEditingRegisto] = useState(null);
   const [editForm, setEditForm] = useState({ horaInicio: '', horaFim: '', justificacao: '' });
   const alertRef = useRef(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [turnoStartTime, setTurnoStartTime] = useState(null);
+  const timerRef = useRef(null);
 
   const loadData = async () => {
     try {
