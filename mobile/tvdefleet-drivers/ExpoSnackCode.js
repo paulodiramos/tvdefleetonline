@@ -1,7 +1,7 @@
-// TVDEFleet Drivers - Aplicação Móvel Completa
+// TVDEFleet Drivers - Aplicação Móvel Completa v2
 // Cole este código em https://snack.expo.dev
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
   Alert, ScrollView, ActivityIndicator, RefreshControl,
@@ -9,11 +9,6 @@ import {
 } from 'react-native';
 
 const API_URL = 'https://fleetmanager-37.preview.emergentagent.com/api';
-
-// ===== CONTEXT =====
-const AuthContext = React.createContext(null);
-
-const useAuth = () => React.useContext(AuthContext);
 
 // ===== API SERVICE =====
 const api = {
@@ -55,9 +50,7 @@ const api = {
   }
 };
 
-// ===== COMPONENTS =====
-
-// Login Screen
+// ===== LOGIN SCREEN =====
 const LoginScreen = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -104,6 +97,7 @@ const LoginScreen = ({ onLogin }) => {
         <TextInput
           style={styles.input}
           placeholder="Email"
+          placeholderTextColor="#64748b"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -113,6 +107,7 @@ const LoginScreen = ({ onLogin }) => {
         <TextInput
           style={styles.input}
           placeholder="Password"
+          placeholderTextColor="#64748b"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -134,7 +129,7 @@ const LoginScreen = ({ onLogin }) => {
   );
 };
 
-// Bottom Tab Navigation
+// ===== TAB BAR =====
 const TabBar = ({ activeTab, onTabChange }) => {
   const tabs = [
     { id: 'ponto', label: 'Ponto', icon: '⏱️' },
@@ -161,9 +156,9 @@ const TabBar = ({ activeTab, onTabChange }) => {
   );
 };
 
-// Ponto Screen (Relógio de Ponto)
+// ===== PONTO SCREEN =====
 const PontoScreen = ({ user }) => {
-  const [status, setStatus] = useState('off'); // off, working, paused
+  const [status, setStatus] = useState('off');
   const [loading, setLoading] = useState(false);
   const [resumo, setResumo] = useState(null);
   const [historico, setHistorico] = useState([]);
@@ -171,7 +166,6 @@ const PontoScreen = ({ user }) => {
 
   const loadData = async () => {
     try {
-      // Carregar estado atual
       const estado = await api.get('/ponto/estado-atual');
       if (estado.ativo) {
         setStatus(estado.em_pausa ? 'paused' : 'working');
@@ -179,21 +173,17 @@ const PontoScreen = ({ user }) => {
         setStatus('off');
       }
       
-      // Carregar resumo semanal
       const resumoData = await api.get('/ponto/resumo-semanal');
       setResumo(resumoData);
       
-      // Carregar histórico
       const hist = await api.get('/ponto/historico');
       setHistorico(hist.slice(0, 5));
     } catch (e) {
-      console.error('Erro ao carregar dados:', e);
+      console.error('Erro:', e);
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -233,11 +223,7 @@ const PontoScreen = ({ user }) => {
     }
   };
 
-  const formatMinutos = (mins) => {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return `${h}h ${m}m`;
-  };
+  const formatMinutos = (mins) => `${Math.floor(mins / 60)}h ${mins % 60}m`;
 
   return (
     <ScrollView 
@@ -246,7 +232,6 @@ const PontoScreen = ({ user }) => {
     >
       <Text style={styles.screenTitle}>Relógio de Ponto</Text>
       
-      {/* Status Atual */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Estado Atual</Text>
         <View style={styles.statusBox}>
@@ -309,7 +294,6 @@ const PontoScreen = ({ user }) => {
         </View>
       </View>
 
-      {/* Resumo Semanal */}
       {resumo && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Esta Semana</Text>
@@ -330,7 +314,6 @@ const PontoScreen = ({ user }) => {
         </View>
       )}
 
-      {/* Histórico */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Últimos Registos</Text>
         {historico.length === 0 ? (
@@ -352,38 +335,37 @@ const PontoScreen = ({ user }) => {
   );
 };
 
-// Ganhos Screen
+// ===== GANHOS SCREEN (COM SELEÇÃO DE SEMANA E UPLOAD DE RECIBO) =====
 const GanhosScreen = ({ user }) => {
-  const [semanaAtual, setSemanaAtual] = useState(null);
-  const [historico, setHistorico] = useState([]);
+  const [semanas, setSemanas] = useState([]);
+  const [selectedSemana, setSelectedSemana] = useState(null);
+  const [ganhos, setGanhos] = useState(null);
+  const [recibo, setRecibo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showSemanaModal, setShowSemanaModal] = useState(false);
 
-  const loadData = async () => {
+  const loadSemanas = async () => {
     try {
-      const ganhos = await api.get('/ponto/ganhos-semana');
-      setSemanaAtual(ganhos);
-      
-      // Histórico simplificado (últimas 4 semanas)
-      const hist = [];
-      const hoje = new Date();
-      let semana = ganhos.semana;
-      let ano = ganhos.ano;
-      
-      for (let i = 0; i < 4; i++) {
-        try {
-          const g = await api.get(`/ponto/ganhos-semana?semana=${semana}&ano=${ano}`);
-          hist.push(g);
-        } catch (e) {}
-        
-        semana--;
-        if (semana <= 0) {
-          semana = 52;
-          ano--;
-        }
+      const data = await api.get('/ponto/semanas-disponiveis?num_semanas=12');
+      setSemanas(data.semanas);
+      if (data.semanas.length > 0 && !selectedSemana) {
+        setSelectedSemana(data.semanas[0]);
       }
+    } catch (e) {
+      console.error('Erro:', e);
+    }
+  };
+
+  const loadGanhos = async (semana, ano) => {
+    try {
+      setLoading(true);
+      const data = await api.get(`/ponto/ganhos-semana?semana=${semana}&ano=${ano}`);
+      setGanhos(data);
       
-      setHistorico(hist);
+      // Verificar se existe recibo
+      const reciboData = await api.get(`/ponto/recibo-semanal/${semana}/${ano}`);
+      setRecibo(reciboData.recibo);
     } catch (e) {
       console.error('Erro:', e);
     } finally {
@@ -392,16 +374,40 @@ const GanhosScreen = ({ user }) => {
   };
 
   useEffect(() => {
-    loadData();
+    loadSemanas();
   }, []);
+
+  useEffect(() => {
+    if (selectedSemana) {
+      loadGanhos(selectedSemana.semana, selectedSemana.ano);
+    }
+  }, [selectedSemana]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    if (selectedSemana) {
+      await loadGanhos(selectedSemana.semana, selectedSemana.ano);
+    }
     setRefreshing(false);
   };
 
-  if (loading) {
+  const handleUploadRecibo = () => {
+    if (recibo) {
+      Alert.alert(
+        'Recibo Existente',
+        `Já existe um recibo para esta semana.\n\nEnviado em: ${new Date(recibo.created_at).toLocaleDateString('pt-PT')}\n\nPara alterar, contacte o seu parceiro ou gestor.`
+      );
+      return;
+    }
+    
+    Alert.alert(
+      'Upload de Recibo',
+      `Para carregar o recibo da ${selectedSemana.label}, use a versão web da aplicação.\n\nApós o upload, o recibo não poderá ser alterado por si.`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  if (loading && !ganhos) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#3b82f6" />
@@ -416,36 +422,65 @@ const GanhosScreen = ({ user }) => {
     >
       <Text style={styles.screenTitle}>Ganhos e Relatórios</Text>
       
-      {semanaAtual && (
+      {/* Seletor de Semana */}
+      <TouchableOpacity 
+        style={styles.semanaSelector}
+        onPress={() => setShowSemanaModal(true)}
+      >
+        <View>
+          <Text style={styles.semanaSelectorLabel}>Semana selecionada</Text>
+          <Text style={styles.semanaSelectorValue}>
+            {selectedSemana ? selectedSemana.label : 'Selecionar...'}
+          </Text>
+          {selectedSemana && (
+            <Text style={styles.semanaSelectorPeriodo}>{selectedSemana.periodo}</Text>
+          )}
+        </View>
+        <Text style={styles.semanaSelectorArrow}>▼</Text>
+      </TouchableOpacity>
+
+      {ganhos && (
         <>
-          {/* Resumo Atual */}
+          {/* Valor Líquido */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{semanaAtual.periodo}</Text>
-            
             <View style={styles.ganhoBox}>
               <Text style={styles.ganhoLabel}>Valor Líquido</Text>
               <Text style={[
                 styles.ganhoValor, 
-                semanaAtual.valor_liquido >= 0 ? styles.positive : styles.negative
+                ganhos.valor_liquido >= 0 ? styles.positive : styles.negative
               ]}>
-                €{semanaAtual.valor_liquido.toFixed(2)}
+                €{ganhos.valor_liquido.toFixed(2)}
               </Text>
             </View>
+            
+            {/* Botão de Recibo */}
+            <TouchableOpacity 
+              style={[
+                styles.reciboBtn,
+                recibo ? styles.reciboBtnExiste : styles.reciboBtnNovo
+              ]}
+              onPress={handleUploadRecibo}
+            >
+              <Text style={styles.reciboBtnIcon}>{recibo ? '✓' : '📤'}</Text>
+              <Text style={styles.reciboBtnText}>
+                {recibo ? 'Recibo Enviado' : 'Enviar Recibo'}
+              </Text>
+            </TouchableOpacity>
             
             {/* Ganhos */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>💰 Ganhos</Text>
               <View style={styles.row}>
                 <Text style={styles.label}>Uber</Text>
-                <Text style={styles.value}>€{semanaAtual.ganhos.uber.toFixed(2)}</Text>
+                <Text style={styles.value}>€{ganhos.ganhos.uber.toFixed(2)}</Text>
               </View>
               <View style={styles.row}>
                 <Text style={styles.label}>Bolt</Text>
-                <Text style={styles.value}>€{semanaAtual.ganhos.bolt.toFixed(2)}</Text>
+                <Text style={styles.value}>€{ganhos.ganhos.bolt.toFixed(2)}</Text>
               </View>
               <View style={[styles.row, styles.totalRow]}>
                 <Text style={styles.totalLabel}>Total Ganhos</Text>
-                <Text style={styles.totalValue}>€{semanaAtual.ganhos.total.toFixed(2)}</Text>
+                <Text style={styles.totalValue}>€{ganhos.ganhos.total.toFixed(2)}</Text>
               </View>
             </View>
             
@@ -454,24 +489,24 @@ const GanhosScreen = ({ user }) => {
               <Text style={styles.sectionTitle}>📉 Despesas</Text>
               <View style={styles.row}>
                 <Text style={styles.label}>Via Verde</Text>
-                <Text style={styles.value}>€{semanaAtual.despesas.via_verde.toFixed(2)}</Text>
+                <Text style={styles.value}>€{ganhos.despesas.via_verde.toFixed(2)}</Text>
               </View>
               <View style={styles.row}>
                 <Text style={styles.label}>Combustível</Text>
-                <Text style={styles.value}>€{semanaAtual.despesas.combustivel.toFixed(2)}</Text>
+                <Text style={styles.value}>€{ganhos.despesas.combustivel.toFixed(2)}</Text>
               </View>
               <View style={styles.row}>
                 <Text style={styles.label}>Elétrico</Text>
-                <Text style={styles.value}>€{semanaAtual.despesas.eletrico.toFixed(2)}</Text>
+                <Text style={styles.value}>€{ganhos.despesas.eletrico.toFixed(2)}</Text>
               </View>
               <View style={styles.row}>
                 <Text style={styles.label}>Aluguer</Text>
-                <Text style={styles.value}>€{semanaAtual.despesas.aluguer.toFixed(2)}</Text>
+                <Text style={styles.value}>€{ganhos.despesas.aluguer.toFixed(2)}</Text>
               </View>
               <View style={[styles.row, styles.totalRow]}>
                 <Text style={styles.totalLabel}>Total Despesas</Text>
                 <Text style={[styles.totalValue, styles.negative]}>
-                  €{semanaAtual.despesas.total.toFixed(2)}
+                  €{ganhos.despesas.total.toFixed(2)}
                 </Text>
               </View>
             </View>
@@ -481,37 +516,65 @@ const GanhosScreen = ({ user }) => {
               <Text style={styles.sectionTitle}>⏱️ Horas Trabalhadas</Text>
               <View style={styles.row}>
                 <Text style={styles.label}>Total</Text>
-                <Text style={styles.value}>{semanaAtual.horas_trabalhadas.formatado}</Text>
+                <Text style={styles.value}>{ganhos.horas_trabalhadas.formatado}</Text>
               </View>
               <View style={styles.row}>
                 <Text style={styles.label}>Turnos</Text>
-                <Text style={styles.value}>{semanaAtual.horas_trabalhadas.total_turnos}</Text>
+                <Text style={styles.value}>{ganhos.horas_trabalhadas.total_turnos}</Text>
               </View>
             </View>
           </View>
-
-          {/* Histórico */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Histórico</Text>
-            {historico.slice(1).map((h, idx) => (
-              <View key={idx} style={styles.historyRow}>
-                <Text style={styles.historyPeriod}>S{h.semana}/{h.ano}</Text>
-                <Text style={[
-                  styles.historyValue,
-                  h.valor_liquido >= 0 ? styles.positive : styles.negative
-                ]}>
-                  €{h.valor_liquido.toFixed(2)}
-                </Text>
-              </View>
-            ))}
-          </View>
         </>
       )}
+
+      {/* Modal Seleção de Semana */}
+      <Modal
+        visible={showSemanaModal}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Selecionar Semana</Text>
+            
+            <ScrollView style={styles.semanaList}>
+              {semanas.map((s) => (
+                <TouchableOpacity
+                  key={`${s.semana}-${s.ano}`}
+                  style={[
+                    styles.semanaItem,
+                    selectedSemana?.semana === s.semana && selectedSemana?.ano === s.ano && styles.semanaItemActive
+                  ]}
+                  onPress={() => {
+                    setSelectedSemana(s);
+                    setShowSemanaModal(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.semanaItemLabel,
+                    selectedSemana?.semana === s.semana && selectedSemana?.ano === s.ano && styles.semanaItemLabelActive
+                  ]}>
+                    {s.label}
+                  </Text>
+                  <Text style={styles.semanaItemPeriodo}>{s.periodo}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            
+            <TouchableOpacity 
+              style={styles.modalCloseBtn}
+              onPress={() => setShowSemanaModal(false)}
+            >
+              <Text style={styles.modalCloseBtnText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
 
-// Documentos Screen
+// ===== DOCUMENTOS SCREEN =====
 const DocumentosScreen = ({ user }) => {
   const [documentos, setDocumentos] = useState({});
   const [loading, setLoading] = useState(true);
@@ -537,9 +600,7 @@ const DocumentosScreen = ({ user }) => {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -548,10 +609,9 @@ const DocumentosScreen = ({ user }) => {
   };
 
   const handleUpload = (tipo) => {
-    // Em produção, usar expo-document-picker
     Alert.alert(
       'Upload de Documento',
-      `Para carregar ${tiposDocumentos[tipo].nome}, use a versão web da aplicação ou aguarde a próxima atualização.`,
+      `Para carregar ${tiposDocumentos[tipo].nome}, use a versão web da aplicação.`,
       [{ text: 'OK' }]
     );
   };
@@ -605,14 +665,14 @@ const DocumentosScreen = ({ user }) => {
       
       <View style={styles.infoBox}>
         <Text style={styles.infoText}>
-          💡 Os documentos são guardados com histórico. Quando atualizar um documento, o anterior fica arquivado e visível para o parceiro.
+          💡 Os documentos são guardados com histórico. Quando atualizar um documento, o anterior fica arquivado.
         </Text>
       </View>
     </ScrollView>
   );
 };
 
-// Tickets/Suporte Screen
+// ===== TICKETS SCREEN =====
 const TicketsScreen = ({ user }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -651,9 +711,7 @@ const TicketsScreen = ({ user }) => {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -669,7 +727,7 @@ const TicketsScreen = ({ user }) => {
     
     try {
       await api.post('/tickets/criar', novoTicket);
-      Alert.alert('Sucesso', 'Ticket criado com sucesso!');
+      Alert.alert('Sucesso', 'Ticket criado!');
       setModalVisible(false);
       setNovoTicket({ titulo: '', categoria: 'outro', descricao: '' });
       loadData();
@@ -684,7 +742,6 @@ const TicketsScreen = ({ user }) => {
     try {
       await api.post(`/tickets/${selectedTicket.id}/mensagem`, { conteudo: novaMensagem });
       setNovaMensagem('');
-      // Recarregar ticket
       const updated = await api.get(`/tickets/${selectedTicket.id}`);
       setSelectedTicket(updated);
       loadData();
@@ -701,7 +758,6 @@ const TicketsScreen = ({ user }) => {
     );
   }
 
-  // Modal de Chat do Ticket
   if (selectedTicket) {
     return (
       <KeyboardAvoidingView 
@@ -741,6 +797,7 @@ const TicketsScreen = ({ user }) => {
             <TextInput
               style={styles.chatTextInput}
               placeholder="Escreva uma mensagem..."
+              placeholderTextColor="#64748b"
               value={novaMensagem}
               onChangeText={setNovaMensagem}
               multiline
@@ -762,7 +819,7 @@ const TicketsScreen = ({ user }) => {
           style={styles.addBtn}
           onPress={() => setModalVisible(true)}
         >
-          <Text style={styles.addBtnText}>+ Novo Ticket</Text>
+          <Text style={styles.addBtnText}>+ Novo</Text>
         </TouchableOpacity>
       </View>
       
@@ -771,7 +828,6 @@ const TicketsScreen = ({ user }) => {
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>🎫</Text>
             <Text style={styles.emptyText}>Sem tickets</Text>
-            <Text style={styles.emptySubtext}>Crie um ticket para contactar o suporte</Text>
           </View>
         ) : (
           tickets.map((ticket) => (
@@ -787,9 +843,6 @@ const TicketsScreen = ({ user }) => {
                 </View>
               </View>
               <Text style={styles.ticketTitulo}>{ticket.titulo}</Text>
-              <Text style={styles.ticketCategoria}>
-                {categorias.find(c => c.id === ticket.categoria)?.nome || ticket.categoria}
-              </Text>
               <Text style={styles.ticketData}>
                 {new Date(ticket.created_at).toLocaleDateString('pt-PT')}
               </Text>
@@ -798,12 +851,7 @@ const TicketsScreen = ({ user }) => {
         )}
       </ScrollView>
 
-      {/* Modal Novo Ticket */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent={true}
-      >
+      <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Novo Ticket</Text>
@@ -811,6 +859,7 @@ const TicketsScreen = ({ user }) => {
             <TextInput
               style={styles.input}
               placeholder="Título"
+              placeholderTextColor="#64748b"
               value={novoTicket.titulo}
               onChangeText={(t) => setNovoTicket({...novoTicket, titulo: t})}
             />
@@ -838,6 +887,7 @@ const TicketsScreen = ({ user }) => {
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Descreva o seu problema..."
+              placeholderTextColor="#64748b"
               value={novoTicket.descricao}
               onChangeText={(t) => setNovoTicket({...novoTicket, descricao: t})}
               multiline
@@ -855,7 +905,7 @@ const TicketsScreen = ({ user }) => {
                 style={[styles.modalBtn, styles.modalBtnConfirm]}
                 onPress={criarTicket}
               >
-                <Text style={styles.modalBtnConfirmText}>Criar Ticket</Text>
+                <Text style={styles.modalBtnConfirmText}>Criar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -865,7 +915,7 @@ const TicketsScreen = ({ user }) => {
   );
 };
 
-// Main App
+// ===== MAIN APP =====
 export default function App() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('ponto');
@@ -887,7 +937,6 @@ export default function App() {
 
   return (
     <View style={styles.appContainer}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>TVDEFleet</Text>
         <TouchableOpacity onPress={handleLogout}>
@@ -895,7 +944,6 @@ export default function App() {
         </TouchableOpacity>
       </View>
       
-      {/* Content */}
       <View style={styles.content}>
         {activeTab === 'ponto' && <PontoScreen user={user} />}
         {activeTab === 'ganhos' && <GanhosScreen user={user} />}
@@ -903,7 +951,6 @@ export default function App() {
         {activeTab === 'tickets' && <TicketsScreen user={user} />}
       </View>
       
-      {/* Tab Bar */}
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
     </View>
   );
@@ -911,564 +958,213 @@ export default function App() {
 
 // ===== STYLES =====
 const styles = StyleSheet.create({
-  // App Layout
-  appContainer: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
+  appContainer: { flex: 1, backgroundColor: '#0f172a' },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    paddingTop: 50,
-    backgroundColor: '#1e293b',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    padding: 16, paddingTop: 50, backgroundColor: '#1e293b'
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  logoutBtn: {
-    color: '#94a3b8',
-    fontSize: 14,
-  },
-  content: {
-    flex: 1,
-  },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  logoutBtn: { color: '#94a3b8', fontSize: 14 },
+  content: { flex: 1 },
   
-  // Tab Bar
   tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#1e293b',
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-    paddingBottom: 20,
+    flexDirection: 'row', backgroundColor: '#1e293b',
+    borderTopWidth: 1, borderTopColor: '#334155', paddingBottom: 20
   },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  tabActive: {
-    borderTopWidth: 2,
-    borderTopColor: '#3b82f6',
-  },
-  tabIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  tabLabel: {
-    fontSize: 11,
-    color: '#64748b',
-  },
-  tabLabelActive: {
-    color: '#3b82f6',
-    fontWeight: '600',
-  },
+  tab: { flex: 1, alignItems: 'center', paddingVertical: 12 },
+  tabActive: { borderTopWidth: 2, borderTopColor: '#3b82f6' },
+  tabIcon: { fontSize: 20, marginBottom: 4 },
+  tabLabel: { fontSize: 11, color: '#64748b' },
+  tabLabelActive: { color: '#3b82f6', fontWeight: '600' },
   
-  // Login
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  loginBox: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#94a3b8',
-    textAlign: 'center',
-    marginBottom: 32,
-  },
+  container: { flex: 1, backgroundColor: '#0f172a' },
+  loginBox: { flex: 1, justifyContent: 'center', padding: 24 },
+  title: { fontSize: 32, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 16, color: '#94a3b8', textAlign: 'center', marginBottom: 32 },
   input: {
-    backgroundColor: '#1e293b',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: '#334155',
+    backgroundColor: '#1e293b', padding: 16, borderRadius: 12, marginBottom: 16,
+    fontSize: 16, color: '#fff', borderWidth: 1, borderColor: '#334155'
   },
-  btn: {
-    backgroundColor: '#3b82f6',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  btnDisabled: {
-    opacity: 0.7,
-  },
-  btnText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  btn: { backgroundColor: '#3b82f6', padding: 16, borderRadius: 12, marginTop: 8 },
+  btnDisabled: { opacity: 0.7 },
+  btnText: { color: '#fff', textAlign: 'center', fontSize: 18, fontWeight: 'bold' },
   
-  // Screens
-  screen: {
-    flex: 1,
-    padding: 16,
-  },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  screen: { flex: 1, padding: 16 },
+  screenTitle: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginBottom: 16 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  // Cards
-  card: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#94a3b8',
-    marginBottom: 12,
-  },
+  card: { backgroundColor: '#1e293b', borderRadius: 16, padding: 16, marginBottom: 16 },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: '#94a3b8', marginBottom: 12 },
   
-  // Ponto
   statusBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#0f172a',
-    borderRadius: 12,
-    marginBottom: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    padding: 20, backgroundColor: '#0f172a', borderRadius: 12, marginBottom: 16
   },
-  statusIcon: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  statusText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionBtn: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
+  statusIcon: { fontSize: 32, marginRight: 12 },
+  statusText: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  buttonGroup: { flexDirection: 'row', gap: 8 },
+  actionBtn: { flex: 1, padding: 14, borderRadius: 12, alignItems: 'center' },
   btnGreen: { backgroundColor: '#22c55e' },
   btnYellow: { backgroundColor: '#eab308' },
   btnRed: { backgroundColor: '#ef4444' },
-  actionBtnText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  stat: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 4,
-  },
+  actionBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  stat: { alignItems: 'center' },
+  statValue: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
+  statLabel: { fontSize: 12, color: '#64748b', marginTop: 4 },
   historyItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#334155'
   },
-  historyDate: {
-    color: '#94a3b8',
-    fontSize: 14,
-  },
-  historyTime: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  emptyText: {
-    color: '#64748b',
-    textAlign: 'center',
-    padding: 20,
-  },
+  historyDate: { color: '#94a3b8', fontSize: 14 },
+  historyTime: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  emptyText: { color: '#64748b', textAlign: 'center', padding: 20 },
   
-  // Ganhos
+  // Ganhos - Seletor de Semana
+  semanaSelector: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    backgroundColor: '#1e293b', borderRadius: 12, padding: 16, marginBottom: 16
+  },
+  semanaSelectorLabel: { fontSize: 12, color: '#64748b' },
+  semanaSelectorValue: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginTop: 2 },
+  semanaSelectorPeriodo: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  semanaSelectorArrow: { fontSize: 16, color: '#64748b' },
+  
+  // Ganhos - Recibo
+  reciboBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    padding: 14, borderRadius: 12, marginBottom: 16
+  },
+  reciboBtnNovo: { backgroundColor: '#3b82f6' },
+  reciboBtnExiste: { backgroundColor: '#22c55e' },
+  reciboBtnIcon: { fontSize: 18, marginRight: 8 },
+  reciboBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  
   ganhoBox: {
-    backgroundColor: '#0f172a',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: '#0f172a', padding: 20, borderRadius: 12,
+    alignItems: 'center', marginBottom: 16
   },
-  ganhoLabel: {
-    fontSize: 14,
-    color: '#64748b',
-    marginBottom: 4,
-  },
-  ganhoValor: {
-    fontSize: 36,
-    fontWeight: 'bold',
-  },
+  ganhoLabel: { fontSize: 14, color: '#64748b', marginBottom: 4 },
+  ganhoValor: { fontSize: 36, fontWeight: 'bold' },
   positive: { color: '#22c55e' },
   negative: { color: '#ef4444' },
-  section: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#94a3b8',
-    marginBottom: 8,
-  },
+  section: { marginBottom: 16 },
+  sectionTitle: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8 },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#334155'
   },
-  label: {
-    color: '#94a3b8',
-    fontSize: 14,
-  },
-  value: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
+  label: { color: '#94a3b8', fontSize: 14 },
+  value: { color: '#fff', fontSize: 14, fontWeight: '500' },
   totalRow: {
-    backgroundColor: '#0f172a',
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 8,
-    borderBottomWidth: 0,
+    backgroundColor: '#0f172a', marginTop: 8, padding: 12,
+    borderRadius: 8, borderBottomWidth: 0
   },
-  totalLabel: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
+  totalLabel: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  totalValue: { color: '#22c55e', fontWeight: 'bold', fontSize: 16 },
+  
+  // Semana Modal
+  semanaList: { maxHeight: 300 },
+  semanaItem: {
+    padding: 16, borderBottomWidth: 1, borderBottomColor: '#334155'
   },
-  totalValue: {
-    color: '#22c55e',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  historyRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
-  },
-  historyPeriod: {
-    color: '#94a3b8',
-  },
-  historyValue: {
-    fontWeight: 'bold',
-  },
+  semanaItemActive: { backgroundColor: '#3b82f6', borderRadius: 8 },
+  semanaItemLabel: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  semanaItemLabelActive: { color: '#fff' },
+  semanaItemPeriodo: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
   
   // Documentos
   docItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#334155'
   },
-  docInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  docIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  docNome: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  docStatus: {
-    fontSize: 12,
-    marginTop: 2,
-  },
+  docInfo: { flexDirection: 'row', alignItems: 'center' },
+  docIcon: { fontSize: 24, marginRight: 12 },
+  docNome: { color: '#fff', fontSize: 14, fontWeight: '500' },
+  docStatus: { fontSize: 12, marginTop: 2 },
   statusOk: { color: '#22c55e' },
   statusPending: { color: '#f59e0b' },
   statusMissing: { color: '#ef4444' },
-  docArrow: {
-    color: '#64748b',
-    fontSize: 20,
-  },
-  infoBox: {
-    backgroundColor: '#1e3a5f',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  infoText: {
-    color: '#93c5fd',
-    fontSize: 13,
-    lineHeight: 20,
-  },
+  docArrow: { color: '#64748b', fontSize: 20 },
+  infoBox: { backgroundColor: '#1e3a5f', padding: 16, borderRadius: 12, marginTop: 8 },
+  infoText: { color: '#93c5fd', fontSize: 13, lineHeight: 20 },
   
   // Tickets
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 16
   },
   addBtn: {
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    backgroundColor: '#3b82f6', paddingHorizontal: 16,
+    paddingVertical: 8, borderRadius: 8
   },
-  addBtnText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  emptySubtext: {
-    color: '#64748b',
-    fontSize: 13,
-    marginTop: 4,
-  },
+  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+  emptyState: { alignItems: 'center', padding: 40 },
+  emptyIcon: { fontSize: 48, marginBottom: 12 },
   ticketCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: '#1e293b', borderRadius: 12,
+    padding: 16, marginBottom: 12
   },
   ticketHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 8
   },
-  ticketNumero: {
-    color: '#64748b',
-    fontSize: 12,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  statusBadgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  ticketTitulo: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  ticketCategoria: {
-    color: '#94a3b8',
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  ticketData: {
-    color: '#64748b',
-    fontSize: 11,
-  },
+  ticketNumero: { color: '#64748b', fontSize: 12 },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  statusBadgeText: { color: '#fff', fontSize: 10, fontWeight: '600', textTransform: 'uppercase' },
+  ticketTitulo: { color: '#fff', fontSize: 16, fontWeight: '600', marginBottom: 4 },
+  ticketData: { color: '#64748b', fontSize: 11 },
   
   // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'flex-end',
-  },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modalContent: {
-    backgroundColor: '#1e293b',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    maxHeight: '80%',
+    backgroundColor: '#1e293b', borderTopLeftRadius: 24,
+    borderTopRightRadius: 24, padding: 24, maxHeight: '80%'
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 20,
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 20 },
+  modalCloseBtn: {
+    backgroundColor: '#334155', padding: 14, borderRadius: 12,
+    alignItems: 'center', marginTop: 16
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  categoryPicker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  categoryBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#334155',
-  },
-  categoryBtnActive: {
-    backgroundColor: '#3b82f6',
-  },
-  categoryBtnText: {
-    color: '#94a3b8',
-    fontSize: 12,
-  },
-  categoryBtnTextActive: {
-    color: '#fff',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  modalBtn: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  modalBtnCancel: {
-    backgroundColor: '#334155',
-  },
-  modalBtnConfirm: {
-    backgroundColor: '#3b82f6',
-  },
-  modalBtnCancelText: {
-    color: '#94a3b8',
-    fontWeight: '600',
-  },
-  modalBtnConfirmText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
+  modalCloseBtnText: { color: '#fff', fontWeight: '600' },
+  textArea: { height: 100, textAlignVertical: 'top' },
+  categoryPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  categoryBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: '#334155' },
+  categoryBtnActive: { backgroundColor: '#3b82f6' },
+  categoryBtnText: { color: '#94a3b8', fontSize: 12 },
+  categoryBtnTextActive: { color: '#fff' },
+  modalButtons: { flexDirection: 'row', gap: 12, marginTop: 16 },
+  modalBtn: { flex: 1, padding: 14, borderRadius: 12, alignItems: 'center' },
+  modalBtnCancel: { backgroundColor: '#334155' },
+  modalBtnConfirm: { backgroundColor: '#3b82f6' },
+  modalBtnCancelText: { color: '#94a3b8', fontWeight: '600' },
+  modalBtnConfirmText: { color: '#fff', fontWeight: '600' },
   
   // Chat
   chatHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#1e293b',
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 16, backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#334155'
   },
-  backBtn: {
-    color: '#3b82f6',
-    fontSize: 16,
-  },
-  chatTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  chatMessages: {
-    flex: 1,
-    padding: 16,
-  },
-  message: {
-    maxWidth: '80%',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  messageOwn: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#3b82f6',
-  },
-  messageOther: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#334155',
-  },
-  messageAuthor: {
-    color: '#94a3b8',
-    fontSize: 11,
-    marginBottom: 4,
-  },
-  messageText: {
-    color: '#fff',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  messageTime: {
-    color: '#94a3b8',
-    fontSize: 10,
-    marginTop: 4,
-    textAlign: 'right',
-  },
+  backBtn: { color: '#3b82f6', fontSize: 16 },
+  chatTitle: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  chatMessages: { flex: 1, padding: 16 },
+  message: { maxWidth: '80%', padding: 12, borderRadius: 12, marginBottom: 12 },
+  messageOwn: { alignSelf: 'flex-end', backgroundColor: '#3b82f6' },
+  messageOther: { alignSelf: 'flex-start', backgroundColor: '#334155' },
+  messageAuthor: { color: '#94a3b8', fontSize: 11, marginBottom: 4 },
+  messageText: { color: '#fff', fontSize: 14, lineHeight: 20 },
+  messageTime: { color: '#94a3b8', fontSize: 10, marginTop: 4, textAlign: 'right' },
   chatInput: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#1e293b',
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-    alignItems: 'flex-end',
+    flexDirection: 'row', padding: 16, backgroundColor: '#1e293b',
+    borderTopWidth: 1, borderTopColor: '#334155', alignItems: 'flex-end'
   },
   chatTextInput: {
-    flex: 1,
-    backgroundColor: '#334155',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    color: '#fff',
-    maxHeight: 100,
-    marginRight: 8,
+    flex: 1, backgroundColor: '#334155', borderRadius: 20,
+    paddingHorizontal: 16, paddingVertical: 10, color: '#fff', maxHeight: 100, marginRight: 8
   },
   sendBtn: {
-    backgroundColor: '#3b82f6',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#3b82f6', width: 44, height: 44,
+    borderRadius: 22, alignItems: 'center', justifyContent: 'center'
   },
-  sendBtnText: {
-    color: '#fff',
-    fontSize: 18,
-  },
+  sendBtnText: { color: '#fff', fontSize: 18 }
 });
