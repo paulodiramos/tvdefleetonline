@@ -1521,6 +1521,8 @@ const TicketsScreen = ({ user }) => {
 
   // Modal de detalhe da vistoria para aceitar
   if (vistoriaSelecionada) {
+    const API_BASE = 'https://fleet-inspect-11.preview.emergentagent.com';
+    
     return (
       <ScrollView style={styles.screen}>
         <TouchableOpacity onPress={() => setVistoriaSelecionada(null)}>
@@ -1539,6 +1541,24 @@ const TicketsScreen = ({ user }) => {
           <Text style={styles.vistoriaDetalhe}>Quilometragem: {vistoriaSelecionada.km?.toLocaleString()} km</Text>
           <Text style={styles.vistoriaDetalhe}>Combustível: {vistoriaSelecionada.nivel_combustivel}%</Text>
         </View>
+
+        {/* Fotos da Vistoria */}
+        {vistoriaSelecionada.fotos && Object.keys(vistoriaSelecionada.fotos).length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📷 Fotos ({Object.keys(vistoriaSelecionada.fotos).length})</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+              {Object.entries(vistoriaSelecionada.fotos).map(([tipo, foto]) => (
+                <View key={tipo} style={{ marginRight: 12, alignItems: 'center' }}>
+                  <Image 
+                    source={{ uri: typeof foto === 'string' ? `${API_BASE}${foto}` : `${API_BASE}${foto.url}` }} 
+                    style={{ width: 120, height: 90, borderRadius: 8 }} 
+                  />
+                  <Text style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>{tipo}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
         
         {/* Danos Detetados */}
         {vistoriaSelecionada.danos && vistoriaSelecionada.danos.length > 0 && (
@@ -1572,6 +1592,17 @@ const TicketsScreen = ({ user }) => {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>📝 Observações</Text>
             <Text style={styles.vistoriaDetalhe}>{vistoriaSelecionada.observacoes}</Text>
+          </View>
+        )}
+
+        {/* Assinatura */}
+        {vistoriaSelecionada.assinatura_url && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>✍️ Assinatura</Text>
+            <Image 
+              source={{ uri: `${API_BASE}${vistoriaSelecionada.assinatura_url}` }} 
+              style={{ width: 200, height: 80, borderRadius: 8, marginTop: 8 }} 
+            />
           </View>
         )}
         
