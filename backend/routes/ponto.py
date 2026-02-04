@@ -1192,7 +1192,9 @@ async def get_registos_dia(
             "hora_inicio_real": reg.get("hora_inicio_real"),
             "hora_fim_real": reg.get("hora_fim_real"),
             "justificacao_edicao": reg.get("justificacao_edicao"),
-            "pausas_detalhadas": reg.get("pausas", [])
+            "pausas_detalhadas": reg.get("pausas", []),
+            "tipo": reg.get("tipo", "trabalho"),  # "trabalho" ou "pessoal"
+            "matricula": reg.get("matricula")
         })
     
     return {
