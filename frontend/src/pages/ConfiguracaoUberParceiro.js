@@ -245,6 +245,47 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     }
   };
 
+  const extrairRendimentos = async () => {
+    setExtraindo(true);
+    setResultadoExtracao(null);
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Calcular datas baseado no índice da semana
+      const hoje = new Date();
+      const diasAtras = parseInt(semanaIndex) * 7;
+      const dataFim = new Date(hoje);
+      dataFim.setDate(hoje.getDate() - diasAtras);
+      const dataInicio = new Date(dataFim);
+      dataInicio.setDate(dataFim.getDate() - 7);
+      
+      toast.info('A extrair rendimentos Uber... isto pode demorar alguns minutos.');
+      
+      const response = await axios.post(`${API}/rpa/uber/minha-extracao`, {
+        data_inicio: dataInicio.toISOString().split('T')[0],
+        data_fim: dataFim.toISOString().split('T')[0],
+        semana_index: parseInt(semanaIndex)
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 180000
+      });
+      
+      if (response.data.sucesso) {
+        toast.success(response.data.mensagem);
+        setResultadoExtracao(response.data);
+        carregarDados(); // Atualiza histórico
+      } else {
+        toast.error(response.data.erro || 'Extração falhou');
+      }
+    } catch (error) {
+      console.error('Erro extração:', error);
+      toast.error(error.response?.data?.detail || 'Erro na extração de rendimentos');
+    } finally {
+      setExtraindo(false);
+    }
+  };
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
