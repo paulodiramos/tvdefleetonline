@@ -534,6 +534,322 @@ const PontoScreen = ({ user, status, setStatus }) => {
   );
 };
 
+// ===== ECRÃS PARA GESTOR/PARCEIRO =====
+
+// Ecrã de Gestão de Recibos
+const RecibosGestaoScreen = ({ user }) => {
+  const [recibos, setRecibos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filtro, setFiltro] = useState('pendente');
+
+  const loadRecibos = async () => {
+    try {
+      const data = await api.get(`/ponto/parceiro/recibos-pendentes?status=${filtro}`);
+      setRecibos(data.recibos || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadRecibos(); }, [filtro]);
+
+  const handleAprovar = async (reciboId) => {
+    try {
+      await api.post(`/ponto/parceiro/aprovar-recibo/${reciboId}`, {});
+      Alert.alert('Sucesso', 'Recibo aprovado');
+      loadRecibos();
+    } catch (e) { Alert.alert('Erro', e.message); }
+  };
+
+  const handleRejeitar = async (reciboId) => {
+    try {
+      await api.post(`/ponto/parceiro/rejeitar-recibo/${reciboId}`, {});
+      Alert.alert('Sucesso', 'Recibo rejeitado');
+      loadRecibos();
+    } catch (e) { Alert.alert('Erro', e.message); }
+  };
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  return (
+    <ScrollView style={styles.screen} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadRecibos(); setRefreshing(false); }} />}>
+      <Text style={styles.screenTitle}>📄 Verificar Recibos</Text>
+      
+      {/* Filtros */}
+      <View style={styles.filtrosRow}>
+        {['pendente', 'aprovado', 'rejeitado'].map(f => (
+          <TouchableOpacity key={f} style={[styles.filtroBtn, filtro === f && styles.filtroBtnActive]} onPress={() => setFiltro(f)}>
+            <Text style={[styles.filtroBtnText, filtro === f && styles.filtroBtnTextActive]}>{f.charAt(0).toUpperCase() + f.slice(1)}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {recibos.length === 0 ? (
+        <View style={styles.emptyState}><Text style={styles.emptyText}>Sem recibos {filtro}s</Text></View>
+      ) : recibos.map(r => (
+        <View key={r.id} style={styles.card}>
+          <View style={styles.reciboHeader}>
+            <Text style={styles.cardTitle}>{r.motorista_nome}</Text>
+            <Text style={styles.reciboSemana}>Semana {r.semana}/{r.ano}</Text>
+          </View>
+          <Text style={styles.cardSubtitle}>Ganhos: €{r.total_ganhos?.toFixed(2) || '0.00'}</Text>
+          {filtro === 'pendente' && (
+            <View style={styles.reciboActions}>
+              <TouchableOpacity style={[styles.actionBtn, styles.actionBtnApprove]} onPress={() => handleAprovar(r.id)}>
+                <Text style={styles.actionBtnText}>✓ Aprovar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionBtn, styles.actionBtnReject]} onPress={() => handleRejeitar(r.id)}>
+                <Text style={styles.actionBtnText}>✗ Rejeitar</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      ))}
+    </ScrollView>
+  );
+};
+
+// Ecrã de Resumo Semanal (Gestor/Parceiro)
+const ResumoSemanalGestaoScreen = ({ user }) => {
+  const [motoristas, setMotoristas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [semana, setSemana] = useState(null);
+  const [ano, setAno] = useState(null);
+
+  useEffect(() => {
+    const now = new Date();
+    const oneJan = new Date(now.getFullYear(), 0, 1);
+    const weekNum = Math.ceil(((now - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
+    setSemana(weekNum);
+    setAno(now.getFullYear());
+  }, []);
+
+  const loadResumo = async () => {
+    if (!semana || !ano) return;
+    try {
+      const data = await api.get(`/ponto/parceiro/resumo-semanal?semana=${semana}&ano=${ano}`);
+      setMotoristas(data.motoristas || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { if (semana && ano) loadResumo(); }, [semana, ano]);
+
+  const handleAlterarEstado = async (motoristaId, novoEstado) => {
+    try {
+      await api.post(`/ponto/parceiro/alterar-estado-resumo`, { 
+        motorista_id: motoristaId, 
+        semana, 
+        ano, 
+        estado: novoEstado 
+      });
+      Alert.alert('Sucesso', 'Estado alterado');
+      loadResumo();
+    } catch (e) { Alert.alert('Erro', e.message); }
+  };
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  return (
+    <ScrollView style={styles.screen}>
+      <Text style={styles.screenTitle}>📊 Resumo Semanal</Text>
+      <Text style={styles.cardSubtitle}>Semana {semana}/{ano}</Text>
+      
+      {/* Seletor de semana */}
+      <View style={styles.semanaSelector}>
+        <TouchableOpacity onPress={() => setSemana(s => s - 1)} style={styles.semanaBtn}><Text style={styles.semanaBtnText}>←</Text></TouchableOpacity>
+        <Text style={styles.semanaText}>Semana {semana}</Text>
+        <TouchableOpacity onPress={() => setSemana(s => s + 1)} style={styles.semanaBtn}><Text style={styles.semanaBtnText}>→</Text></TouchableOpacity>
+      </View>
+
+      {motoristas.length === 0 ? (
+        <View style={styles.emptyState}><Text style={styles.emptyText}>Sem dados para esta semana</Text></View>
+      ) : motoristas.map(m => (
+        <View key={m.id} style={styles.card}>
+          <Text style={styles.cardTitle}>{m.nome}</Text>
+          <View style={styles.resumoRow}>
+            <Text style={styles.resumoLabel}>Ganhos Uber:</Text>
+            <Text style={styles.resumoValue}>€{m.ganhos_uber?.toFixed(2) || '0.00'}</Text>
+          </View>
+          <View style={styles.resumoRow}>
+            <Text style={styles.resumoLabel}>Ganhos Bolt:</Text>
+            <Text style={styles.resumoValue}>€{m.ganhos_bolt?.toFixed(2) || '0.00'}</Text>
+          </View>
+          <View style={styles.resumoRow}>
+            <Text style={styles.resumoLabel}>Via Verde:</Text>
+            <Text style={[styles.resumoValue, { color: '#ef4444' }]}>-€{m.via_verde?.toFixed(2) || '0.00'}</Text>
+          </View>
+          <View style={styles.resumoRow}>
+            <Text style={styles.resumoLabel}>Líquido:</Text>
+            <Text style={[styles.resumoValue, { color: '#22c55e', fontWeight: 'bold' }]}>€{m.liquido?.toFixed(2) || '0.00'}</Text>
+          </View>
+          <View style={styles.estadoRow}>
+            <Text style={styles.estadoLabel}>Estado:</Text>
+            <View style={styles.estadoBtns}>
+              {['pendente', 'pago', 'confirmado'].map(e => (
+                <TouchableOpacity key={e} style={[styles.estadoBtn, m.estado === e && styles.estadoBtnActive]} onPress={() => handleAlterarEstado(m.id, e)}>
+                  <Text style={[styles.estadoBtnText, m.estado === e && styles.estadoBtnTextActive]}>{e}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      ))}
+    </ScrollView>
+  );
+};
+
+// Ecrã de Extras/Dívidas (Gestor/Parceiro)
+const ExtrasGestaoScreen = ({ user }) => {
+  const [motoristas, setMotoristas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedMotorista, setSelectedMotorista] = useState(null);
+  const [extraForm, setExtraForm] = useState({ tipo: 'debito', descricao: '', valor: '' });
+
+  const loadMotoristas = async () => {
+    try {
+      const data = await api.get('/motoristas/meus');
+      setMotoristas(data.motoristas || data || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadMotoristas(); }, []);
+
+  const handleAddExtra = async () => {
+    if (!extraForm.descricao || !extraForm.valor) {
+      Alert.alert('Erro', 'Preencha todos os campos');
+      return;
+    }
+    try {
+      await api.post('/financeiro/extras', {
+        motorista_id: selectedMotorista.id,
+        tipo: extraForm.tipo,
+        descricao: extraForm.descricao,
+        valor: parseFloat(extraForm.valor)
+      });
+      Alert.alert('Sucesso', 'Extra adicionado');
+      setShowModal(false);
+      setExtraForm({ tipo: 'debito', descricao: '', valor: '' });
+    } catch (e) { Alert.alert('Erro', e.message); }
+  };
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  return (
+    <ScrollView style={styles.screen}>
+      <Text style={styles.screenTitle}>💸 Extras / Dívidas</Text>
+      <Text style={styles.cardSubtitle}>Adicionar débitos ou créditos aos motoristas</Text>
+
+      {motoristas.map(m => (
+        <TouchableOpacity key={m.id} style={styles.card} onPress={() => { setSelectedMotorista(m); setShowModal(true); }}>
+          <View style={styles.motoristaRow}>
+            <View>
+              <Text style={styles.cardTitle}>{m.name || m.nome}</Text>
+              <Text style={styles.cardSubtitle}>{m.email}</Text>
+            </View>
+            <Text style={styles.addBtn}>+ Adicionar</Text>
+          </View>
+        </TouchableOpacity>
+      ))}
+
+      {/* Modal para adicionar extra */}
+      <Modal visible={showModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Adicionar Extra</Text>
+            <Text style={styles.modalSubtitle}>{selectedMotorista?.name || selectedMotorista?.nome}</Text>
+            
+            <View style={styles.tipoSelector}>
+              <TouchableOpacity 
+                style={[styles.tipoBtn, extraForm.tipo === 'debito' && styles.tipoBtnDebito]} 
+                onPress={() => setExtraForm({ ...extraForm, tipo: 'debito' })}
+              >
+                <Text style={styles.tipoBtnText}>Débito (-)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tipoBtn, extraForm.tipo === 'credito' && styles.tipoBtnCredito]} 
+                onPress={() => setExtraForm({ ...extraForm, tipo: 'credito' })}
+              >
+                <Text style={styles.tipoBtnText}>Crédito (+)</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TextInput 
+              style={styles.input} 
+              placeholder="Descrição" 
+              placeholderTextColor="#64748b"
+              value={extraForm.descricao}
+              onChangeText={(t) => setExtraForm({ ...extraForm, descricao: t })}
+            />
+            <TextInput 
+              style={styles.input} 
+              placeholder="Valor (€)" 
+              placeholderTextColor="#64748b"
+              keyboardType="numeric"
+              value={extraForm.valor}
+              onChangeText={(t) => setExtraForm({ ...extraForm, valor: t })}
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)}>
+                <Text style={styles.cancelBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btn} onPress={handleAddExtra}>
+                <Text style={styles.btnText}>Adicionar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </ScrollView>
+  );
+};
+
+// Ecrã de Alertas (Gestor/Parceiro)
+const AlertasGestaoScreen = ({ user }) => {
+  const [alertas, setAlertas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadAlertas = async () => {
+    try {
+      const data = await api.get('/alertas/parceiro');
+      setAlertas(data.alertas || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadAlertas(); }, []);
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  return (
+    <ScrollView style={styles.screen}>
+      <Text style={styles.screenTitle}>🔔 Alertas</Text>
+      
+      {alertas.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>✅ Sem alertas pendentes</Text>
+        </View>
+      ) : alertas.map(a => (
+        <View key={a.id} style={[styles.card, a.prioridade === 'alta' && styles.cardAlerta]}>
+          <View style={styles.alertaHeader}>
+            <Text style={styles.alertaIcon}>{a.tipo === 'documento' ? '📄' : a.tipo === 'veiculo' ? '🚗' : '⚠️'}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>{a.titulo}</Text>
+              <Text style={styles.cardSubtitle}>{a.descricao}</Text>
+            </View>
+            {a.prioridade === 'alta' && <Text style={styles.alertaPrioridade}>URGENTE</Text>}
+          </View>
+          {a.motorista_nome && <Text style={styles.alertaMotorista}>Motorista: {a.motorista_nome}</Text>}
+          {a.data_limite && <Text style={styles.alertaData}>Data limite: {a.data_limite}</Text>}
+        </View>
+      ))}
+    </ScrollView>
+  );
+};
+
 // ===== GANHOS SCREEN =====
 const GanhosScreen = () => {
   const [semanas, setSemanas] = useState([]);
