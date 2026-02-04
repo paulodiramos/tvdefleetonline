@@ -78,6 +78,7 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
     setSelectedParceiro(parceiro);
     setLoginStep(0);
     setSmsCode('');
+    setResultadoExtracao(null);
     
     // Carregar credenciais existentes
     try {
@@ -95,6 +96,17 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
     } catch (error) {
       // Sem credenciais existentes
       setCredenciais({ email: '', password: '', telefone: '' });
+    }
+    
+    // Carregar histórico de importações
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/rpa/uber/historico/${parceiro.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setHistorico(response.data || []);
+    } catch (error) {
+      setHistorico([]);
     }
   };
 
