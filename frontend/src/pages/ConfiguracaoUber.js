@@ -616,6 +616,116 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
                       </Button>
                     </div>
                   )}
+                  
+                  {/* Secção de Extração de Rendimentos */}
+                  <div className="border-t border-slate-700 pt-6 space-y-4">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Download className="w-4 h-4 text-green-500" />
+                      Extrair Rendimentos (CSV)
+                    </h4>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm text-gray-400 mb-1 block">Selecionar Semana</label>
+                        <Select value={semanaIndex} onValueChange={setSemanaIndex}>
+                          <SelectTrigger className="bg-slate-700 border-slate-600">
+                            <SelectValue placeholder="Selecione a semana" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">Semana Atual</SelectItem>
+                            <SelectItem value="1">Semana Passada</SelectItem>
+                            <SelectItem value="2">Há 2 Semanas</SelectItem>
+                            <SelectItem value="3">Há 3 Semanas</SelectItem>
+                            <SelectItem value="4">Há 4 Semanas</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <Button 
+                        onClick={extrairRendimentos}
+                        disabled={extraindo}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        {extraindo ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            A extrair rendimentos...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4 mr-2" />
+                            Extrair Rendimentos Uber
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {/* Resultado da Extração */}
+                    {resultadoExtracao && (
+                      <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg space-y-3">
+                        <div className="flex items-center gap-2 text-green-500">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-medium">Extração Concluída!</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 bg-slate-800 rounded-lg">
+                            <div className="flex items-center gap-2 text-gray-400 text-sm">
+                              <Users className="w-4 h-4" />
+                              Motoristas
+                            </div>
+                            <div className="text-xl font-bold text-white">
+                              {resultadoExtracao.total_motoristas}
+                            </div>
+                          </div>
+                          <div className="p-3 bg-slate-800 rounded-lg">
+                            <div className="flex items-center gap-2 text-gray-400 text-sm">
+                              <DollarSign className="w-4 h-4" />
+                              Total
+                            </div>
+                            <div className="text-xl font-bold text-green-400">
+                              €{resultadoExtracao.total_rendimentos?.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Lista de Motoristas */}
+                        {resultadoExtracao.motoristas?.length > 0 && (
+                          <div className="max-h-48 overflow-y-auto space-y-1">
+                            {resultadoExtracao.motoristas.map((m, i) => (
+                              <div key={i} className="flex justify-between items-center p-2 bg-slate-800/50 rounded text-sm">
+                                <span className="text-gray-300">{m.nome}</span>
+                                <span className="text-green-400 font-medium">€{m.rendimentos_liquidos?.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Histórico de Importações */}
+                    {historico.length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-sm text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Últimas Importações
+                        </h5>
+                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                          {historico.slice(0, 5).map((imp, i) => (
+                            <div key={i} className="flex justify-between items-center p-2 bg-slate-800/30 rounded text-xs">
+                              <span className="text-gray-400">
+                                {new Date(imp.created_at).toLocaleDateString('pt-PT')}
+                              </span>
+                              <span className="text-gray-300">
+                                {imp.total_motoristas} motoristas
+                              </span>
+                              <span className="text-green-400">€{imp.total_rendimentos?.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
