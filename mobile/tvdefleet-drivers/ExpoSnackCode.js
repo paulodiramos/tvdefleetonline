@@ -1863,6 +1863,8 @@ const VistoriasScreen = ({ user }) => {
   const [selectedMotorista, setSelectedMotorista] = useState(null);
   const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
   const [searchMatricula, setSearchMatricula] = useState('');
+  const [showAssinaturaModal, setShowAssinaturaModal] = useState(false);
+  const [assinaturaPath, setAssinaturaPath] = useState([]);
 
   // Filtrar motoristas pela matrícula
   const motoristasFiltrados = searchMatricula 
