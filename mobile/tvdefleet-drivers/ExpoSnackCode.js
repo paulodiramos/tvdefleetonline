@@ -828,14 +828,44 @@ const TicketsScreen = ({ user }) => {
             <TextInput style={styles.input} placeholder="Título" placeholderTextColor="#64748b" value={form.titulo} onChangeText={t => setForm({...form, titulo: t})} />
             <TextInput style={[styles.input, { height: 100 }]} placeholder="Descrição detalhada..." placeholderTextColor="#64748b" value={form.descricao} onChangeText={t => setForm({...form, descricao: t})} multiline />
             
-            {/* Info sobre anexos */}
-            <View style={styles.anexoInfo}>
-              <Text style={styles.anexoInfoText}>📎 Pode anexar fotos/PDF após criar o ticket</Text>
+            {/* Secção de Fotos - sempre visível mas destacada para acidente/avaria */}
+            <View style={[styles.fotosSection, categoriaAtual.foto && styles.fotosSectionDestaque]}>
+              <Text style={styles.fotosSectionTitle}>
+                {categoriaAtual.foto ? '📷 Fotos (Recomendado)' : '📷 Fotos (Opcional)'}
+              </Text>
+              
+              {form.fotos.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.fotosPreview}>
+                  {form.fotos.map((foto, idx) => (
+                    <View key={idx} style={styles.fotoPreviewItem}>
+                      <Image source={{ uri: foto.uri }} style={styles.fotoPreviewImg} />
+                      <TouchableOpacity style={styles.fotoRemoveBtn} onPress={() => removerFoto(idx)}>
+                        <Text style={styles.fotoRemoveBtnText}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+              
+              <View style={styles.fotoBtns}>
+                <TouchableOpacity style={styles.fotoBtn} onPress={tirarFoto}>
+                  <Text style={styles.fotoBtnText}>📸 Tirar Foto</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.fotoBtn} onPress={escolherFoto}>
+                  <Text style={styles.fotoBtnText}>🖼️ Galeria</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {categoriaAtual.foto && form.fotos.length === 0 && (
+                <Text style={styles.fotoHint}>⚠️ Para {categoriaAtual.label.toLowerCase()}, é importante anexar fotos</Text>
+              )}
             </View>
             
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => { setModal(false); setShowCategorias(false); }}><Text style={styles.modalBtnCancelText}>Cancelar</Text></TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={criar}><Text style={styles.modalBtnConfirmText}>Criar</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => { setModal(false); setShowCategorias(false); setForm({ titulo: '', categoria: 'esclarecimentos', descricao: '', fotos: [] }); }}><Text style={styles.modalBtnCancelText}>Cancelar</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm, enviando && styles.btnDisabled]} onPress={criar} disabled={enviando}>
+                <Text style={styles.modalBtnConfirmText}>{enviando ? 'A enviar...' : 'Criar'}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
