@@ -2102,7 +2102,7 @@ export default function App() {
         {renderScreen()}
       </View>
       <TabBar activeTab={tab} onTabChange={setTab} userRole={user.role} />
-      <GPSPopup visible={gps.visible} type={gps.type} onYes={() => handleGPS(true)} onNo={() => handleGPS(false)} />
+      <GPSPopup visible={gps.visible} type={gps.type} onYes={() => handleGPS(true)} onNo={() => handleGPS(false)} onDoNotDisturb={handleDoNotDisturb} />
     </View>
   );
 }
