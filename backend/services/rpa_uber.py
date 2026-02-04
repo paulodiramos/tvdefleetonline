@@ -164,48 +164,54 @@ class UberRPA:
             
             await self.screenshot("apos_continuar")
             
-            # VERIFICAR SE HÁ CAPTCHA/PUZZLE - Uber usa "Protecting your account"
+            # VERIFICAR SE HÁ CAPTCHA/PUZZLE - Uber usa "Protecting your account" ou "Proteger a sua conta"
             captcha_detectado = False
             
-            # Verificar se há texto de proteção de conta
-            protecting_text = self.page.locator('text=Protecting your account')
-            puzzle_btn = self.page.locator('button:has-text("Start Puzzle"), button:has-text("Iniciar Puzzle")')
+            # Verificar se há texto de proteção de conta (PT e EN)
+            protecting_text = self.page.locator('text=/Protecting your account|Proteger a sua conta|Resolva este desafio/')
+            puzzle_btn = self.page.locator('button:has-text("Start Puzzle"), button:has-text("Iniciar desafio"), button:has-text("Iniciar Puzzle")')
             
             if await protecting_text.count() > 0 or await puzzle_btn.count() > 0:
                 captcha_detectado = True
-                logger.info("🧩 CAPTCHA puzzle detectado!")
+                logger.info("🧩 CAPTCHA/desafio de segurança detectado!")
                 await self.screenshot("captcha_detectado")
                 
-                # Tentar clicar no botão Start Puzzle
+                # Tentar clicar no botão Iniciar desafio
                 if await puzzle_btn.count() > 0:
-                    logger.info("🧩 A clicar em Start Puzzle...")
+                    logger.info("🧩 A clicar em Iniciar desafio...")
                     await puzzle_btn.first.click()
-                    await self.page.wait_for_timeout(5000)
+                    await self.page.wait_for_timeout(8000)
                     await self.screenshot("puzzle_iniciado")
                     
-                    # Tentar resolver o puzzle (alguns são simples cliques)
-                    for attempt in range(5):
+                    # Tentar resolver o puzzle
+                    for attempt in range(10):
                         try:
                             # Verificar se ainda está no puzzle
-                            still_puzzle = self.page.locator('text=Protecting your account')
+                            still_puzzle = self.page.locator('text=/Protecting your account|Proteger a sua conta/')
                             if await still_puzzle.count() == 0:
-                                logger.info("✅ Puzzle parece ter sido resolvido!")
+                                logger.info("✅ Desafio parece ter sido resolvido!")
                                 captcha_detectado = False
                                 break
                             
-                            # Procurar iframes de puzzle
+                            # Procurar iframes de puzzle (Arkose Labs usa iframes)
                             frames = self.page.frames
                             for frame in frames[1:]:  # Skip main frame
                                 try:
-                                    # Tentar clicar em elementos do puzzle
-                                    clickables = frame.locator('div[role="button"], button, img, canvas')
-                                    count = await clickables.count()
-                                    if count > 0:
-                                        await clickables.first.click()
-                                        logger.info(f"🧩 Tentativa {attempt+1}: Clicou em elemento")
-                                        await self.page.wait_for_timeout(2000)
-                                except:
-                                    pass
+                                    # Verificar se é um iframe de verificação
+                                    frame_url = frame.url
+                                    if 'arkoselabs' in frame_url or 'funcaptcha' in frame_url or 'client-api' in frame_url:
+                                        logger.info(f"🧩 Iframe de puzzle encontrado: {frame_url[:50]}...")
+                                        
+                                        # Tentar clicar em elementos do puzzle
+                                        clickables = frame.locator('div[role="button"], button, img, canvas, [data-theme]')
+                                        count = await clickables.count()
+                                        if count > 0:
+                                            # Clicar no centro do primeiro elemento
+                                            await clickables.first.click()
+                                            logger.info(f"🧩 Tentativa {attempt+1}: Clicou em elemento do puzzle")
+                                            await self.page.wait_for_timeout(2000)
+                                except Exception as fe:
+                                    logger.debug(f"Frame error: {fe}")
                             
                             await self.page.wait_for_timeout(3000)
                             await self.screenshot(f"puzzle_tentativa_{attempt+1}")
@@ -217,7 +223,9 @@ class UberRPA:
                 
                 if captcha_detectado:
                     logger.warning("⚠️ CAPTCHA não foi possível resolver automaticamente")
-                    logger.warning("💡 Sugestão: Fazer login manual primeiro e usar sessão guardada")
+                    logger.warning("💡 O desafio de segurança da Uber requer intervenção manual")
+                    logger.warning("💡 Sugestão: Fazer login manual no browser, depois guardar sessão")
+                    return False  # Retornar falso se CAPTCHA não resolvido
             
             # VERIFICAR SE PEDE SMS
             # Procurar opção "Enviar códigos por SMS" ou campo de código
