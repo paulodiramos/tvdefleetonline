@@ -296,6 +296,49 @@ async def register_motorista(motorista_data: MotoristaCreate):
     return Motorista(**motorista_dict)
 
 
+@router.get("/motoristas/meus")
+async def get_meus_motoristas(current_user: Dict = Depends(get_current_user)):
+    """Listar motoristas para app móvel - funciona para parceiros, gestores e inspetores"""
+    
+    query = {"deleted": {"$ne": True}}
+    
+    if current_user["role"] == "parceiro":
+        query["parceiro_atribuido"] = current_user["id"]
+    elif current_user["role"] == "gestao":
+        # Gestor vê motoristas dos parceiros atribuídos
+        parceiros_ids = current_user.get("parceiros_atribuidos", [])
+        if parceiros_ids:
+            query["parceiro_atribuido"] = {"$in": parceiros_ids}
+        else:
+            return {"motoristas": []}
+    elif current_user["role"] == "inspetor":
+        # Inspetor vê motoristas dos parceiros associados
+        parceiros_ids = current_user.get("parceiros_associados", [])
+        if parceiros_ids:
+            query["parceiro_atribuido"] = {"$in": parceiros_ids}
+        else:
+            return {"motoristas": []}
+    else:
+        return {"motoristas": []}
+    
+    motoristas = await db.motoristas.find(
+        query, 
+        {"_id": 0, "id": 1, "name": 1, "email": 1, "telefone": 1, "veiculo_atribuido": 1}
+    ).to_list(200)
+    
+    # Enriquecer com matrícula do veículo
+    for m in motoristas:
+        if m.get("veiculo_atribuido"):
+            veiculo = await db.vehicles.find_one(
+                {"id": m["veiculo_atribuido"]},
+                {"_id": 0, "matricula": 1}
+            )
+            if veiculo:
+                m["veiculo_matricula"] = veiculo.get("matricula")
+    
+    return {"motoristas": motoristas, "total": len(motoristas)}
+
+
 @router.get("/motoristas", response_model=List[Motorista])
 async def get_motoristas(current_user: Dict = Depends(get_current_user)):
     """Get all motoristas (filtered by role)"""
