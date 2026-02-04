@@ -406,3 +406,187 @@ async def documentos_pendentes_validacao(
         "pendentes": documentos,
         "total": len(documentos)
     }
+
+
+# ============ RECIBOS SEMANAIS ============
+
+class ReciboSemanalRequest(BaseModel):
+    semana: int
+    ano: int
+    valor_liquido: Optional[float] = None
+
+
+@router.post("/recibo-semanal")
+async def enviar_recibo_semanal(
+    data: ReciboSemanalRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Motorista envia/reenvia recibo semanal para aprovação do parceiro.
+    Estados: pendente, aprovado, rejeitado
+    """
+    
+    if current_user["role"] != "motorista":
+        raise HTTPException(status_code=403, detail="Apenas motoristas podem enviar recibos")
+    
+    motorista_id = current_user["id"]
+    now = datetime.now(timezone.utc)
+    
+    # Verificar se já existe recibo
+    recibo_existente = await db.recibos_semanais.find_one({
+        "motorista_id": motorista_id,
+        "semana": data.semana,
+        "ano": data.ano
+    }, {"_id": 0})
+    
+    if recibo_existente:
+        # Se já foi aprovado, não pode alterar
+        if recibo_existente.get("status") == "aprovado":
+            raise HTTPException(
+                status_code=400, 
+                detail="Este recibo já foi aprovado e não pode ser alterado"
+            )
+        
+        # Atualizar para pendente (reenvio)
+        await db.recibos_semanais.update_one(
+            {"motorista_id": motorista_id, "semana": data.semana, "ano": data.ano},
+            {"$set": {
+                "status": "pendente",
+                "valor_liquido": data.valor_liquido,
+                "reenviado_em": now.isoformat(),
+                "motivo_rejeicao": None,
+                "updated_at": now.isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": "Recibo reenviado para aprovação"
+        }
+    
+    # Criar novo recibo
+    recibo = {
+        "id": str(uuid.uuid4()),
+        "motorista_id": motorista_id,
+        "semana": data.semana,
+        "ano": data.ano,
+        "valor_liquido": data.valor_liquido,
+        "status": "pendente",
+        "created_at": now.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    
+    await db.recibos_semanais.insert_one(recibo)
+    
+    logger.info(f"Recibo semanal {data.semana}/{data.ano} enviado por motorista {motorista_id}")
+    
+    return {
+        "success": True,
+        "message": "Recibo enviado para aprovação"
+    }
+
+
+@router.get("/recibos-pendentes")
+async def listar_recibos_pendentes(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar recibos semanais pendentes (para parceiros)"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Build query based on role
+    if current_user["role"] == "parceiro":
+        motoristas = await db.motoristas.find(
+            {"parceiro_atribuido": current_user["id"]},
+            {"_id": 0, "id": 1}
+        ).to_list(500)
+        motorista_ids = [m["id"] for m in motoristas]
+        
+        query = {
+            "motorista_id": {"$in": motorista_ids},
+            "status": "pendente"
+        }
+    else:
+        query = {"status": "pendente"}
+    
+    recibos = await db.recibos_semanais.find(
+        query, {"_id": 0}
+    ).sort("created_at", 1).to_list(200)
+    
+    # Adicionar info do motorista
+    for recibo in recibos:
+        motorista = await db.motoristas.find_one(
+            {"id": recibo["motorista_id"]},
+            {"_id": 0, "name": 1, "email": 1}
+        )
+        recibo["motorista_nome"] = motorista.get("name") if motorista else "Desconhecido"
+    
+    return {
+        "recibos": recibos,
+        "total": len(recibos)
+    }
+
+
+@router.post("/recibo/{recibo_id}/aprovar")
+async def aprovar_recibo(
+    recibo_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Aprovar recibo semanal"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    recibo = await db.recibos_semanais.find_one({"id": recibo_id}, {"_id": 0})
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Recibo não encontrado")
+    
+    now = datetime.now(timezone.utc)
+    
+    await db.recibos_semanais.update_one(
+        {"id": recibo_id},
+        {"$set": {
+            "status": "aprovado",
+            "aprovado_por": current_user["id"],
+            "aprovado_em": now.isoformat(),
+            "updated_at": now.isoformat()
+        }}
+    )
+    
+    return {"success": True, "message": "Recibo aprovado"}
+
+
+class RejeitarReciboRequest(BaseModel):
+    motivo: str
+
+
+@router.post("/recibo/{recibo_id}/rejeitar")
+async def rejeitar_recibo(
+    recibo_id: str,
+    data: RejeitarReciboRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Rejeitar recibo semanal"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    recibo = await db.recibos_semanais.find_one({"id": recibo_id}, {"_id": 0})
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Recibo não encontrado")
+    
+    now = datetime.now(timezone.utc)
+    
+    await db.recibos_semanais.update_one(
+        {"id": recibo_id},
+        {"$set": {
+            "status": "rejeitado",
+            "motivo_rejeicao": data.motivo,
+            "rejeitado_por": current_user["id"],
+            "rejeitado_em": now.isoformat(),
+            "updated_at": now.isoformat()
+        }}
+    )
+    
+    return {"success": True, "message": "Recibo rejeitado"}
