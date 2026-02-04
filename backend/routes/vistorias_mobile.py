@@ -39,6 +39,8 @@ class VistoriaCreate(BaseModel):
     nivel_combustivel: int
     observacoes: Optional[str] = ""
     assinatura: Optional[str] = None  # base64
+    motorista_id: Optional[str] = None  # ID do motorista (para inspetor/parceiro)
+    veiculo_id: Optional[str] = None  # ID do veículo
 
 
 @router.get("/minhas")
