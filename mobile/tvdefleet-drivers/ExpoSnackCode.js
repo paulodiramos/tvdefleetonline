@@ -2174,29 +2174,46 @@ const VistoriasScreen = ({ user }) => {
           {step === 1 && (
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>📷 Fotografar Veículo</Text>
-              <Text style={styles.stepSubtitle}>Tire as fotos obrigatórias (*) do veículo</Text>
+              <Text style={styles.stepSubtitle}>Tire as fotos obrigatórias (*). Pode adicionar mais fotos em cada campo.</Text>
               
               <View style={styles.fotosGrid}>
                 {FOTOS_OBRIGATORIAS.map(foto => {
-                  const tirada = fotos[foto.id];
+                  const fotoData = fotos[foto.id];
+                  const temFoto = fotoData && (Array.isArray(fotoData) ? fotoData.length > 0 : true);
+                  const fotoCount = getFotoCount(foto.id);
                   const obrigatoria = ['frente', 'traseira', 'lateral_esq', 'lateral_dir', 'km'].includes(foto.id);
+                  const primeiraFoto = Array.isArray(fotoData) ? fotoData[0] : fotoData;
                   
                   return (
-                    <TouchableOpacity 
-                      key={foto.id} 
-                      style={[styles.fotoCard, tirada && styles.fotoCardDone]}
-                      onPress={() => tirarFoto(foto.id)}
-                    >
-                      {tirada ? (
-                        <Image source={{ uri: tirada.uri }} style={styles.fotoThumb} />
-                      ) : (
-                        <Text style={styles.fotoIcon}>{foto.icon}</Text>
+                    <View key={foto.id} style={styles.fotoCardContainer}>
+                      <TouchableOpacity 
+                        style={[styles.fotoCard, temFoto && styles.fotoCardDone]}
+                        onPress={() => tirarFoto(foto.id)}
+                      >
+                        {temFoto ? (
+                          <Image source={{ uri: primeiraFoto.uri }} style={styles.fotoThumb} />
+                        ) : (
+                          <Text style={styles.fotoIcon}>{foto.icon}</Text>
+                        )}
+                        <Text style={styles.fotoLabel}>
+                          {foto.label}{obrigatoria ? ' *' : ''}
+                        </Text>
+                        {fotoCount > 0 && (
+                          <View style={styles.fotoCountBadge}>
+                            <Text style={styles.fotoCountText}>{fotoCount}</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                      {/* Botão para adicionar mais fotos */}
+                      {temFoto && (
+                        <TouchableOpacity 
+                          style={styles.addMoreFotoBtn}
+                          onPress={() => tirarFoto(foto.id, true)}
+                        >
+                          <Text style={styles.addMoreFotoBtnText}>+ Mais</Text>
+                        </TouchableOpacity>
                       )}
-                      <Text style={styles.fotoLabel}>
-                        {foto.label}{obrigatoria ? ' *' : ''}
-                      </Text>
-                      {tirada && <Text style={styles.fotoCheck}>✓</Text>}
-                    </TouchableOpacity>
+                    </View>
                   );
                 })}
               </View>
