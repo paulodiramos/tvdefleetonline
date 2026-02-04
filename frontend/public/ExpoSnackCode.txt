@@ -634,12 +634,13 @@ const RecibosGestaoScreen = ({ user }) => {
   );
 };
 
-// Ecrã de Resumo Semanal (Gestor/Parceiro)
+// Ecrã de Resumo Semanal (Gestor/Parceiro) - CORRIGIDO
 const ResumoSemanalGestaoScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [semana, setSemana] = useState(null);
   const [ano, setAno] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -654,7 +655,7 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
     try {
       const data = await api.get(`/ponto/parceiro/resumo-semanal?semana=${semana}&ano=${ano}`);
       setMotoristas(data.motoristas || []);
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error('Erro ao carregar resumo:', e); }
     setLoading(false);
   };
 
@@ -662,12 +663,7 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
 
   const handleAlterarEstado = async (motoristaId, novoEstado) => {
     try {
-      await api.post(`/ponto/parceiro/alterar-estado-resumo`, { 
-        motorista_id: motoristaId, 
-        semana, 
-        ano, 
-        estado: novoEstado 
-      });
+      await api.post(`/ponto/parceiro/alterar-estado-resumo?motorista_id=${motoristaId}&semana=${semana}&ano=${ano}&estado=${novoEstado}`, {});
       Alert.alert('Sucesso', 'Estado alterado');
       loadResumo();
     } catch (e) { Alert.alert('Erro', e.message); }
@@ -676,22 +672,22 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
   return (
-    <ScrollView style={styles.screen}>
+    <ScrollView style={styles.screen} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadResumo(); setRefreshing(false); }} />}>
       <Text style={styles.screenTitle}>📊 Resumo Semanal</Text>
-      <Text style={styles.cardSubtitle}>Semana {semana}/{ano}</Text>
       
       {/* Seletor de semana */}
       <View style={styles.semanaSelector}>
-        <TouchableOpacity onPress={() => setSemana(s => s - 1)} style={styles.semanaBtn}><Text style={styles.semanaBtnText}>←</Text></TouchableOpacity>
-        <Text style={styles.semanaText}>Semana {semana}</Text>
-        <TouchableOpacity onPress={() => setSemana(s => s + 1)} style={styles.semanaBtn}><Text style={styles.semanaBtnText}>→</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => { setSemana(s => s > 1 ? s - 1 : 52); if (semana === 1) setAno(a => a - 1); }} style={styles.semanaBtn}><Text style={styles.semanaBtnText}>←</Text></TouchableOpacity>
+        <Text style={styles.semanaText}>Semana {semana}/{ano}</Text>
+        <TouchableOpacity onPress={() => { setSemana(s => s < 52 ? s + 1 : 1); if (semana === 52) setAno(a => a + 1); }} style={styles.semanaBtn}><Text style={styles.semanaBtnText}>→</Text></TouchableOpacity>
       </View>
 
       {motoristas.length === 0 ? (
-        <View style={styles.emptyState}><Text style={styles.emptyText}>Sem dados para esta semana</Text></View>
+        <View style={styles.emptyState}><Text style={styles.emptyText}>Sem motoristas associados</Text></View>
       ) : motoristas.map(m => (
         <View key={m.id} style={styles.card}>
           <Text style={styles.cardTitle}>{m.nome}</Text>
+          <Text style={styles.cardSubtitle}>{m.email}</Text>
           <View style={styles.resumoRow}>
             <Text style={styles.resumoLabel}>Ganhos Uber:</Text>
             <Text style={styles.resumoValue}>€{m.ganhos_uber?.toFixed(2) || '0.00'}</Text>
@@ -709,7 +705,7 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
             <Text style={[styles.resumoValue, { color: '#22c55e', fontWeight: 'bold' }]}>€{m.liquido?.toFixed(2) || '0.00'}</Text>
           </View>
           <View style={styles.estadoRow}>
-            <Text style={styles.estadoLabel}>Estado:</Text>
+            <Text style={styles.estadoLabel}>Estado: {m.estado === 'sem_dados' ? '📭 Sem dados' : m.estado}</Text>
             <View style={styles.estadoBtns}>
               {['pendente', 'pago', 'confirmado'].map(e => (
                 <TouchableOpacity key={e} style={[styles.estadoBtn, m.estado === e && styles.estadoBtnActive]} onPress={() => handleAlterarEstado(m.id, e)}>
