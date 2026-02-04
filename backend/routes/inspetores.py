@@ -236,6 +236,65 @@ async def atualizar_inspetor(
     return {"success": True, "message": "Inspetor atualizado"}
 
 
+class InspetorEditSchema(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    password: Optional[str] = None
+
+
+@router.put("/{inspetor_id}/editar")
+async def editar_inspetor_completo(
+    inspetor_id: str,
+    data: InspetorEditSchema,
+    current_user: dict = Depends(get_current_user)
+):
+    """Editar inspetor - nome, email, telefone e password"""
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    inspetor = await db.users.find_one(
+        {"id": inspetor_id, "role": UserRole.INSPETOR},
+        {"_id": 0}
+    )
+    
+    if not inspetor:
+        raise HTTPException(status_code=404, detail="Inspetor não encontrado")
+    
+    # Verificar permissão
+    if current_user["role"] == UserRole.PARCEIRO:
+        if current_user["id"] not in inspetor.get("parceiros_associados", []):
+            raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Verificar se email já existe (se foi alterado)
+    if data.email != inspetor.get("email"):
+        existing = await db.users.find_one(
+            {"email": data.email, "id": {"$ne": inspetor_id}},
+            {"_id": 0}
+        )
+        if existing:
+            raise HTTPException(status_code=400, detail="Email já está em uso")
+    
+    update_data = {
+        "name": data.name,
+        "email": data.email,
+        "phone": data.phone,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Se password foi fornecida, atualizar
+    if data.password and len(data.password) >= 6:
+        update_data["password"] = hash_password(data.password)
+    
+    await db.users.update_one(
+        {"id": inspetor_id},
+        {"$set": update_data}
+    )
+    
+    return {"success": True, "message": "Inspetor atualizado com sucesso"}
+
+
 @router.delete("/{inspetor_id}")
 async def eliminar_inspetor(
     inspetor_id: str,
