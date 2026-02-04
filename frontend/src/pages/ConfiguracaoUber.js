@@ -4,39 +4,17 @@ import { API } from '@/App';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
-  Car, Settings, CheckCircle, AlertCircle, RefreshCw, 
-  Key, Clock, User, Building, ExternalLink, Loader2,
-  Shield, Smartphone, Lock, Download, Calendar, FileText, 
-  DollarSign, Users, TrendingUp
+  Car, CheckCircle, AlertCircle, RefreshCw, 
+  Clock, Building, Loader2, Shield, Users, Eye
 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const ConfiguracaoUber = ({ user, onLogout }) => {
   const [parceiros, setParceiros] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedParceiro, setSelectedParceiro] = useState(null);
-  const [credenciais, setCredenciais] = useState({ email: '', password: '', telefone: '' });
   const [sessaoStatus, setSessaoStatus] = useState({});
-  const [loginStep, setLoginStep] = useState(0); // 0: inicial, 1: aguardando SMS, 2: sucesso
-  const [smsCode, setSmsCode] = useState('');
-  const [executando, setExecutando] = useState(false);
-  const [loginWindow, setLoginWindow] = useState(null);
-  
-  // Estados para extração de rendimentos
-  const [extraindo, setExtraindo] = useState(false);
-  const [semanaIndex, setSemanaIndex] = useState("0");
-  const [resultadoExtracao, setResultadoExtracao] = useState(null);
-  const [historico, setHistorico] = useState([]);
 
   useEffect(() => {
     fetchParceiros();
@@ -74,250 +52,6 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
     }
   };
 
-  const handleSelectParceiro = async (parceiro) => {
-    setSelectedParceiro(parceiro);
-    setLoginStep(0);
-    setSmsCode('');
-    setResultadoExtracao(null);
-    
-    // Carregar credenciais existentes
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/rpa/uber/credenciais/${parceiro.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.data) {
-        setCredenciais({
-          email: response.data.email || '',
-          password: response.data.password || '',
-          telefone: response.data.telefone || ''
-        });
-      }
-    } catch (error) {
-      // Sem credenciais existentes
-      setCredenciais({ email: '', password: '', telefone: '' });
-    }
-    
-    // Carregar histórico de importações
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/rpa/uber/historico/${parceiro.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setHistorico(response.data || []);
-    } catch (error) {
-      setHistorico([]);
-    }
-  };
-
-  const salvarCredenciais = async () => {
-    if (!selectedParceiro) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/rpa/uber/credenciais/${selectedParceiro.id}`, credenciais, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success('Credenciais guardadas!');
-    } catch (error) {
-      toast.error('Erro ao guardar credenciais');
-    }
-  };
-
-  const iniciarLoginUber = async () => {
-    if (!selectedParceiro || !credenciais.email || !credenciais.password) {
-      toast.error('Preencha email e password');
-      return;
-    }
-    
-    setExecutando(true);
-    setLoginStep(1);
-    
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Primeiro, guardar credenciais
-      await salvarCredenciais();
-      
-      // Iniciar processo de login
-      const response = await axios.post(`${API}/rpa/uber/iniciar-login/${selectedParceiro.id}`, {
-        email: credenciais.email,
-        password: credenciais.password
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.sucesso) {
-        setLoginStep(2);
-        toast.success('Login Uber realizado com sucesso!');
-        checkSessaoUber(selectedParceiro.id);
-      } else if (response.data.precisa_sms) {
-        setLoginStep(1);
-        toast.info('Código SMS enviado para ' + credenciais.telefone);
-      } else if (response.data.precisa_captcha) {
-        toast.warning('CAPTCHA detectado - abrindo janela para login manual');
-        // Abrir janela popup para login manual
-        abrirLoginManual();
-      } else {
-        toast.error(response.data.erro || 'Erro no login');
-        setLoginStep(0);
-      }
-    } catch (error) {
-      console.error('Erro no login:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao iniciar login');
-      setLoginStep(0);
-    } finally {
-      setExecutando(false);
-    }
-  };
-
-  const confirmarSMS = async () => {
-    if (!smsCode || smsCode.length !== 4) {
-      toast.error('Introduza o código de 4 dígitos');
-      return;
-    }
-    
-    setExecutando(true);
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/rpa/uber/confirmar-sms/${selectedParceiro.id}`, {
-        codigo: smsCode
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.sucesso) {
-        setLoginStep(2);
-        toast.success('Login concluído com sucesso!');
-        checkSessaoUber(selectedParceiro.id);
-      } else {
-        toast.error(response.data.erro || 'Código inválido');
-      }
-    } catch (error) {
-      toast.error('Erro ao confirmar SMS');
-    } finally {
-      setExecutando(false);
-    }
-  };
-
-  const abrirLoginManual = () => {
-    // Abrir popup para o utilizador fazer login manual
-    const width = 500;
-    const height = 700;
-    const left = (window.innerWidth - width) / 2;
-    const top = (window.innerHeight - height) / 2;
-    
-    const popup = window.open(
-      'https://auth.uber.com/v2/?next_url=https%3A%2F%2Ffleet.uber.com%2F',
-      'UberLogin',
-      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
-    );
-    
-    setLoginWindow(popup);
-    
-    // Instruções
-    toast.info(
-      'Faça login na janela que abriu. Após concluir, clique em "Confirmar Login Manual".',
-      { duration: 10000 }
-    );
-  };
-
-  const confirmarLoginManual = async () => {
-    if (loginWindow) {
-      loginWindow.close();
-      setLoginWindow(null);
-    }
-    
-    setExecutando(true);
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/rpa/uber/capturar-sessao/${selectedParceiro.id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.sucesso) {
-        setLoginStep(2);
-        toast.success('Sessão Uber capturada com sucesso!');
-        checkSessaoUber(selectedParceiro.id);
-      } else {
-        toast.error('Não foi possível capturar a sessão');
-      }
-    } catch (error) {
-      toast.error('Erro ao capturar sessão');
-    } finally {
-      setExecutando(false);
-    }
-  };
-
-  const testarSincronizacao = async (parceiroId) => {
-    try {
-      const token = localStorage.getItem('token');
-      toast.info('A testar sincronização Uber...');
-      
-      const response = await axios.post(`${API}/rpa/uber/testar/${parceiroId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.sucesso) {
-        toast.success(`Teste OK! ${response.data.mensagem || ''}`);
-      } else {
-        toast.error(response.data.erro || 'Teste falhou');
-      }
-    } catch (error) {
-      toast.error('Erro no teste de sincronização');
-    }
-  };
-
-  const extrairRendimentos = async () => {
-    if (!selectedParceiro) return;
-    
-    setExtraindo(true);
-    setResultadoExtracao(null);
-    
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Calcular datas baseado no índice da semana
-      const hoje = new Date();
-      const diasAtras = parseInt(semanaIndex) * 7;
-      const dataFim = new Date(hoje);
-      dataFim.setDate(hoje.getDate() - diasAtras);
-      const dataInicio = new Date(dataFim);
-      dataInicio.setDate(dataFim.getDate() - 7);
-      
-      toast.info('A extrair rendimentos Uber... isto pode demorar alguns minutos.');
-      
-      const response = await axios.post(`${API}/rpa/uber/extrair-rendimentos/${selectedParceiro.id}`, {
-        data_inicio: dataInicio.toISOString().split('T')[0],
-        data_fim: dataFim.toISOString().split('T')[0],
-        semana_index: parseInt(semanaIndex)
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 180000 // 3 minutos
-      });
-      
-      if (response.data.sucesso) {
-        toast.success(response.data.mensagem);
-        setResultadoExtracao(response.data);
-        
-        // Atualizar histórico
-        const histRes = await axios.get(`${API}/rpa/uber/historico/${selectedParceiro.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setHistorico(histRes.data || []);
-      } else {
-        toast.error(response.data.erro || 'Extração falhou');
-      }
-    } catch (error) {
-      console.error('Erro extração:', error);
-      toast.error(error.response?.data?.detail || 'Erro na extração de rendimentos');
-    } finally {
-      setExtraindo(false);
-    }
-  };
-
   const getSessaoStatusBadge = (parceiroId) => {
     const status = sessaoStatus[parceiroId];
     if (!status) return <Badge variant="outline">A verificar...</Badge>;
@@ -326,17 +60,22 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
       return (
         <Badge className="bg-green-600">
           <CheckCircle className="w-3 h-3 mr-1" />
-          Ativa até {new Date(status.expira).toLocaleDateString()}
+          Ativa
         </Badge>
       );
     }
     return (
       <Badge variant="destructive">
         <AlertCircle className="w-3 h-3 mr-1" />
-        Sessão Expirada
+        Expirada
       </Badge>
     );
   };
+
+  // Contagens
+  const totalParceiros = parceiros.length;
+  const sessoesAtivas = Object.values(sessaoStatus).filter(s => s?.valida).length;
+  const sessoesExpiradas = totalParceiros - sessoesAtivas;
 
   if (loading) {
     return (
@@ -356,10 +95,10 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Car className="w-7 h-7 text-blue-500" />
-              Configuração Uber Fleet
+              Monitorização Uber Fleet
             </h1>
-            <p className="text-gray-400 mt-1">
-              Configure as credenciais Uber para cada parceiro
+            <p className="text-gray-500 mt-1">
+              Acompanhe o estado das sessões Uber de todos os parceiros
             </p>
           </div>
           <Button variant="outline" onClick={fetchParceiros}>
@@ -368,385 +107,125 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Lista de Parceiros */}
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                Parceiros
-              </CardTitle>
-              <CardDescription>
-                Selecione um parceiro para configurar
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {parceiros.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">Nenhum parceiro encontrado</p>
-              ) : (
-                parceiros.map((parceiro) => (
-                  <div
-                    key={parceiro.id}
-                    className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                      selectedParceiro?.id === parceiro.id
-                        ? 'border-blue-500 bg-blue-500/10'
-                        : 'border-slate-600 hover:border-slate-500 bg-slate-700/50'
-                    }`}
-                    onClick={() => handleSelectParceiro(parceiro)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">{parceiro.nome || parceiro.name}</h3>
-                        <p className="text-sm text-gray-400">{parceiro.email}</p>
-                      </div>
-                      {getSessaoStatusBadge(parceiro.id)}
-                    </div>
-                  </div>
-                ))
-              )}
+        {/* Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Parceiros</p>
+                  <p className="text-3xl font-bold">{totalParceiros}</p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Building className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
-
-          {/* Configuração do Parceiro Selecionado */}
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                {selectedParceiro ? `Configurar: ${selectedParceiro.nome || selectedParceiro.name}` : 'Selecione um Parceiro'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!selectedParceiro ? (
-                <div className="text-center py-12 text-gray-400">
-                  <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Selecione um parceiro na lista ao lado</p>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Sessões Ativas</p>
+                  <p className="text-3xl font-bold text-green-600">{sessoesAtivas}</p>
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Credenciais */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium flex items-center gap-2">
-                      <Key className="w-4 h-4 text-yellow-500" />
-                      Credenciais Uber Fleet
-                    </h4>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm text-gray-400">Email</label>
-                        <Input
-                          type="email"
-                          placeholder="email@exemplo.com"
-                          value={credenciais.email}
-                          onChange={(e) => setCredenciais({ ...credenciais, email: e.target.value })}
-                          className="bg-slate-700 border-slate-600"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="text-sm text-gray-400">Password</label>
-                        <Input
-                          type="password"
-                          placeholder="••••••••"
-                          value={credenciais.password}
-                          onChange={(e) => setCredenciais({ ...credenciais, password: e.target.value })}
-                          className="bg-slate-700 border-slate-600"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="text-sm text-gray-400">Telefone (para SMS)</label>
-                        <Input
-                          type="tel"
-                          placeholder="920000000"
-                          value={credenciais.telefone}
-                          onChange={(e) => setCredenciais({ ...credenciais, telefone: e.target.value })}
-                          className="bg-slate-700 border-slate-600"
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button onClick={salvarCredenciais} variant="outline" className="w-full">
-                      Guardar Credenciais
-                    </Button>
-                  </div>
-
-                  {/* Processo de Login */}
-                  <div className="border-t border-slate-700 pt-6 space-y-4">
-                    <h4 className="font-medium flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-green-500" />
-                      Autenticação Uber
-                    </h4>
-
-                    {loginStep === 0 && (
-                      <div className="space-y-3">
-                        <p className="text-sm text-gray-400">
-                          Clique para iniciar o processo de login. Se a Uber pedir CAPTCHA, 
-                          abrirá uma janela para login manual.
-                        </p>
-                        <Button 
-                          onClick={iniciarLoginUber} 
-                          disabled={executando || !credenciais.email || !credenciais.password}
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                        >
-                          {executando ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              A processar...
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="w-4 h-4 mr-2" />
-                              Iniciar Login Uber
-                            </>
-                          )}
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          onClick={abrirLoginManual}
-                          className="w-full"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Login Manual (se houver CAPTCHA)
-                        </Button>
-                      </div>
-                    )}
-
-                    {loginStep === 1 && (
-                      <div className="space-y-3">
-                        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                          <div className="flex items-center gap-2 text-yellow-500 mb-2">
-                            <Smartphone className="w-5 h-5" />
-                            <span className="font-medium">Código SMS Enviado</span>
-                          </div>
-                          <p className="text-sm text-gray-300">
-                            Introduza o código de 4 dígitos enviado para {credenciais.telefone}
-                          </p>
-                        </div>
-                        
-                        <Input
-                          type="text"
-                          placeholder="0000"
-                          maxLength={4}
-                          value={smsCode}
-                          onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, ''))}
-                          className="bg-slate-700 border-slate-600 text-center text-2xl tracking-widest"
-                        />
-                        
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setLoginStep(0)}
-                            className="flex-1"
-                          >
-                            Cancelar
-                          </Button>
-                          <Button 
-                            onClick={confirmarSMS}
-                            disabled={executando || smsCode.length !== 4}
-                            className="flex-1 bg-green-600 hover:bg-green-700"
-                          >
-                            {executando ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {loginStep === 2 && (
-                      <div className="space-y-3">
-                        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-                          <div className="flex items-center gap-2 text-green-500">
-                            <CheckCircle className="w-5 h-5" />
-                            <span className="font-medium">Login Uber Ativo!</span>
-                          </div>
-                          <p className="text-sm text-gray-300 mt-1">
-                            A sessão está configurada e pronta para sincronização.
-                          </p>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setLoginStep(0)}
-                            className="flex-1"
-                          >
-                            Reconfigurar
-                          </Button>
-                          <Button 
-                            onClick={() => testarSincronizacao(selectedParceiro.id)}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700"
-                          >
-                            Testar Sincronização
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {loginWindow && (
-                      <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                        <p className="text-sm text-gray-300 mb-3">
-                          Complete o login na janela popup. Depois clique aqui:
-                        </p>
-                        <Button 
-                          onClick={confirmarLoginManual}
-                          disabled={executando}
-                          className="w-full bg-green-600 hover:bg-green-700"
-                        >
-                          {executando ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : (
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                          )}
-                          Confirmar Login Manual
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Status e Ações */}
-                  {sessaoStatus[selectedParceiro.id]?.valida && (
-                    <div className="border-t border-slate-700 pt-4">
-                      <Button 
-                        variant="outline"
-                        onClick={() => testarSincronizacao(selectedParceiro.id)}
-                        className="w-full"
-                      >
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Testar Sincronização Uber
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {/* Secção de Extração de Rendimentos */}
-                  <div className="border-t border-slate-700 pt-6 space-y-4">
-                    <h4 className="font-medium flex items-center gap-2">
-                      <Download className="w-4 h-4 text-green-500" />
-                      Extrair Rendimentos (CSV)
-                    </h4>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm text-gray-400 mb-1 block">Selecionar Semana</label>
-                        <Select value={semanaIndex} onValueChange={setSemanaIndex}>
-                          <SelectTrigger className="bg-slate-700 border-slate-600">
-                            <SelectValue placeholder="Selecione a semana" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="0">Semana Atual</SelectItem>
-                            <SelectItem value="1">Semana Passada</SelectItem>
-                            <SelectItem value="2">Há 2 Semanas</SelectItem>
-                            <SelectItem value="3">Há 3 Semanas</SelectItem>
-                            <SelectItem value="4">Há 4 Semanas</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <Button 
-                        onClick={extrairRendimentos}
-                        disabled={extraindo}
-                        className="w-full bg-green-600 hover:bg-green-700"
-                      >
-                        {extraindo ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            A extrair rendimentos...
-                          </>
-                        ) : (
-                          <>
-                            <Download className="w-4 h-4 mr-2" />
-                            Extrair Rendimentos Uber
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    
-                    {/* Resultado da Extração */}
-                    {resultadoExtracao && (
-                      <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg space-y-3">
-                        <div className="flex items-center gap-2 text-green-500">
-                          <CheckCircle className="w-5 h-5" />
-                          <span className="font-medium">Extração Concluída!</span>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="p-3 bg-slate-800 rounded-lg">
-                            <div className="flex items-center gap-2 text-gray-400 text-sm">
-                              <Users className="w-4 h-4" />
-                              Motoristas
-                            </div>
-                            <div className="text-xl font-bold text-white">
-                              {resultadoExtracao.total_motoristas}
-                            </div>
-                          </div>
-                          <div className="p-3 bg-slate-800 rounded-lg">
-                            <div className="flex items-center gap-2 text-gray-400 text-sm">
-                              <DollarSign className="w-4 h-4" />
-                              Total
-                            </div>
-                            <div className="text-xl font-bold text-green-400">
-                              €{resultadoExtracao.total_rendimentos?.toFixed(2)}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Lista de Motoristas */}
-                        {resultadoExtracao.motoristas?.length > 0 && (
-                          <div className="max-h-48 overflow-y-auto space-y-1">
-                            {resultadoExtracao.motoristas.map((m, i) => (
-                              <div key={i} className="flex justify-between items-center p-2 bg-slate-800/50 rounded text-sm">
-                                <span className="text-gray-300">{m.nome}</span>
-                                <span className="text-green-400 font-medium">€{m.rendimentos_liquidos?.toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Histórico de Importações */}
-                    {historico.length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-sm text-gray-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Últimas Importações
-                        </h5>
-                        <div className="space-y-1 max-h-32 overflow-y-auto">
-                          {historico.slice(0, 5).map((imp, i) => (
-                            <div key={i} className="flex justify-between items-center p-2 bg-slate-800/30 rounded text-xs">
-                              <span className="text-gray-400">
-                                {new Date(imp.created_at).toLocaleDateString('pt-PT')}
-                              </span>
-                              <span className="text-gray-300">
-                                {imp.total_motoristas} motoristas
-                              </span>
-                              <span className="text-green-400">€{imp.total_rendimentos?.toFixed(2)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
                 </div>
-              )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Sessões Expiradas</p>
+                  <p className="text-3xl font-bold text-red-600">{sessoesExpiradas}</p>
+                </div>
+                <div className="p-3 bg-red-100 rounded-full">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Lista de Parceiros */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Estado dos Parceiros
+            </CardTitle>
+            <CardDescription>
+              Parceiros com sessão expirada precisam fazer login manual na área deles
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {parceiros.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Nenhum parceiro encontrado</p>
+            ) : (
+              <div className="space-y-3">
+                {parceiros.map((parceiro) => {
+                  const status = sessaoStatus[parceiro.id];
+                  return (
+                    <div
+                      key={parceiro.id}
+                      className={`p-4 rounded-lg border ${
+                        status?.valida 
+                          ? 'border-green-200 bg-green-50' 
+                          : 'border-red-200 bg-red-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${
+                            status?.valida ? 'bg-green-200' : 'bg-red-200'
+                          }`}>
+                            <Building className={`w-4 h-4 ${
+                              status?.valida ? 'text-green-700' : 'text-red-700'
+                            }`} />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{parceiro.nome || parceiro.name}</h3>
+                            <p className="text-sm text-gray-500">{parceiro.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {status?.valida && status?.expira && (
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Expira: {new Date(status.expira).toLocaleDateString('pt-PT')}
+                            </span>
+                          )}
+                          {getSessaoStatusBadge(parceiro.id)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Informações */}
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="bg-slate-50">
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-500/10 rounded-lg">
-                <Shield className="w-6 h-6 text-blue-500" />
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Shield className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <h4 className="font-medium mb-1">Como funciona?</h4>
-                <ul className="text-sm text-gray-400 space-y-1 list-disc list-inside">
-                  <li>As credenciais são guardadas de forma segura</li>
-                  <li>O sistema faz login automático e guarda a sessão</li>
-                  <li>A sessão dura aproximadamente 30 dias</li>
-                  <li>Se a Uber pedir CAPTCHA, use o "Login Manual"</li>
-                  <li>Após configurado, a sincronização funciona automaticamente</li>
+                <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                  <li>Cada parceiro configura as suas credenciais na área própria</li>
+                  <li>O parceiro faz login manual quando há CAPTCHA</li>
+                  <li>O parceiro extrai os seus próprios rendimentos</li>
+                  <li>Esta página mostra apenas o estado das sessões</li>
+                  <li>Contacte parceiros com sessão expirada para renovarem o login</li>
                 </ul>
               </div>
             </div>
