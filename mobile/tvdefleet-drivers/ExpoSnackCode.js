@@ -2287,6 +2287,8 @@ const styles = StyleSheet.create({
   gpsNoText: { color: '#94a3b8', fontWeight: '600' },
   gpsYes: { flex: 1, padding: 16, borderRadius: 12, backgroundColor: '#3b82f6', alignItems: 'center' },
   gpsYesText: { color: '#fff', fontWeight: '600' },
+  dndBtn: { marginTop: 16, padding: 12, borderRadius: 8, backgroundColor: '#1e293b', alignItems: 'center', width: '100%' },
+  dndText: { color: '#94a3b8', fontSize: 13 },
   // Tipo selector styles
   tipoSelector: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   tipoBtn: { flex: 1, padding: 14, borderRadius: 12, backgroundColor: '#0f172a', alignItems: 'center', borderWidth: 2, borderColor: '#334155' },
