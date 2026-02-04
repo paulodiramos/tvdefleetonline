@@ -768,3 +768,167 @@ async def testar_minha_sessao_uber(
     except Exception as e:
         logger.error(f"Erro no teste Uber: {e}")
         return {"sucesso": False, "erro": str(e)}
+
+
+
+
+@router.post("/minha-extracao")
+async def extrair_meus_rendimentos_uber(
+    data: ExtrairRendimentosRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro extrai os seus próprios rendimentos Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    cred = await db.credenciais_plataforma.find_one(
+        {"parceiro_id": parceiro_id, "plataforma": "uber"}
+    )
+    
+    if not cred:
+        return {"sucesso": False, "erro": "Credenciais não configuradas"}
+    
+    try:
+        from services.rpa_uber import UberRPA
+        import csv
+        import io
+        
+        rpa = UberRPA(
+            email=cred["email"],
+            password=cred["password"]
+        )
+        
+        await rpa.iniciar_browser(headless=True, usar_sessao=True)
+        
+        # Navegar para Fleet
+        await rpa.page.goto("https://fleet.uber.com/", wait_until="domcontentloaded", timeout=60000)
+        await rpa.page.wait_for_timeout(3000)
+        
+        url = rpa.page.url
+        
+        # Se não está logado, tentar login
+        if "auth" in url or "login" in url:
+            logger.info("Sessão expirada - a fazer login...")
+            login_ok = await rpa.fazer_login()
+            if not login_ok:
+                await rpa.fechar_browser()
+                return {"sucesso": False, "erro": "Sessão expirada - faça login manual novamente"}
+        
+        # Navegar para Rendimentos
+        logger.info("A navegar para Rendimentos...")
+        rendimentos_link = rpa.page.locator('a:has-text("Rendimentos"), [href*="earnings"]').first
+        
+        if await rendimentos_link.count() > 0:
+            await rendimentos_link.click()
+            await rpa.page.wait_for_timeout(3000)
+        else:
+            current_url = rpa.page.url
+            org_id = current_url.split('/orgs/')[1].split('/')[0] if '/orgs/' in current_url else None
+            if org_id:
+                await rpa.page.goto(f"https://supplier.uber.com/orgs/{org_id}/earnings", wait_until="domcontentloaded")
+            else:
+                await rpa.page.goto("https://fleet.uber.com/p3/earnings", wait_until="domcontentloaded")
+            await rpa.page.wait_for_timeout(3000)
+        
+        # Tentar fazer download do relatório
+        logger.info("A fazer download do relatório...")
+        download_btn = rpa.page.locator('button:has-text("Fazer o download"), text=Fazer o download do relatório').first
+        
+        ficheiro_csv = None
+        motoristas_data = []
+        
+        if await download_btn.count() > 0 and await download_btn.is_visible():
+            try:
+                async with rpa.page.expect_download(timeout=60000) as download_info:
+                    await download_btn.click()
+                
+                download = await download_info.value
+                
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                original_name = download.suggested_filename or f"uber_rendimentos_{timestamp}.csv"
+                ficheiro_csv = f"/tmp/uber_downloads/{original_name}"
+                
+                os.makedirs("/tmp/uber_downloads", exist_ok=True)
+                await download.save_as(ficheiro_csv)
+                logger.info(f"CSV descarregado: {ficheiro_csv}")
+                
+                # Processar CSV
+                with open(ficheiro_csv, 'r', encoding='utf-8-sig') as f:
+                    content = f.read()
+                
+                delimiter = ';' if ';' in content else ','
+                reader = csv.DictReader(io.StringIO(content), delimiter=delimiter)
+                
+                for row in reader:
+                    motorista = {
+                        "nome": row.get("Nome do motorista", row.get("Driver name", row.get("Nome", ""))),
+                        "rendimentos_totais": parse_valor(row.get("Rendimentos totais", row.get("Total earnings", "0"))),
+                        "reembolsos_despesas": parse_valor(row.get("Reembolsos e despesas", row.get("Reimbursements", "0"))),
+                        "ajustes": parse_valor(row.get("Ajustes", row.get("Adjustments", "0"))),
+                        "pagamento": parse_valor(row.get("Pagamento", row.get("Payment", "0"))),
+                        "rendimentos_liquidos": parse_valor(row.get("Rendimentos líquidos", row.get("Net earnings", "0"))),
+                    }
+                    if motorista["nome"]:
+                        motoristas_data.append(motorista)
+                
+            except Exception as e:
+                logger.warning(f"Download falhou: {e}")
+                motoristas_data = await rpa.extrair_dados_tabela()
+        else:
+            motoristas_data = await rpa.extrair_dados_tabela()
+        
+        await rpa.fechar_browser(guardar=True)
+        
+        total_rendimentos = sum(m.get("rendimentos_liquidos", 0) for m in motoristas_data)
+        
+        # Guardar na base de dados
+        if motoristas_data:
+            now = datetime.now(timezone.utc)
+            
+            await db.importacoes_uber.insert_one({
+                "parceiro_id": parceiro_id,
+                "data_inicio": data.data_inicio,
+                "data_fim": data.data_fim,
+                "motoristas": motoristas_data,
+                "total_motoristas": len(motoristas_data),
+                "total_rendimentos": total_rendimentos,
+                "ficheiro_csv": ficheiro_csv,
+                "created_at": now.isoformat(),
+                "created_by": current_user["id"]
+            })
+        
+        return {
+            "sucesso": True,
+            "mensagem": f"Extração concluída! {len(motoristas_data)} motoristas, total €{total_rendimentos:.2f}",
+            "motoristas": motoristas_data,
+            "total_motoristas": len(motoristas_data),
+            "total_rendimentos": total_rendimentos,
+            "ficheiro": ficheiro_csv
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na extração Uber: {e}")
+        return {"sucesso": False, "erro": str(e)}
+
+
+@router.get("/meu-historico")
+async def get_meu_historico_importacoes(
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro obtém o seu histórico de importações Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    cursor = db.importacoes_uber.find(
+        {"parceiro_id": parceiro_id},
+        {"_id": 0, "motoristas": 0}
+    ).sort("created_at", -1).limit(20)
+    
+    importacoes = await cursor.to_list(length=20)
+    return importacoes
