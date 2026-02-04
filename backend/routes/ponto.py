@@ -215,20 +215,23 @@ async def registar_check_in(
             "latitude": request.latitude,
             "longitude": request.longitude
         } if request.latitude else None,
+        "matricula": request.matricula,  # Matrícula do veículo (opcional)
         "check_out": None,
         "check_out_location": None,
         "pausas": [],
         "total_pausas_minutos": 0,
+        "horas_restantes_inicio": verificacao["horas_restantes"],
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.registos_ponto.insert_one(ponto)
-    logger.info(f"Check-in registado para user {current_user['id']}")
+    logger.info(f"Check-in registado para user {motorista_id}")
     
     return {
         "success": True,
         "ponto_id": ponto["id"],
         "hora_inicio": hora,
+        "horas_restantes": verificacao["horas_restantes"],
         "message": "Check-in registado com sucesso"
     }
 
