@@ -128,7 +128,8 @@ const Layout = ({ children, user, onLogout }) => {
       
       const veiculosSubmenu = filtrarSubmenu([
         { path: '/vehicles', label: 'Lista de Veículos' },
-        { path: '/vistorias', label: 'Vistorias' }
+        { path: '/vistorias', label: 'Vistorias Agendadas' },
+        { path: '/vistorias-mobile', label: '📱 Vistorias Móveis' }
       ]);
       
       const financeiroSubmenu = filtrarSubmenu([
