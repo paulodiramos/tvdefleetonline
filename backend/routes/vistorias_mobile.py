@@ -315,6 +315,119 @@ async def listar_vistorias_pendentes(
     }
 
 
+async def _formatar_vistorias(vistorias: list) -> list:
+    """Helper para formatar lista de vistorias"""
+    resultado = []
+    for v in vistorias:
+        try:
+            created = datetime.fromisoformat(v["created_at"].replace("Z", "+00:00"))
+            data_str = created.strftime("%d/%m/%Y %H:%M")
+        except:
+            data_str = v.get("created_at", "N/A")
+        resultado.append({
+            "id": v["id"],
+            "tipo": v["tipo"],
+            "motorista_nome": v.get("motorista_nome"),
+            "veiculo_matricula": v.get("veiculo_matricula"),
+            "data": data_str,
+            "km": v.get("km"),
+            "total_danos": len(v.get("danos", [])),
+            "total_fotos": len(v.get("fotos", {})),
+            "status": v.get("status", "pendente")
+        })
+    return resultado
+
+
+@router.get("/todas")
+async def listar_todas_vistorias(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar todas as vistorias"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    query = {}
+    
+    if current_user["role"] == "parceiro":
+        motoristas = await db.motoristas.find(
+            {"parceiro_atribuido": current_user["id"]},
+            {"_id": 0, "id": 1}
+        ).to_list(500)
+        motorista_ids = [m["id"] for m in motoristas]
+        query["motorista_id"] = {"$in": motorista_ids}
+    
+    vistorias = await db.vistorias_mobile.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    
+    return {
+        "vistorias": await _formatar_vistorias(vistorias),
+        "total": len(vistorias)
+    }
+
+
+@router.get("/aprovadas")
+async def listar_vistorias_aprovadas(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar vistorias aprovadas"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    query = {"status": "aprovada"}
+    
+    if current_user["role"] == "parceiro":
+        motoristas = await db.motoristas.find(
+            {"parceiro_atribuido": current_user["id"]},
+            {"_id": 0, "id": 1}
+        ).to_list(500)
+        motorista_ids = [m["id"] for m in motoristas]
+        query["motorista_id"] = {"$in": motorista_ids}
+    
+    vistorias = await db.vistorias_mobile.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    
+    return {
+        "vistorias": await _formatar_vistorias(vistorias),
+        "total": len(vistorias)
+    }
+
+
+@router.get("/rejeitadas")
+async def listar_vistorias_rejeitadas(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar vistorias rejeitadas"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    query = {"status": "rejeitada"}
+    
+    if current_user["role"] == "parceiro":
+        motoristas = await db.motoristas.find(
+            {"parceiro_atribuido": current_user["id"]},
+            {"_id": 0, "id": 1}
+        ).to_list(500)
+        motorista_ids = [m["id"] for m in motoristas]
+        query["motorista_id"] = {"$in": motorista_ids}
+    
+    vistorias = await db.vistorias_mobile.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    
+    return {
+        "vistorias": await _formatar_vistorias(vistorias),
+        "total": len(vistorias)
+    }
+
+
 @router.post("/{vistoria_id}/aprovar")
 async def aprovar_vistoria(
     vistoria_id: str,
