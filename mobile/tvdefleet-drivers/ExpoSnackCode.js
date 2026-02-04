@@ -63,6 +63,7 @@ const LoginScreen = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const handleLogin = async () => {
     if (!email || !password) { Alert.alert('Erro', 'Preencha os campos'); return; }
     setLoading(true);
@@ -93,7 +94,19 @@ const LoginScreen = ({ onLogin }) => {
         <Text style={styles.title}>🚗 TVDEFleet</Text>
         <Text style={styles.subtitle}>App Móvel</Text>
         <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#64748b" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-        <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#64748b" value={password} onChangeText={setPassword} secureTextEntry />
+        <View style={styles.passwordContainer}>
+          <TextInput 
+            style={styles.passwordInput} 
+            placeholder="Password" 
+            placeholderTextColor="#64748b" 
+            value={password} 
+            onChangeText={setPassword} 
+            secureTextEntry={!showPassword} 
+          />
+          <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPassword(!showPassword)}>
+            <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleLogin} disabled={loading}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Entrar</Text>}
         </TouchableOpacity>
