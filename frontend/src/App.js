@@ -744,6 +744,16 @@ function App() {
             }
           />
           <Route
+            path="/configuracao-uber"
+            element={
+              user && user.role === 'admin' ? (
+                <ConfiguracaoUber user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/importar-dados"
             element={
               user ? (
