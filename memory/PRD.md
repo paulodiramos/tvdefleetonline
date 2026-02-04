@@ -11,6 +11,50 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ---
 
+## ✅ Correções e Melhorias App Móvel (04/02/2026)
+
+### Bug Fixes
+1. **Vistorias Pendentes não apareciam para Motorista**
+   - Corrigido filtro no endpoint `/api/vistorias/pendentes-aceitacao`
+   - Agora filtra por `status=pendente` e `motorista_aceite=None`
+   
+2. **Endpoint confirmar-motorista não atualizava status**
+   - Adicionada atualização de `status` para "aprovada" ou "rejeitada_motorista"
+
+3. **Vistoria não associada ao veículo na WebApp**
+   - Endpoint `/api/vistorias/{id}/aprovar` agora atualiza coleção `vehicles`
+   - Adiciona referência da vistoria e atualiza `ultima_vistoria`
+
+### Novas Funcionalidades App Móvel
+1. **Extras/Dívidas**
+   - Dropdown para selecionar motorista
+   - Campo de email para notificação opcional
+   - Lista de motoristas com email visível
+
+2. **Resumo Semanal (Parceiro/Gestor)**
+   - Dashboard com totais da empresa (Uber, Bolt, Via Verde, Abastecimentos, Extras, Líquido)
+   - Dropdown para filtrar por motorista específico
+   - Estado com ícones visuais (⏳ pendente, 💰 pago, ✅ confirmado)
+
+3. **Vistoria - Pesquisa por Matrícula**
+   - Campo de pesquisa por matrícula ou nome
+   - Botão OCR para ler matrícula via foto (IA)
+   - Endpoint `/api/vistorias/ocr-matricula` criado
+
+4. **Vistoria - Múltiplas Fotos**
+   - Possibilidade de adicionar mais de 1 foto por campo
+   - Badge com contagem de fotos
+   - Botão "+ Mais" para adicionar fotos extras
+
+5. **Assinatura com Dedo**
+   - Modal com canvas para assinar
+   - Captura de assinatura via foto como fallback
+
+### Ficheiro Atualizado
+- `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js` → `/app/frontend/public/ExpoSnackCode.txt`
+
+---
+
 ## ✅ WebApp - Ficha de Motorista Expandida (04/02/2026)
 
 ### Novas Tabs na Ficha de Motorista
