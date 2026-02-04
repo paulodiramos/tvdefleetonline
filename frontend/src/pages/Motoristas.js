@@ -2408,6 +2408,17 @@ const Motoristas = ({ user, onLogout }) => {
       </div>
       )}
 
+      {/* Dialog Completo de Motorista (com App, Ponto, Turnos) */}
+      <MotoristaDetailDialog
+        open={showDetailDialog && selectedMotorista !== null}
+        onClose={() => {
+          setShowDetailDialog(false);
+          setSelectedMotorista(null);
+        }}
+        motoristaId={selectedMotorista?.id}
+        userRole={user?.role}
+      />
+
     </Layout>
   );
 };
