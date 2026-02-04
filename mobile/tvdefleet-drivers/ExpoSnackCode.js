@@ -630,35 +630,84 @@ const GanhosScreen = () => {
 
 // ===== TICKETS SCREEN =====
 const CATEGORIAS = [
-  { id: 'pagamentos', icon: '💳', label: 'Pagamentos', color: '#3b82f6' },
-  { id: 'tecnico', icon: '🔧', label: 'Técnico', color: '#8b5cf6' },
-  { id: 'esclarecimentos', icon: '❓', label: 'Esclarecimentos', color: '#06b6d4' },
-  { id: 'relatorios', icon: '📊', label: 'Relatórios', color: '#10b981' },
-  { id: 'acidente', icon: '🚨', label: 'Acidente', color: '#dc2626' },
-  { id: 'avaria', icon: '🛠️', label: 'Avaria', color: '#d97706' },
-  { id: 'outro', icon: '📝', label: 'Outro', color: '#64748b' },
+  { id: 'pagamentos', icon: '💳', label: 'Pagamentos', color: '#3b82f6', foto: false },
+  { id: 'tecnico', icon: '🔧', label: 'Técnico', color: '#8b5cf6', foto: false },
+  { id: 'esclarecimentos', icon: '❓', label: 'Esclarecimentos', color: '#06b6d4', foto: false },
+  { id: 'relatorios', icon: '📊', label: 'Relatórios', color: '#10b981', foto: false },
+  { id: 'acidente', icon: '🚨', label: 'Acidente', color: '#dc2626', foto: true },
+  { id: 'avaria', icon: '🛠️', label: 'Avaria', color: '#d97706', foto: true },
+  { id: 'outro', icon: '📝', label: 'Outro', color: '#64748b', foto: false },
 ];
 
 const TicketsScreen = ({ user }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ titulo: '', categoria: 'esclarecimentos', descricao: '', anexos: [] });
+  const [form, setForm] = useState({ titulo: '', categoria: 'esclarecimentos', descricao: '', fotos: [] });
   const [sel, setSel] = useState(null);
   const [msg, setMsg] = useState('');
   const [showCategorias, setShowCategorias] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
   useEffect(() => { (async () => { setTickets(await api.get('/tickets/meus')); setLoading(false); })(); }, []);
 
+  const tirarFoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Erro', 'Permissão de câmara necessária'); return; }
+    
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      base64: true,
+    });
+    
+    if (!result.canceled && result.assets[0]) {
+      setForm(f => ({ ...f, fotos: [...f.fotos, result.assets[0]] }));
+    }
+  };
+
+  const escolherFoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Erro', 'Permissão de galeria necessária'); return; }
+    
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      base64: true,
+      allowsMultipleSelection: true,
+    });
+    
+    if (!result.canceled && result.assets) {
+      setForm(f => ({ ...f, fotos: [...f.fotos, ...result.assets] }));
+    }
+  };
+
+  const removerFoto = (index) => {
+    setForm(f => ({ ...f, fotos: f.fotos.filter((_, i) => i !== index) }));
+  };
+
   const criar = async () => {
     if (!form.titulo || !form.descricao) { Alert.alert('Erro', 'Preencha os campos'); return; }
-    await api.post('/tickets/criar', form);
-    setModal(false);
-    setForm({ titulo: '', categoria: 'esclarecimentos', descricao: '', anexos: [] });
-    setTickets(await api.get('/tickets/meus'));
+    setEnviando(true);
+    try {
+      // Criar ticket com fotos em base64
+      const ticketData = {
+        titulo: form.titulo,
+        categoria: form.categoria,
+        descricao: form.descricao,
+        fotos: form.fotos.map(f => ({ base64: f.base64, uri: f.uri }))
+      };
+      await api.post('/tickets/criar', ticketData);
+      setModal(false);
+      setForm({ titulo: '', categoria: 'esclarecimentos', descricao: '', fotos: [] });
+      setTickets(await api.get('/tickets/meus'));
+      Alert.alert('Sucesso', 'Ticket criado!');
+    } catch (e) { Alert.alert('Erro', e.message); }
+    setEnviando(false);
   };
 
   const getCategoriaInfo = (catId) => CATEGORIAS.find(c => c.id === catId) || CATEGORIAS[CATEGORIAS.length - 1];
+  const categoriaAtual = getCategoriaInfo(form.categoria);
 
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
@@ -666,6 +715,17 @@ const TicketsScreen = ({ user }) => {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.screen}>
       <TouchableOpacity onPress={() => setSel(null)}><Text style={styles.backBtn}>← #{sel.numero}</Text></TouchableOpacity>
       <ScrollView style={{ flex: 1, padding: 16 }}>
+        {/* Fotos do ticket */}
+        {sel.fotos && sel.fotos.length > 0 && (
+          <View style={styles.ticketFotosContainer}>
+            <Text style={styles.ticketFotosLabel}>📷 Fotos anexadas:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {sel.fotos.map((foto, i) => (
+                <Image key={i} source={{ uri: foto.url || foto.uri }} style={styles.ticketFotoThumb} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
         {sel.mensagens?.map((m, i) => (
           <View key={i} style={[styles.message, m.autor_id === user.id ? styles.messageOwn : styles.messageOther]}>
             <Text style={styles.messageText}>{m.conteudo}</Text>
@@ -693,10 +753,10 @@ const TicketsScreen = ({ user }) => {
       
       {/* Botões Urgentes */}
       <View style={styles.urgentBtns}>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ ...form, titulo: 'Acidente', categoria: 'acidente' }); setModal(true); }}>
+        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ titulo: 'Acidente', categoria: 'acidente', descricao: '', fotos: [] }); setModal(true); }}>
           <Text style={styles.urgentBtnText}>🚨 Acidente</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ ...form, titulo: 'Avaria', categoria: 'avaria' }); setModal(true); }}>
+        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ titulo: 'Avaria', categoria: 'avaria', descricao: '', fotos: [] }); setModal(true); }}>
           <Text style={styles.urgentBtnText}>🛠️ Avaria</Text>
         </TouchableOpacity>
       </View>
