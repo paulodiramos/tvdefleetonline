@@ -1753,6 +1753,11 @@ const VistoriasScreen = ({ user }) => {
   const enviarVistoria = async () => {
     if (!fotosCompletas()) { Alert.alert('Erro', 'Complete todas as fotos obrigatórias'); return; }
     if (!km) { Alert.alert('Erro', 'Introduza a quilometragem'); return; }
+    // Validar motorista para inspetor/parceiro
+    if (user.role !== 'motorista' && !selectedMotorista) {
+      Alert.alert('Erro', 'Selecione um motorista');
+      return;
+    }
     
     setEnviando(true);
     try {
@@ -1770,10 +1775,12 @@ const VistoriasScreen = ({ user }) => {
         km: parseInt(km),
         nivel_combustivel: parseInt(combustivel),
         observacoes: observacoes,
-        assinatura: assinatura?.base64 || null
+        assinatura: assinatura?.base64 || null,
+        motorista_id: selectedMotorista?.id || null,
+        veiculo_id: selectedMotorista?.veiculo_atribuido || null
       });
       
-      Alert.alert('Sucesso', 'Vistoria enviada com sucesso!');
+      Alert.alert('Sucesso', 'Vistoria enviada com sucesso! O motorista será notificado para confirmar.');
       setShowNovaVistoria(false);
       loadVistorias();
     } catch (e) { 
