@@ -834,3 +834,453 @@ async def get_semanas_disponiveis(
         })
     
     return {"semanas": semanas}
+
+
+# ============ DEFINIÇÕES E ALERTAS ============
+
+@router.get("/definicoes")
+async def get_definicoes_ponto(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter definições de ponto do motorista"""
+    
+    motorista_id = current_user["id"]
+    
+    # Buscar definições do motorista
+    definicoes = await db.definicoes_ponto.find_one(
+        {"motorista_id": motorista_id}, 
+        {"_id": 0}
+    )
+    
+    if not definicoes:
+        # Retornar valores por defeito
+        definicoes = {
+            "motorista_id": motorista_id,
+            "alerta_horas_maximas": DEFAULT_ALERTA_HORAS,
+            "alertas_ativos": True,
+            "permitir_edicao_registos": False  # Por defeito, não permitido
+        }
+    
+    # Verificar se o parceiro autorizou edição
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if motorista and motorista.get("parceiro_atribuido"):
+        parceiro = await db.parceiros.find_one(
+            {"id": motorista["parceiro_atribuido"]}, 
+            {"_id": 0}
+        )
+        if parceiro:
+            definicoes["permitir_edicao_registos"] = parceiro.get("permitir_edicao_ponto_motoristas", False)
+    
+    return definicoes
+
+
+@router.post("/definicoes")
+async def atualizar_definicoes_ponto(
+    data: DefinicoesPontoRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar definições de ponto do motorista"""
+    
+    motorista_id = current_user["id"]
+    now = datetime.now(timezone.utc)
+    
+    update_data = {"updated_at": now.isoformat()}
+    
+    if data.alerta_horas_maximas is not None:
+        if data.alerta_horas_maximas < 1 or data.alerta_horas_maximas > 24:
+            raise HTTPException(status_code=400, detail="Horas máximas deve ser entre 1 e 24")
+        update_data["alerta_horas_maximas"] = data.alerta_horas_maximas
+    
+    # Atualizar ou criar definições
+    result = await db.definicoes_ponto.update_one(
+        {"motorista_id": motorista_id},
+        {
+            "$set": update_data,
+            "$setOnInsert": {
+                "motorista_id": motorista_id,
+                "alertas_ativos": True,
+                "created_at": now.isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    logger.info(f"Definições de ponto atualizadas para motorista {motorista_id}")
+    
+    return {"success": True, "message": "Definições atualizadas"}
+
+
+@router.get("/verificar-alerta-horas")
+async def verificar_alerta_horas(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Verificar se o motorista excedeu o limite de horas configurado.
+    Retorna informação de alerta se excedido.
+    """
+    
+    motorista_id = current_user["id"]
+    
+    # Buscar definições
+    definicoes = await db.definicoes_ponto.find_one(
+        {"motorista_id": motorista_id}, 
+        {"_id": 0}
+    )
+    
+    limite_horas = definicoes.get("alerta_horas_maximas", DEFAULT_ALERTA_HORAS) if definicoes else DEFAULT_ALERTA_HORAS
+    limite_minutos = limite_horas * 60
+    
+    # Buscar registo atual ativo
+    registo_ativo = await db.registos_ponto.find_one({
+        "user_id": motorista_id,
+        "check_out": None
+    }, {"_id": 0})
+    
+    if not registo_ativo:
+        return {
+            "em_turno": False,
+            "alerta": False,
+            "limite_horas": limite_horas
+        }
+    
+    # Calcular tempo trabalhado
+    check_in = datetime.fromisoformat(registo_ativo["check_in"].replace("Z", "+00:00"))
+    now = datetime.now(timezone.utc)
+    
+    tempo_total = (now - check_in).total_seconds() / 60  # em minutos
+    
+    # Subtrair pausas
+    total_pausas = registo_ativo.get("total_pausas_minutos", 0)
+    if registo_ativo.get("em_pausa") and registo_ativo.get("pausa_iniciada"):
+        pausa_inicio = datetime.fromisoformat(registo_ativo["pausa_iniciada"].replace("Z", "+00:00"))
+        total_pausas += (now - pausa_inicio).total_seconds() / 60
+    
+    tempo_trabalho = tempo_total - total_pausas
+    
+    excedeu = tempo_trabalho >= limite_minutos
+    tempo_excedido = max(0, tempo_trabalho - limite_minutos)
+    
+    return {
+        "em_turno": True,
+        "alerta": excedeu,
+        "limite_horas": limite_horas,
+        "tempo_trabalho_minutos": int(tempo_trabalho),
+        "tempo_trabalho_formatado": f"{int(tempo_trabalho // 60)}h {int(tempo_trabalho % 60)}m",
+        "tempo_excedido_minutos": int(tempo_excedido) if excedeu else 0,
+        "mensagem": f"⚠️ Excedeu o limite de {limite_horas}h por {int(tempo_excedido // 60)}h {int(tempo_excedido % 60)}m" if excedeu else None
+    }
+
+
+# ============ CONSULTA DETALHADA DE REGISTOS ============
+
+@router.get("/registos-dia/{data}")
+async def get_registos_dia(
+    data: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obter todos os registos de um dia específico com detalhes completos.
+    Data no formato YYYY-MM-DD
+    """
+    
+    motorista_id = current_user["id"]
+    
+    try:
+        dia = datetime.strptime(data, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Data inválida. Use formato YYYY-MM-DD")
+    
+    inicio_dia = dia.replace(hour=0, minute=0, second=0).isoformat()
+    fim_dia = dia.replace(hour=23, minute=59, second=59).isoformat()
+    
+    # Buscar registos do dia
+    registos = await db.registos_ponto.find({
+        "user_id": motorista_id,
+        "check_in": {"$gte": inicio_dia, "$lte": fim_dia}
+    }, {"_id": 0}).sort("check_in", 1).to_list(50)
+    
+    # Processar cada registo
+    registos_detalhados = []
+    total_minutos_dia = 0
+    total_pausas_dia = 0
+    
+    for reg in registos:
+        check_in = datetime.fromisoformat(reg["check_in"].replace("Z", "+00:00"))
+        
+        if reg.get("check_out"):
+            check_out = datetime.fromisoformat(reg["check_out"].replace("Z", "+00:00"))
+            duracao = (check_out - check_in).total_seconds() / 60
+        else:
+            # Ainda em curso
+            duracao = (datetime.now(timezone.utc) - check_in).total_seconds() / 60
+        
+        pausas = reg.get("total_pausas_minutos", 0)
+        tempo_trabalho = duracao - pausas
+        
+        total_minutos_dia += tempo_trabalho
+        total_pausas_dia += pausas
+        
+        registos_detalhados.append({
+            "id": reg["id"],
+            "hora_inicio": check_in.strftime("%H:%M"),
+            "hora_fim": datetime.fromisoformat(reg["check_out"].replace("Z", "+00:00")).strftime("%H:%M") if reg.get("check_out") else "Em curso",
+            "duracao_total_minutos": int(duracao),
+            "pausas_minutos": int(pausas),
+            "tempo_trabalho_minutos": int(tempo_trabalho),
+            "tempo_trabalho_formatado": f"{int(tempo_trabalho // 60)}h {int(tempo_trabalho % 60)}m",
+            "em_curso": not reg.get("check_out"),
+            "editado": reg.get("editado", False),
+            "hora_inicio_real": reg.get("hora_inicio_real"),
+            "hora_fim_real": reg.get("hora_fim_real"),
+            "justificacao_edicao": reg.get("justificacao_edicao"),
+            "pausas_detalhadas": reg.get("pausas", [])
+        })
+    
+    return {
+        "data": data,
+        "data_formatada": dia.strftime("%d/%m/%Y"),
+        "dia_semana": ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"][dia.weekday()],
+        "registos": registos_detalhados,
+        "total_turnos": len(registos_detalhados),
+        "total_minutos_dia": int(total_minutos_dia),
+        "total_pausas_dia": int(total_pausas_dia),
+        "total_formatado": f"{int(total_minutos_dia // 60)}h {int(total_minutos_dia % 60)}m"
+    }
+
+
+@router.get("/calendario-mes/{ano}/{mes}")
+async def get_calendario_mes(
+    ano: int,
+    mes: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obter resumo de registos para um mês inteiro (para visualização em calendário).
+    """
+    
+    motorista_id = current_user["id"]
+    
+    # Validar
+    if mes < 1 or mes > 12:
+        raise HTTPException(status_code=400, detail="Mês inválido")
+    
+    # Primeiro e último dia do mês
+    primeiro_dia = datetime(ano, mes, 1)
+    if mes == 12:
+        ultimo_dia = datetime(ano + 1, 1, 1) - timedelta(days=1)
+    else:
+        ultimo_dia = datetime(ano, mes + 1, 1) - timedelta(days=1)
+    
+    inicio_mes = primeiro_dia.replace(hour=0, minute=0, second=0).isoformat()
+    fim_mes = ultimo_dia.replace(hour=23, minute=59, second=59).isoformat()
+    
+    # Buscar todos os registos do mês
+    registos = await db.registos_ponto.find({
+        "user_id": motorista_id,
+        "check_in": {"$gte": inicio_mes, "$lte": fim_mes}
+    }, {"_id": 0}).to_list(500)
+    
+    # Agrupar por dia
+    dias = {}
+    
+    for reg in registos:
+        check_in = datetime.fromisoformat(reg["check_in"].replace("Z", "+00:00"))
+        dia_str = check_in.strftime("%Y-%m-%d")
+        
+        if dia_str not in dias:
+            dias[dia_str] = {
+                "data": dia_str,
+                "turnos": 0,
+                "minutos_trabalho": 0,
+                "minutos_pausas": 0
+            }
+        
+        dias[dia_str]["turnos"] += 1
+        
+        tempo_trabalho = reg.get("tempo_trabalho_minutos", 0)
+        pausas = reg.get("total_pausas_minutos", 0)
+        
+        dias[dia_str]["minutos_trabalho"] += tempo_trabalho
+        dias[dia_str]["minutos_pausas"] += pausas
+    
+    # Converter para lista ordenada
+    dias_lista = sorted(dias.values(), key=lambda x: x["data"])
+    
+    # Calcular totais do mês
+    total_turnos = sum(d["turnos"] for d in dias_lista)
+    total_minutos = sum(d["minutos_trabalho"] for d in dias_lista)
+    total_pausas = sum(d["minutos_pausas"] for d in dias_lista)
+    dias_trabalhados = len(dias_lista)
+    
+    return {
+        "ano": ano,
+        "mes": mes,
+        "mes_nome": ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"][mes - 1],
+        "dias": dias_lista,
+        "resumo": {
+            "dias_trabalhados": dias_trabalhados,
+            "total_turnos": total_turnos,
+            "total_horas": f"{total_minutos // 60}h {total_minutos % 60}m",
+            "total_pausas": f"{total_pausas // 60}h {total_pausas % 60}m",
+            "media_diaria": f"{(total_minutos // dias_trabalhados) // 60}h {(total_minutos // dias_trabalhados) % 60}m" if dias_trabalhados > 0 else "0h"
+        }
+    }
+
+
+# ============ EDIÇÃO DE REGISTOS (SE AUTORIZADO) ============
+
+@router.post("/registos/{registo_id}/editar")
+async def editar_registo_ponto(
+    registo_id: str,
+    data: EditarRegistoRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Editar horários reais de um registo de ponto.
+    Apenas permitido se o parceiro autorizou esta funcionalidade.
+    """
+    
+    motorista_id = current_user["id"]
+    
+    # Verificar se o registo existe e pertence ao motorista
+    registo = await db.registos_ponto.find_one({
+        "id": registo_id,
+        "user_id": motorista_id
+    }, {"_id": 0})
+    
+    if not registo:
+        raise HTTPException(status_code=404, detail="Registo não encontrado")
+    
+    # Verificar se o registo está fechado (tem check_out)
+    if not registo.get("check_out"):
+        raise HTTPException(status_code=400, detail="Não é possível editar um turno em curso")
+    
+    # Verificar se o parceiro autorizou edição
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    
+    pode_editar = False
+    
+    if motorista and motorista.get("parceiro_atribuido"):
+        parceiro = await db.parceiros.find_one(
+            {"id": motorista["parceiro_atribuido"]}, 
+            {"_id": 0}
+        )
+        if parceiro:
+            pode_editar = parceiro.get("permitir_edicao_ponto_motoristas", False)
+    
+    if not pode_editar:
+        raise HTTPException(
+            status_code=403, 
+            detail="Edição de registos não autorizada pelo seu parceiro. Contacte o parceiro para solicitar esta permissão."
+        )
+    
+    # Validar horas
+    try:
+        hora_inicio = datetime.strptime(data.hora_inicio_real, "%H:%M")
+        hora_fim = datetime.strptime(data.hora_fim_real, "%H:%M")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Formato de hora inválido. Use HH:MM")
+    
+    if hora_fim <= hora_inicio:
+        # Pode ser que o turno passou da meia-noite
+        pass
+    
+    # Calcular novo tempo de trabalho
+    check_in_original = datetime.fromisoformat(registo["check_in"].replace("Z", "+00:00"))
+    data_registo = check_in_original.date()
+    
+    nova_hora_inicio = datetime.combine(data_registo, hora_inicio.time())
+    nova_hora_fim = datetime.combine(data_registo, hora_fim.time())
+    
+    # Se hora fim é menor que hora início, assumir que passou da meia-noite
+    if nova_hora_fim <= nova_hora_inicio:
+        nova_hora_fim += timedelta(days=1)
+    
+    novo_tempo_minutos = (nova_hora_fim - nova_hora_inicio).total_seconds() / 60
+    
+    now = datetime.now(timezone.utc)
+    
+    # Atualizar registo
+    await db.registos_ponto.update_one(
+        {"id": registo_id},
+        {"$set": {
+            "editado": True,
+            "hora_inicio_real": data.hora_inicio_real,
+            "hora_fim_real": data.hora_fim_real,
+            "tempo_trabalho_minutos_editado": int(novo_tempo_minutos),
+            "justificacao_edicao": data.justificacao,
+            "editado_em": now.isoformat(),
+            "editado_por": motorista_id,
+            "updated_at": now.isoformat()
+        }}
+    )
+    
+    logger.info(f"Registo {registo_id} editado por motorista {motorista_id}: {data.hora_inicio_real} - {data.hora_fim_real}")
+    
+    return {
+        "success": True,
+        "message": "Registo atualizado com sucesso",
+        "novo_tempo": f"{int(novo_tempo_minutos // 60)}h {int(novo_tempo_minutos % 60)}m"
+    }
+
+
+@router.get("/registos/{registo_id}/historico-edicoes")
+async def get_historico_edicoes(
+    registo_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter histórico de edições de um registo (para parceiros/admin)"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    registo = await db.registos_ponto.find_one({"id": registo_id}, {"_id": 0})
+    
+    if not registo:
+        raise HTTPException(status_code=404, detail="Registo não encontrado")
+    
+    return {
+        "registo_id": registo_id,
+        "editado": registo.get("editado", False),
+        "hora_original_inicio": datetime.fromisoformat(registo["check_in"].replace("Z", "+00:00")).strftime("%H:%M"),
+        "hora_original_fim": datetime.fromisoformat(registo["check_out"].replace("Z", "+00:00")).strftime("%H:%M") if registo.get("check_out") else None,
+        "hora_editada_inicio": registo.get("hora_inicio_real"),
+        "hora_editada_fim": registo.get("hora_fim_real"),
+        "justificacao": registo.get("justificacao_edicao"),
+        "editado_em": registo.get("editado_em"),
+        "editado_por": registo.get("editado_por")
+    }
+
+
+# ============ AUTORIZAÇÃO DE EDIÇÃO (PARA PARCEIROS) ============
+
+@router.post("/parceiro/autorizar-edicao")
+async def autorizar_edicao_motoristas(
+    autorizar: bool,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Parceiro autoriza ou desautoriza os seus motoristas a editarem registos de ponto.
+    """
+    
+    if current_user["role"] != "parceiro":
+        raise HTTPException(status_code=403, detail="Apenas parceiros podem usar esta funcionalidade")
+    
+    parceiro_id = current_user["id"]
+    
+    await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": {
+            "permitir_edicao_ponto_motoristas": autorizar,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    estado = "autorizada" if autorizar else "desautorizada"
+    logger.info(f"Edição de ponto {estado} pelo parceiro {parceiro_id}")
+    
+    return {
+        "success": True,
+        "message": f"Edição de registos de ponto {estado} para os seus motoristas"
+    }
