@@ -114,6 +114,7 @@ from routes.exportacao import router as exportacao_router
 from routes.ponto import router as ponto_router
 from routes.tickets import router as tickets_router
 from routes.documentos_motorista import router as documentos_motorista_router
+from routes.turnos import router as turnos_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
