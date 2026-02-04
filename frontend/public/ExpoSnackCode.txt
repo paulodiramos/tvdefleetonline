@@ -1677,7 +1677,7 @@ const VistoriasScreen = ({ user }) => {
   const [vistorias, setVistorias] = useState([]);
   const [showNovaVistoria, setShowNovaVistoria] = useState(false);
   const [vistoriaAtual, setVistoriaAtual] = useState(null);
-  const [step, setStep] = useState(0); // 0: tipo, 1: fotos, 2: danos, 3: obs, 4: assinatura, 5: resumo
+  const [step, setStep] = useState(0); // 0: selecao motorista, 1: fotos, 2: danos, 3: obs, 4: assinatura, 5: resumo
   const [tipoVistoria, setTipoVistoria] = useState('entrada'); // entrada, saida
   const [fotos, setFotos] = useState({});
   const [danos, setDanos] = useState([]);
@@ -1687,6 +1687,10 @@ const VistoriasScreen = ({ user }) => {
   const [assinatura, setAssinatura] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  // Novos estados para seleção de motorista/veículo
+  const [motoristas, setMotoristas] = useState([]);
+  const [selectedMotorista, setSelectedMotorista] = useState(null);
+  const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
 
   const loadVistorias = async () => {
     try {
@@ -1696,7 +1700,20 @@ const VistoriasScreen = ({ user }) => {
     setLoading(false);
   };
 
-  useEffect(() => { loadVistorias(); }, []);
+  const loadMotoristas = async () => {
+    // Carregar motoristas apenas para inspetor/parceiro/gestor
+    if (user.role !== 'motorista') {
+      try {
+        const data = await api.get('/motoristas/meus');
+        setMotoristas(data.motoristas || data || []);
+      } catch (e) { console.error(e); }
+    }
+  };
+
+  useEffect(() => { 
+    loadVistorias(); 
+    loadMotoristas();
+  }, []);
 
   const iniciarVistoria = (tipo) => {
     setTipoVistoria(tipo);
@@ -1706,7 +1723,10 @@ const VistoriasScreen = ({ user }) => {
     setKm('');
     setCombustivel('50');
     setAssinatura(null);
-    setStep(1);
+    setSelectedMotorista(null);
+    // Para inspetor/parceiro, começar com seleção de motorista (step 0)
+    // Para motorista, ir direto para fotos (step 1)
+    setStep(user.role === 'motorista' ? 1 : 0);
     setShowNovaVistoria(true);
   };
 
@@ -1733,6 +1753,11 @@ const VistoriasScreen = ({ user }) => {
   const enviarVistoria = async () => {
     if (!fotosCompletas()) { Alert.alert('Erro', 'Complete todas as fotos obrigatórias'); return; }
     if (!km) { Alert.alert('Erro', 'Introduza a quilometragem'); return; }
+    // Validar motorista para inspetor/parceiro
+    if (user.role !== 'motorista' && !selectedMotorista) {
+      Alert.alert('Erro', 'Selecione um motorista');
+      return;
+    }
     
     setEnviando(true);
     try {
@@ -1750,10 +1775,12 @@ const VistoriasScreen = ({ user }) => {
         km: parseInt(km),
         nivel_combustivel: parseInt(combustivel),
         observacoes: observacoes,
-        assinatura: assinatura?.base64 || null
+        assinatura: assinatura?.base64 || null,
+        motorista_id: selectedMotorista?.id || null,
+        veiculo_id: selectedMotorista?.veiculo_atribuido || null
       });
       
-      Alert.alert('Sucesso', 'Vistoria enviada com sucesso!');
+      Alert.alert('Sucesso', 'Vistoria enviada com sucesso! O motorista será notificado para confirmar.');
       setShowNovaVistoria(false);
       loadVistorias();
     } catch (e) { 
@@ -1769,33 +1796,93 @@ const VistoriasScreen = ({ user }) => {
 
   // Modal de Nova Vistoria
   if (showNovaVistoria) {
+    const minStep = user.role === 'motorista' ? 1 : 0;
+    const totalSteps = user.role === 'motorista' ? 5 : 6;
+    
     return (
       <View style={styles.screen}>
         {/* Header */}
         <View style={styles.vistoriaHeader}>
-          <TouchableOpacity onPress={() => { if (step > 1) setStep(step - 1); else setShowNovaVistoria(false); }}>
+          <TouchableOpacity onPress={() => { if (step > minStep) setStep(step - 1); else setShowNovaVistoria(false); }}>
             <Text style={styles.vistoriaBack}>← Voltar</Text>
           </TouchableOpacity>
           <Text style={styles.vistoriaHeaderTitle}>
             {tipoVistoria === 'entrada' ? '📥 Vistoria de Entrada' : '📤 Vistoria de Saída'}
           </Text>
-          <Text style={styles.vistoriaStep}>Passo {step}/5</Text>
+          <Text style={styles.vistoriaStep}>Passo {step}/{totalSteps - 1}</Text>
         </View>
 
         {/* Progresso - Clicável para navegar entre passos */}
         <View style={styles.progressBar}>
-          {[1,2,3,4,5].map(s => (
-            <TouchableOpacity 
-              key={s} 
-              style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} 
-              onPress={() => s < step && setStep(s)}
-            >
-              <Text style={styles.progressDotText}>{s}</Text>
-            </TouchableOpacity>
-          ))}
+          {[...Array(totalSteps - 1)].map((_, i) => {
+            const s = minStep + i;
+            return (
+              <TouchableOpacity 
+                key={s} 
+                style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} 
+                onPress={() => s < step && setStep(s)}
+              >
+                <Text style={styles.progressDotText}>{i + 1}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <ScrollView style={{ flex: 1 }}>
+          {/* Step 0: Seleção de Motorista (apenas para inspetor/parceiro/gestor) */}
+          {step === 0 && user.role !== 'motorista' && (
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>👤 Selecionar Motorista</Text>
+              <Text style={styles.stepSubtitle}>Escolha o motorista e veículo para a vistoria</Text>
+              
+              {selectedMotorista ? (
+                <View style={styles.selectedMotoristaCard}>
+                  <View style={styles.selectedMotoristaInfo}>
+                    <Text style={styles.selectedMotoristaName}>{selectedMotorista.name || selectedMotorista.nome}</Text>
+                    <Text style={styles.selectedMotoristaEmail}>{selectedMotorista.email}</Text>
+                    {selectedMotorista.veiculo_matricula && (
+                      <Text style={styles.selectedMotoristaVeiculo}>🚗 {selectedMotorista.veiculo_matricula}</Text>
+                    )}
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.changeMotoristaBtn}
+                    onPress={() => setSelectedMotorista(null)}
+                  >
+                    <Text style={styles.changeMotoristaBtnText}>Alterar</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.motoristasListContainer}>
+                  {motoristas.length === 0 ? (
+                    <Text style={styles.noMotoristasText}>Nenhum motorista encontrado</Text>
+                  ) : (
+                    motoristas.map(m => (
+                      <TouchableOpacity 
+                        key={m.id} 
+                        style={styles.motoristaSelectCard}
+                        onPress={() => setSelectedMotorista(m)}
+                      >
+                        <View>
+                          <Text style={styles.motoristaSelectName}>{m.name || m.nome}</Text>
+                          <Text style={styles.motoristaSelectEmail}>{m.email}</Text>
+                        </View>
+                        {m.veiculo_matricula && (
+                          <Text style={styles.motoristaSelectVeiculo}>🚗 {m.veiculo_matricula}</Text>
+                        )}
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
+              )}
+              
+              {selectedMotorista && (
+                <TouchableOpacity style={styles.stepNextBtn} onPress={() => setStep(1)}>
+                  <Text style={styles.stepNextBtnText}>Continuar →</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+          
           {/* Step 1: Fotos */}
           {step === 1 && (
             <View style={styles.stepContent}>
@@ -2659,6 +2746,22 @@ const styles = StyleSheet.create({
   stepContent: { padding: 16 },
   stepTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
   stepSubtitle: { color: '#94a3b8', fontSize: 13, marginBottom: 16 },
+  // Seleção de Motorista
+  selectedMotoristaCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, borderWidth: 2, borderColor: '#22c55e' },
+  selectedMotoristaInfo: { flex: 1 },
+  selectedMotoristaName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  selectedMotoristaEmail: { color: '#94a3b8', fontSize: 13 },
+  selectedMotoristaVeiculo: { color: '#3b82f6', fontSize: 13, marginTop: 4 },
+  changeMotoristaBtn: { backgroundColor: '#334155', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  changeMotoristaBtnText: { color: '#fff', fontSize: 13 },
+  motoristasListContainer: { gap: 8 },
+  motoristaSelectCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  motoristaSelectName: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  motoristaSelectEmail: { color: '#64748b', fontSize: 12 },
+  motoristaSelectVeiculo: { color: '#3b82f6', fontSize: 13 },
+  noMotoristasText: { color: '#64748b', textAlign: 'center', padding: 40 },
+  stepNextBtn: { backgroundColor: '#3b82f6', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 16 },
+  stepNextBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   // Fotos Grid
   fotosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
   fotoCard: { width: (SCREEN_WIDTH - 56) / 2, height: 100, backgroundColor: '#1e293b', borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#334155', borderStyle: 'dashed' },
