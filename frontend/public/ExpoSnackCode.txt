@@ -67,11 +67,24 @@ const LoginScreen = ({ onLogin }) => {
     if (!email || !password) { Alert.alert('Erro', 'Preencha os campos'); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      console.log('A tentar login em:', `${API_URL}/auth/login`);
+      const res = await fetch(`${API_URL}/auth/login`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ email, password }) 
+      });
+      console.log('Response status:', res.status);
       const data = await res.json();
-      if (data.access_token) { api.setToken(data.access_token); onLogin(data.user, data.access_token); }
-      else Alert.alert('Erro', data.detail || 'Credenciais inválidas');
-    } catch (e) { Alert.alert('Erro', 'Falha na ligação'); }
+      if (data.access_token) { 
+        api.setToken(data.access_token); 
+        onLogin(data.user, data.access_token); 
+      } else {
+        Alert.alert('Erro', data.detail || 'Credenciais inválidas');
+      }
+    } catch (e) { 
+      console.error('Erro login:', e);
+      Alert.alert('Erro de Ligação', `Não foi possível conectar ao servidor.\n\nURL: ${API_URL}\nErro: ${e.message}\n\nVerifique a sua ligação à internet.`); 
+    }
     setLoading(false);
   };
   return (
