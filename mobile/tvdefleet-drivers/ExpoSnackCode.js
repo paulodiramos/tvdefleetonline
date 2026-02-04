@@ -1677,7 +1677,7 @@ const VistoriasScreen = ({ user }) => {
   const [vistorias, setVistorias] = useState([]);
   const [showNovaVistoria, setShowNovaVistoria] = useState(false);
   const [vistoriaAtual, setVistoriaAtual] = useState(null);
-  const [step, setStep] = useState(0); // 0: tipo, 1: fotos, 2: danos, 3: obs, 4: assinatura, 5: resumo
+  const [step, setStep] = useState(0); // 0: selecao motorista, 1: fotos, 2: danos, 3: obs, 4: assinatura, 5: resumo
   const [tipoVistoria, setTipoVistoria] = useState('entrada'); // entrada, saida
   const [fotos, setFotos] = useState({});
   const [danos, setDanos] = useState([]);
@@ -1687,6 +1687,10 @@ const VistoriasScreen = ({ user }) => {
   const [assinatura, setAssinatura] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  // Novos estados para seleção de motorista/veículo
+  const [motoristas, setMotoristas] = useState([]);
+  const [selectedMotorista, setSelectedMotorista] = useState(null);
+  const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
 
   const loadVistorias = async () => {
     try {
@@ -1696,7 +1700,20 @@ const VistoriasScreen = ({ user }) => {
     setLoading(false);
   };
 
-  useEffect(() => { loadVistorias(); }, []);
+  const loadMotoristas = async () => {
+    // Carregar motoristas apenas para inspetor/parceiro/gestor
+    if (user.role !== 'motorista') {
+      try {
+        const data = await api.get('/motoristas/meus');
+        setMotoristas(data.motoristas || data || []);
+      } catch (e) { console.error(e); }
+    }
+  };
+
+  useEffect(() => { 
+    loadVistorias(); 
+    loadMotoristas();
+  }, []);
 
   const iniciarVistoria = (tipo) => {
     setTipoVistoria(tipo);
