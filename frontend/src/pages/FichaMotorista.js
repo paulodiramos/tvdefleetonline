@@ -2581,12 +2581,12 @@ const FichaMotorista = ({ user }) => {
               <CardContent className="space-y-4">
                 <div>
                   <Label>Veículo Atribuído para os Turnos</Label>
-                  <Select value={turnoVeiculoId} onValueChange={setTurnoVeiculoId}>
+                  <Select value={turnoVeiculoId || "none"} onValueChange={(v) => setTurnoVeiculoId(v === "none" ? "" : v)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Selecionar veículo..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sem veículo específico</SelectItem>
+                      <SelectItem value="none">Sem veículo específico</SelectItem>
                       {veiculosDisponiveis.map(v => (
                         <SelectItem key={v.id} value={v.id}>
                           <Car className="w-4 h-4 inline mr-2" />
