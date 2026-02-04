@@ -82,28 +82,43 @@ async def criar_vistoria(
 ):
     """Criar nova vistoria de entrada ou saída com análise IA"""
     
-    if current_user["role"] != "motorista":
-        raise HTTPException(status_code=403, detail="Apenas motoristas podem criar vistorias")
+    # Inspetores, Gestores e Parceiros podem criar vistorias
+    allowed_roles = ["inspetor", "gestao", "parceiro"]
+    if current_user["role"] not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Apenas inspetores, gestores ou parceiros podem criar vistorias")
     
-    motorista_id = current_user["id"]
+    inspetor_id = current_user["id"]
     now = datetime.now(timezone.utc)
     
-    # Buscar info do motorista e veículo
-    motorista = await db.motoristas.find_one(
-        {"id": motorista_id},
-        {"_id": 0, "name": 1, "veiculo_atribuido": 1, "telefone": 1}
-    )
+    # Para inspetor/gestor/parceiro, precisamos identificar o motorista e veículo
+    # Isso pode vir do request ou ser selecionado na app
+    motorista_id = data.motorista_id if hasattr(data, 'motorista_id') and data.motorista_id else None
+    veiculo_id = data.veiculo_id if hasattr(data, 'veiculo_id') and data.veiculo_id else None
     
+    motorista_nome = None
+    motorista_telefone = None
     veiculo_matricula = None
-    veiculo_id = None
-    if motorista and motorista.get("veiculo_atribuido"):
+    
+    # Se temos motorista_id, buscar info
+    if motorista_id:
+        motorista = await db.motoristas.find_one(
+            {"id": motorista_id},
+            {"_id": 0, "name": 1, "veiculo_atribuido": 1, "telefone": 1}
+        )
+        if motorista:
+            motorista_nome = motorista.get("name")
+            motorista_telefone = motorista.get("telefone")
+            if not veiculo_id and motorista.get("veiculo_atribuido"):
+                veiculo_id = motorista["veiculo_atribuido"]
+    
+    # Buscar info do veículo
+    if veiculo_id:
         veiculo = await db.vehicles.find_one(
-            {"id": motorista["veiculo_atribuido"]},
+            {"id": veiculo_id},
             {"_id": 0, "id": 1, "matricula": 1}
         )
         if veiculo:
             veiculo_matricula = veiculo.get("matricula")
-            veiculo_id = veiculo.get("id")
     
     # Salvar fotos
     fotos_salvas = {}
