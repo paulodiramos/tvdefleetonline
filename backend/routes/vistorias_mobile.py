@@ -542,14 +542,26 @@ async def listar_vistorias_pendentes_aceitacao(
     if current_user["role"] != "motorista":
         raise HTTPException(status_code=403, detail="Apenas motoristas podem ver vistorias pendentes de aceitação")
     
-    # Buscar vistorias associadas ao motorista que ainda não foram aceites
-    motorista_id = current_user["id"]
+    # Buscar motorista pelo email do user atual
+    motorista = await db.motoristas.find_one(
+        {"email": current_user["email"]},
+        {"_id": 0, "id": 1}
+    )
     
+    motorista_id = motorista["id"] if motorista else current_user["id"]
+    
+    # Também aceitar vistorias onde o motorista_id é o user_id
     vistorias = await db.vistorias_mobile.find(
         {
-            "motorista_id": motorista_id,
+            "$or": [
+                {"motorista_id": motorista_id},
+                {"motorista_id": current_user["id"]}
+            ],
             "status": "aprovada",  # Já aprovada pelo parceiro
-            "motorista_aceite": {"$exists": False}  # Ainda não confirmada pelo motorista
+            "$or": [
+                {"motorista_aceite": {"$exists": False}},
+                {"motorista_aceite": None}
+            ]
         },
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
