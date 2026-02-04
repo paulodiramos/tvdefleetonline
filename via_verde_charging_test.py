@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://fleet-guardian-7.preview.emergentagent.com/api"
+BACKEND_URL = "https://fleet-inspect-11.preview.emergentagent.com/api"
 
 # Test credentials (from review request)
 TEST_CREDENTIALS = {
