@@ -41,8 +41,13 @@ TICKET_CATEGORIES = [
     "documentos",
     "veiculo",
     "contrato",
+    "acidente",
+    "avaria",
     "outro"
 ]
+
+# Categorias que requerem fotos obrigatórias
+CATEGORIAS_COM_FOTOS = ["acidente", "avaria"]
 
 # Dias para auto-fechamento sem resposta
 AUTO_CLOSE_DAYS = 7
