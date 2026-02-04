@@ -1063,6 +1063,206 @@ async def atualizar_definicoes_ponto(
             raise HTTPException(
                 status_code=403, 
                 detail="O seu parceiro não autorizou a alteração do período de descanso. Contacte-o para solicitar permissão."
+
+
+# ============ ENDPOINTS PARA APP MÓVEL PARCEIRO/GESTOR ============
+
+@router.get("/parceiro/recibos-pendentes")
+async def listar_recibos_pendentes_parceiro(
+    status: str = "pendente",
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar recibos dos motoristas do parceiro para aprovação"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Buscar motoristas do parceiro
+    query = {"deleted": {"$ne": True}}
+    if current_user["role"] == "parceiro":
+        query["parceiro_atribuido"] = current_user["id"]
+    elif current_user["role"] == "gestao":
+        parceiros_ids = current_user.get("parceiros_atribuidos", [])
+        if parceiros_ids:
+            query["parceiro_atribuido"] = {"$in": parceiros_ids}
+    
+    motoristas = await db.motoristas.find(query, {"_id": 0, "id": 1, "name": 1}).to_list(500)
+    motorista_ids = [m["id"] for m in motoristas]
+    motorista_map = {m["id"]: m["name"] for m in motoristas}
+    
+    # Buscar recibos
+    recibo_query = {"motorista_id": {"$in": motorista_ids}}
+    if status != "todos":
+        recibo_query["recibo_status"] = status
+    
+    recibos = await db.recibos_semanais.find(
+        recibo_query,
+        {"_id": 0}
+    ).sort([("ano", -1), ("semana", -1)]).to_list(200)
+    
+    # Enriquecer com nome do motorista
+    for r in recibos:
+        r["motorista_nome"] = motorista_map.get(r.get("motorista_id"), "N/A")
+    
+    return {"recibos": recibos, "total": len(recibos)}
+
+
+@router.post("/parceiro/aprovar-recibo/{recibo_id}")
+async def aprovar_recibo(
+    recibo_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Aprovar recibo de um motorista"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    recibo = await db.recibos_semanais.find_one({"id": recibo_id}, {"_id": 0})
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Recibo não encontrado")
+    
+    now = datetime.now(timezone.utc)
+    await db.recibos_semanais.update_one(
+        {"id": recibo_id},
+        {"$set": {
+            "recibo_status": "aprovado",
+            "aprovado_por": current_user["id"],
+            "aprovado_em": now.isoformat()
+        }}
+    )
+    
+    return {"success": True, "message": "Recibo aprovado"}
+
+
+@router.post("/parceiro/rejeitar-recibo/{recibo_id}")
+async def rejeitar_recibo(
+    recibo_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Rejeitar recibo de um motorista"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    recibo = await db.recibos_semanais.find_one({"id": recibo_id}, {"_id": 0})
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Recibo não encontrado")
+    
+    now = datetime.now(timezone.utc)
+    await db.recibos_semanais.update_one(
+        {"id": recibo_id},
+        {"$set": {
+            "recibo_status": "rejeitado",
+            "rejeitado_por": current_user["id"],
+            "rejeitado_em": now.isoformat()
+        }}
+    )
+    
+    return {"success": True, "message": "Recibo rejeitado"}
+
+
+@router.get("/parceiro/resumo-semanal")
+async def get_resumo_semanal_parceiro(
+    semana: int = None,
+    ano: int = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Resumo semanal dos motoristas do parceiro para app móvel"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Semana atual se não especificada
+    now = datetime.now(timezone.utc)
+    if semana is None:
+        semana = now.isocalendar()[1]
+    if ano is None:
+        ano = now.year
+    
+    # Buscar motoristas do parceiro
+    query = {"deleted": {"$ne": True}}
+    if current_user["role"] == "parceiro":
+        query["parceiro_atribuido"] = current_user["id"]
+    elif current_user["role"] == "gestao":
+        parceiros_ids = current_user.get("parceiros_atribuidos", [])
+        if parceiros_ids:
+            query["parceiro_atribuido"] = {"$in": parceiros_ids}
+    
+    motoristas = await db.motoristas.find(query, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(200)
+    
+    resultado = []
+    for m in motoristas:
+        # Buscar resumo financeiro da semana
+        resumo = await db.resumos_semanais.find_one({
+            "motorista_id": m["id"],
+            "semana": semana,
+            "ano": ano
+        }, {"_id": 0})
+        
+        if resumo:
+            resultado.append({
+                "id": m["id"],
+                "nome": m["name"],
+                "email": m.get("email"),
+                "ganhos_uber": resumo.get("ganhos_uber", 0),
+                "ganhos_bolt": resumo.get("ganhos_bolt", 0),
+                "via_verde": resumo.get("total_portagens", 0),
+                "extras": resumo.get("extras", 0),
+                "liquido": resumo.get("liquido_motorista", 0),
+                "estado": resumo.get("estado", "pendente")
+            })
+        else:
+            resultado.append({
+                "id": m["id"],
+                "nome": m["name"],
+                "email": m.get("email"),
+                "ganhos_uber": 0,
+                "ganhos_bolt": 0,
+                "via_verde": 0,
+                "extras": 0,
+                "liquido": 0,
+                "estado": "sem_dados"
+            })
+    
+    return {
+        "semana": semana,
+        "ano": ano,
+        "motoristas": resultado,
+        "total": len(resultado)
+    }
+
+
+@router.post("/parceiro/alterar-estado-resumo")
+async def alterar_estado_resumo(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    estado: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Alterar estado do resumo semanal de um motorista"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if estado not in ["pendente", "pago", "confirmado"]:
+        raise HTTPException(status_code=400, detail="Estado inválido")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Criar ou atualizar resumo
+    await db.resumos_semanais.update_one(
+        {"motorista_id": motorista_id, "semana": semana, "ano": ano},
+        {"$set": {
+            "estado": estado,
+            "atualizado_por": current_user["id"],
+            "atualizado_em": now.isoformat()
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": f"Estado alterado para {estado}"}
+
             )
         if data.espacamento_horas < 12 or data.espacamento_horas > 48:
             raise HTTPException(status_code=400, detail="Espaçamento deve ser entre 12 e 48 horas")
