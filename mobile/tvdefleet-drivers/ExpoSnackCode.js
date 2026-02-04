@@ -3238,4 +3238,31 @@ const styles = StyleSheet.create({
   alertaPrioridade: { color: '#ef4444', fontSize: 10, fontWeight: 'bold', backgroundColor: '#1e293b', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   alertaMotorista: { color: '#94a3b8', fontSize: 12, marginTop: 8 },
   alertaData: { color: '#f59e0b', fontSize: 12, marginTop: 4 },
+  // Novos estilos para pesquisa e OCR
+  searchContainer: { flexDirection: 'row', marginBottom: 16, gap: 8 },
+  searchInput: { flex: 1, backgroundColor: '#1e293b', borderRadius: 12, padding: 14, color: '#fff', fontSize: 15 },
+  ocrBtn: { backgroundColor: '#8b5cf6', paddingHorizontal: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  ocrBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
+  // Picker Dropdown
+  pickerItem: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#334155' },
+  pickerItemSelected: { backgroundColor: '#334155' },
+  pickerItemText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  pickerItemSubtext: { color: '#64748b', fontSize: 12, marginTop: 2 },
+  // Dashboard
+  dashboardGrid: { gap: 8 },
+  dashboardItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
+  dashboardLabel: { color: '#94a3b8', fontSize: 13 },
+  dashboardValue: { fontSize: 14, fontWeight: '600' },
+  // Fotos múltiplas
+  fotoCardContainer: { width: (SCREEN_WIDTH - 56) / 2 },
+  fotoCountBadge: { position: 'absolute', top: 6, left: 6, backgroundColor: '#3b82f6', width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  fotoCountText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  addMoreFotoBtn: { backgroundColor: '#334155', padding: 6, borderRadius: 6, alignItems: 'center', marginTop: 4 },
+  addMoreFotoBtnText: { color: '#94a3b8', fontSize: 11 },
+  // Modal de Assinatura
+  assinaturaModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', padding: 16 },
+  assinaturaModalContent: { backgroundColor: '#1e293b', borderRadius: 16, padding: 16 },
+  assinaturaModalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 },
+  assinaturaCanvas: { backgroundColor: '#fff', height: 200, borderRadius: 12, marginBottom: 16 },
+  assinaturaModalActions: { flexDirection: 'row', gap: 8 },
 });
