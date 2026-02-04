@@ -560,3 +560,263 @@ async def get_historico_semanas(
         })
     
     return {"historico": historico}
+
+
+# ============ RECIBOS SEMANAIS ============
+
+from fastapi import UploadFile, File, Form
+import shutil
+from pathlib import Path
+
+RECIBOS_UPLOAD_DIR = Path(__file__).parent.parent / "uploads" / "recibos_semanais"
+RECIBOS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+@router.post("/recibo-semanal/upload")
+async def upload_recibo_semanal(
+    semana: int = Form(...),
+    ano: int = Form(...),
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload de recibo semanal pelo motorista.
+    - Apenas 1 recibo por semana
+    - Após upload, não pode ser trocado pelo motorista
+    - Apenas gestor, admin ou parceiro podem apagar
+    """
+    
+    if current_user["role"] != "motorista":
+        raise HTTPException(status_code=403, detail="Apenas motoristas podem fazer upload de recibos")
+    
+    motorista_id = current_user["id"]
+    
+    # Verificar se já existe recibo para esta semana
+    recibo_existente = await db.recibos_semanais.find_one({
+        "motorista_id": motorista_id,
+        "semana": semana,
+        "ano": ano
+    }, {"_id": 0})
+    
+    if recibo_existente:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Já existe um recibo para a semana {semana}/{ano}. Contacte o seu parceiro ou gestor para alterar."
+        )
+    
+    # Validar ficheiro
+    allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png"]
+    import os
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail=f"Tipo de ficheiro não permitido. Use: {allowed_extensions}")
+    
+    # Guardar ficheiro
+    recibo_id = str(uuid.uuid4())
+    file_name = f"{motorista_id}_{ano}_{semana}_{recibo_id}{file_ext}"
+    file_path = RECIBOS_UPLOAD_DIR / file_name
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    now = datetime.now(timezone.utc)
+    
+    # Criar registo do recibo
+    recibo = {
+        "id": recibo_id,
+        "motorista_id": motorista_id,
+        "motorista_nome": current_user.get("name"),
+        "semana": semana,
+        "ano": ano,
+        "nome_ficheiro": file.filename,
+        "path": str(file_path),
+        "file_url": f"/api/ponto/recibo-semanal/ficheiro/{recibo_id}",
+        "created_at": now.isoformat(),
+        "created_by": motorista_id
+    }
+    
+    await db.recibos_semanais.insert_one(recibo)
+    
+    logger.info(f"Recibo semanal {semana}/{ano} carregado por motorista {motorista_id}")
+    
+    return {
+        "success": True,
+        "recibo_id": recibo_id,
+        "message": f"Recibo da semana {semana}/{ano} carregado com sucesso"
+    }
+
+
+@router.get("/recibo-semanal/{semana}/{ano}")
+async def get_recibo_semanal(
+    semana: int,
+    ano: int,
+    motorista_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter recibo de uma semana específica"""
+    
+    # Se motorista_id não especificado, usar o do utilizador atual
+    if not motorista_id:
+        motorista_id = current_user["id"]
+    
+    # Verificar permissões
+    if current_user["role"] == "motorista" and motorista_id != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    recibo = await db.recibos_semanais.find_one({
+        "motorista_id": motorista_id,
+        "semana": semana,
+        "ano": ano
+    }, {"_id": 0})
+    
+    return {
+        "existe": recibo is not None,
+        "recibo": recibo
+    }
+
+
+@router.get("/recibo-semanal/ficheiro/{recibo_id}")
+async def get_ficheiro_recibo(
+    recibo_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Download do ficheiro do recibo"""
+    from fastapi.responses import FileResponse
+    
+    recibo = await db.recibos_semanais.find_one({"id": recibo_id}, {"_id": 0})
+    
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Recibo não encontrado")
+    
+    # Verificar permissões
+    if current_user["role"] == "motorista" and recibo["motorista_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    file_path = Path(recibo["path"])
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=recibo["nome_ficheiro"],
+        media_type="application/octet-stream"
+    )
+
+
+@router.get("/recibos-semanais/meus")
+async def listar_meus_recibos(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar todos os recibos do motorista"""
+    
+    recibos = await db.recibos_semanais.find({
+        "motorista_id": current_user["id"]
+    }, {"_id": 0}).sort([("ano", -1), ("semana", -1)]).to_list(100)
+    
+    return {"recibos": recibos}
+
+
+@router.delete("/recibo-semanal/{recibo_id}")
+async def apagar_recibo(
+    recibo_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Apagar recibo - APENAS gestor, admin ou parceiro podem apagar
+    """
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(
+            status_code=403, 
+            detail="Apenas administradores, gestores ou parceiros podem apagar recibos"
+        )
+    
+    recibo = await db.recibos_semanais.find_one({"id": recibo_id}, {"_id": 0})
+    
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Recibo não encontrado")
+    
+    # Se parceiro, verificar se motorista pertence ao parceiro
+    if current_user["role"] == "parceiro":
+        motorista = await db.motoristas.find_one({"id": recibo["motorista_id"]}, {"_id": 0})
+        if not motorista or motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Apagar ficheiro físico
+    file_path = Path(recibo["path"])
+    if file_path.exists():
+        file_path.unlink()
+    
+    # Apagar registo
+    await db.recibos_semanais.delete_one({"id": recibo_id})
+    
+    logger.info(f"Recibo {recibo_id} apagado por {current_user['id']}")
+    
+    return {"success": True, "message": "Recibo apagado com sucesso"}
+
+
+@router.get("/recibos-semanais/motorista/{motorista_id}")
+async def listar_recibos_motorista(
+    motorista_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar recibos de um motorista (para parceiros, gestores, admin)"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Se parceiro, verificar se motorista pertence ao parceiro
+    if current_user["role"] == "parceiro":
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if not motorista or motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    recibos = await db.recibos_semanais.find({
+        "motorista_id": motorista_id
+    }, {"_id": 0}).sort([("ano", -1), ("semana", -1)]).to_list(200)
+    
+    return {"motorista_id": motorista_id, "recibos": recibos}
+
+
+@router.get("/semanas-disponiveis")
+async def get_semanas_disponiveis(
+    num_semanas: int = 12,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter lista de semanas disponíveis para seleção"""
+    
+    hoje = datetime.now(timezone.utc)
+    semana_atual = hoje.isocalendar()[1]
+    ano_atual = hoje.year
+    
+    semanas = []
+    
+    for i in range(num_semanas):
+        semana = semana_atual - i
+        ano = ano_atual
+        
+        while semana <= 0:
+            semana += 52
+            ano -= 1
+        
+        # Calcular datas da semana
+        primeiro_dia_ano = datetime(ano, 1, 1)
+        if primeiro_dia_ano.weekday() <= 3:
+            primeira_segunda = primeiro_dia_ano - timedelta(days=primeiro_dia_ano.weekday())
+        else:
+            primeira_segunda = primeiro_dia_ano + timedelta(days=(7 - primeiro_dia_ano.weekday()))
+        
+        inicio_semana = primeira_segunda + timedelta(weeks=semana - 1)
+        fim_semana = inicio_semana + timedelta(days=6)
+        
+        semanas.append({
+            "semana": semana,
+            "ano": ano,
+            "label": f"Semana {semana}/{ano}",
+            "periodo": f"{inicio_semana.strftime('%d/%m')} - {fim_semana.strftime('%d/%m/%Y')}",
+            "data_inicio": inicio_semana.strftime("%Y-%m-%d"),
+            "data_fim": fim_semana.strftime("%Y-%m-%d")
+        })
+    
+    return {"semanas": semanas}
