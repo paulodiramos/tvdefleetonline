@@ -181,9 +181,11 @@ async def registar_check_in(
 ):
     """Registar check-in (início de turno)"""
     
+    motorista_id = current_user["id"]
+    
     # Verificar se já tem ponto ativo
     ponto_ativo = await db.registos_ponto.find_one({
-        "user_id": current_user["id"],
+        "user_id": motorista_id,
         "check_out": None
     })
     
@@ -193,11 +195,20 @@ async def registar_check_in(
             detail="Já tem um turno ativo. Faça check-out primeiro."
         )
     
+    # Verificar se pode iniciar turno (limite de horas)
+    verificacao = await verificar_pode_iniciar_turno(motorista_id)
+    
+    if not verificacao["pode_iniciar"]:
+        raise HTTPException(
+            status_code=400,
+            detail=verificacao["mensagem"]
+        )
+    
     hora = request.hora or datetime.now(timezone.utc).isoformat()
     
     ponto = {
         "id": str(uuid.uuid4()),
-        "user_id": current_user["id"],
+        "user_id": motorista_id,
         "parceiro_id": current_user.get("parceiro_id"),
         "check_in": hora,
         "check_in_location": {
