@@ -1862,6 +1862,15 @@ const VistoriasScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [selectedMotorista, setSelectedMotorista] = useState(null);
   const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
+  const [searchMatricula, setSearchMatricula] = useState('');
+
+  // Filtrar motoristas pela matrícula
+  const motoristasFiltrados = searchMatricula 
+    ? motoristas.filter(m => 
+        (m.veiculo_matricula || '').toUpperCase().includes(searchMatricula.toUpperCase()) ||
+        (m.name || m.nome || '').toUpperCase().includes(searchMatricula.toUpperCase())
+      )
+    : motoristas;
 
   const loadVistorias = async () => {
     try {
