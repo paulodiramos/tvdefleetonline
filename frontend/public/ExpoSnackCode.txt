@@ -132,14 +132,14 @@ const getTabsForRole = (role) => {
       { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
     ];
   }
-  // Gestor/Parceiro: Vistorias (podem fazer), Recibos, Resumo Semanal, Extras, Alertas
+  // Gestor/Parceiro: Vistorias (podem fazer), Consulta Frota, Recibos, Resumo Semanal, Extras, Alertas
   if (role === 'gestao' || role === 'parceiro') {
     return [
-      { id: 'vistorias', icon: '🔍', label: 'Vistorias' },
-      { id: 'recibos', icon: '📄', label: 'Recibos' },
+      { id: 'vistorias', icon: '🔍', label: 'Nova' },
+      { id: 'frota', icon: '📋', label: 'Frota' },
       { id: 'resumo', icon: '📊', label: 'Resumo' },
       { id: 'extras', icon: '💸', label: 'Extras' },
-      { id: 'alertas', icon: '🔔', label: 'Alertas' },
+      { id: 'recibos', icon: '📄', label: 'Recibos' },
     ];
   }
   // Default para outros roles
@@ -839,19 +839,21 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
   );
 };
 
-// Ecrã de Extras/Dívidas (Gestor/Parceiro) - MELHORADO
+// Ecrã de Extras/Dívidas (Gestor/Parceiro) - CORRIGIDO
 const ExtrasGestaoScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedMotorista, setSelectedMotorista] = useState(null);
-  const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
   const [extraForm, setExtraForm] = useState({ tipo: 'debito', descricao: '', valor: '', email: '' });
 
   const loadMotoristas = async () => {
     try {
       const data = await api.get('/motoristas/meus');
-      setMotoristas(data.motoristas || data || []);
+      // Filtrar apenas motoristas ativos
+      const lista = data.motoristas || data || [];
+      const ativos = lista.filter(m => m.status === 'ativo' || m.ativo !== false);
+      setMotoristas(ativos);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
@@ -860,9 +862,7 @@ const ExtrasGestaoScreen = ({ user }) => {
 
   const handleSelectMotorista = (m) => {
     setSelectedMotorista(m);
-    setExtraForm({ ...extraForm, email: m.email || '' });
-    setShowMotoristaPicker(false);
-    setShowModal(true);
+    setExtraForm({ tipo: 'debito', descricao: '', valor: '', email: m.email || '' });
   };
 
   const handleAddExtra = async () => {
@@ -889,116 +889,310 @@ const ExtrasGestaoScreen = ({ user }) => {
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
+  const handleVoltar = () => {
+    setSelectedMotorista(null);
+    setExtraForm({ tipo: 'debito', descricao: '', valor: '', email: '' });
+  };
+
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
+  // Se motorista selecionado, mostrar formulário de extra
+  if (selectedMotorista) {
+    return (
+      <ScrollView style={styles.screen}>
+        {/* Botão Voltar */}
+        <TouchableOpacity onPress={handleVoltar} style={{ marginBottom: 16 }}>
+          <Text style={styles.backBtn}>← Voltar</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.screenTitle}>💸 Adicionar Extra</Text>
+        
+        {/* Info do motorista selecionado */}
+        <View style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#3b82f6' }]}>
+          <Text style={styles.cardTitle}>{selectedMotorista.name || selectedMotorista.nome}</Text>
+          <Text style={styles.cardSubtitle}>{selectedMotorista.email || 'Sem email'}</Text>
+          {selectedMotorista.veiculo_matricula && (
+            <Text style={{ color: '#3b82f6', marginTop: 4 }}>🚗 {selectedMotorista.veiculo_matricula}</Text>
+          )}
+        </View>
+
+        {/* Tipo de Extra */}
+        <Text style={[styles.cardSubtitle, { marginBottom: 8 }]}>Tipo de movimento:</Text>
+        <View style={styles.tipoSelector}>
+          <TouchableOpacity 
+            style={[styles.tipoBtn, extraForm.tipo === 'debito' && styles.tipoBtnDebito]} 
+            onPress={() => setExtraForm({ ...extraForm, tipo: 'debito' })}
+          >
+            <Text style={styles.tipoBtnText}>➖ Débito</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tipoBtn, extraForm.tipo === 'credito' && styles.tipoBtnCredito]} 
+            onPress={() => setExtraForm({ ...extraForm, tipo: 'credito' })}
+          >
+            <Text style={styles.tipoBtnText}>➕ Crédito</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TextInput 
+          style={styles.input} 
+          placeholder="Descrição do extra" 
+          placeholderTextColor="#64748b"
+          value={extraForm.descricao}
+          onChangeText={(t) => setExtraForm({ ...extraForm, descricao: t })}
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Valor (€)" 
+          placeholderTextColor="#64748b"
+          keyboardType="numeric"
+          value={extraForm.valor}
+          onChangeText={(t) => setExtraForm({ ...extraForm, valor: t })}
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Email para notificação (opcional)" 
+          placeholderTextColor="#64748b"
+          keyboardType="email-address"
+          value={extraForm.email}
+          onChangeText={(t) => setExtraForm({ ...extraForm, email: t })}
+        />
+
+        <TouchableOpacity style={styles.btn} onPress={handleAddExtra}>
+          <Text style={styles.btnText}>Adicionar Extra</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  }
+
+  // Ecrã principal - apenas dropdown para selecionar motorista
   return (
     <ScrollView style={styles.screen}>
       <Text style={styles.screenTitle}>💸 Extras / Dívidas</Text>
-      <Text style={styles.cardSubtitle}>Adicionar débitos ou créditos aos motoristas</Text>
+      <Text style={styles.cardSubtitle}>Selecione um motorista para adicionar extras</Text>
 
-      {/* Botão para selecionar motorista via dropdown */}
-      <TouchableOpacity 
-        style={[styles.card, { backgroundColor: '#3b82f6', alignItems: 'center' }]} 
-        onPress={() => setShowMotoristaPicker(true)}
-      >
-        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>+ Adicionar Extra a Motorista</Text>
-      </TouchableOpacity>
-
-      {/* Lista de motoristas como referência rápida */}
-      <Text style={[styles.cardSubtitle, { marginTop: 16 }]}>Ou selecione da lista:</Text>
-      {motoristas.map(m => (
-        <TouchableOpacity key={m.id} style={styles.card} onPress={() => handleSelectMotorista(m)}>
-          <View style={styles.motoristaRow}>
-            <View>
-              <Text style={styles.cardTitle}>{m.name || m.nome}</Text>
-              <Text style={styles.cardSubtitle}>{m.email || 'Sem email'}</Text>
-            </View>
-            <Text style={styles.addBtn}>+ Adicionar</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
-
-      {/* Modal Picker de Motorista */}
-      <Modal visible={showMotoristaPicker} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
-            <Text style={styles.modalTitle}>Selecionar Motorista</Text>
-            <ScrollView>
-              {motoristas.map(m => (
-                <TouchableOpacity 
-                  key={m.id} 
-                  style={[styles.pickerItem, selectedMotorista?.id === m.id && styles.pickerItemSelected]}
-                  onPress={() => handleSelectMotorista(m)}
-                >
+      {/* Dropdown de motoristas ativos */}
+      <View style={[styles.card, { marginTop: 16 }]}>
+        <Text style={[styles.cardSubtitle, { marginBottom: 12 }]}>Motoristas Ativos ({motoristas.length}):</Text>
+        {motoristas.length === 0 ? (
+          <Text style={{ color: '#64748b', textAlign: 'center', padding: 20 }}>Nenhum motorista ativo</Text>
+        ) : (
+          motoristas.map(m => (
+            <TouchableOpacity 
+              key={m.id} 
+              style={[styles.pickerItem, { borderRadius: 8, marginBottom: 8, backgroundColor: '#1e293b' }]}
+              onPress={() => handleSelectMotorista(m)}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View>
                   <Text style={styles.pickerItemText}>{m.name || m.nome}</Text>
                   <Text style={styles.pickerItemSubtext}>{m.email || 'Sem email'}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowMotoristaPicker(false)}>
-              <Text style={styles.cancelBtnText}>Cancelar</Text>
+                </View>
+                <Text style={{ color: '#3b82f6', fontSize: 20 }}>→</Text>
+              </View>
             </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+          ))
+        )}
+      </View>
+    </ScrollView>
+  );
+};
 
-      {/* Modal para adicionar extra */}
-      <Modal visible={showModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Adicionar Extra</Text>
-            <Text style={styles.modalSubtitle}>{selectedMotorista?.name || selectedMotorista?.nome}</Text>
-            
-            <View style={styles.tipoSelector}>
-              <TouchableOpacity 
-                style={[styles.tipoBtn, extraForm.tipo === 'debito' && styles.tipoBtnDebito]} 
-                onPress={() => setExtraForm({ ...extraForm, tipo: 'debito' })}
-              >
-                <Text style={styles.tipoBtnText}>Débito (-)</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.tipoBtn, extraForm.tipo === 'credito' && styles.tipoBtnCredito]} 
-                onPress={() => setExtraForm({ ...extraForm, tipo: 'credito' })}
-              >
-                <Text style={styles.tipoBtnText}>Crédito (+)</Text>
-              </TouchableOpacity>
+// Ecrã de Vistorias da Frota (Parceiro/Gestor) - NOVO
+const VistoriasFrotaScreen = ({ user }) => {
+  const [vistorias, setVistorias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedVistoria, setSelectedVistoria] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState('todas');
+
+  const loadVistorias = async () => {
+    try {
+      const data = await api.get('/vistorias/frota');
+      setVistorias(data.vistorias || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadVistorias(); }, []);
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'aprovada': return { text: '✅ Aprovada', color: '#22c55e' };
+      case 'pendente': return { text: '⏳ Pendente', color: '#f59e0b' };
+      case 'rejeitada': return { text: '❌ Rejeitada', color: '#ef4444' };
+      default: return { text: status || 'N/A', color: '#64748b' };
+    }
+  };
+
+  const vistoriasFiltradas = filtroStatus === 'todas' 
+    ? vistorias 
+    : vistorias.filter(v => v.status === filtroStatus);
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  // Detalhe de uma vistoria selecionada
+  if (selectedVistoria) {
+    const v = selectedVistoria;
+    const badge = getStatusBadge(v.status);
+    const API_BASE = 'https://fleet-inspect-11.preview.emergentagent.com';
+    
+    return (
+      <ScrollView style={styles.screen}>
+        <TouchableOpacity onPress={() => setSelectedVistoria(null)}>
+          <Text style={styles.backBtn}>← Voltar</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.screenTitle}>📋 Relatório de Vistoria</Text>
+        
+        {/* Info básica */}
+        <View style={styles.card}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.cardTitle}>
+              {v.tipo === 'entrada' ? '📥 Entrada' : '📤 Saída'}
+            </Text>
+            <View style={{ backgroundColor: badge.color, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
+              <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>{badge.text}</Text>
             </View>
-
-            <TextInput 
-              style={styles.input} 
-              placeholder="Descrição" 
-              placeholderTextColor="#64748b"
-              value={extraForm.descricao}
-              onChangeText={(t) => setExtraForm({ ...extraForm, descricao: t })}
-            />
-            <TextInput 
-              style={styles.input} 
-              placeholder="Valor (€)" 
-              placeholderTextColor="#64748b"
-              keyboardType="numeric"
-              value={extraForm.valor}
-              onChangeText={(t) => setExtraForm({ ...extraForm, valor: t })}
-            />
-            <TextInput 
-              style={styles.input} 
-              placeholder="Email para notificação (opcional)" 
-              placeholderTextColor="#64748b"
-              keyboardType="email-address"
-              value={extraForm.email}
-              onChangeText={(t) => setExtraForm({ ...extraForm, email: t })}
-            />
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)}>
-                <Text style={styles.cancelBtnText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.btn} onPress={handleAddExtra}>
-                <Text style={styles.btnText}>Adicionar</Text>
-              </TouchableOpacity>
-            </View>
           </View>
+          <Text style={styles.cardSubtitle}>{v.data}</Text>
         </View>
-      </Modal>
+
+        {/* Veículo e Motorista */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>🚗 Veículo</Text>
+          <Text style={styles.vistoriaDetalhe}>Matrícula: {v.veiculo_matricula || 'N/A'}</Text>
+          <Text style={styles.vistoriaDetalhe}>Km: {v.km?.toLocaleString() || 'N/A'} km</Text>
+          <Text style={styles.vistoriaDetalhe}>Combustível: {v.nivel_combustivel || 'N/A'}%</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>👤 Motorista</Text>
+          <Text style={styles.vistoriaDetalhe}>{v.motorista_nome || 'N/A'}</Text>
+          {v.motorista_aceite !== null && (
+            <Text style={{ color: v.motorista_aceite ? '#22c55e' : '#ef4444', marginTop: 4 }}>
+              {v.motorista_aceite ? '✓ Aceite pelo motorista' : '✗ Rejeitado pelo motorista'}
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>👷 Inspetor</Text>
+          <Text style={styles.vistoriaDetalhe}>{v.inspetor_nome || 'N/A'}</Text>
+        </View>
+
+        {/* Fotos */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📷 Fotos ({Object.keys(v.fotos || {}).length})</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+            {Object.entries(v.fotos || {}).map(([tipo, foto]) => (
+              <View key={tipo} style={{ marginRight: 12, alignItems: 'center' }}>
+                <Image 
+                  source={{ uri: `${API_BASE}${foto.url}` }} 
+                  style={{ width: 120, height: 90, borderRadius: 8 }} 
+                />
+                <Text style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>{tipo}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Danos */}
+        {(v.danos?.length > 0 || v.danos_ia?.length > 0) && (
+          <View style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#ef4444' }]}>
+            <Text style={styles.cardTitle}>⚠️ Danos Registados</Text>
+            {v.danos?.map((d, i) => (
+              <Text key={i} style={styles.vistoriaDetalhe}>• {d.tipo}: {d.descricao || 'Sem descrição'}</Text>
+            ))}
+            {v.danos_ia?.map((d, i) => (
+              <Text key={`ia-${i}`} style={[styles.vistoriaDetalhe, { color: '#8b5cf6' }]}>
+                🤖 IA: {d.tipo} - {d.descricao}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {/* Observações */}
+        {v.observacoes && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📝 Observações</Text>
+            <Text style={styles.vistoriaDetalhe}>{v.observacoes}</Text>
+          </View>
+        )}
+
+        {/* Assinatura */}
+        {v.assinatura_url && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>✍️ Assinatura</Text>
+            <Image 
+              source={{ uri: `${API_BASE}${v.assinatura_url}` }} 
+              style={{ width: 200, height: 80, borderRadius: 8, marginTop: 8 }} 
+            />
+          </View>
+        )}
+      </ScrollView>
+    );
+  }
+
+  // Lista de vistorias
+  return (
+    <ScrollView 
+      style={styles.screen}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadVistorias(); setRefreshing(false); }} />}
+    >
+      <Text style={styles.screenTitle}>🔍 Vistorias da Frota</Text>
+      <Text style={styles.cardSubtitle}>Consulte todas as vistorias realizadas</Text>
+
+      {/* Filtros */}
+      <View style={styles.filtrosRow}>
+        {[
+          { id: 'todas', label: 'Todas' },
+          { id: 'pendente', label: 'Pendentes' },
+          { id: 'aprovada', label: 'Aprovadas' },
+        ].map(f => (
+          <TouchableOpacity 
+            key={f.id}
+            style={[styles.filtroBtn, filtroStatus === f.id && styles.filtroBtnActive]}
+            onPress={() => setFiltroStatus(f.id)}
+          >
+            <Text style={[styles.filtroBtnText, filtroStatus === f.id && styles.filtroBtnTextActive]}>{f.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Contador */}
+      <Text style={{ color: '#64748b', marginBottom: 12 }}>{vistoriasFiltradas.length} vistoria(s)</Text>
+
+      {vistoriasFiltradas.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>Sem vistorias registadas</Text>
+        </View>
+      ) : vistoriasFiltradas.map(v => {
+        const badge = getStatusBadge(v.status);
+        return (
+          <TouchableOpacity 
+            key={v.id} 
+            style={styles.card}
+            onPress={() => setSelectedVistoria(v)}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>
+                  {v.tipo === 'entrada' ? '📥' : '📤'} {v.veiculo_matricula || 'Veículo'}
+                </Text>
+                <Text style={styles.cardSubtitle}>{v.motorista_nome || 'Motorista'}</Text>
+                <Text style={{ color: '#64748b', fontSize: 12, marginTop: 4 }}>{v.data}</Text>
+              </View>
+              <View style={{ backgroundColor: badge.color, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
+                <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{v.status}</Text>
+              </View>
+            </View>
+            {v.danos?.length > 0 && (
+              <Text style={{ color: '#f59e0b', fontSize: 12, marginTop: 8 }}>⚠️ {v.danos.length} dano(s) registado(s)</Text>
+            )}
+            <Text style={{ color: '#3b82f6', fontSize: 12, marginTop: 4 }}>Toque para ver detalhes →</Text>
+          </TouchableOpacity>
+        );
+      })}
     </ScrollView>
   );
 };
@@ -1327,6 +1521,8 @@ const TicketsScreen = ({ user }) => {
 
   // Modal de detalhe da vistoria para aceitar
   if (vistoriaSelecionada) {
+    const API_BASE = 'https://fleet-inspect-11.preview.emergentagent.com';
+    
     return (
       <ScrollView style={styles.screen}>
         <TouchableOpacity onPress={() => setVistoriaSelecionada(null)}>
@@ -1345,6 +1541,24 @@ const TicketsScreen = ({ user }) => {
           <Text style={styles.vistoriaDetalhe}>Quilometragem: {vistoriaSelecionada.km?.toLocaleString()} km</Text>
           <Text style={styles.vistoriaDetalhe}>Combustível: {vistoriaSelecionada.nivel_combustivel}%</Text>
         </View>
+
+        {/* Fotos da Vistoria */}
+        {vistoriaSelecionada.fotos && Object.keys(vistoriaSelecionada.fotos).length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📷 Fotos ({Object.keys(vistoriaSelecionada.fotos).length})</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+              {Object.entries(vistoriaSelecionada.fotos).map(([tipo, foto]) => (
+                <View key={tipo} style={{ marginRight: 12, alignItems: 'center' }}>
+                  <Image 
+                    source={{ uri: typeof foto === 'string' ? `${API_BASE}${foto}` : `${API_BASE}${foto.url}` }} 
+                    style={{ width: 120, height: 90, borderRadius: 8 }} 
+                  />
+                  <Text style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>{tipo}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
         
         {/* Danos Detetados */}
         {vistoriaSelecionada.danos && vistoriaSelecionada.danos.length > 0 && (
@@ -1378,6 +1592,17 @@ const TicketsScreen = ({ user }) => {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>📝 Observações</Text>
             <Text style={styles.vistoriaDetalhe}>{vistoriaSelecionada.observacoes}</Text>
+          </View>
+        )}
+
+        {/* Assinatura */}
+        {vistoriaSelecionada.assinatura_url && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>✍️ Assinatura</Text>
+            <Image 
+              source={{ uri: `${API_BASE}${vistoriaSelecionada.assinatura_url}` }} 
+              style={{ width: 200, height: 80, borderRadius: 8, marginTop: 8 }} 
+            />
           </View>
         )}
         
@@ -2734,9 +2959,10 @@ export default function App() {
       return null;
     }
     
-    // GESTOR/PARCEIRO: Vistorias, Recibos, Resumo, Extras, Alertas
+    // GESTOR/PARCEIRO: Vistorias, Frota, Resumo, Extras, Recibos
     if (role === 'gestao' || role === 'parceiro') {
       if (tab === 'vistorias') return <VistoriasScreen user={user} canCreate={true} />;
+      if (tab === 'frota') return <VistoriasFrotaScreen user={user} />;
       if (tab === 'recibos') return <RecibosGestaoScreen user={user} />;
       if (tab === 'resumo') return <ResumoSemanalGestaoScreen user={user} />;
       if (tab === 'extras') return <ExtrasGestaoScreen user={user} />;
