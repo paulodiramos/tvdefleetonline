@@ -949,26 +949,33 @@ async def get_semanas_disponiveis(
 async def get_definicoes_ponto(
     current_user: dict = Depends(get_current_user)
 ):
-    """Obter definições de ponto do motorista"""
+    """Obter definições de ponto do motorista e permissões do parceiro"""
     
     motorista_id = current_user["id"]
     
     # Buscar definições do motorista
-    definicoes = await db.definicoes_ponto.find_one(
+    definicoes_motorista = await db.definicoes_motorista.find_one(
         {"motorista_id": motorista_id}, 
         {"_id": 0}
     )
     
-    if not definicoes:
-        # Retornar valores por defeito
-        definicoes = {
-            "motorista_id": motorista_id,
-            "alerta_horas_maximas": DEFAULT_ALERTA_HORAS,
-            "alertas_ativos": True,
-            "permitir_edicao_registos": False  # Por defeito, não permitido
-        }
+    # Valores por defeito
+    definicoes = {
+        "motorista_id": motorista_id,
+        "horas_maximas": DEFAULT_HORAS_MAXIMAS,
+        "espacamento_horas": DEFAULT_ESPACAMENTO_HORAS,
+        "alertas_ativos": True,
+        # Permissões do parceiro (por defeito)
+        "permitir_edicao_registos": True,  # Autorizado por defeito
+        "permitir_alterar_horas_maximas": False,  # Bloqueado por defeito
+        "permitir_alterar_espacamento": False,  # Bloqueado por defeito
+    }
     
-    # Verificar se o parceiro autorizou edição
+    if definicoes_motorista:
+        definicoes["horas_maximas"] = definicoes_motorista.get("horas_maximas", DEFAULT_HORAS_MAXIMAS)
+        definicoes["espacamento_horas"] = definicoes_motorista.get("espacamento_horas", DEFAULT_ESPACAMENTO_HORAS)
+    
+    # Buscar permissões do parceiro
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if motorista and motorista.get("parceiro_atribuido"):
         parceiro = await db.parceiros.find_one(
@@ -976,7 +983,20 @@ async def get_definicoes_ponto(
             {"_id": 0}
         )
         if parceiro:
-            definicoes["permitir_edicao_registos"] = parceiro.get("permitir_edicao_ponto_motoristas", False)
+            # Edição de registos: autorizado por defeito, parceiro pode BLOQUEAR
+            definicoes["permitir_edicao_registos"] = parceiro.get("permitir_edicao_ponto", True)
+            # Alterar horas máximas: bloqueado por defeito, parceiro pode AUTORIZAR
+            definicoes["permitir_alterar_horas_maximas"] = parceiro.get("permitir_alterar_horas_maximas", False)
+            # Alterar espaçamento: bloqueado por defeito, parceiro pode AUTORIZAR
+            definicoes["permitir_alterar_espacamento"] = parceiro.get("permitir_alterar_espacamento", False)
+            # Horas definidas pelo parceiro (se existir)
+            if parceiro.get("horas_maximas_motoristas"):
+                definicoes["horas_maximas_parceiro"] = parceiro["horas_maximas_motoristas"]
+    
+    # Calcular horas nas últimas 24h
+    horas_24h = await calcular_horas_ultimas_24h(motorista_id)
+    definicoes["horas_trabalhadas_24h"] = horas_24h["total_formatado"]
+    definicoes["horas_trabalhadas_minutos"] = horas_24h["total_minutos"]
     
     return definicoes
 
@@ -986,26 +1006,55 @@ async def atualizar_definicoes_ponto(
     data: DefinicoesPontoRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Atualizar definições de ponto do motorista"""
+    """Atualizar definições de ponto do motorista (se autorizado pelo parceiro)"""
     
     motorista_id = current_user["id"]
     now = datetime.now(timezone.utc)
     
+    # Buscar permissões do parceiro
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    parceiro = None
+    if motorista and motorista.get("parceiro_atribuido"):
+        parceiro = await db.parceiros.find_one(
+            {"id": motorista["parceiro_atribuido"]}, 
+            {"_id": 0}
+        )
+    
     update_data = {"updated_at": now.isoformat()}
     
+    # Verificar permissão para alterar horas máximas
     if data.alerta_horas_maximas is not None:
+        pode_alterar = parceiro.get("permitir_alterar_horas_maximas", False) if parceiro else False
+        if not pode_alterar:
+            raise HTTPException(
+                status_code=403, 
+                detail="O seu parceiro não autorizou a alteração do limite de horas. Contacte-o para solicitar permissão."
+            )
         if data.alerta_horas_maximas < 1 or data.alerta_horas_maximas > 24:
             raise HTTPException(status_code=400, detail="Horas máximas deve ser entre 1 e 24")
-        update_data["alerta_horas_maximas"] = data.alerta_horas_maximas
+        update_data["horas_maximas"] = data.alerta_horas_maximas
+    
+    # Verificar permissão para alterar espaçamento
+    if data.espacamento_horas is not None:
+        pode_alterar = parceiro.get("permitir_alterar_espacamento", False) if parceiro else False
+        if not pode_alterar:
+            raise HTTPException(
+                status_code=403, 
+                detail="O seu parceiro não autorizou a alteração do período de descanso. Contacte-o para solicitar permissão."
+            )
+        if data.espacamento_horas < 12 or data.espacamento_horas > 48:
+            raise HTTPException(status_code=400, detail="Espaçamento deve ser entre 12 e 48 horas")
+        update_data["espacamento_horas"] = data.espacamento_horas
     
     # Atualizar ou criar definições
-    result = await db.definicoes_ponto.update_one(
+    await db.definicoes_motorista.update_one(
         {"motorista_id": motorista_id},
         {
             "$set": update_data,
             "$setOnInsert": {
                 "motorista_id": motorista_id,
-                "alertas_ativos": True,
+                "horas_maximas": DEFAULT_HORAS_MAXIMAS,
+                "espacamento_horas": DEFAULT_ESPACAMENTO_HORAS,
                 "created_at": now.isoformat()
             }
         },
