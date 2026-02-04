@@ -1135,6 +1135,7 @@ export default function App() {
       </View>
       <View style={{ flex: 1 }}>
         {tab === 'ponto' && <PontoScreen user={user} status={status} setStatus={setStatus} />}
+        {tab === 'turnos' && <TurnosScreen user={user} />}
         {tab === 'ganhos' && <GanhosScreen />}
         {tab === 'tickets' && <TicketsScreen user={user} />}
         {tab === 'config' && <ConfigScreen user={user} onLogout={() => { setUser(null); api.setToken(null); }} />}
