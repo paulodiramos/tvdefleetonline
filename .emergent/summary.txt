@@ -1,96 +1,99 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas com múltiplos perfis de utilizador (Motorista, Inspetor, Parceiro, Gestor) tanto na aplicação web como na aplicação móvel.
+O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas com múltiplos perfis de utilizador (Motorista, Inspetor, Parceiro, Gestor) para web e mobile.
 
-**Requisitos Chave Implementados/Em Progresso:**
-1.  **Sistema de Perfis:** Implementação de 4 perfis distintos (, , , ) com permissões específicas.
+**PRODUCT REQUIREMENTS:**
+1.  **Sistema de Perfis:** Implementação de 4 perfis distintos (, , , ).
 2.  **Sistema de Vistorias Avançado:**
-    *   Inspetores (ou Parceiros/Gestores) realizam vistorias na app móvel, selecionando o motorista e o veículo.
-    *   O motorista recebe uma notificação na sua app para aprovar ou rejeitar a vistoria.
-    *   O motorista pode visualizar o relatório detalhado antes de tomar uma decisão.
-    *   Após a aprovação do motorista, um relatório em PDF deve ser gerado e enviado para o seu email (funcionalidade de PDF/email pendente).
+    *   Inspetores realizam vistorias na app móvel.
+    *   Motorista recebe notificação para aprovar/rejeitar a vistoria, podendo ver detalhes e fotos.
+    *   Após aprovação, um relatório PDF deve ser gerado e enviado por email (Pendente).
+    *   Funcionalidades adicionadas: pesquisa de veículo por matrícula (texto e OCR de foto), upload de múltiplas fotos por item, e campo de assinatura digital.
 3.  **WebApp para Parceiros/Gestores:**
-    *   Página para gerir inspetores (criar, editar, desativar).
-    *   Página para consultar os relatórios de todas as vistorias móveis.
+    *   Página para gerir inspetores.
+    *   Página para consultar relatórios de vistorias.
+    *   Página para o admin configurar manualmente a sessão do RPA da Uber.
 4.  **App Móvel Dinâmica:**
-    *   A interface (menus e ecrãs) adapta-se automaticamente com base no perfil do utilizador logado.
-    *   Funcionalidades como ver senha, popup de inatividade com modo não incomodar e navegação melhorada nas vistorias.
-
-**Requisitos Originais Pendentes:**
-*   Corrigir a sincronização com a Via Verde (falha na filtragem de datas).
-*   Finalizar a integração com a API da Uber.
+    *   A interface adapta-se ao perfil do utilizador.
+    *   **Novos Requisitos:** Ecrã de Extras corrigido para usar um dropdown de motoristas ativos; dashboard Resumo Semanal para parceiros com totais da empresa e filtro por motorista; novo ecrã Vistorias da Frota para parceiros.
+5.  **Integrações RPA:**
+    *   Corrigir a sincronização com a Via Verde (bug na filtragem de datas).
+    *   Implementar a extração de dados da Uber, contornando o CAPTCHA com um login manual na webapp.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
 - Uma aplicação full-stack (React + FastAPI + MongoDB).
-- A app móvel é um protótipo num único ficheiro () testado via Expo Snack.
-- O sistema de perfis (, , , ) foi implementado no backend e na app móvel.
-- A WebApp possui páginas para gestão de inspetores () e consulta de vistorias ().
-- O fluxo de criação de vistoria por um inspetor e aprovação pelo motorista está parcialmente implementado no backend e na app móvel.
-- Foram criadas credenciais de teste para os diferentes perfis, incluindo os utilizadores reais Zeny Macaia (parceiro) e Jorge Macaia (motorista).
+- O backend foi corrigido para resolver bugs críticos, incluindo a falha que impedia vistorias pendentes de aparecerem para os motoristas e erros de rota que bloqueavam funcionalidades.
+- A aplicação móvel, prototipada num único ficheiro , foi extensivamente modificada para incluir novas funcionalidades requisitadas pelo utilizador, como pesquisa por matrícula (OCR), upload de múltiplas fotos, assinatura digital, e dashboards melhorados para parceiros.
+- Foi criada uma nova página na webapp () e os respetivos endpoints de backend () para permitir que o administrador faça login manualmente no portal da Uber, capturando a sessão para contornar o bloqueio por CAPTCHA do RPA.
+- Foi criado um guia de deployment detalhado () e um script de instalação () em .
 
 **Last working item**:
-- **Last item agent was working:** O agente estava a criar os endpoints de backend necessários para resolver um conjunto de problemas reportados pelo utilizador. O objetivo era fornecer os dados corretos à aplicação móvel para os perfis de parceiro e inspetor.
-    1.  Criar um endpoint em  () para que inspetores e parceiros possam obter a lista dos seus motoristas associados.
-    2.  Criar um conjunto de endpoints em  para que parceiros e gestores possam consultar dados de resumos semanais na app móvel.
+- **Last item agent was working:** O agente estava a tentar corrigir a visibilidade do novo item de menu Configuração Uber no dropdown Financeiro da webapp. O link foi adicionado ao ficheiro  e protegido por uma verificação de permissão, mas não estava a aparecer para o utilizador administrador durante os testes com a ferramenta de screenshot, que sofriam com expiração de sessão.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** both. O backend necessitará de testes via  para validar os novos endpoints. A app móvel precisará de ser atualizada para usar estes endpoints e testada no Expo Snack para confirmar que os dados são exibidos corretamente para os perfis de inspetor e parceiro.
+- **Which testing method agent to use?** Frontend testing agent. A sessão precisa ser mantida durante o teste, que envolve: 1. Fazer login como admin. 2. Clicar no menu Financeiro. 3. Verificar se o item Configuração Uber está visível.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0) Ecrãs da App Móvel para Parceiro/Inspetor não recebem dados**
-    - **Description:** A app móvel, quando usada por um inspetor, não mostra a lista de motoristas para iniciar uma vistoria. Quando usada por um parceiro, os ecrãs de Resumo Semanal e Extras não mostram dados. Isto deve-se à falta de endpoints no backend que sirvam estes dados a estes perfis específicos.
-    - **Attempted fixes:** O agente iniciou a criação dos endpoints necessários em  e .
+- **Issue 1: (P0) Menu Configuração Uber não está visível na WebApp**
+    - **Description:** O link para a nova página de configuração do RPA da Uber não aparece no menu Financeiro para o utilizador administrador, bloqueando o acesso à funcionalidade.
+    - **Attempted fixes:** O agente adicionou o link ao  e envolveu-o numa verificação de permissão (). Os testes foram inconclusivos.
     - **Next debug checklist:**
-        1.  Finalizar o endpoint  em  para devolver os motoristas associados a um parceiro/inspetor.
-        2.  Finalizar os endpoints em  para devolver os resumos semanais e outros dados para o parceiro.
-        3.  Atualizar o código da app móvel () para chamar estes novos endpoints.
-        4.  Testar o fluxo completo usando as credenciais de inspetor e parceiro.
-    - **Why fix this issue and what will be achieved with the fix?** É um bloqueador para a utilização da app móvel pelos perfis de gestão (inspetor, parceiro, gestor).
+        1.  Verificar a lógica da função  em .
+        2.  Confirmar que o  do utilizador () está a ser corretamente avaliado para permitir a visualização do item de menu com .
+        3.  Testar o fluxo de login e navegação de forma robusta para garantir que o menu é renderizado corretamente.
+    - **Why fix this issue and what will be achieved with the fix?** É um bloqueador para a solução do RPA da Uber. O utilizador não pode configurar a sessão manual sem acesso a esta página.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Both
+    - **Should Test frontend/backend/both after fix?** Frontend
     - **Blocked on other issue:** N/A
 
 - **Issue 2: (P1) Falha na Filtragem de Datas do RPA da Via Verde**
     - **Description:** Problema crítico e recorrente. A automação descarrega todas as transações em vez de apenas as do período selecionado.
-    - **Attempted fixes:** O agente anterior verificou que existe um código de filtragem com Pandas em , mas não testou se o problema está resolvido. O problema pode estar na fase de download ou no formato dos dados, e não na filtragem.
-    - **Next debug checklist:** Executar um teste de ponta a ponta do RPA da Via Verde para confirmar se o problema persiste. Se sim, depurar o script , focando no processo de download e na interação com a página da Via Verde.
-    - **Why fix this issue and what will be achieved with the fix?** Resolve um problema central e recorrente da aplicação web.
+    - **Attempted fixes:** Nenhuma nesta sessão.
+    - **Next debug checklist:** Executar um teste de ponta a ponta do RPA da Via Verde para confirmar se o problema persiste. Se sim, depurar o script .
+    - **Why fix this issue and what will be achieved with the fix?** Resolve um problema central e recorrente da aplicação.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Backend
     - **Blocked on other issue:** N/A
 
 **In progress Task List**:
-N/A (O trabalho em progresso está classificado como o Issue 1)
+- **Task 1: (P0) Finalizar a solução para o RPA da Uber**
+    - **Where to resume:** A infraestrutura (página frontend e endpoints backend) para o login manual está criada. O trabalho deve ser retomado após resolver o **Issue 1**. Os próximos passos são:
+        1.  Implementar a lógica na página  para lançar um browser Playwright (ou iframe) onde o admin possa fazer login.
+        2.  Implementar a lógica no backend () para capturar e guardar o estado da sessão (cookies/local storage) após o login bem-sucedido.
+    - **What will be achieved with this?** Uma solução funcional para extrair dados da Uber, contornando o bloqueio do CAPTCHA.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Both
+    - **Blocked on something:** Issue 1: Menu Configuração Uber não está visível na WebApp
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - (P0) **Visualização de Vistoria e Geração de PDF:** Implementar o ecrã na app móvel para o motorista ver os detalhes completos de uma vistoria antes de a aprovar. Após a aprovação, gerar um relatório PDF e enviá-lo para o email do motorista.
-    - (P1) **Sistema de Tickets para Parceiros:** Adicionar a funcionalidade de gestão de tickets (criar/responder) à app móvel para os perfis de parceiro e gestor.
-    - (P2) **Finalizar UI de Desativação de Motorista:** A funcionalidade foi implementada, mas nunca foi confirmada pelo utilizador. Precisa de verificação.
+    - (P0) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria pelo motorista e enviá-lo para o seu email.
+    - (P1) **Sistema de Tickets na App Móvel:** Adicionar a funcionalidade de gestão de tickets (criar/responder) para os perfis de parceiro e gestor.
 - **Future Tasks:**
-    - (P1) Finalizar a integração com a API da Uber (atualmente bloqueada pela aprovação da Uber).
-    - (P1) Implementar Integração Ifthenpay e Moloni (adiado pelo utilizador).
+    - (P1) Implementar Integração Ifthenpay e Moloni.
     - (P2) Implementar o envio de relatórios de vistoria via WhatsApp.
     - (P3) Refatorar o  para uma estrutura de projeto React Native modular.
     - (P3) Refatorar  para decompor as abas em componentes mais pequenos.
 
 **Completed work in this session**
-- **Sistema de Perfis Múltiplos:** Implementado o novo perfil inspetor. A app móvel foi refatorada para exibir tabs e ecrãs dinamicamente com base no perfil do utilizador (, , ).
-- **Gestão de Inspetores na WebApp:** Criada a página  que permite a parceiros/admins criar, listar, editar e desativar utilizadores inspetores.
-- **Fluxo de Vistoria (Inspetor -> Motorista):**
-    - O backend foi ajustado para permitir que inspetores criem vistorias para motoristas específicos.
-    - O backend foi corrigido para que as vistorias criadas apareçam na app do motorista para aprovação.
-    - A app móvel foi modificada para que o motorista receba a vistoria na área de Suporte/Tickets.
-- **Melhorias na App Móvel:**
-    - Adicionado botão de ver senha no login.
-    - Adicionado popup de inatividade com opção não incomodar.
-    - Melhorada a navegação no ecrã de vistorias com passos clicáveis.
-    - Adicionado um botão de Terminar Sessão.
-- **Resolução de Bug Crítico de Roteamento:** Corrigido um problema de ordenação de rotas em  onde um endpoint dinâmico  estava a intercetar chamadas a endpoints estáticos, o que impedia o funcionamento do fluxo de aprovação.
+- **Correção de Bugs Críticos de Backend:**
+    - Resolvido um bug em  que impedia vistorias pendentes de serem listadas para os motoristas.
+    - Corrigido um problema de ordenação de rotas em  que fazia com que a rota  fosse incorretamente interpretada.
+    - Corrigidos erros de sintaxe em  que causavam a queda do servidor.
+- **Implementação de Múltiplas Funcionalidades na App Móvel:**
+    - **Vistorias:** Adicionado pesquisa por matrícula (texto e OCR de foto), upload de múltiplas fotos por item e um campo de assinatura digital.
+    - **Ecrãs de Parceiro:** Criado um novo ecrã Vistorias da Frota e melhorado o Resumo Semanal com filtros e totais.
+    - **Ecrã de Extras:** Totalmente refeito para ser mais intuitivo, usando um dropdown para selecionar motoristas ativos.
+- **Solução para o RPA da Uber:**
+    - Identificado que um CAPTCHA avançado (Arkose Labs) bloqueava a automação.
+    - Criada uma nova página de configuração na webapp () e endpoints de suporte para que o administrador possa fazer login manualmente e salvar a sessão para o RPA.
+- **Documentação e Suporte:**
+    - Criado um guia de deployment extremamente detalhado para o servidor PTISP do utilizador ().
+    - Pesquisado e recomendado um plano de alojamento específico para as necessidades da aplicação.
 
 **Earlier issues found/mentioned but not fixed**
 - **Integridade de Dados:** A base de dados pode conter inconsistências, como o mesmo veículo atribuído a múltiplos motoristas ativos.
@@ -105,73 +108,95 @@ N/A (O trabalho em progresso está classificado como o Issue 1)
 
 
 **Key Technical Concepts**
-- **Expo Snack Prototyping:** Desenvolvimento contínuo da app móvel num único ficheiro.
-- **UI Dinâmica por Perfil:** A app móvel e a webapp mostram/ocultam funcionalidades com base no  do utilizador.
-- **FastAPI Route Ordering:** Foi crucial reordenar os endpoints em  (colocar rotas estáticas antes de dinâmicas) para corrigir um bug de roteamento.
-- **Criação de Utilizadores na BD:** O agente usou  para criar/atualizar utilizadores diretamente na base de dados para fins de teste.
+- **RPA CAPTCHA Workaround:** A estratégia mudou de tentar resolver o CAPTCHA para contorná-lo através de uma sessão de login manual iniciada pelo utilizador numa interface web.
+- **FastAPI Route Ordering:** A importância de declarar rotas estáticas (ex: ) antes de rotas dinâmicas (ex: ) foi um ponto de depuração crucial.
+- **Single-File Prototyping:** A complexidade da aplicação móvel está a ser gerida num único ficheiro de 3500+ linhas, o que exige edições muito cuidadosas.
 
 **key DB schema**
-- ****: O campo  agora aceita o valor . O modelo foi atualizado para gerir a associação entre inspetores e parceiros.
-- ****: O schema agora inclui  e  para associar a vistoria ao motorista correto, e  para seguir o fluxo de aprovação.
+- ****: Atualizado para guardar credenciais e estado da sessão Uber (, , ).
+- ****: Atualizado para associar uma lista de vistorias () a cada veículo.
 
 **All files of reference**
-- : Ficheiro central da app móvel, contém toda a lógica de UI e chamadas API.
-- : Contém toda a lógica de backend para criar e gerir vistorias, incluindo o fluxo de aprovação.
-- : Modificado para adicionar um endpoint para a app móvel listar motoristas.
-- : Modificado para adicionar endpoints para a app móvel do parceiro.
-- : Novo ficheiro para gerir a criação, edição e listagem de inspetores.
-- : Nova página da webapp para gestão de inspetores.
-- : Nova página da webapp para consulta de relatórios de vistoria.
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+
+**Areas that need refactoring**:
+- O ficheiro  é o maior débito técnico, com mais de 3500 linhas. Uma refatoração para uma estrutura de projeto React Native modular é uma tarefa futura de alta prioridade para garantir a manutenibilidade.
+
+**key api endpoints**
+- : Novo endpoint para iniciar o processo de login manual da Uber.
+- : Novo endpoint para listar parceiros e o estado das suas sessões Uber.
+- : Novo endpoint para parceiros obterem a lista completa de vistorias da sua frota.
+- : Novo endpoint para processar uma imagem de matrícula e devolver o texto.
+- : Endpoint corrigido, crucial para o fluxo de aprovação do motorista.
 
 **Critical Info for New Agent**
-- **Prioridade Máxima:** A tarefa atual é corrigir os ecrãs da app móvel para parceiros e inspetores, que não estão a receber dados. Isto implica finalizar os endpoints de backend que o agente anterior começou a criar e depois atualizar a app móvel.
-- **Testar com Perfis Reais:** O teste deve ser feito com as credenciais fornecidas para cada perfil (, , ) e também com os utilizadores reais  (parceiro Zeny) e  (motorista Jorge).
-- **Complexidade do :** O ficheiro da app móvel está a tornar-se extremamente grande e complexo. Tenha muito cuidado ao fazer alterações para não introduzir regressões.
-- **Problema do RPA da Via Verde:** Não assuma que está resolvido. O problema é recorrente e precisa de um teste completo para validar a sua resolução.
+- **Prioridade Máxima:** Resolver o **Issue 1** para que o utilizador possa aceder à página de configuração do RPA da Uber. Este é o bloqueador imediato.
+- **RPA da Uber:** A abordagem é o login manual. Não tente resolver o CAPTCHA automaticamente. O fluxo de trabalho é: o admin acede à página de configuração, inicia o processo, faz login numa janela/iframe, e o backend captura a sessão.
+- **RPA da Via Verde:** Este é o próximo bug crítico a ser abordado após a conclusão da tarefa do RPA da Uber.
+- **Cuidado com :** O ficheiro da app móvel é extremamente grande e frágil. Faça alterações pequenas e focadas.
 
 **documents and test reports created in this job**
 - 
 - 
+==============================================
+   TVDEFleet - Instalação Automática
+==============================================
+
+[0;31m[ERROR][0m Por favor, edite o script e configure o seu domínio
 - 
--  (atualizado múltiplas vezes)
+- 
 -  (atualizado)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (msg 464):** Reporta um novo conjunto de bugs/features: inspetor não vê motoristas, app de parceiro sem dados, app precisa de tickets, motorista precisa ver vistoria antes de aprovar e receber PDF por email.
-2.  **Agent (msg 465-475):** Começa a depurar o problema do inspetor não ver motoristas e inicia a criação de um novo endpoint em .
-3.  **Agent (msg 476-487):** Começa a criar os novos endpoints em  para alimentar com dados a app do parceiro.
-4.  **Agent (msg 488-491):** Planeia atualizar a app móvel para corrigir as chamadas API e adicionar as novas funcionalidades.
+1.  **faz menu:** Pedido para corrigir o menu da webapp que não mostra o novo link Configuração Uber.
+2.  **onde faco configuracao uber:** Pergunta onde está a página de configuração da Uber.
+3.  **User confirma solução de login manual:** Concorda com a abordagem de login manual para o RPA da Uber.
+4.  **User fornece screenshots do fluxo de login:** Mostra o fluxo correto de login manual na Uber (Email -> Mais Opções -> Palavra-passe).
+5.  **faz simulacao para login...:** Pede ao agente para simular o fluxo de login com base nos screenshots.
+6.  **User fornece credenciais Uber:** Partilha credenciais para o parceiro Conde e menciona a verificação por SMS.
+7.  **o que falta fazer? vamos fazer... uber?:** Pergunta sobre as próximas tarefas e sugere trabalhar no RPA da Uber.
+8.  **qual o servidor portugues...:** Pede recomendação de um plano de alojamento em Portugal.
+9.  **podes fazer guia mega detalhado?:** Pede um guia de deployment completo.
+10. **consigo colocar tudo este desvolvimento... no meu servidor ptisp?:** Pergunta sobre a viabilidade de auto-hospedar a aplicação.
 
 **Project Health Check:**
 - **Broken:**
-    - Funcionalidades da app móvel para perfis de  e  estão sem dados.
-    - Sincronização com a Via Verde (filtragem de datas) permanece não verificada e provavelmente quebrada.
+    - Acesso à funcionalidade de configuração do RPA da Uber (link do menu não funciona).
+    - Sincronização com a Via Verde (filtragem de datas).
 - **Mocked:**
-    - Toda a aplicação móvel, que é um protótipo complexo num único ficheiro (), representando um débito técnico significativo.
-    - Envio de emails e geração de PDF para relatórios de vistoria ainda não foram implementados.
+    - A aplicação móvel inteira () é um protótipo, representando um débito técnico significativo.
 
 **3rd Party Integrations**
-- **OpenAI GPT-4 Vision:** A ser usado para análise de vistorias, usa **Emergent LLM Key**.
-- **Expo (React Native):** Utilizado para o desenvolvimento da app móvel (via Expo Snack).
-- **Playwright:** Usado para o RPA da Via Verde (com bug).
-- **Outras:** Bolt API, WhatsApp Cloud API, Uber Pay API (bloqueada).
+- **Playwright:** Usado para os RPAs da Uber e Via Verde. O RPA da Uber está a ser alterado para um fluxo de login semi-manual.
+- **Expo (React Native):** Usado para o protótipo da app móvel.
+- **OpenAI GPT-4 Vision:** Planeado para análise de vistorias, usa **Emergent LLM Key**.
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** N/A
-- **Known regressions:** O problema com o RPA da Via Verde é uma regressão conhecida e persistente.
+- **Known regressions:** O problema do RPA da Via Verde é persistente.
 
 **Credentials to test flow:**
-**Utilizadores Reais (Password: )**
--   **Parceiro:** 
--   **Motorista:** 
+**WebApp Admin**
+-   **Email:** 
+-   **Password:** 
 
-**Utilizadores de Teste Genéricos (Password: )**
--   **Motorista:** 
+**Uber RPA Test (Parceiro)**
+-   **Email:** 
+-   **Password:** 
+
+**Mobile App Test Users (Password: )**
 -   **Parceiro:** 
 -   **Inspetor:** 
--   **Admin:**  (Password: )
+-   **Motorista:** 
 
 **What agent forgot to execute**
-- O agente estava a seguir as instruções do utilizador. No entanto, ainda não começou a implementação de várias funcionalidades pedidas na última mensagem do utilizador (msg 464), como o sistema de tickets para parceiros, a visualização detalhada da vistoria para o motorista, e a geração/envio de PDF. Estas devem ser as próximas tarefas após a correção dos bugs atuais.</analysis>
+- O agente estava a seguir o fluxo de pedidos do utilizador. As tarefas pendentes de alta prioridade, como a geração de PDF e o sistema de tickets, foram adiadas para resolver os bugs e implementar o RPA da Uber, conforme solicitado.</analysis>
