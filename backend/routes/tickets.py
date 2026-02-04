@@ -38,6 +38,9 @@ TICKET_STATUS = {
 TICKET_CATEGORIES = [
     "problema_tecnico",
     "pagamentos",
+    "tecnico",
+    "esclarecimentos",
+    "relatorios",
     "documentos",
     "veiculo",
     "contrato",
