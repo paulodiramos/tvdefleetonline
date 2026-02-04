@@ -95,9 +95,9 @@ const TabBar = ({ activeTab, onTabChange }) => (
     {[
       { id: 'ponto', icon: '⏱️', label: 'Ponto' }, 
       { id: 'turnos', icon: '📅', label: 'Turnos' },
+      { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
       { id: 'ganhos', icon: '💰', label: 'Ganhos' }, 
       { id: 'tickets', icon: '🎫', label: 'Suporte' }, 
-      { id: 'config', icon: '⚙️', label: 'Config' }
     ].map(t => (
       <TouchableOpacity key={t.id} style={[styles.tab, activeTab === t.id && styles.tabActive]} onPress={() => onTabChange(t.id)}>
         <Text style={styles.tabIcon}>{t.icon}</Text>
