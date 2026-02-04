@@ -720,13 +720,14 @@ const ResumoSemanalGestaoScreen = ({ user }) => {
   );
 };
 
-// Ecrã de Extras/Dívidas (Gestor/Parceiro)
+// Ecrã de Extras/Dívidas (Gestor/Parceiro) - MELHORADO
 const ExtrasGestaoScreen = ({ user }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedMotorista, setSelectedMotorista] = useState(null);
-  const [extraForm, setExtraForm] = useState({ tipo: 'debito', descricao: '', valor: '' });
+  const [showMotoristaPicker, setShowMotoristaPicker] = useState(false);
+  const [extraForm, setExtraForm] = useState({ tipo: 'debito', descricao: '', valor: '', email: '' });
 
   const loadMotoristas = async () => {
     try {
@@ -738,9 +739,20 @@ const ExtrasGestaoScreen = ({ user }) => {
 
   useEffect(() => { loadMotoristas(); }, []);
 
+  const handleSelectMotorista = (m) => {
+    setSelectedMotorista(m);
+    setExtraForm({ ...extraForm, email: m.email || '' });
+    setShowMotoristaPicker(false);
+    setShowModal(true);
+  };
+
   const handleAddExtra = async () => {
+    if (!selectedMotorista) {
+      Alert.alert('Erro', 'Selecione um motorista');
+      return;
+    }
     if (!extraForm.descricao || !extraForm.valor) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+      Alert.alert('Erro', 'Preencha descrição e valor');
       return;
     }
     try {
@@ -748,11 +760,13 @@ const ExtrasGestaoScreen = ({ user }) => {
         motorista_id: selectedMotorista.id,
         tipo: extraForm.tipo,
         descricao: extraForm.descricao,
-        valor: parseFloat(extraForm.valor)
+        valor: parseFloat(extraForm.valor),
+        email_notificacao: extraForm.email || null
       });
       Alert.alert('Sucesso', 'Extra adicionado');
       setShowModal(false);
-      setExtraForm({ tipo: 'debito', descricao: '', valor: '' });
+      setExtraForm({ tipo: 'debito', descricao: '', valor: '', email: '' });
+      setSelectedMotorista(null);
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
@@ -763,17 +777,51 @@ const ExtrasGestaoScreen = ({ user }) => {
       <Text style={styles.screenTitle}>💸 Extras / Dívidas</Text>
       <Text style={styles.cardSubtitle}>Adicionar débitos ou créditos aos motoristas</Text>
 
+      {/* Botão para selecionar motorista via dropdown */}
+      <TouchableOpacity 
+        style={[styles.card, { backgroundColor: '#3b82f6', alignItems: 'center' }]} 
+        onPress={() => setShowMotoristaPicker(true)}
+      >
+        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>+ Adicionar Extra a Motorista</Text>
+      </TouchableOpacity>
+
+      {/* Lista de motoristas como referência rápida */}
+      <Text style={[styles.cardSubtitle, { marginTop: 16 }]}>Ou selecione da lista:</Text>
       {motoristas.map(m => (
-        <TouchableOpacity key={m.id} style={styles.card} onPress={() => { setSelectedMotorista(m); setShowModal(true); }}>
+        <TouchableOpacity key={m.id} style={styles.card} onPress={() => handleSelectMotorista(m)}>
           <View style={styles.motoristaRow}>
             <View>
               <Text style={styles.cardTitle}>{m.name || m.nome}</Text>
-              <Text style={styles.cardSubtitle}>{m.email}</Text>
+              <Text style={styles.cardSubtitle}>{m.email || 'Sem email'}</Text>
             </View>
             <Text style={styles.addBtn}>+ Adicionar</Text>
           </View>
         </TouchableOpacity>
       ))}
+
+      {/* Modal Picker de Motorista */}
+      <Modal visible={showMotoristaPicker} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+            <Text style={styles.modalTitle}>Selecionar Motorista</Text>
+            <ScrollView>
+              {motoristas.map(m => (
+                <TouchableOpacity 
+                  key={m.id} 
+                  style={[styles.pickerItem, selectedMotorista?.id === m.id && styles.pickerItemSelected]}
+                  onPress={() => handleSelectMotorista(m)}
+                >
+                  <Text style={styles.pickerItemText}>{m.name || m.nome}</Text>
+                  <Text style={styles.pickerItemSubtext}>{m.email || 'Sem email'}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowMotoristaPicker(false)}>
+              <Text style={styles.cancelBtnText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal para adicionar extra */}
       <Modal visible={showModal} transparent animationType="slide">
@@ -811,6 +859,14 @@ const ExtrasGestaoScreen = ({ user }) => {
               keyboardType="numeric"
               value={extraForm.valor}
               onChangeText={(t) => setExtraForm({ ...extraForm, valor: t })}
+            />
+            <TextInput 
+              style={styles.input} 
+              placeholder="Email para notificação (opcional)" 
+              placeholderTextColor="#64748b"
+              keyboardType="email-address"
+              value={extraForm.email}
+              onChangeText={(t) => setExtraForm({ ...extraForm, email: t })}
             />
 
             <View style={styles.modalActions}>
