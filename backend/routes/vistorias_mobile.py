@@ -209,13 +209,18 @@ async def criar_vistoria(
     # Gerar token de confirmação
     token_confirmacao = str(uuid.uuid4())[:8]
     
+    # Buscar nome do inspetor
+    inspetor_nome = current_user.get("name", "Inspetor")
+    
     # Criar vistoria
     vistoria = {
         "id": vistoria_id,
         "tipo": data.tipo,
+        "inspetor_id": inspetor_id,
+        "inspetor_nome": inspetor_nome,
         "motorista_id": motorista_id,
-        "motorista_nome": motorista.get("name") if motorista else None,
-        "motorista_telefone": motorista.get("telefone") if motorista else None,
+        "motorista_nome": motorista_nome,
+        "motorista_telefone": motorista_telefone,
         "veiculo_id": veiculo_id,
         "veiculo_matricula": veiculo_matricula,
         "km": data.km,
@@ -231,6 +236,7 @@ async def criar_vistoria(
         "token_confirmacao": token_confirmacao,
         "confirmado": False,
         "status": "pendente",
+        "motorista_aceite": None,  # Aguarda aceitação do motorista
         "created_at": now.isoformat(),
         "updated_at": now.isoformat()
     }
