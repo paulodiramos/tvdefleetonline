@@ -373,6 +373,12 @@ function App() {
             }
           />
           <Route
+            path="/vistorias-mobile"
+            element={
+              user && (user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') ? <VistoriasMobile user={user} onLogout={handleLogout} /> : <Navigate to="/" />
+            }
+          />
+          <Route
             path="/upload-csv"
             element={
               user ? <UploadCSV user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
