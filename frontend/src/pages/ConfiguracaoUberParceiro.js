@@ -529,6 +529,140 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Extração de Rendimentos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Download className="w-5 h-5 text-green-500" />
+              Extrair Rendimentos
+            </CardTitle>
+            <CardDescription>
+              Descarregue os seus rendimentos Uber por semana
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-600 mb-1 block">Selecionar Semana</label>
+              <Select value={semanaIndex} onValueChange={setSemanaIndex}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a semana" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Semana Atual</SelectItem>
+                  <SelectItem value="1">Semana Passada</SelectItem>
+                  <SelectItem value="2">Há 2 Semanas</SelectItem>
+                  <SelectItem value="3">Há 3 Semanas</SelectItem>
+                  <SelectItem value="4">Há 4 Semanas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Button 
+              onClick={extrairRendimentos}
+              disabled={extraindo || !sessaoStatus?.valida}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              {extraindo ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  A extrair rendimentos...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Extrair Rendimentos Uber
+                </>
+              )}
+            </Button>
+            
+            {!sessaoStatus?.valida && (
+              <p className="text-sm text-amber-600 text-center">
+                ⚠️ Configure primeiro as credenciais e faça login
+              </p>
+            )}
+            
+            {/* Resultado da Extração */}
+            {resultadoExtracao && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-green-700">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-medium">Extração Concluída!</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white rounded-lg border">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                      <Users className="w-4 h-4" />
+                      Motoristas
+                    </div>
+                    <div className="text-xl font-bold">
+                      {resultadoExtracao.total_motoristas}
+                    </div>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                      <DollarSign className="w-4 h-4" />
+                      Total
+                    </div>
+                    <div className="text-xl font-bold text-green-600">
+                      €{resultadoExtracao.total_rendimentos?.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Lista de Motoristas */}
+                {resultadoExtracao.motoristas?.length > 0 && (
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {resultadoExtracao.motoristas.map((m, i) => (
+                      <div key={i} className="flex justify-between items-center p-2 bg-white rounded border text-sm">
+                        <span className="text-gray-700">{m.nome}</span>
+                        <span className="text-green-600 font-medium">€{m.rendimentos_liquidos?.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Histórico de Importações */}
+        {historico.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-500" />
+                Histórico de Importações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {historico.map((imp, i) => (
+                  <div key={i} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <div className="text-sm font-medium">
+                          {new Date(imp.created_at).toLocaleDateString('pt-PT', { 
+                            day: '2-digit', month: 'short', year: 'numeric' 
+                          })}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {imp.data_inicio} a {imp.data_fim}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600">{imp.total_motoristas} motoristas</div>
+                      <div className="text-sm font-semibold text-green-600">€{imp.total_rendimentos?.toFixed(2)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Informações */}
         <Card className="bg-slate-50">
           <CardContent className="pt-6">
@@ -541,9 +675,9 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                 <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
                   <li>Configure as suas credenciais Uber Fleet</li>
                   <li>Faça login (manual se houver CAPTCHA)</li>
+                  <li>Selecione a semana e extraia os rendimentos</li>
                   <li>A sessão dura aproximadamente 30 dias</li>
-                  <li>O administrador extrai os rendimentos semanalmente</li>
-                  <li>Se a sessão expirar, receberá uma notificação</li>
+                  <li>Os dados são guardados automaticamente</li>
                 </ul>
               </div>
             </div>
