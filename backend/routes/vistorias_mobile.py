@@ -93,6 +93,61 @@ async def get_minhas_vistorias(
     }
 
 
+@router.get("/pendentes-aceitacao")
+async def listar_vistorias_pendentes_aceitacao(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar vistorias pendentes de aceitação pelo motorista"""
+    
+    if current_user["role"] != "motorista":
+        raise HTTPException(status_code=403, detail="Apenas motoristas podem ver vistorias pendentes de aceitação")
+    
+    # Buscar motorista pelo email do user atual
+    motorista = await db.motoristas.find_one(
+        {"email": current_user["email"]},
+        {"_id": 0, "id": 1}
+    )
+    
+    motorista_id = motorista["id"] if motorista else current_user["id"]
+    
+    # Buscar vistorias pendentes de aceitação
+    vistorias = await db.vistorias_mobile.find(
+        {
+            "motorista_id": {"$in": [motorista_id, current_user["id"]]},
+            "status": "aprovada",
+            "motorista_aceite": None
+        },
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    resultado = []
+    for v in vistorias:
+        try:
+            created = datetime.fromisoformat(v["created_at"].replace("Z", "+00:00"))
+            data_str = created.strftime("%d/%m/%Y %H:%M")
+        except:
+            data_str = v.get("created_at", "N/A")
+        
+        resultado.append({
+            "id": v["id"],
+            "tipo": v["tipo"],
+            "veiculo_matricula": v.get("veiculo_matricula"),
+            "data": data_str,
+            "km": v.get("km"),
+            "nivel_combustivel": v.get("nivel_combustivel"),
+            "danos": v.get("danos", []),
+            "observacoes": v.get("observacoes"),
+            "analise_ia": v.get("analise_ia"),
+            "inspetor_nome": v.get("inspetor_nome"),
+            "created_at": v.get("created_at")
+        })
+    
+    return {
+        "vistorias": resultado,
+        "total": len(resultado)
+    }
+
+
 @router.post("/criar")
 async def criar_vistoria(
     data: VistoriaCreate,
