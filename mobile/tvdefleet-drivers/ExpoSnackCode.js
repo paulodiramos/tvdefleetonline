@@ -628,13 +628,24 @@ const GanhosScreen = () => {
 };
 
 // ===== TICKETS SCREEN =====
+const CATEGORIAS = [
+  { id: 'pagamentos', icon: '💳', label: 'Pagamentos', color: '#3b82f6' },
+  { id: 'tecnico', icon: '🔧', label: 'Técnico', color: '#8b5cf6' },
+  { id: 'esclarecimentos', icon: '❓', label: 'Esclarecimentos', color: '#06b6d4' },
+  { id: 'relatorios', icon: '📊', label: 'Relatórios', color: '#10b981' },
+  { id: 'acidente', icon: '🚨', label: 'Acidente', color: '#dc2626' },
+  { id: 'avaria', icon: '🛠️', label: 'Avaria', color: '#d97706' },
+  { id: 'outro', icon: '📝', label: 'Outro', color: '#64748b' },
+];
+
 const TicketsScreen = ({ user }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ titulo: '', categoria: 'outro', descricao: '' });
+  const [form, setForm] = useState({ titulo: '', categoria: 'esclarecimentos', descricao: '', anexos: [] });
   const [sel, setSel] = useState(null);
   const [msg, setMsg] = useState('');
+  const [showCategorias, setShowCategorias] = useState(false);
 
   useEffect(() => { (async () => { setTickets(await api.get('/tickets/meus')); setLoading(false); })(); }, []);
 
@@ -642,8 +653,11 @@ const TicketsScreen = ({ user }) => {
     if (!form.titulo || !form.descricao) { Alert.alert('Erro', 'Preencha os campos'); return; }
     await api.post('/tickets/criar', form);
     setModal(false);
+    setForm({ titulo: '', categoria: 'esclarecimentos', descricao: '', anexos: [] });
     setTickets(await api.get('/tickets/meus'));
   };
+
+  const getCategoriaInfo = (catId) => CATEGORIAS.find(c => c.id === catId) || CATEGORIAS[CATEGORIAS.length - 1];
 
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
@@ -654,6 +668,7 @@ const TicketsScreen = ({ user }) => {
         {sel.mensagens?.map((m, i) => (
           <View key={i} style={[styles.message, m.autor_id === user.id ? styles.messageOwn : styles.messageOther]}>
             <Text style={styles.messageText}>{m.conteudo}</Text>
+            {m.anexo && <Text style={styles.messageAnexo}>📎 Anexo</Text>}
           </View>
         ))}
       </ScrollView>
@@ -674,30 +689,91 @@ const TicketsScreen = ({ user }) => {
         <Text style={styles.screenTitle}>Suporte</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => setModal(true)}><Text style={styles.addBtnText}>+ Novo</Text></TouchableOpacity>
       </View>
+      
+      {/* Botões Urgentes */}
       <View style={styles.urgentBtns}>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ titulo: 'Acidente', categoria: 'acidente', descricao: '' }); setModal(true); }}>
+        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ ...form, titulo: 'Acidente', categoria: 'acidente' }); setModal(true); }}>
           <Text style={styles.urgentBtnText}>🚨 Acidente</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ titulo: 'Avaria', categoria: 'avaria', descricao: '' }); setModal(true); }}>
-          <Text style={styles.urgentBtnText}>🔧 Avaria</Text>
+        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ ...form, titulo: 'Avaria', categoria: 'avaria' }); setModal(true); }}>
+          <Text style={styles.urgentBtnText}>🛠️ Avaria</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView>
-        {tickets.map(t => (
-          <TouchableOpacity key={t.id} style={styles.ticketCard} onPress={() => setSel(t)}>
-            <Text style={styles.ticketNumero}>#{t.numero}</Text>
-            <Text style={styles.ticketTitulo}>{t.titulo}</Text>
+      
+      {/* Categorias Rápidas */}
+      <View style={styles.categoriasGrid}>
+        {CATEGORIAS.filter(c => !['acidente', 'avaria'].includes(c.id)).map(cat => (
+          <TouchableOpacity 
+            key={cat.id} 
+            style={[styles.categoriaQuick, { borderColor: cat.color }]}
+            onPress={() => { setForm({ ...form, categoria: cat.id }); setModal(true); }}
+          >
+            <Text style={styles.categoriaQuickIcon}>{cat.icon}</Text>
+            <Text style={styles.categoriaQuickLabel}>{cat.label}</Text>
           </TouchableOpacity>
         ))}
+      </View>
+      
+      {/* Lista de Tickets */}
+      <Text style={styles.ticketListTitle}>Meus Tickets</Text>
+      <ScrollView>
+        {tickets.length === 0 && <Text style={styles.emptyText}>Sem tickets</Text>}
+        {tickets.map(t => {
+          const cat = getCategoriaInfo(t.categoria);
+          return (
+            <TouchableOpacity key={t.id} style={styles.ticketCard} onPress={() => setSel(t)}>
+              <View style={styles.ticketHeader}>
+                <View style={[styles.ticketCategoria, { backgroundColor: cat.color }]}>
+                  <Text style={styles.ticketCategoriaText}>{cat.icon} {cat.label}</Text>
+                </View>
+                <Text style={styles.ticketNumero}>#{t.numero}</Text>
+              </View>
+              <Text style={styles.ticketTitulo}>{t.titulo}</Text>
+              {t.tem_anexos && <Text style={styles.ticketAnexos}>📎 Com anexos</Text>}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
+      
+      {/* Modal Novo Ticket */}
       <Modal visible={modal} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { maxHeight: '90%' }]}>
             <Text style={styles.modalTitle}>Novo Ticket</Text>
+            
+            {/* Selector de Categoria */}
+            <Text style={styles.inputLabel}>Categoria</Text>
+            <TouchableOpacity style={styles.categoriaSelector} onPress={() => setShowCategorias(!showCategorias)}>
+              <Text style={styles.categoriaSelectorText}>
+                {getCategoriaInfo(form.categoria).icon} {getCategoriaInfo(form.categoria).label}
+              </Text>
+              <Text style={styles.categoriaSelectorArrow}>{showCategorias ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+            
+            {showCategorias && (
+              <View style={styles.categoriasList}>
+                {CATEGORIAS.map(cat => (
+                  <TouchableOpacity 
+                    key={cat.id} 
+                    style={[styles.categoriaItem, form.categoria === cat.id && { backgroundColor: cat.color + '20' }]}
+                    onPress={() => { setForm({...form, categoria: cat.id}); setShowCategorias(false); }}
+                  >
+                    <Text style={styles.categoriaItemText}>{cat.icon} {cat.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            
             <TextInput style={styles.input} placeholder="Título" placeholderTextColor="#64748b" value={form.titulo} onChangeText={t => setForm({...form, titulo: t})} />
-            <TextInput style={[styles.input, { height: 100 }]} placeholder="Descrição..." placeholderTextColor="#64748b" value={form.descricao} onChangeText={t => setForm({...form, descricao: t})} multiline />
+            <TextInput style={[styles.input, { height: 100 }]} placeholder="Descrição detalhada..." placeholderTextColor="#64748b" value={form.descricao} onChangeText={t => setForm({...form, descricao: t})} multiline />
+            
+            {/* Info sobre anexos */}
+            <View style={styles.anexoInfo}>
+              <Text style={styles.anexoInfoText}>📎 Pode anexar fotos/PDF após criar o ticket</Text>
+            </View>
+            
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setModal(false)}><Text style={styles.modalBtnCancelText}>Cancelar</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => { setModal(false); setShowCategorias(false); }}><Text style={styles.modalBtnCancelText}>Cancelar</Text></TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={criar}><Text style={styles.modalBtnConfirmText}>Criar</Text></TouchableOpacity>
             </View>
           </View>
