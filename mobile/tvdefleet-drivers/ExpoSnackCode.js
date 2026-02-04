@@ -748,7 +748,7 @@ const ExtrasGestaoScreen = ({ user }) => {
       return;
     }
     try {
-      await api.post('/financeiro/extras', {
+      await api.post('/extras-motorista/adicionar', {
         motorista_id: selectedMotorista.id,
         tipo: extraForm.tipo,
         descricao: extraForm.descricao,
