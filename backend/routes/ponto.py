@@ -1366,6 +1366,7 @@ async def editar_registo_ponto(
             "hora_fim_real": data.hora_fim_real,
             "tempo_trabalho_minutos_editado": int(novo_tempo_minutos),
             "justificacao_edicao": data.justificacao,
+            "tipo": data.tipo or "trabalho",  # "trabalho" ou "pessoal"
             "editado_em": now.isoformat(),
             "editado_por": motorista_id,
             "updated_at": now.isoformat()
