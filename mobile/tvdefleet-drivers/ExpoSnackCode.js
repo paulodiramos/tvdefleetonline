@@ -880,6 +880,134 @@ const TicketsScreen = ({ user }) => {
   );
 };
 
+// ===== TURNOS SCREEN =====
+const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+const TurnosScreen = ({ user }) => {
+  const [loading, setLoading] = useState(true);
+  const [turnos, setTurnos] = useState(null);
+  const [historicoTurnos, setHistoricoTurnos] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadTurnos = async () => {
+    try {
+      const data = await api.get('/turnos/meus');
+      setTurnos(data.turnos_atuais);
+      setHistoricoTurnos(data.historico || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadTurnos(); }, []);
+
+  const formatHora = (h) => h ? h.substring(0, 5) : '--:--';
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  return (
+    <ScrollView 
+      style={styles.screen} 
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadTurnos(); setRefreshing(false); }} />}
+    >
+      <Text style={styles.screenTitle}>Meus Turnos</Text>
+      
+      {/* Turnos Atuais */}
+      {turnos && turnos.length > 0 ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📅 Horário Atual</Text>
+          {turnos.map((turno, idx) => (
+            <View key={idx} style={styles.turnoItem}>
+              <View style={styles.turnoDia}>
+                <Text style={styles.turnoDiaText}>{DIAS_SEMANA[turno.dia_semana]}</Text>
+              </View>
+              <View style={styles.turnoHoras}>
+                <Text style={styles.turnoHoraText}>{formatHora(turno.hora_inicio)}</Text>
+                <Text style={styles.turnoSep}>→</Text>
+                <Text style={styles.turnoHoraText}>{formatHora(turno.hora_fim)}</Text>
+              </View>
+              {turno.veiculo_matricula && (
+                <Text style={styles.turnoVeiculo}>🚗 {turno.veiculo_matricula}</Text>
+              )}
+            </View>
+          ))}
+          {turnos[0]?.valido_desde && (
+            <Text style={styles.turnoValidade}>Válido desde: {turnos[0].valido_desde}</Text>
+          )}
+        </View>
+      ) : (
+        <View style={styles.card}>
+          <View style={styles.semTurnos}>
+            <Text style={styles.semTurnosIcon}>📅</Text>
+            <Text style={styles.semTurnosText}>Sem turnos configurados</Text>
+            <Text style={styles.semTurnosHint}>O seu parceiro ainda não definiu o seu horário de trabalho</Text>
+          </View>
+        </View>
+      )}
+      
+      {/* Próximos Turnos da Semana */}
+      {turnos && turnos.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📆 Esta Semana</Text>
+          {(() => {
+            const hoje = new Date();
+            const diaSemana = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1; // Converter para Segunda=0
+            const proximosTurnos = [];
+            
+            for (let i = 0; i < 7; i++) {
+              const diaIdx = (diaSemana + i) % 7;
+              const turno = turnos.find(t => t.dia_semana === diaIdx);
+              const data = new Date(hoje);
+              data.setDate(data.getDate() + i);
+              
+              proximosTurnos.push({
+                dia: DIAS_SEMANA[diaIdx],
+                data: data.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }),
+                turno,
+                isHoje: i === 0
+              });
+            }
+            
+            return proximosTurnos.map((item, idx) => (
+              <View key={idx} style={[styles.proximoTurno, item.isHoje && styles.proximoTurnoHoje]}>
+                <View style={styles.proximoTurnoDia}>
+                  <Text style={[styles.proximoTurnoDiaText, item.isHoje && styles.proximoTurnoHojeText]}>
+                    {item.isHoje ? '📍 Hoje' : item.dia}
+                  </Text>
+                  <Text style={styles.proximoTurnoData}>{item.data}</Text>
+                </View>
+                {item.turno ? (
+                  <Text style={styles.proximoTurnoHora}>
+                    {formatHora(item.turno.hora_inicio)} - {formatHora(item.turno.hora_fim)}
+                  </Text>
+                ) : (
+                  <Text style={styles.proximoTurnoFolga}>Folga</Text>
+                )}
+              </View>
+            ));
+          })()}
+        </View>
+      )}
+      
+      {/* Histórico de Horários */}
+      {historicoTurnos.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📜 Histórico de Horários</Text>
+          {historicoTurnos.map((hist, idx) => (
+            <View key={idx} style={styles.historicoItem}>
+              <Text style={styles.historicoPeriodo}>
+                {hist.data_inicio} - {hist.data_fim || 'Atual'}
+              </Text>
+              <Text style={styles.historicoResumo}>
+                {hist.dias_semana?.length || 0} dias/semana
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </ScrollView>
+  );
+};
+
 // ===== CONFIG SCREEN =====
 const ConfigScreen = ({ user, onLogout }) => {
   const [defs, setDefs] = useState(null);
