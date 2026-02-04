@@ -24,6 +24,7 @@ Aplicação móvel para motoristas TVDE com funcionalidades de relógio de ponto
    - Sistema de pausas
    - Histórico diário com navegação por data
    - Edição de registos (com permissão do parceiro)
+   - **NOVO:** Tipo de registo (Trabalho/Pessoal) - tempo pessoal não conta para horas
    - Limite de horas em janela de 24h rolante
    - Bloqueio automático ao atingir limite
 
@@ -31,11 +32,17 @@ Aplicação móvel para motoristas TVDE com funcionalidades de relógio de ponto
    - Visualização semanal de ganhos (Uber/Bolt)
    - Despesas (Via Verde, Combustível)
    - Seletor de semanas
+   - **NOVO:** Sistema de Recibos Semanais
+     - Botão "Enviar Recibo" quando não enviado
+     - Estados: pendente, aprovado, rejeitado
+     - Bloqueio após aprovação
 
 3. **Suporte (Tickets)**
    - Criação de tickets por categoria
-   - Botões rápidos para Acidente/Avaria
+   - **NOVO:** Categorias expandidas: Pagamentos, Técnico, Esclarecimentos, Relatórios, Acidente, Avaria
+   - Botões rápidos para categorias
    - Chat com mensagens
+   - Suporte para anexos (fotos/PDF)
 
 4. **Configurações**
    - Perfil do utilizador
