@@ -78,7 +78,7 @@ const LoginScreen = ({ onLogin }) => {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <View style={styles.loginBox}>
         <Text style={styles.title}>🚗 TVDEFleet</Text>
-        <Text style={styles.subtitle}>Área do Motorista</Text>
+        <Text style={styles.subtitle}>App Móvel</Text>
         <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#64748b" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
         <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#64748b" value={password} onChangeText={setPassword} secureTextEntry />
         <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleLogin} disabled={loading}>
@@ -89,23 +89,53 @@ const LoginScreen = ({ onLogin }) => {
   );
 };
 
-// ===== TAB BAR =====
-const TabBar = ({ activeTab, onTabChange }) => (
-  <View style={styles.tabBar}>
-    {[
+// ===== TAB BAR DINÂMICA =====
+const getTabsForRole = (role) => {
+  // Motorista: Ponto, Turnos, Vistorias (consulta), Ganhos, Suporte
+  if (role === 'motorista') {
+    return [
       { id: 'ponto', icon: '⏱️', label: 'Ponto' }, 
       { id: 'turnos', icon: '📅', label: 'Turnos' },
       { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
       { id: 'ganhos', icon: '💰', label: 'Ganhos' }, 
       { id: 'tickets', icon: '🎫', label: 'Suporte' }, 
-    ].map(t => (
-      <TouchableOpacity key={t.id} style={[styles.tab, activeTab === t.id && styles.tabActive]} onPress={() => onTabChange(t.id)}>
-        <Text style={styles.tabIcon}>{t.icon}</Text>
-        <Text style={[styles.tabLabel, activeTab === t.id && styles.tabLabelActive]}>{t.label}</Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-);
+    ];
+  }
+  // Inspetor: Apenas Vistorias (fazer)
+  if (role === 'inspetor') {
+    return [
+      { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
+    ];
+  }
+  // Gestor/Parceiro: Vistorias, Recibos, Resumo Semanal, Extras, Alertas, Ganhos
+  if (role === 'gestao' || role === 'parceiro') {
+    return [
+      { id: 'vistorias', icon: '🔍', label: 'Vistorias' },
+      { id: 'recibos', icon: '📄', label: 'Recibos' },
+      { id: 'resumo', icon: '📊', label: 'Resumo' },
+      { id: 'extras', icon: '💸', label: 'Extras' },
+      { id: 'alertas', icon: '🔔', label: 'Alertas' },
+    ];
+  }
+  // Default para outros roles
+  return [
+    { id: 'vistorias', icon: '🔍', label: 'Vistoria' },
+  ];
+};
+
+const TabBar = ({ activeTab, onTabChange, userRole }) => {
+  const tabs = getTabsForRole(userRole);
+  return (
+    <View style={styles.tabBar}>
+      {tabs.map(t => (
+        <TouchableOpacity key={t.id} style={[styles.tab, activeTab === t.id && styles.tabActive]} onPress={() => onTabChange(t.id)}>
+          <Text style={styles.tabIcon}>{t.icon}</Text>
+          <Text style={[styles.tabLabel, activeTab === t.id && styles.tabLabelActive]}>{t.label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
 
 // ===== PONTO SCREEN =====
 const PontoScreen = ({ user, status, setStatus }) => {
