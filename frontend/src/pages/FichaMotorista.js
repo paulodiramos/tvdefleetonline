@@ -158,6 +158,18 @@ const FichaMotorista = ({ user }) => {
   // Veículo atribuído
   const [veiculo, setVeiculo] = useState(null);
   
+  // Estados para novas funcionalidades - App, Ponto e Turnos
+  const [configApp, setConfigApp] = useState(null);
+  const [dadosPonto, setDadosPonto] = useState(null);
+  const [turnos, setTurnos] = useState(null);
+  const [turnosForm, setTurnosForm] = useState([]);
+  const [turnoVeiculoId, setTurnoVeiculoId] = useState('');
+  const [veiculosDisponiveis, setVeiculosDisponiveis] = useState([]);
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [savingTurnos, setSavingTurnos] = useState(false);
+  
+  const DIAS_SEMANA_LABELS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  
   // Upload states
   const [uploading, setUploading] = useState({});
   
