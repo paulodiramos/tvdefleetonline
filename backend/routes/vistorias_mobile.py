@@ -596,7 +596,30 @@ async def aprovar_vistoria(
         }}
     )
     
-    return {"success": True, "message": "Vistoria aprovada"}
+    # Associar vistoria ao veículo na coleção de veículos
+    if vistoria.get("veiculo_id"):
+        await db.vehicles.update_one(
+            {"id": vistoria["veiculo_id"]},
+            {"$push": {
+                "vistorias": {
+                    "vistoria_id": vistoria_id,
+                    "tipo": vistoria.get("tipo"),
+                    "data": vistoria.get("created_at"),
+                    "km": vistoria.get("km"),
+                    "danos_count": len(vistoria.get("danos", [])),
+                    "status": "aprovada"
+                }
+            },
+            "$set": {
+                "ultima_vistoria": vistoria_id,
+                "ultima_vistoria_data": vistoria.get("created_at"),
+                "ultima_vistoria_km": vistoria.get("km"),
+                "updated_at": now.isoformat()
+            }}
+        )
+        logger.info(f"Vistoria {vistoria_id} associada ao veículo {vistoria['veiculo_id']}")
+    
+    return {"success": True, "message": "Vistoria aprovada e associada ao veículo"}
 
 
 class RejeitarVistoriaRequest(BaseModel):
