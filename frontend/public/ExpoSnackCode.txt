@@ -1,14 +1,15 @@
-// TVDEFleet Drivers - App Móvel v5
-// COM: Período 24h rolante, permissões parceiro, matrícula opcional
+// TVDEFleet Drivers - App Móvel v6
+// COM: Período 24h rolante, permissões parceiro, matrícula opcional, fotos tickets, turnos
 // Cole este código em https://snack.expo.dev
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
   Alert, ScrollView, ActivityIndicator, RefreshControl,
-  Modal, Platform, KeyboardAvoidingView, Vibration
+  Modal, Platform, KeyboardAvoidingView, Vibration, Image
 } from 'react-native';
 import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
 
 const API_URL = 'https://fleetmanager-38.preview.emergentagent.com/api';
 
@@ -88,7 +89,13 @@ const LoginScreen = ({ onLogin }) => {
 // ===== TAB BAR =====
 const TabBar = ({ activeTab, onTabChange }) => (
   <View style={styles.tabBar}>
-    {[{ id: 'ponto', icon: '⏱️', label: 'Ponto' }, { id: 'ganhos', icon: '💰', label: 'Ganhos' }, { id: 'tickets', icon: '🎫', label: 'Suporte' }, { id: 'config', icon: '⚙️', label: 'Config' }].map(t => (
+    {[
+      { id: 'ponto', icon: '⏱️', label: 'Ponto' }, 
+      { id: 'turnos', icon: '📅', label: 'Turnos' },
+      { id: 'ganhos', icon: '💰', label: 'Ganhos' }, 
+      { id: 'tickets', icon: '🎫', label: 'Suporte' }, 
+      { id: 'config', icon: '⚙️', label: 'Config' }
+    ].map(t => (
       <TouchableOpacity key={t.id} style={[styles.tab, activeTab === t.id && styles.tabActive]} onPress={() => onTabChange(t.id)}>
         <Text style={styles.tabIcon}>{t.icon}</Text>
         <Text style={[styles.tabLabel, activeTab === t.id && styles.tabLabelActive]}>{t.label}</Text>
@@ -629,35 +636,84 @@ const GanhosScreen = () => {
 
 // ===== TICKETS SCREEN =====
 const CATEGORIAS = [
-  { id: 'pagamentos', icon: '💳', label: 'Pagamentos', color: '#3b82f6' },
-  { id: 'tecnico', icon: '🔧', label: 'Técnico', color: '#8b5cf6' },
-  { id: 'esclarecimentos', icon: '❓', label: 'Esclarecimentos', color: '#06b6d4' },
-  { id: 'relatorios', icon: '📊', label: 'Relatórios', color: '#10b981' },
-  { id: 'acidente', icon: '🚨', label: 'Acidente', color: '#dc2626' },
-  { id: 'avaria', icon: '🛠️', label: 'Avaria', color: '#d97706' },
-  { id: 'outro', icon: '📝', label: 'Outro', color: '#64748b' },
+  { id: 'pagamentos', icon: '💳', label: 'Pagamentos', color: '#3b82f6', foto: false },
+  { id: 'tecnico', icon: '🔧', label: 'Técnico', color: '#8b5cf6', foto: false },
+  { id: 'esclarecimentos', icon: '❓', label: 'Esclarecimentos', color: '#06b6d4', foto: false },
+  { id: 'relatorios', icon: '📊', label: 'Relatórios', color: '#10b981', foto: false },
+  { id: 'acidente', icon: '🚨', label: 'Acidente', color: '#dc2626', foto: true },
+  { id: 'avaria', icon: '🛠️', label: 'Avaria', color: '#d97706', foto: true },
+  { id: 'outro', icon: '📝', label: 'Outro', color: '#64748b', foto: false },
 ];
 
 const TicketsScreen = ({ user }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ titulo: '', categoria: 'esclarecimentos', descricao: '', anexos: [] });
+  const [form, setForm] = useState({ titulo: '', categoria: 'esclarecimentos', descricao: '', fotos: [] });
   const [sel, setSel] = useState(null);
   const [msg, setMsg] = useState('');
   const [showCategorias, setShowCategorias] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
   useEffect(() => { (async () => { setTickets(await api.get('/tickets/meus')); setLoading(false); })(); }, []);
 
+  const tirarFoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Erro', 'Permissão de câmara necessária'); return; }
+    
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      base64: true,
+    });
+    
+    if (!result.canceled && result.assets[0]) {
+      setForm(f => ({ ...f, fotos: [...f.fotos, result.assets[0]] }));
+    }
+  };
+
+  const escolherFoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Erro', 'Permissão de galeria necessária'); return; }
+    
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      base64: true,
+      allowsMultipleSelection: true,
+    });
+    
+    if (!result.canceled && result.assets) {
+      setForm(f => ({ ...f, fotos: [...f.fotos, ...result.assets] }));
+    }
+  };
+
+  const removerFoto = (index) => {
+    setForm(f => ({ ...f, fotos: f.fotos.filter((_, i) => i !== index) }));
+  };
+
   const criar = async () => {
     if (!form.titulo || !form.descricao) { Alert.alert('Erro', 'Preencha os campos'); return; }
-    await api.post('/tickets/criar', form);
-    setModal(false);
-    setForm({ titulo: '', categoria: 'esclarecimentos', descricao: '', anexos: [] });
-    setTickets(await api.get('/tickets/meus'));
+    setEnviando(true);
+    try {
+      // Criar ticket com fotos em base64
+      const ticketData = {
+        titulo: form.titulo,
+        categoria: form.categoria,
+        descricao: form.descricao,
+        fotos: form.fotos.map(f => ({ base64: f.base64, uri: f.uri }))
+      };
+      await api.post('/tickets/criar', ticketData);
+      setModal(false);
+      setForm({ titulo: '', categoria: 'esclarecimentos', descricao: '', fotos: [] });
+      setTickets(await api.get('/tickets/meus'));
+      Alert.alert('Sucesso', 'Ticket criado!');
+    } catch (e) { Alert.alert('Erro', e.message); }
+    setEnviando(false);
   };
 
   const getCategoriaInfo = (catId) => CATEGORIAS.find(c => c.id === catId) || CATEGORIAS[CATEGORIAS.length - 1];
+  const categoriaAtual = getCategoriaInfo(form.categoria);
 
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
@@ -665,6 +721,17 @@ const TicketsScreen = ({ user }) => {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.screen}>
       <TouchableOpacity onPress={() => setSel(null)}><Text style={styles.backBtn}>← #{sel.numero}</Text></TouchableOpacity>
       <ScrollView style={{ flex: 1, padding: 16 }}>
+        {/* Fotos do ticket */}
+        {sel.fotos && sel.fotos.length > 0 && (
+          <View style={styles.ticketFotosContainer}>
+            <Text style={styles.ticketFotosLabel}>📷 Fotos anexadas:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {sel.fotos.map((foto, i) => (
+                <Image key={i} source={{ uri: foto.url || foto.uri }} style={styles.ticketFotoThumb} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
         {sel.mensagens?.map((m, i) => (
           <View key={i} style={[styles.message, m.autor_id === user.id ? styles.messageOwn : styles.messageOther]}>
             <Text style={styles.messageText}>{m.conteudo}</Text>
@@ -692,10 +759,10 @@ const TicketsScreen = ({ user }) => {
       
       {/* Botões Urgentes */}
       <View style={styles.urgentBtns}>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ ...form, titulo: 'Acidente', categoria: 'acidente' }); setModal(true); }}>
+        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ titulo: 'Acidente', categoria: 'acidente', descricao: '', fotos: [] }); setModal(true); }}>
           <Text style={styles.urgentBtnText}>🚨 Acidente</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ ...form, titulo: 'Avaria', categoria: 'avaria' }); setModal(true); }}>
+        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ titulo: 'Avaria', categoria: 'avaria', descricao: '', fotos: [] }); setModal(true); }}>
           <Text style={styles.urgentBtnText}>🛠️ Avaria</Text>
         </TouchableOpacity>
       </View>
@@ -767,19 +834,177 @@ const TicketsScreen = ({ user }) => {
             <TextInput style={styles.input} placeholder="Título" placeholderTextColor="#64748b" value={form.titulo} onChangeText={t => setForm({...form, titulo: t})} />
             <TextInput style={[styles.input, { height: 100 }]} placeholder="Descrição detalhada..." placeholderTextColor="#64748b" value={form.descricao} onChangeText={t => setForm({...form, descricao: t})} multiline />
             
-            {/* Info sobre anexos */}
-            <View style={styles.anexoInfo}>
-              <Text style={styles.anexoInfoText}>📎 Pode anexar fotos/PDF após criar o ticket</Text>
+            {/* Secção de Fotos - sempre visível mas destacada para acidente/avaria */}
+            <View style={[styles.fotosSection, categoriaAtual.foto && styles.fotosSectionDestaque]}>
+              <Text style={styles.fotosSectionTitle}>
+                {categoriaAtual.foto ? '📷 Fotos (Recomendado)' : '📷 Fotos (Opcional)'}
+              </Text>
+              
+              {form.fotos.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.fotosPreview}>
+                  {form.fotos.map((foto, idx) => (
+                    <View key={idx} style={styles.fotoPreviewItem}>
+                      <Image source={{ uri: foto.uri }} style={styles.fotoPreviewImg} />
+                      <TouchableOpacity style={styles.fotoRemoveBtn} onPress={() => removerFoto(idx)}>
+                        <Text style={styles.fotoRemoveBtnText}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+              
+              <View style={styles.fotoBtns}>
+                <TouchableOpacity style={styles.fotoBtn} onPress={tirarFoto}>
+                  <Text style={styles.fotoBtnText}>📸 Tirar Foto</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.fotoBtn} onPress={escolherFoto}>
+                  <Text style={styles.fotoBtnText}>🖼️ Galeria</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {categoriaAtual.foto && form.fotos.length === 0 && (
+                <Text style={styles.fotoHint}>⚠️ Para {categoriaAtual.label.toLowerCase()}, é importante anexar fotos</Text>
+              )}
             </View>
             
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => { setModal(false); setShowCategorias(false); }}><Text style={styles.modalBtnCancelText}>Cancelar</Text></TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={criar}><Text style={styles.modalBtnConfirmText}>Criar</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => { setModal(false); setShowCategorias(false); setForm({ titulo: '', categoria: 'esclarecimentos', descricao: '', fotos: [] }); }}><Text style={styles.modalBtnCancelText}>Cancelar</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm, enviando && styles.btnDisabled]} onPress={criar} disabled={enviando}>
+                <Text style={styles.modalBtnConfirmText}>{enviando ? 'A enviar...' : 'Criar'}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
     </View>
+  );
+};
+
+// ===== TURNOS SCREEN =====
+const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+const TurnosScreen = ({ user }) => {
+  const [loading, setLoading] = useState(true);
+  const [turnos, setTurnos] = useState(null);
+  const [historicoTurnos, setHistoricoTurnos] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadTurnos = async () => {
+    try {
+      const data = await api.get('/turnos/meus');
+      setTurnos(data.turnos_atuais);
+      setHistoricoTurnos(data.historico || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadTurnos(); }, []);
+
+  const formatHora = (h) => h ? h.substring(0, 5) : '--:--';
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  return (
+    <ScrollView 
+      style={styles.screen} 
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadTurnos(); setRefreshing(false); }} />}
+    >
+      <Text style={styles.screenTitle}>Meus Turnos</Text>
+      
+      {/* Turnos Atuais */}
+      {turnos && turnos.length > 0 ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📅 Horário Atual</Text>
+          {turnos.map((turno, idx) => (
+            <View key={idx} style={styles.turnoItem}>
+              <View style={styles.turnoDia}>
+                <Text style={styles.turnoDiaText}>{DIAS_SEMANA[turno.dia_semana]}</Text>
+              </View>
+              <View style={styles.turnoHoras}>
+                <Text style={styles.turnoHoraText}>{formatHora(turno.hora_inicio)}</Text>
+                <Text style={styles.turnoSep}>→</Text>
+                <Text style={styles.turnoHoraText}>{formatHora(turno.hora_fim)}</Text>
+              </View>
+              {turno.veiculo_matricula && (
+                <Text style={styles.turnoVeiculo}>🚗 {turno.veiculo_matricula}</Text>
+              )}
+            </View>
+          ))}
+          {turnos[0]?.valido_desde && (
+            <Text style={styles.turnoValidade}>Válido desde: {turnos[0].valido_desde}</Text>
+          )}
+        </View>
+      ) : (
+        <View style={styles.card}>
+          <View style={styles.semTurnos}>
+            <Text style={styles.semTurnosIcon}>📅</Text>
+            <Text style={styles.semTurnosText}>Sem turnos configurados</Text>
+            <Text style={styles.semTurnosHint}>O seu parceiro ainda não definiu o seu horário de trabalho</Text>
+          </View>
+        </View>
+      )}
+      
+      {/* Próximos Turnos da Semana */}
+      {turnos && turnos.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📆 Esta Semana</Text>
+          {(() => {
+            const hoje = new Date();
+            const diaSemana = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1; // Converter para Segunda=0
+            const proximosTurnos = [];
+            
+            for (let i = 0; i < 7; i++) {
+              const diaIdx = (diaSemana + i) % 7;
+              const turno = turnos.find(t => t.dia_semana === diaIdx);
+              const data = new Date(hoje);
+              data.setDate(data.getDate() + i);
+              
+              proximosTurnos.push({
+                dia: DIAS_SEMANA[diaIdx],
+                data: data.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }),
+                turno,
+                isHoje: i === 0
+              });
+            }
+            
+            return proximosTurnos.map((item, idx) => (
+              <View key={idx} style={[styles.proximoTurno, item.isHoje && styles.proximoTurnoHoje]}>
+                <View style={styles.proximoTurnoDia}>
+                  <Text style={[styles.proximoTurnoDiaText, item.isHoje && styles.proximoTurnoHojeText]}>
+                    {item.isHoje ? '📍 Hoje' : item.dia}
+                  </Text>
+                  <Text style={styles.proximoTurnoData}>{item.data}</Text>
+                </View>
+                {item.turno ? (
+                  <Text style={styles.proximoTurnoHora}>
+                    {formatHora(item.turno.hora_inicio)} - {formatHora(item.turno.hora_fim)}
+                  </Text>
+                ) : (
+                  <Text style={styles.proximoTurnoFolga}>Folga</Text>
+                )}
+              </View>
+            ));
+          })()}
+        </View>
+      )}
+      
+      {/* Histórico de Horários */}
+      {historicoTurnos.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📜 Histórico de Horários</Text>
+          {historicoTurnos.map((hist, idx) => (
+            <View key={idx} style={styles.historicoItem}>
+              <Text style={styles.historicoPeriodo}>
+                {hist.data_inicio} - {hist.data_fim || 'Atual'}
+              </Text>
+              <Text style={styles.historicoResumo}>
+                {hist.dias_semana?.length || 0} dias/semana
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </ScrollView>
   );
 };
 
@@ -910,6 +1135,7 @@ export default function App() {
       </View>
       <View style={{ flex: 1 }}>
         {tab === 'ponto' && <PontoScreen user={user} status={status} setStatus={setStatus} />}
+        {tab === 'turnos' && <TurnosScreen user={user} />}
         {tab === 'ganhos' && <GanhosScreen />}
         {tab === 'tickets' && <TicketsScreen user={user} />}
         {tab === 'config' && <ConfigScreen user={user} onLogout={() => { setUser(null); api.setToken(null); }} />}
@@ -1133,4 +1359,44 @@ const styles = StyleSheet.create({
   anexoInfo: { backgroundColor: '#0f172a', padding: 12, borderRadius: 8, marginBottom: 8 },
   anexoInfoText: { color: '#64748b', fontSize: 12, textAlign: 'center' },
   messageAnexo: { color: '#93c5fd', fontSize: 11, marginTop: 4 },
+  // Fotos styles
+  fotosSection: { backgroundColor: '#0f172a', padding: 12, borderRadius: 12, marginBottom: 16 },
+  fotosSectionDestaque: { borderWidth: 2, borderColor: '#f59e0b', borderStyle: 'dashed' },
+  fotosSectionTitle: { color: '#94a3b8', fontSize: 13, fontWeight: '600', marginBottom: 12 },
+  fotosPreview: { marginBottom: 12 },
+  fotoPreviewItem: { position: 'relative', marginRight: 12 },
+  fotoPreviewImg: { width: 80, height: 80, borderRadius: 8 },
+  fotoRemoveBtn: { position: 'absolute', top: -8, right: -8, backgroundColor: '#ef4444', width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  fotoRemoveBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  fotoBtns: { flexDirection: 'row', gap: 12 },
+  fotoBtn: { flex: 1, backgroundColor: '#334155', padding: 12, borderRadius: 8, alignItems: 'center' },
+  fotoBtnText: { color: '#fff', fontSize: 13 },
+  fotoHint: { color: '#f59e0b', fontSize: 11, marginTop: 8, textAlign: 'center' },
+  ticketFotosContainer: { backgroundColor: '#1e293b', padding: 12, borderRadius: 12, marginBottom: 16 },
+  ticketFotosLabel: { color: '#94a3b8', fontSize: 12, marginBottom: 8 },
+  ticketFotoThumb: { width: 100, height: 100, borderRadius: 8, marginRight: 8 },
+  // Turnos styles
+  turnoItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', padding: 12, borderRadius: 10, marginBottom: 8 },
+  turnoDia: { width: 90 },
+  turnoDiaText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  turnoHoras: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  turnoHoraText: { color: '#3b82f6', fontSize: 16, fontWeight: 'bold' },
+  turnoSep: { color: '#64748b', fontSize: 14, marginHorizontal: 8 },
+  turnoVeiculo: { color: '#64748b', fontSize: 11 },
+  turnoValidade: { color: '#64748b', fontSize: 11, textAlign: 'center', marginTop: 8 },
+  semTurnos: { alignItems: 'center', padding: 24 },
+  semTurnosIcon: { fontSize: 48, marginBottom: 12 },
+  semTurnosText: { color: '#fff', fontSize: 16, fontWeight: '600', marginBottom: 4 },
+  semTurnosHint: { color: '#64748b', fontSize: 12, textAlign: 'center' },
+  proximoTurno: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#334155' },
+  proximoTurnoHoje: { backgroundColor: '#1e3a5f', marginHorizontal: -16, paddingHorizontal: 16, borderRadius: 8, marginVertical: 4 },
+  proximoTurnoDia: {},
+  proximoTurnoDiaText: { color: '#94a3b8', fontSize: 13 },
+  proximoTurnoHojeText: { color: '#3b82f6', fontWeight: 'bold' },
+  proximoTurnoData: { color: '#64748b', fontSize: 11 },
+  proximoTurnoHora: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  proximoTurnoFolga: { color: '#64748b', fontSize: 13, fontStyle: 'italic' },
+  historicoItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#334155' },
+  historicoPeriodo: { color: '#94a3b8', fontSize: 13 },
+  historicoResumo: { color: '#64748b', fontSize: 12 },
 });
