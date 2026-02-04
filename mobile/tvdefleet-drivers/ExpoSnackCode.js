@@ -89,7 +89,13 @@ const LoginScreen = ({ onLogin }) => {
 // ===== TAB BAR =====
 const TabBar = ({ activeTab, onTabChange }) => (
   <View style={styles.tabBar}>
-    {[{ id: 'ponto', icon: '⏱️', label: 'Ponto' }, { id: 'ganhos', icon: '💰', label: 'Ganhos' }, { id: 'tickets', icon: '🎫', label: 'Suporte' }, { id: 'config', icon: '⚙️', label: 'Config' }].map(t => (
+    {[
+      { id: 'ponto', icon: '⏱️', label: 'Ponto' }, 
+      { id: 'turnos', icon: '📅', label: 'Turnos' },
+      { id: 'ganhos', icon: '💰', label: 'Ganhos' }, 
+      { id: 'tickets', icon: '🎫', label: 'Suporte' }, 
+      { id: 'config', icon: '⚙️', label: 'Config' }
+    ].map(t => (
       <TouchableOpacity key={t.id} style={[styles.tab, activeTab === t.id && styles.tabActive]} onPress={() => onTabChange(t.id)}>
         <Text style={styles.tabIcon}>{t.icon}</Text>
         <Text style={[styles.tabLabel, activeTab === t.id && styles.tabLabelActive]}>{t.label}</Text>
