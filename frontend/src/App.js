@@ -120,6 +120,7 @@ import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 // RPA - Apenas Designer e Automação activos
 import RPAAutomacao from "@/pages/RPAAutomacao";
 import RPADesigner from "@/pages/RPADesigner";
+import GestaoPlataformasRPA from "@/pages/GestaoPlataformasRPA";
 import ImportacaoRPA from "@/pages/ImportacaoRPA";
 import GestaoPermissoesParceiros from "@/pages/GestaoPermissoesParceiros";
 import GestaoFuncionalidades from "@/pages/GestaoFuncionalidades";
