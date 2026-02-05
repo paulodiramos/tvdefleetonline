@@ -62,6 +62,14 @@ export default function RPADesigner({ user, onLogout }) {
   const [sessaoParceiroSelecionada, setSessaoParceiroSelecionada] = useState(null);
   const [urlInicial, setUrlInicial] = useState('');
   
+  // Estado para credenciais de teste (antes de gravar)
+  const [credenciaisTeste, setCredenciaisTeste] = useState({
+    username: '',
+    password: '',
+    usar_credenciais: false
+  });
+  const [showCredenciaisModal, setShowCredenciaisModal] = useState(false);
+  
   const wsRef = useRef(null);
   const canvasRef = useRef(null);
 
