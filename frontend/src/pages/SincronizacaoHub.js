@@ -104,12 +104,12 @@ const RPA_AUTOMATIONS = [
     name: 'Prio Energy',
     description: 'Extração de faturas e consumos de combustível',
     icon: <Fuel className="w-6 h-6 text-orange-500" />,
-    status: 'inactive',
-    dataTypes: ['Faturas', 'Consumos', 'Cartões'],
-    configPath: null,
+    status: 'active',
+    dataTypes: ['Faturas', 'Consumos', 'Cartões Frota'],
+    configPath: '/admin/rpa-designer',
     designerPath: '/admin/rpa-designer',
-    color: 'gray',
-    note: 'A configurar'
+    color: 'green',
+    note: 'Login testado com sucesso'
   }
 ];
 
