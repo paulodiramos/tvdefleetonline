@@ -1049,61 +1049,6 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
         </div>
       )}
 
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="border-l-2 border-l-green-500">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1 text-green-600 mb-1">
-              <TrendingUp className="w-3 h-3" />
-              <span className="text-xs font-medium">Receitas</span>
-            </div>
-            <p className="text-lg font-bold text-green-700">{formatCurrency(totalReceitas)}</p>
-            <div className="text-xs text-green-600 mt-1 space-y-0.5">
-              <div className="flex justify-between"><span>Aluguer:</span><span>{formatCurrency(totalAluguer)}</span></div>
-              <div className="flex justify-between"><span>Extras:</span><span>{formatCurrency(totalExtras)}</span></div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-2 border-l-red-500">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1 text-red-600 mb-1">
-              <TrendingDown className="w-3 h-3" />
-              <span className="text-xs font-medium">Despesas</span>
-            </div>
-            <p className="text-lg font-bold text-red-700">{formatCurrency(totalDespesas)}</p>
-            <div className="text-xs text-red-600 mt-1 space-y-0.5">
-              <div className="flex justify-between"><span>Combustível:</span><span>{formatCurrency(totais.total_combustivel)}</span></div>
-              <div className="flex justify-between"><span>Via Verde:</span><span>{formatCurrency(totais.total_via_verde)}</span></div>
-              <div className="flex justify-between"><span>Elétrico:</span><span>{formatCurrency(totais.total_eletrico)}</span></div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={`border-l-2 ${isPositive ? 'border-l-blue-500' : 'border-l-orange-500'}`}>
-          <CardContent className="p-3">
-            <div className={`flex items-center gap-1 mb-1 ${isPositive ? 'text-blue-600' : 'text-orange-600'}`}>
-              <DollarSign className="w-3 h-3" />
-              <span className="text-xs font-medium">Líquido</span>
-            </div>
-            <p className={`text-lg font-bold ${isPositive ? 'text-blue-700' : 'text-orange-700'}`}>{formatCurrency(liquidoParceiro)}</p>
-            <div className="flex items-center gap-1 mt-1">
-              <Users className="w-3 h-3 text-slate-400" />
-              <span className="text-xs text-slate-500">{motoristas.length} motoristas</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Info Motoristas */}
-      <div className="bg-slate-50 rounded p-2 text-center text-xs text-slate-600">
-        <span>Ganhos Motoristas: {formatCurrency(totais.total_ganhos)}</span>
-        <span className="mx-2 text-slate-300">|</span>
-        <span>Uber: {formatCurrency(totais.total_ganhos_uber)}</span>
-        <span className="mx-2 text-slate-300">|</span>
-        <span>Bolt: {formatCurrency(totais.total_ganhos_bolt)}</span>
-      </div>
-
       {/* Dashboard de Totais */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Caixa Receitas */}
