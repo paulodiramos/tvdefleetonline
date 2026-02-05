@@ -24,6 +24,10 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
   const [atualizando, setAtualizando] = useState(false);
   const [textoInput, setTextoInput] = useState('');
   
+  // Estado de extração
+  const [semanaSelecionada, setSemanaSelecionada] = useState('0');
+  const [extraindo, setExtraindo] = useState(false);
+  
   const imgRef = useRef(null);
   const intervalRef = useRef(null);
 
