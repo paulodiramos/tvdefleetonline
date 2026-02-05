@@ -332,6 +332,18 @@ export default function RPADesigner({ user, onLogout }) {
 
   // Abrir preview numa janela popup grande
   const abrirPreviewPopup = (sid) => {
+    // Preparar credenciais ANTES de abrir o popup
+    const credenciaisParaPopup = {
+      email: credenciaisTeste.email || '',
+      password: credenciaisTeste.password || '',
+      telefone: credenciaisTeste.telefone || '',
+      codigo_sms: credenciaisTeste.codigo_sms || '',
+      texto_livre: credenciaisTeste.texto_livre || ''
+    };
+    const credenciaisData = JSON.stringify(credenciaisParaPopup);
+    
+    console.log('Credenciais a passar para popup:', credenciaisParaPopup); // Debug
+    
     const largura = Math.min(1400, window.screen.width - 100);
     const altura = Math.min(900, window.screen.height - 100);
     const esquerda = (window.screen.width - largura) / 2;
@@ -342,15 +354,6 @@ export default function RPADesigner({ user, onLogout }) {
       'RPA_Preview',
       `width=${largura},height=${altura},left=${esquerda},top=${topo},scrollbars=yes,resizable=yes`
     );
-    
-    // Preparar credenciais para o popup
-    const credenciaisData = JSON.stringify({
-      email: credenciaisTeste.email || '',
-      password: credenciaisTeste.password || '',
-      telefone: credenciaisTeste.telefone || '',
-      codigo_sms: credenciaisTeste.codigo_sms || '',
-      texto_livre: credenciaisTeste.texto_livre || ''
-    });
     
     if (popup) {
       popup.document.write(`
