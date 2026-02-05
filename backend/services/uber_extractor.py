@@ -269,8 +269,27 @@ class UberExtractor:
             logger.info("Passo 6: Clicar em Gerar")
             gerar_final_btn = self.page.get_by_role("button", name="Gerar", exact=True)
             if await gerar_final_btn.count() > 0:
-                await gerar_final_btn.first.click()
-                await asyncio.sleep(5)  # Aguardar geração
+                try:
+                    # Aguardar que o botão esteja habilitado (max 10 segundos)
+                    await gerar_final_btn.first.wait_for(state="visible", timeout=5000)
+                    
+                    # Verificar se está habilitado
+                    is_disabled = await gerar_final_btn.first.is_disabled()
+                    if is_disabled:
+                        logger.warning("Botão 'Gerar' está desabilitado - verifique se todos os campos foram preenchidos")
+                        # Tentar scroll para garantir visibilidade
+                        await gerar_final_btn.first.scroll_into_view_if_needed()
+                        await asyncio.sleep(2)
+                        
+                        # Verificar novamente
+                        is_disabled = await gerar_final_btn.first.is_disabled()
+                        if is_disabled:
+                            return {"sucesso": False, "erro": "Botão 'Gerar' desabilitado - selecione organização e período"}
+                    
+                    await gerar_final_btn.first.click()
+                    await asyncio.sleep(5)  # Aguardar geração
+                except Exception as e:
+                    logger.warning(f"Erro ao clicar em Gerar: {e}")
             
             # 7. Fazer download
             logger.info("Passo 7: Fazer download")
