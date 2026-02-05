@@ -1320,7 +1320,8 @@ async def websocket_design_browser(
                         delta = 300
                     elif direcao == "up":
                         delta = -300
-                    await page.evaluate(f"window.scrollBy(0, {delta})")
+                    # Usar mouse wheel para scroll mais confiável
+                    await page.mouse.wheel(0, delta)
                 
                 elif data.get("tipo") == "espera":
                     segundos = data.get("segundos", 3)
