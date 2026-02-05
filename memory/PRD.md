@@ -3,7 +3,7 @@
 ## Visão Geral
 Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro, automações RPA, sistema de permissões granular, e **App Móvel para Motoristas**.
 
-## ✅ NOVO: RPA Designer Visual (05/02/2026)
+## ✅ ATUALIZAÇÃO: RPA Designer Visual (05/02/2026)
 
 ### Descrição
 Sistema onde o Admin desenha/grava fluxos de automação uma vez, e esses designs ficam disponíveis para todos os parceiros executarem automaticamente.
@@ -13,16 +13,38 @@ Sistema onde o Admin desenha/grava fluxos de automação uma vez, e esses design
 ADMIN (1 vez)                    PARCEIRO (automático)
 ─────────────                    ────────────────────
 1. Escolhe plataforma            1. Vai a "Resumo Semanal"
-2. Usa credenciais teste         2. Clica "Sincronizar"
-3. Grava passos no browser       3. Sistema usa design admin
-4. Define variáveis (semanas)    4. Executa com creds parceiro
-5. Guarda 4 designs (semanas)    5. Dados importados ✅
+2. Usa sessão do parceiro        2. Clica "Sincronizar"
+   (evita CAPTCHA!)              3. Sistema usa design admin
+3. Grava passos no browser       4. Executa com creds parceiro
+4. Define variáveis (semanas)    5. Dados importados ✅
+5. Guarda 4 designs (semanas)
 ```
+
+### Correções e Melhorias Recentes (05/02/2026)
+
+#### ✅ Bug Fix P0: Criação de Motoristas
+- **Problema:** Quando um parceiro criava um motorista, o `parceiro_id` não era atribuído automaticamente
+- **Solução:** Modificado `/app/backend/routes/motoristas.py` endpoint `POST /motoristas/register`
+- **Lógica atual:**
+  - Se utilizador = parceiro → `parceiro_id` atribuído automaticamente
+  - Se utilizador = admin/gestão → usa `parceiro_id` do body (se fornecido)
+
+#### ✅ Melhoria P1: Sessões de Parceiros para evitar CAPTCHA
+- **Problema:** Browser interativo era bloqueado por CAPTCHA Uber/Bolt
+- **Solução:** 
+  1. Novo endpoint `GET /api/rpa-designer/sessoes-parceiros` lista parceiros com sessões ativas
+  2. Admin pode selecionar sessão de parceiro ao iniciar gravação
+  3. Sistema usa cookies do parceiro → sem passar pelo login/CAPTCHA
+- **Ficheiros modificados:**
+  - `/app/backend/routes/rpa_designer.py` - Novo endpoint e lógica de sessão
+  - `/app/frontend/src/pages/RPADesigner.js` - UI para selecionar sessão
 
 ### Funcionalidades Implementadas
 - **Gestão de Plataformas**: Criar/editar plataformas (Uber, Bolt, Via Verde, etc.)
 - **Designs por Semana**: Cada plataforma pode ter até 4 designs (semana atual, -1, -2, -3)
 - **Browser Interativo**: Admin navega no site e o sistema grava os cliques
+- **Usar Sessão de Parceiro**: Evita CAPTCHA usando cookies de login manual do parceiro
+- **URL Inicial Customizada**: Admin pode começar de qualquer URL (não só a base)
 - **Tipos de Passos Suportados**:
   - `goto` - Navegar URL
   - `click` - Clicar em elemento
@@ -52,8 +74,11 @@ ADMIN (1 vez)                    PARCEIRO (automático)
 - `PUT /api/rpa-designer/designs/{id}` - Atualizar
 - `DELETE /api/rpa-designer/designs/{id}` - Eliminar
 
+**Admin - Sessões de Parceiros:**
+- `GET /api/rpa-designer/sessoes-parceiros` - Listar sessões ativas de parceiros
+
 **Admin - Sessão de Gravação:**
-- `POST /api/rpa-designer/sessao/iniciar` - Iniciar sessão de design
+- `POST /api/rpa-designer/sessao/iniciar` - Iniciar sessão de design (aceita `parceiro_id` e `url_inicial`)
 - `POST /api/rpa-designer/sessao/{id}/gravar-passo` - Gravar passo
 - `GET /api/rpa-designer/sessao/{id}/passos` - Obter passos
 - `POST /api/rpa-designer/sessao/{id}/guardar` - Guardar como design
