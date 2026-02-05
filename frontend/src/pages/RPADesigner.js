@@ -484,6 +484,16 @@ export default function RPADesigner({ user, onLogout }) {
             <div class="sidebar">
               <h3>🔧 Dados para Design RPA</h3>
               
+              <!-- Botões de Controlo -->
+              <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                <button onclick="pararSessao()" style="flex: 1; padding: 12px; background: #ef4444; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold;">
+                  ⏹ Parar
+                </button>
+                <button onclick="guardarDesign()" style="flex: 1; padding: 12px; background: #22c55e; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold;">
+                  💾 Guardar
+                </button>
+              </div>
+              
               <div class="field-group">
                 <label>📧 Email</label>
                 <div class="field-row">
