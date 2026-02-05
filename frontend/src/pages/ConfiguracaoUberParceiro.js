@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import { 
   Car, CheckCircle, AlertCircle, Loader2, Shield, Key, 
   Lock, Clock, FileText, Calendar, Users, DollarSign,
-  Monitor, Play, Square, RefreshCw, Keyboard, Download
+  Monitor, Play, Square, RefreshCw, Keyboard, Download,
+  Eye, EyeOff
 } from 'lucide-react';
 
 const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
@@ -17,6 +18,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
   const [credenciais, setCredenciais] = useState({ email: '', password: '', telefone: '' });
   const [sessao, setSessao] = useState(null);
   const [historico, setHistorico] = useState([]);
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   
   // Estados do browser remoto
   const [browserAtivo, setBrowserAtivo] = useState(false);
