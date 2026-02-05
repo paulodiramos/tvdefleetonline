@@ -583,19 +583,38 @@ export default function RPADesigner({ user, onLogout }) {
                 <CardTitle className="text-sm text-gray-300 flex items-center justify-between">
                   <span>📝 Passos Gravados ({passos.length})</span>
                   {passos.length > 0 && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setPassos([])}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      Limpar
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          if (passos.length > 0) {
+                            setPassos(passos.slice(0, -1).map((p, i) => ({...p, ordem: i + 1})));
+                            toast.info('Último passo removido');
+                          }
+                        }}
+                        className="text-yellow-400 hover:text-yellow-300 text-xs"
+                      >
+                        ↩️ Anular
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          if (window.confirm('Limpar todos os passos?')) {
+                            setPassos([]);
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-300 text-xs"
+                      >
+                        🗑️ Limpar
+                      </Button>
+                    </div>
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
                   {passos.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
                       <p>Nenhum passo gravado</p>
@@ -607,29 +626,79 @@ export default function RPADesigner({ user, onLogout }) {
                     passos.map((passo, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2 p-2 bg-gray-700 rounded text-sm group"
+                        className={`flex items-center gap-2 p-2 rounded text-sm group ${
+                          passo.tipo === 'fill_credential' 
+                            ? 'bg-yellow-900/50 border border-yellow-600' 
+                            : 'bg-gray-700'
+                        }`}
                       >
-                        <span className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-xs">
+                        <span className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-xs text-white">
                           {passo.ordem}
                         </span>
-                        <div className="flex-1 truncate">
-                          <span className="mr-2">
-                            {TIPOS_PASSO.find(t => t.value === passo.tipo)?.icon || '❓'}
-                          </span>
-                          <span className="text-gray-300">
-                            {passo.descricao || passo.tipo}
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span>
+                              {TIPOS_PASSO.find(t => t.value === passo.tipo)?.icon || '❓'}
+                            </span>
+                            <span className="text-gray-300 truncate text-xs">
+                              {passo.descricao || passo.tipo}
+                            </span>
+                          </div>
+                          {passo.seletor && (
+                            <div className="text-xs text-gray-500 truncate">
+                              {passo.seletor}
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => removerPasso(passo.ordem)}
-                          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                          {passo.tipo === 'type' && (
+                            <button
+                              onClick={() => {
+                                // Converter para credencial
+                                const campo = window.prompt('Converter para credencial:\n1 = email\n2 = password\n3 = telefone', '1');
+                                if (campo) {
+                                  const campos = {'1': 'email', '2': 'password', '3': 'telefone'};
+                                  const novosPassos = [...passos];
+                                  novosPassos[index] = {
+                                    ...passo,
+                                    tipo: 'fill_credential',
+                                    campo_credencial: campos[campo] || 'email',
+                                    descricao: `🔐 ${campos[campo] || 'email'}`
+                                  };
+                                  setPassos(novosPassos);
+                                  toast.success('Convertido para credencial');
+                                }
+                              }}
+                              className="text-yellow-400 hover:text-yellow-300"
+                              title="Converter para credencial"
+                            >
+                              🔐
+                            </button>
+                          )}
+                          <button
+                            onClick={() => removerPasso(passo.ordem)}
+                            className="text-red-400 hover:text-red-300"
+                            title="Remover passo"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
                 </div>
+                
+                {/* Legenda */}
+                {passos.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-700">
+                    <p className="text-xs text-gray-500 mb-2">Dica: Passe o rato sobre um passo para ver opções</p>
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-yellow-400">🔐 = Credencial</span>
+                      <span className="text-gray-400">🖱️ = Click</span>
+                      <span className="text-gray-400">⌨️ = Texto</span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
