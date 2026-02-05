@@ -439,9 +439,27 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                 
                 {/* Controlos */}
                 <div className="flex flex-wrap gap-2 items-center">
+                  <Button onClick={preencherEmail} variant="outline" size="sm" className="bg-blue-50">
+                    📧 Preencher Email
+                  </Button>
+                  <Button onClick={preencherPassword} variant="outline" size="sm" className="bg-blue-50">
+                    🔑 Preencher Password
+                  </Button>
+                  <Button onClick={() => enviarTecla('Enter')} variant="outline" size="sm">
+                    Enter ↵
+                  </Button>
+                  <Button onClick={() => enviarTecla('Tab')} variant="outline" size="sm">
+                    Tab
+                  </Button>
+                  <Button onClick={atualizarScreenshot} variant="outline" size="icon" title="Atualizar">
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 items-center">
                   <div className="flex-1 flex gap-2">
                     <Input
-                      placeholder="Escrever texto (email, password, código SMS)..."
+                      placeholder="Ou escreva manualmente aqui..."
                       value={textoInput}
                       onChange={(e) => setTextoInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && enviarTexto()}
@@ -450,15 +468,6 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                       <Keyboard className="w-4 h-4" />
                     </Button>
                   </div>
-                  <Button onClick={() => enviarTecla('Enter')} variant="outline" size="sm">
-                    Enter
-                  </Button>
-                  <Button onClick={() => enviarTecla('Tab')} variant="outline" size="sm">
-                    Tab
-                  </Button>
-                  <Button onClick={atualizarScreenshot} variant="outline" size="icon" title="Atualizar">
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
                 </div>
                 
                 {/* Ações */}
