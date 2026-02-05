@@ -153,19 +153,34 @@ export default function RPADesigner({ user, onLogout }) {
 
     setLoading(true);
     try {
-      const res = await fetch(
-        `${API_URL}/api/rpa-designer/sessao/iniciar?plataforma_id=${plataformaSelecionada.id}&semana_offset=${semanaSelecionada}`,
-        {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
+      // Construir URL com parâmetros opcionais
+      let url = `${API_URL}/api/rpa-designer/sessao/iniciar?plataforma_id=${plataformaSelecionada.id}&semana_offset=${semanaSelecionada}`;
+      
+      // Adicionar sessão do parceiro se selecionada
+      if (sessaoParceiroSelecionada) {
+        url += `&parceiro_id=${sessaoParceiroSelecionada.parceiro_id}`;
+      }
+      
+      // Adicionar URL inicial se definida
+      if (urlInicial) {
+        url += `&url_inicial=${encodeURIComponent(urlInicial)}`;
+      }
+      
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       
       if (data.session_id) {
         setSessionId(data.session_id);
         setGravando(true);
-        toast.success('Sessão iniciada! Browser a carregar...');
+        
+        if (data.usando_sessao_parceiro) {
+          toast.success('Sessão iniciada com cookies do parceiro! Browser a carregar...');
+        } else {
+          toast.success('Sessão iniciada! Browser a carregar...');
+        }
         
         // Conectar WebSocket
         conectarWebSocket(data.session_id);
