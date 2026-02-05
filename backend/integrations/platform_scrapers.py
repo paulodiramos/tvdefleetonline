@@ -605,9 +605,11 @@ class ViaVerdeScraper(BaseScraper):
             # 3. Preencher filtros de data
             logger.info("📅 Preenchendo filtros de data...")
             
-            # Converter formato de data para DD-MM-YYYY (formato português)
+            # Converter formato de data para DD-MM-YYYY (formato português) e DD/MM/YYYY
             start_date_pt = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d-%m-%Y')
             end_date_pt = datetime.strptime(end_date, '%Y-%m-%d').strftime('%d-%m-%Y')
+            start_date_slash = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d/%m/%Y')
+            end_date_slash = datetime.strptime(end_date, '%Y-%m-%d').strftime('%d/%m/%Y')
             
             # Procurar campos de data
             date_from_selectors = [
@@ -616,7 +618,12 @@ class ViaVerdeScraper(BaseScraper):
                 'input[name*="from"]',
                 'input[id*="DataInicio"]',
                 'input[placeholder*="início"]',
-                'input[type="date"]'
+                'input[placeholder*="Início"]',
+                'input[id*="startDate"]',
+                'input[name*="startDate"]',
+                '#dataInicio',
+                '.date-from input',
+                'input[type="date"]:first-of-type'
             ]
             
             date_to_selectors = [
@@ -624,43 +631,79 @@ class ViaVerdeScraper(BaseScraper):
                 'input[name*="dataFim"]',
                 'input[name*="to"]',
                 'input[id*="DataFim"]',
-                'input[placeholder*="fim"]'
+                'input[placeholder*="fim"]',
+                'input[placeholder*="Fim"]',
+                'input[id*="endDate"]',
+                'input[name*="endDate"]',
+                '#dataFim',
+                '.date-to input',
+                'input[type="date"]:last-of-type'
             ]
             
+            # Função auxiliar para preencher campo de data
+            async def fill_date_field(selectors, date_value, date_value_slash, field_name):
+                for selector in selectors:
+                    try:
+                        locator = self.page.locator(selector).first
+                        if await locator.is_visible(timeout=2000):
+                            # Limpar campo primeiro
+                            await locator.click()
+                            await asyncio.sleep(0.3)
+                            await locator.fill('')
+                            await asyncio.sleep(0.2)
+                            
+                            # Tentar com formato DD-MM-YYYY
+                            await locator.fill(date_value)
+                            await asyncio.sleep(0.3)
+                            
+                            # Verificar se foi aceite
+                            value = await locator.input_value()
+                            if value and len(value) > 5:
+                                logger.info(f"✅ {field_name} preenchida: {date_value} (valor: {value})")
+                                return True
+                            
+                            # Tentar com formato DD/MM/YYYY
+                            await locator.fill('')
+                            await locator.fill(date_value_slash)
+                            await asyncio.sleep(0.3)
+                            
+                            value = await locator.input_value()
+                            if value and len(value) > 5:
+                                logger.info(f"✅ {field_name} preenchida: {date_value_slash} (valor: {value})")
+                                return True
+                            
+                            # Tentar via keyboard type
+                            await locator.fill('')
+                            await locator.type(date_value, delay=50)
+                            await asyncio.sleep(0.3)
+                            
+                            logger.info(f"✅ {field_name} preenchida via type: {date_value}")
+                            return True
+                    except Exception as e:
+                        logger.debug(f"Tentativa {selector} falhou: {e}")
+                        continue
+                return False
+            
             # Preencher data inicial
-            filled_from = False
-            for selector in date_from_selectors:
-                try:
-                    locator = self.page.locator(selector).first
-                    if await locator.is_visible(timeout=2000):
-                        await locator.click()
-                        await asyncio.sleep(0.3)
-                        await locator.fill(start_date_pt)
-                        await asyncio.sleep(0.5)
-                        logger.info(f"✅ Data inicial preenchida: {start_date_pt}")
-                        filled_from = True
-                        break
-                except:
-                    continue
+            filled_from = await fill_date_field(
+                date_from_selectors, 
+                start_date_pt, 
+                start_date_slash, 
+                "Data inicial"
+            )
             
             # Preencher data final
-            filled_to = False
-            for selector in date_to_selectors:
-                try:
-                    locator = self.page.locator(selector).first
-                    if await locator.is_visible(timeout=2000):
-                        await locator.click()
-                        await asyncio.sleep(0.3)
-                        await locator.fill(end_date_pt)
-                        await asyncio.sleep(0.5)
-                        logger.info(f"✅ Data final preenchida: {end_date_pt}")
-                        filled_to = True
-                        break
-                except:
-                    continue
+            filled_to = await fill_date_field(
+                date_to_selectors, 
+                end_date_pt, 
+                end_date_slash, 
+                "Data final"
+            )
             
             if not filled_from or not filled_to:
                 logger.warning(f"⚠️ Datas não preenchidas (from: {filled_from}, to: {filled_to})")
+                # Tirar screenshot para debug
+                await self.page.screenshot(path='/tmp/viaverde_04_dates_failed.png')
             
             await self.page.screenshot(path='/tmp/viaverde_04_dates_filled.png')
             
