@@ -587,172 +587,272 @@ export default function RPADesigner({ user, onLogout }) {
                       </div>
                     )}
                     
-                    {/* Credenciais e Dados de Teste para Design RPA */}
-                    {plataformaSelecionada && (
-                      <div className="mb-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
-                        <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                          <Key className="w-4 h-4" /> Dados para Design RPA
-                        </h4>
+                    {/* Dados para Design RPA - Layout Grid */}
+                    <div className="mb-4 p-4 bg-gray-800/80 rounded-lg border border-gray-600">
+                      <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        🔧 Dados para Design RPA
+                      </h4>
+                      
+                      {/* Grid horizontal - Email, Senha, Telefone, Código SMS */}
+                      <div className="grid grid-cols-4 gap-3 mb-4">
+                        {/* Email */}
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                            📧 Email
+                          </label>
+                          <div className="flex gap-1">
+                            <Input
+                              placeholder="Email..."
+                              value={credenciaisTeste.email}
+                              onChange={(e) => setCredenciaisTeste(prev => ({
+                                ...prev, 
+                                email: e.target.value
+                              }))}
+                              className="flex-1 bg-white text-black h-9 text-sm"
+                            />
+                            <Button 
+                              size="sm"
+                              className="h-9 px-2 bg-gray-700 hover:bg-gray-600 text-white text-xs"
+                              onClick={() => {
+                                if (credenciaisTeste.email && wsRef.current) {
+                                  wsRef.current.send(JSON.stringify({
+                                    tipo: 'inserir_texto',
+                                    texto: credenciaisTeste.email
+                                  }));
+                                  toast.success('Email inserido');
+                                }
+                              }}
+                            >
+                              Inserir
+                            </Button>
+                          </div>
+                        </div>
                         
-                        <div className="space-y-3">
-                          {/* Email */}
-                          <div>
-                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
-                              📧 Email
-                            </label>
-                            <div className="flex gap-2">
-                              <Input
-                                placeholder="Email..."
-                                value={credenciaisTeste.email}
-                                onChange={(e) => setCredenciaisTeste(prev => ({
-                                  ...prev, 
-                                  email: e.target.value
-                                }))}
-                                className="flex-1 bg-gray-800 border-gray-500 text-white h-10"
-                              />
-                              <Button 
-                                size="sm"
-                                variant="secondary"
-                                className="h-10 px-4"
-                                onClick={() => {
-                                  if (credenciaisTeste.email) {
-                                    toast.success(`Email copiado: ${credenciaisTeste.email}`);
-                                  }
-                                }}
-                              >
-                                Inserir
-                              </Button>
-                            </div>
+                        {/* Senha */}
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                            🔑 Senha
+                          </label>
+                          <div className="flex gap-1">
+                            <Input
+                              type="password"
+                              placeholder="••••"
+                              value={credenciaisTeste.password}
+                              onChange={(e) => setCredenciaisTeste(prev => ({
+                                ...prev, 
+                                password: e.target.value
+                              }))}
+                              className="flex-1 bg-white text-black h-9 text-sm"
+                            />
+                            <Button 
+                              size="sm"
+                              className="h-9 px-2 bg-gray-700 hover:bg-gray-600 text-white text-xs"
+                              onClick={() => {
+                                if (credenciaisTeste.password && wsRef.current) {
+                                  wsRef.current.send(JSON.stringify({
+                                    tipo: 'inserir_texto',
+                                    texto: credenciaisTeste.password
+                                  }));
+                                  toast.success('Senha inserida');
+                                }
+                              }}
+                            >
+                              Inserir
+                            </Button>
                           </div>
-                          
-                          {/* Senha */}
-                          <div>
-                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
-                              🔑 Senha
-                            </label>
-                            <div className="flex gap-2">
-                              <Input
-                                type="password"
-                                placeholder="Senha..."
-                                value={credenciaisTeste.password}
-                                onChange={(e) => setCredenciaisTeste(prev => ({
-                                  ...prev, 
-                                  password: e.target.value
-                                }))}
-                                className="flex-1 bg-gray-800 border-gray-500 text-white h-10"
-                              />
-                              <Button 
-                                size="sm"
-                                variant="secondary"
-                                className="h-10 px-4"
-                                onClick={() => {
-                                  if (credenciaisTeste.password) {
-                                    toast.success('Senha pronta para inserir');
-                                  }
-                                }}
-                              >
-                                Inserir
-                              </Button>
-                            </div>
+                        </div>
+                        
+                        {/* Telefone */}
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                            📱 Telefone
+                          </label>
+                          <div className="flex gap-1">
+                            <Input
+                              placeholder="Telefone..."
+                              value={credenciaisTeste.telefone}
+                              onChange={(e) => setCredenciaisTeste(prev => ({
+                                ...prev, 
+                                telefone: e.target.value
+                              }))}
+                              className="flex-1 bg-gray-600 text-white h-9 text-sm placeholder:text-gray-400"
+                            />
+                            <Button 
+                              size="sm"
+                              className="h-9 px-2 bg-gray-700 hover:bg-gray-600 text-white text-xs"
+                              onClick={() => {
+                                if (credenciaisTeste.telefone && wsRef.current) {
+                                  wsRef.current.send(JSON.stringify({
+                                    tipo: 'inserir_texto',
+                                    texto: credenciaisTeste.telefone
+                                  }));
+                                  toast.success('Telefone inserido');
+                                }
+                              }}
+                            >
+                              Inserir
+                            </Button>
                           </div>
-                          
-                          {/* Telefone */}
-                          <div>
-                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
-                              📱 Telefone
-                            </label>
-                            <div className="flex gap-2">
-                              <Input
-                                placeholder="Telefone..."
-                                value={credenciaisTeste.telefone}
-                                onChange={(e) => setCredenciaisTeste(prev => ({
-                                  ...prev, 
-                                  telefone: e.target.value
-                                }))}
-                                className="flex-1 bg-gray-800 border-gray-500 text-white h-10"
-                              />
-                              <Button 
-                                size="sm"
-                                variant="secondary"
-                                className="h-10 px-4"
-                                onClick={() => {
-                                  if (credenciaisTeste.telefone) {
-                                    toast.success(`Telefone: ${credenciaisTeste.telefone}`);
-                                  }
-                                }}
-                              >
-                                Inserir
-                              </Button>
-                            </div>
+                        </div>
+                        
+                        {/* Código SMS */}
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                            📲 Código SMS
+                          </label>
+                          <div className="flex gap-1">
+                            <Input
+                              placeholder="Código..."
+                              value={credenciaisTeste.codigo_sms}
+                              onChange={(e) => setCredenciaisTeste(prev => ({
+                                ...prev, 
+                                codigo_sms: e.target.value
+                              }))}
+                              className="flex-1 bg-gray-600 text-white h-9 text-sm placeholder:text-gray-400"
+                            />
+                            <Button 
+                              size="sm"
+                              className="h-9 px-2 bg-green-600 hover:bg-green-700 text-white text-xs"
+                              onClick={() => {
+                                if (credenciaisTeste.codigo_sms && wsRef.current) {
+                                  wsRef.current.send(JSON.stringify({
+                                    tipo: 'inserir_texto',
+                                    texto: credenciaisTeste.codigo_sms
+                                  }));
+                                  toast.success('Código SMS enviado');
+                                }
+                              }}
+                            >
+                              Enviar
+                            </Button>
                           </div>
-                          
-                          {/* Código SMS */}
-                          <div>
-                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
-                              📲 Código SMS
-                            </label>
-                            <div className="flex gap-2">
-                              <Input
-                                placeholder="Código..."
-                                value={credenciaisTeste.codigo_sms}
-                                onChange={(e) => setCredenciaisTeste(prev => ({
-                                  ...prev, 
-                                  codigo_sms: e.target.value
-                                }))}
-                                className="flex-1 bg-gray-800 border-gray-500 text-white h-10"
-                              />
-                              <Button 
-                                size="sm"
-                                variant="outline"
-                                className="h-10 px-4 border-orange-500 text-orange-400 hover:bg-orange-500/20"
-                                onClick={() => {
-                                  if (credenciaisTeste.codigo_sms) {
-                                    toast.success(`Código SMS: ${credenciaisTeste.codigo_sms}`);
-                                  }
-                                }}
-                              >
-                                Enviar
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          {/* Texto Livre */}
-                          <div>
-                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
-                              ⌨️ Texto Livre
-                            </label>
-                            <div className="flex gap-2">
-                              <textarea
-                                placeholder="Qualquer texto para inserir durante a gravação..."
-                                value={credenciaisTeste.texto_livre}
-                                onChange={(e) => setCredenciaisTeste(prev => ({
-                                  ...prev, 
-                                  texto_livre: e.target.value
-                                }))}
-                                rows={2}
-                                className="flex-1 bg-gray-800 border border-gray-500 text-white rounded-md px-3 py-2 text-sm resize-none"
-                              />
-                              <Button 
-                                size="sm"
-                                variant="secondary"
-                                className="h-auto px-4 self-stretch"
-                                onClick={() => {
-                                  if (credenciaisTeste.texto_livre) {
-                                    toast.success('Texto pronto para inserir');
-                                  }
-                                }}
-                              >
-                                Inserir
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <p className="text-xs text-blue-400 mt-2">
-                            💡 Preencha os dados antes de iniciar a gravação. Use os botões "Inserir" durante a gravação para preencher campos automaticamente.
-                          </p>
                         </div>
                       </div>
-                    )}
+                      
+                      {/* Texto Livre */}
+                      <div className="mb-3">
+                        <label className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                          ⌨️ Texto livre
+                        </label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Digite texto e pressione Enter ou clique Enviar..."
+                            value={credenciaisTeste.texto_livre}
+                            onChange={(e) => setCredenciaisTeste(prev => ({
+                              ...prev, 
+                              texto_livre: e.target.value
+                            }))}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && credenciaisTeste.texto_livre && wsRef.current) {
+                                wsRef.current.send(JSON.stringify({
+                                  tipo: 'inserir_texto',
+                                  texto: credenciaisTeste.texto_livre
+                                }));
+                                toast.success('Texto inserido');
+                              }
+                            }}
+                            className="flex-1 bg-gray-700 text-white h-10 text-sm border-gray-500 placeholder:text-gray-400"
+                          />
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            className="h-10 px-4 border-gray-500 text-white hover:bg-gray-700"
+                            onClick={() => {
+                              if (credenciaisTeste.texto_livre && wsRef.current) {
+                                wsRef.current.send(JSON.stringify({
+                                  tipo: 'inserir_texto',
+                                  texto: credenciaisTeste.texto_livre
+                                }));
+                                toast.success('Texto enviado');
+                              }
+                            }}
+                          >
+                            Enviar
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Botões de Ação */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
+                          onClick={() => {
+                            if (wsRef.current) {
+                              wsRef.current.send(JSON.stringify({ tipo: 'tecla', tecla: 'Enter' }));
+                              toast.success('Enter enviado');
+                            }
+                          }}
+                        >
+                          ↵ Enter
+                        </Button>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
+                          onClick={() => {
+                            if (wsRef.current) {
+                              wsRef.current.send(JSON.stringify({ tipo: 'tecla', tecla: 'Tab' }));
+                              toast.success('Tab enviado');
+                            }
+                          }}
+                        >
+                          → Tab
+                        </Button>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
+                          onClick={() => {
+                            if (wsRef.current) {
+                              wsRef.current.send(JSON.stringify({ tipo: 'scroll', direcao: 'down' }));
+                            }
+                          }}
+                        >
+                          ↓ Scroll
+                        </Button>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
+                          onClick={() => {
+                            if (wsRef.current) {
+                              wsRef.current.send(JSON.stringify({ tipo: 'scroll', direcao: 'up' }));
+                            }
+                          }}
+                        >
+                          ↑ Scroll
+                        </Button>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
+                          onClick={() => {
+                            const segundos = prompt('Segundos de espera:', '3');
+                            if (segundos && wsRef.current) {
+                              wsRef.current.send(JSON.stringify({ tipo: 'espera', segundos: parseInt(segundos) }));
+                              toast.success(`Espera de ${segundos}s adicionada`);
+                            }
+                          }}
+                        >
+                          ⏳ +Espera
+                        </Button>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 border-gray-500 text-gray-300 hover:bg-gray-700 text-xs"
+                          onClick={() => {
+                            if (wsRef.current) {
+                              wsRef.current.send(JSON.stringify({ tipo: 'aguardar_download' }));
+                              toast.success('Aguardando download...');
+                            }
+                          }}
+                        >
+                          📥 +Download
+                        </Button>
+                      </div>
+                    </div>
                     
                     <Button 
                       className="w-full bg-green-600 hover:bg-green-700"
