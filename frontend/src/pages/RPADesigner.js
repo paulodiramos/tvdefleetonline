@@ -414,15 +414,15 @@ export default function RPADesigner({ user, onLogout }) {
                           }}
                           className={`p-2 rounded text-sm flex items-center justify-between ${
                             semanaSelecionada === s
-                              ? 'bg-blue-600 text-gray-900'
-                              : 'bg-gray-100 hover:bg-gray-200'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                           }`}
                         >
-                          <span>{s === 0 ? 'Atual' : `-${s}`}</span>
+                          <span>{s === 0 ? 'Atual' : `Semana -${s}`}</span>
                           {designExiste ? (
-                            <CheckCircle className="w-4 h-4 text-green-400" />
+                            <CheckCircle className="w-4 h-4 text-green-500" />
                           ) : (
-                            <AlertCircle className="w-4 h-4 text-yellow-400" />
+                            <AlertCircle className="w-4 h-4 text-orange-400" />
                           )}
                         </button>
                       );
