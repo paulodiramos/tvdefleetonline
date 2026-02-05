@@ -1,182 +1,186 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas, que evoluiu para a criação de um sistema de automação (RPA) complexo. O requisito mais recente e de maior prioridade é a implementação de um **RPA Designer Visual**. Este sistema permite que um administrador grave visualmente um fluxo de extração de dados num website, que pode ser executado por outros parceiros. Recentemente, o foco mudou para a melhoria e correção de bugs na página de **Resumo Semanal do Parceiro**, incluindo a adição de um novo dashboard de resumo e a resolução de discrepâncias nos dados sincronizados da API da Bolt.
+O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas, que evoluiu para um sistema de automação (RPA) complexo. A prioridade tem sido o desenvolvimento de um **RPA Designer Visual** e a melhoria da página de **Resumo Semanal do Parceiro**.
+
+Recentemente, o foco esteve em:
+1.  Corrigir uma discrepância de valores da API da Bolt, adicionando um campo manual para Ganhos de Campanha.
+2.  Analisar a API oficial da Uber para substituir o método RPA atual, que é instável.
+3.  Organizar todas as integrações (APIs e RPAs) num hub central de gestão.
+4.  Corrigir bugs nos RPAs existentes (Via Verde, Uber).
+5.  Adicionar uma nova plataforma RPA para a Prio, separando-a em Combustível e Elétrica.
+6.  Melhorar o RPA Designer para permitir a introdução de credenciais de teste antes de iniciar uma gravação.
 
 **PRODUCT REQUIREMENTS:**
-1.  **RPA Designer Visual:** Permitir que um admin grave, edite e guarde scripts de automação.
-2.  **Motor de Execução RPA:** Executar os scripts gravados para cada parceiro.
-3.  **Agendamento de Sincronização:** Permitir o agendamento de execuções.
-4.  **Dashboard de Resumo Semanal (NOVO):**
-    *   Criar um novo layout de dashboard no topo da página com 4 caixas: Receitas, Despesas, Motoristas e Lucro do Parceiro.
-    *   Implementar uma secção para que o parceiro possa introduzir manualmente os valores totais recebidos da Uber e da Bolt.
-    *   O sistema deve comparar os valores manuais com os totais sincronizados dos motoristas e exibir um alerta visual (verde se correto, vermelho se houver diferença).
-5.  **Correção de Bugs:**
-    *   Resolver discrepâncias nos valores sincronizados da API da Bolt (valores de campanha não incluídos).
-    *   Resolver erros de timeout na sincronização da Uber (botão Gerar desativado).
-    *   Corrigir o bug da criação de motoristas que não eram associados automaticamente ao parceiro.
-    *   Resolver a falha na filtragem de datas da Via Verde.
+1.  **RPA Designer Visual:** Permitir que um admin grave, edite e guarde scripts de automação, com a capacidade de usar credenciais de teste para facilitar o processo.
+2.  **Hub de Sincronização:** Uma página central para administradores gerirem e monitorizarem o estado de todas as integrações de dados (APIs e RPAs).
+3.  **Gestão de Credenciais de Parceiro:** Permitir que os parceiros configurem as suas próprias credenciais para as diferentes plataformas (Uber, Bolt, Prio, etc.).
+4.  **Correção de Bugs RPA:** Resolver problemas de timeout na Uber e falhas de filtro de data (login) na Via Verde.
+5.  **Plataforma Prio:** Integrar a Prio como uma plataforma RPA, com suporte para extração de dados de combustível e carregamento elétrico.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
 - Uma aplicação full-stack (React + FastAPI + MongoDB).
-- A estrutura base do **RPA Designer Visual** está implementada, com uma solução para contornar CAPTCHAs através da reutilização de sessões de parceiros.
-- A página de **Resumo Semanal do Parceiro** () foi significativamente redesenhada. Inclui um novo dashboard no topo com resumos financeiros (Receitas, Despesas, Lucro) e uma secção para o parceiro introduzir os totais recebidos da Uber/Bolt e comparar com os valores agregados dos motoristas, mostrando alertas visuais.
-- Foram corrigidos vários bugs críticos, incluindo a associação automática de motoristas a parceiros e o status  na criação de motoristas.
-- Foram implementadas melhorias de UI, como um botão para mostrar/esconder passwords e a adição das datas de início/fim da semana nos resumos.
+- A página de **Resumo Semanal do Parceiro** () foi melhorada com um campo manual para Ganhos de Campanha Bolt, que foi testado e está funcional.
+- Uma nova página central, **Hub de Sincronização** (), foi criada para gerir e monitorizar o estado das integrações (APIs e RPAs).
+- A plataforma **Prio** foi adicionada, dividida em Prio Combustível e Prio Elétrica, e o seu scraper de login foi criado e testado com sucesso.
+- O **RPA Designer** () foi significativamente melhorado. Agora inclui uma secção Dados para Design RPA onde um administrador pode inserir credenciais de teste (email, senha, telefone, código SMS, texto livre) antes de iniciar uma sessão de gravação para facilitar a criação de automações. A UI desta secção foi ajustada conforme o feedback do utilizador.
+- Foi identificado e corrigido um problema de inconsistência de dados, garantindo que a aplicação usa a base de dados correta ().
 
 **Last working item**:
-- **Last item agent was working:** O agente estava a investigar porque a API da Bolt retornava um valor líquido (€277.73) inferior ao esperado pelo utilizador (€300.54). O utilizador identificou a diferença de €22.81 como ganhos de campanha. O agente confirmou que a API da Bolt não parece ter um endpoint para ganhos de campanha e estava a preparar-se para adicionar um campo manual para que o utilizador pudesse inserir esse valor.
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend/Backend testing. O próximo agente deve adicionar o campo Ganhos de Campanha ao modelo de dados, ao backend (endpoints GET/PUT) e ao frontend (tabela e formulário de edição do resumo semanal), e depois testar o fluxo.
+- **Last item agent was working:** O agente estava a finalizar os ajustes de UI na secção **Dados para Design RPA** dentro da página . O objetivo era corresponder ao layout solicitado pelo utilizador (uma grelha horizontal com campos de input maiores e mais visíveis) para facilitar a introdução de dados durante a criação de um design RPA.
+- **Status:** USER VERIFICATION PENDING
+- **Agent Testing Done:** Y
+- **Which testing method agent to use?** Frontend testing agent. Para verificar se o layout e a interatividade da secção Dados para Design RPA correspondem exatamente às expectativas do utilizador.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0) API da Bolt não inclui ganhos de campanha.**
-  - **Description:** A sincronização via API da Bolt não inclui os ganhos de campanha, resultando em valores líquidos inferiores aos do portal da Bolt. A diferença identificada para a semana 5 foi de €22.81.
-  - **Attempted fixes:** O agente investigou a API da Bolt e confirmou que os endpoints de  e  não parecem conter dados de campanha.
-  - **Next debug checklist:**
-    1.  Adicionar um campo  ao modelo de dados do resumo semanal no backend.
-    2.  Modificar o endpoint  em  para guardar este novo campo.
-    3.  Modificar o endpoint  para retornar este campo e incluí-lo no cálculo dos totais.
-    4.  No frontend (), adicionar o campo ao formulário de edição e exibi-lo na tabela de motoristas.
-  - **Why fix this issue and what will be achieved with the fix?** Permite que os valores do resumo semanal correspondam à realidade, garantindo a precisão dos cálculos de lucro.
-  - **Status:** NOT STARTED
-  - **Is recurring issue?** Y
-  - **Should Test frontend/backend/both after fix?** Both
+- **Issue 1: (P1) Erro de timeout na sincronização Uber.**
+- **Issue 2: (P2) Falha no RPA da Via Verde.**
+- **Issue 3: (P3) Bug de UI no Resumo Semanal.**
 
-- **Issue 2: (P1) Erro de timeout na sincronização Uber.**
-  - **Description:** A sincronização da Uber falha com um erro de timeout ao tentar clicar no botão Gerar, porque este se encontra desativado. ().
-  - **Attempted fixes:** O agente modificou o ficheiro  para esperar que o botão Gerar esteja ativo antes de clicar. O backend foi reiniciado.
-  - **Next debug checklist:**
-    1.  Pedir ao utilizador para testar novamente a sincronização da Uber.
-    2.  Se o erro persistir, analisar os logs do backend para ver o estado da página no momento do erro e ajustar a lógica de espera/interação no .
-  - **Why fix this issue and what will be achieved with the fix?** Desbloqueia a sincronização automática de dados da Uber.
-  - **Status:** USER VERIFICATION PENDING
-  - **Is recurring issue?** Y
-  - **Should Test frontend/backend/both after fix?** Backend
+**Issues Detail:**
+- **Issue 1:**
+    - **Description:** A sincronização da Uber falha com um erro de timeout ao tentar clicar no botão Gerar, porque este se encontra desativado.
+    - **Attempted fixes:** O agente modificou o ficheiro  para esperar que o botão esteja habilitado antes de clicar.
+    - **Next debug checklist:** Pedir ao utilizador para testar a sincronização da Uber para validar a correção. Se falhar, analisar os logs e o HTML da página no momento do erro.
+    - **Why fix this issue and what will be achieved with the fix?** Desbloqueia a sincronização automática de dados da Uber, que é um método de extração principal.
+    - **Status:** USER VERIFICATION PENDING
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** Backend
+    - **Blocked on other issue:** None
 
-- **Issue 3: (P2) Falha na Filtragem de Datas do RPA da Via Verde.**
-  - **Description:** Problema recorrente onde a automação da Via Verde descarrega todas as transações em vez de apenas as do período selecionado.
-  - **Status:** NOT STARTED
-  - **Is recurring issue?** Y
-  - **Should Test frontend/backend/both after fix?** Backend
+- **Issue 2:**
+    - **Description:** A automação da Via Verde falha ao extrair dados. O problema inicial parecia ser o filtro de datas, mas uma análise mais profunda revelou que o **login não está a ser bem-sucedido**. O script acredita que está autenticado, mas continua na página de login, provavelmente devido a uma mudança no site (ex: popup de cookies).
+    - **Attempted fixes:** O agente tentou corrigir o preenchimento das datas em . Corrigiu um problema de ambiente do Playwright que impedia o browser de iniciar.
+    - **Next debug checklist:** Analisar os screenshots de debug () e o HTML da página após a tentativa de login para identificar o que está a impedir a autenticação. Ajustar o script em  para lidar com popups ou novos elementos na página de login.
+    - **Why fix this issue and what will be achieved with the fix?** Permite a sincronização automática de despesas de portagens da Via Verde.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** Backend
+    - **Blocked on other issue:** None
+
+- **Issue 3:**
+    - **Description:** A página de resumo semanal () não está a ler os parâmetros de semana e ano da URL (ex: ), mostrando sempre os dados da semana atual.
+    - **Attempted fixes:** Nenhum. O bug foi apenas identificado.
+    - **Next debug checklist:** Investigar o ficheiro  para perceber porque os parâmetros da URL ( ou similar) não estão a ser usados para carregar os dados.
+    - **Why fix this issue and what will be achieved with the fix?** Permite que os utilizadores naveguem e vejam os resumos de semanas anteriores.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend
+    - **Blocked on other issue:** None
 
 **In progress Task List**:
-- **Task 1: (P0) Finalizar o novo dashboard da página de Resumo Semanal.**
-  - **Where to resume:** O layout principal do dashboard foi implementado. Agora é preciso finalizar a correção da discrepância da Bolt, conforme descrito no **Issue 1**.
-  - **What will be achieved with this?** Um dashboard financeiro preciso e funcional que atende aos requisitos do utilizador para verificação de valores.
-  - **Status:** IN PROGRESS
-  - **Should Test frontend/backend/both after fix?** Both
-  - **Blocked on something:** Issue 1.
+- **Task 1: (P1) Organizar a estrutura de APIs e RPAs.**
+  - **Where to resume:** A página  foi criada e populada. O utilizador precisa de rever e confirmar se a organização e o status reportado para cada integração estão corretos.
+  - **What will be achieved with this?** Uma visão centralizada e clara para o admin sobre a saúde de todas as integrações de dados.
+  - **Status:** USER VERIFICATION PENDING
+  - **Should Test frontend/backend/both after fix?** Frontend
+  - **Blocked on something:** User feedback.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - (P1) **Motor de Execução RPA:** Construir o serviço de backend que executa os designs de RPA gravados para os parceiros, de forma manual ou agendada.
-  - (P1) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria e enviá-lo por email.
-  - (P2) **Sistema de Tickets na App Móvel:** Adicionar a funcionalidade de gestão de tickets.
-  - (P2) Implementar as integrações com **Ifthenpay** e **Moloni**.
+  - (P0) **Testar RPA da Prio:** O utilizador precisa de testar a sincronização da Prio usando as credenciais fornecidas para o parceiro Tomas.
+  - (P1) **Implementar Sincronização Uber via API:** Implementar o fluxo OAuth2 e substituir o scraper RPA pela integração direta com a API oficial da Uber, o que tornará a extração de dados mais fiável.
+  - (P1) **Motor de Execução RPA:** Construir o serviço de backend que executa os designs de RPA gravados para os parceiros.
+  - (P2) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria.
 - **Future Tasks:**
-  - (P3) Implementar o envio de relatórios via WhatsApp.
-  - (P3) Refatorar o  e o .
+  - Implementar integrações com **Ifthenpay**, **Moloni** e **Verizon GPS**.
+  - Refatorar o ficheiro monolítico .
+  - Implementar o envio de relatórios via WhatsApp.
 
 **Completed work in this session**
-- **Refatoração do Dashboard de Resumo Semanal:**
-  - Removidos cartões de resumo duplicados.
-  - Criado um novo dashboard com 4 caixas principais (Receitas, Despesas, Motoristas, Lucro do Parceiro).
-  - Implementada uma secção para comparar os totais recebidos pela empresa com os totais dos motoristas, com alertas visuais.
-  - A lógica de comparação foi ajustada para ter uma tolerância de €0.01.
-- **Correção do Bug de Criação de Motoristas:** Corrigido o endpoint  para atribuir automaticamente o  e definir  quando um parceiro cria um motorista.
-- **Melhoria na Sincronização Uber RPA:** Adicionada uma verificação no  para esperar que o botão Gerar esteja habilitado antes de clicar, evitando um erro de timeout.
-- **Melhoria de UI/UX:**
-  - Adicionadas as datas de início e fim da semana ao cabeçalho do resumo semanal.
-  - Implementado um botão olho para mostrar/esconder a password na página de configuração da Uber.
-- **Correção de Dados:** Resolvido um bug onde um motorista não aparecia no resumo semanal por não ter o campo  definido.
+- **Implementado Campo Ganhos de Campanha Bolt:** Adicionado e testado no backend () e frontend () para corrigir discrepâncias financeiras.
+- **Criação do Hub de Sincronização:** Criada a nova página  para centralizar a gestão de APIs e RPAs.
+- **Configuração da Plataforma Prio:** Criado um novo scraper de login para a Prio (), testado com sucesso, e adicionada a plataforma à UI (separada em Combustível e Elétrica).
+- **Melhoria do RPA Designer:** Adicionada em  uma secção para inserir credenciais de teste (login, senha, etc.) antes de gravar uma automação, com UI melhorada conforme feedback.
+- **Correção de Inconsistência da Base de Dados:** Identificado e resolvido um problema onde o agente escrevia para a base de dados errada ( em vez de ).
 
 **Earlier issues found/mentioned but not fixed**
-- O problema da filtragem de datas do RPA da Via Verde continua pendente.
+- O bug de UI no Resumo Semanal (não lê parâmetros da URL) foi identificado durante os testes, mas não foi resolvido.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Falha na Filtragem de Datas do RPA da Via Verde.
 - **Recurrence count:** HIGH
-- **Status:** NOT STARTED
+- **Status:** IN PROGRESS (a causa raiz foi identificada como uma falha de login, não de filtragem).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Dashboard de Verificação Financeira:** Uma interface que permite ao utilizador inserir valores reais recebidos das plataformas e compará-los com os dados agregados do sistema, exibindo alertas para discrepâncias.
-- **Visual RPA Designer:** Um sistema onde um admin grava visualmente uma automação web, que é depois executada parametricamente por outros utilizadores.
-- **Interactive Browser via WebSockets:** O backend executa o Playwright, transmite imagens do browser para o frontend, e recebe eventos de interação para controlar a sessão de gravação.
+- **Centralized Integration Hub:** Uma página de dashboard que agrega o status de múltiplas fontes de dados (APIs diretas e RPAs) para fornecer uma visão geral da saúde do sistema de sincronização.
+- **RPA Test Credentials:** Funcionalidade que permite ao admin inserir credenciais temporárias diretamente no RPA Designer para testar o login e gravar a automação sem precisar de usar uma sessão de parceiro guardada.
 
 **key DB schema**
-- ** (Nova):** Armazena os valores totais recebidos da Uber/Bolt, introduzidos manualmente pelo parceiro, para cada semana (, , , , ).
-- **:** Coleção onde são guardados os dados sincronizados da API da Bolt.
-- **:** O campo  é agora atribuído corretamente na criação.
-- **:** Contém os perfis dos utilizadores.
+- **:** (Coleção na DB ) Armazena as definições das plataformas RPA (ex: Prio Combustível, Prio Elétrica, Uber Fleet).
+- **:** (Coleção na DB ) Armazena os designs RPA criados, associados a uma plataforma.
+- **:** Armazena as credenciais das plataformas, agora incluindo Prio, associadas ao .
+- **:** Coleção que armazena ajustes manuais, agora incluindo .
 
 **All files of reference**
--  (Ficheiro principal do novo dashboard)
--  (Endpoints de backend para o resumo semanal e os novos totais)
--  (Serviço de integração com a API da Bolt)
--  (Serviço de RPA para a Uber)
--  (Endpoint de criação de motoristas corrigido)
+-  (Lógica principal do RPA Designer)
+-  (Novo hub central de gestão)
+-  (Configuração de credenciais pelo parceiro)
+-  (Backend para o designer e gestão de plataformas)
+-  (Scrapers para Via Verde, Prio, etc.)
+-  (Endpoints de gestão de parceiros e credenciais)
 
 **Areas that need refactoring**:
--  permanece um ficheiro monolítico que beneficiaria de ser dividido.
+- : Este ficheiro está a tornar-se muito grande e complexo. Deveria ser refatorado para ter um ficheiro por cada plataforma RPA, melhorando a manutenção.
+- : Continua a ser um ficheiro monolítico que deve ser dividido em módulos.
 
 **key api endpoints**
-- : Retorna os dados para o resumo semanal, incluindo os totais da empresa.
-- : Obtém os totais manuais para uma dada semana.
-- : Guarda os totais manuais para uma dada semana.
-- : Atualiza os dados de um motorista no resumo semanal.
+- : Inicia uma sessão de gravação RPA, agora aceita credenciais de teste no corpo do pedido.
+- : Retorna a lista de plataformas RPA configuradas.
+- : Guarda as credenciais de uma plataforma para um parceiro.
+- : Atualiza os dados de um motorista, incluindo o novo campo .
 
 **Critical Info for New Agent**
-- **Prioridade:** O utilizador está muito focado em garantir a precisão dos dados financeiros no resumo semanal. A prioridade máxima é resolver a discrepância da API da Bolt, adicionando o campo manual para ganhos de campanha.
-- **API da Bolt:** A investigação revelou que as credenciais são específicas para cada parceiro (). A API do parceiro Tomas retorna muitas  com valor , que devem ser ignoradas no cálculo. Os ganhos de campanha não estão disponíveis via API e devem ser adicionados manualmente.
-- **Fluxo de trabalho:** O utilizador dá feedback muito específico e iterativo sobre a UI. Esteja preparado para fazer pequenos ajustes visuais e de layout conforme solicitado.
-- Depois de resolver a questão do resumo semanal, o foco deve voltar para a conclusão da funcionalidade principal do **RPA Designer**.
+- **Database Correcta:** Certifique-se de que todas as operações de base de dados visam , conforme definido em . O agente anterior encontrou e corrigiu uma inconsistência onde estava a usar .
+- **Fragilidade do RPA:** Os scrapers RPA (especialmente Via Verde e Uber) são frágeis e quebram com mudanças nos websites. A falha do RPA da Via Verde não é no filtro de datas, mas sim no **login**. A depuração destes scripts requer análise cuidadosa do HTML/screenshots. A migração para a API oficial da Uber deve ser uma prioridade para reduzir esta fragilidade.
+- **Navegação:** A nova página  foi criada mas não foi adicionada a nenhum menu de navegação. O próximo agente deve adicioná-la ao menu de administrador para fácil acesso.
 
 **documents and test reports created in this job**
-- O ficheiro  foi atualizado com as novas funcionalidades.
+- Nenhum documento ou relatório formal foi criado. O progresso foi validado através de screenshots e testes manuais via .
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Pede para criar campos manuais no resumo semanal para introduzir valores recebidos da Uber/Bolt e mostrar um alerta de diferença.
-2.  **User:** Pede para remover cards de resumo repetidos, ajustar o layout do card Motoristas e remover uma linha vertical no header.
-3.  **User:** Confirma que cada parceiro tem as suas próprias credenciais e pede para a verificação de valores considerar cêntimos.
-4.  **User:** Pede para verificar os ganhos de campanha da Bolt, confirmando que o valor em falta é de €22.81.
-5.  **User:** Confirma que a API não tem os ganhos de campanha e pede para adicionar um campo manual para isso.
-6.  **User:** Solicita a correção de valores Bolt errados.
-7.  **User:** Pede para exibir as datas de início e fim da semana no resumo semanal.
-8.  **User:** Reporta que o valor Bolt está incorreto (€185.69 em vez de €300.54) e que a sincronização Uber falha com um erro de botão Gerar desabilitado.
-9.  **User:** Reporta que o resumo semanal do parceiro Tomas não mostra o motorista, embora ele tenha um veículo atribuído.
-10. **User:** Reporta que o valor 220 é guardado como 219.99 e que um veículo criado por um parceiro não fica ativo para ele.
+1.  **User:** Pede para separar a plataforma Prio em Prio Combustível e Prio Elétrica.
+2.  **User:** Solicita que o RPA Designer tenha campos para inserir login e senha antes de começar a gravar.
+3.  **User:** Pede para adicionar mais tipos de input ao RPA Designer (Email, Senha, Telefone, Código SMS, Texto Livre) e tornar os campos maiores.
+4.  **User:** Fornece um screenshot e pede para reorganizar os inputs do RPA Designer numa grelha horizontal.
+5.  **User:** Pede para testar a plataforma Prio.
+6.  **User:** Clarifica a regra de negócio: as credenciais pertencem ao parceiro, e o admin só as utiliza para configurar os designs RPA.
+7.  **User:** Pergunta onde as plataformas RPA são geridas.
+8.  **User:** Pede para adicionar a Prio à página de gestão de plataformas RPA.
+9.  **User:** Reitera a necessidade de duas plataformas Prio (elétrica e combustível) e pergunta onde o parceiro Tomas pode inserir as credenciais para teste.
+10. **User:** Fornece as credenciais para o parceiro Tomas (para Bolt, Uber, Via Verde e Prio).
 
 **Project Health Check:**
 - **Broken:**
-    - A sincronização da API da Bolt não é totalmente precisa devido à falta de dados de campanha.
-    - A filtragem de datas no RPA da Via Verde.
+    - RPA da Via Verde (falha no login).
+    - Navegação para o resumo semanal de semanas passadas (bug de UI).
 - **In Progress:**
-    - O novo dashboard do resumo semanal.
-    - A sincronização RPA da Uber (correção pendente de verificação).
+    - Correção do RPA da Uber (pendente de verificação).
+    - Melhorias na UI do RPA Designer (pendente de verificação).
 - **Mocked:**
-    - O motor de execução dos designs de RPA (são gravados, mas não executados).
+    - O motor de execução RPA (os designs são criados mas não são executados de forma automatizada).
 
 **3rd Party Integrations**
-- **Playwright:** Essencial para RPA.
+- **Playwright:** Essencial para a funcionalidade de RPA (Web Scraping).
 - **Bolt Fleet API:** Usada para sincronização de dados de ganhos e viagens.
+- **Uber Driver API:** Em análise para substituir o RPA da Uber.
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** Nenhum
-- **Known regressions:** Nenhuma nesta sessão.
+- **Test files created:** Nenhum.
+- **Known regressions:** Nenhuma.
 
 **Credentials to test flow:**
 - **Admin:**  / 
-- **Parceiro (Tomas):**  /  (password foi redefinida pelo agente)
-- **Bolt API (Tomas):** As credenciais estão na coleção  do MongoDB.
-- **Uber (para login Zeny):**  / 
+- **Parceiro (Tomas):**  / 
+- **Credenciais Prio (para o parceiro Tomas):** Utilizador  / Senha 
 
 **What agent forgot to execute**
-- O agente analisou que a API da Bolt retorna muitas  com preço  e o utilizador pediu para ignorá-las. No entanto, o agente não implementou explicitamente uma modificação no código de sincronização () para filtrar apenas  onde  não é  antes de somar. O foco mudou para a discrepância dos ganhos de campanha.</analysis>
+- Não adicionou um link de navegação no menu da aplicação para a nova página ****.
+- Identificou mas não corrigiu o bug de UI na página de Resumo Semanal, que impede a visualização de semanas passadas através da URL.
+- Embora tenha identificado a causa raiz do problema do RPA da Via Verde (falha de login), a correção não foi implementada.</analysis>

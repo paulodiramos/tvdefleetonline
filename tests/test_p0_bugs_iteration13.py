@@ -14,7 +14,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleetsync-16.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-sync-10.preview.emergentagent.com')
 
 # Test data
 PARCEIRO_EMAIL = "parceiro@tvdefleet.com"
