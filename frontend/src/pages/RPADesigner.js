@@ -455,13 +455,22 @@ export default function RPADesigner({ user, onLogout }) {
               </CardHeader>
               <CardContent className="space-y-2">
                 {!gravando ? (
-                  <Button 
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    onClick={iniciarSessao}
-                    disabled={!plataformaSelecionada || loading}
-                  >
-                    <Play className="w-4 h-4 mr-2" /> Iniciar Gravação
-                  </Button>
+                  <>
+                    <Button 
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={iniciarSessao}
+                      disabled={!plataformaSelecionada || loading}
+                    >
+                      <Play className="w-4 h-4 mr-2" /> Iniciar Gravação
+                    </Button>
+                    
+                    {/* Info sobre CAPTCHA */}
+                    <div className="text-xs text-yellow-400 bg-yellow-900/30 p-2 rounded">
+                      ⚠️ <strong>Uber/Bolt</strong>: Têm CAPTCHA. O design deve começar APÓS o login.
+                      <br/>
+                      O parceiro faz login manual 1x e o sistema guarda a sessão.
+                    </div>
+                  </>
                 ) : (
                   <Button 
                     className="w-full bg-red-600 hover:bg-red-700"
@@ -476,7 +485,7 @@ export default function RPADesigner({ user, onLogout }) {
                   variant="outline"
                   onClick={() => setShowNovoPassoModal(true)}
                 >
-                  <Plus className="w-4 h-4 mr-2" /> Adicionar Passo
+                  <Plus className="w-4 h-4 mr-2" /> Adicionar Passo Manual
                 </Button>
                 
                 <Button 
