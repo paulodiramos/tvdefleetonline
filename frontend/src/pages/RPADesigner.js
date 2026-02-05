@@ -342,13 +342,14 @@ export default function RPADesigner({ user, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <Layout user={user} onLogout={onLogout}>
+    <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">🎨 RPA Designer</h1>
-            <p className="text-gray-400">Grave fluxos de automação para extração de dados</p>
+            <h1 className="text-2xl font-bold text-gray-900">🎨 RPA Designer</h1>
+            <p className="text-gray-600">Grave fluxos de automação para extração de dados</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/gestao-plataformas-rpa')}>
@@ -366,13 +367,13 @@ export default function RPADesigner({ user, onLogout }) {
           {/* Painel Esquerdo - Configuração */}
           <div className="col-span-3 space-y-4">
             {/* Seleção de Plataforma */}
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-400">Plataforma</CardTitle>
+                <CardTitle className="text-sm text-gray-600">Plataforma</CardTitle>
               </CardHeader>
               <CardContent>
                 <select
-                  className="w-full bg-gray-700 border-gray-600 rounded p-2 text-white"
+                  className="w-full bg-gray-50 border-gray-300 rounded p-2 text-gray-900"
                   value={plataformaSelecionada?.id || ''}
                   onChange={(e) => {
                     const plat = plataformas.find(p => p.id === e.target.value);
