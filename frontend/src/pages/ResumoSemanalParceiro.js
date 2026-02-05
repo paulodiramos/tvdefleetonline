@@ -1103,6 +1103,234 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
         <span>Bolt: {formatCurrency(totais.total_ganhos_bolt)}</span>
       </div>
 
+      {/* Dashboard de Totais */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Caixa Receitas */}
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-xs font-semibold text-green-700 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" /> Receitas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Uber</span>
+              <span className="font-medium text-green-700">{formatCurrency(totais.total_ganhos_uber)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Bolt</span>
+              <span className="font-medium text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Extras</span>
+              <span className="font-medium text-green-700">{formatCurrency(totalExtras)}</span>
+            </div>
+            <div className="border-t pt-1 flex justify-between text-xs font-bold">
+              <span>Total</span>
+              <span className="text-green-800">{formatCurrency(totais.total_ganhos_uber + totais.total_ganhos_bolt + totalExtras)}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Caixa Despesas */}
+        <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-red-200">
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-xs font-semibold text-red-700 flex items-center gap-1">
+              <TrendingDown className="w-3 h-3" /> Despesas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Combustível</span>
+              <span className="font-medium text-red-700">{formatCurrency(totais.total_combustivel)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Carregamentos</span>
+              <span className="font-medium text-red-700">{formatCurrency(totais.total_eletrico)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Via Verde</span>
+              <span className="font-medium text-red-700">{formatCurrency(totais.total_via_verde)}</span>
+            </div>
+            <div className="border-t pt-1 flex justify-between text-xs font-bold">
+              <span>Total</span>
+              <span className="text-red-800">{formatCurrency(totais.total_combustivel + totais.total_eletrico + totais.total_via_verde)}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Caixa Motoristas */}
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-xs font-semibold text-blue-700 flex items-center gap-1">
+              <Users className="w-3 h-3" /> Motoristas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Nº Motoristas</span>
+              <span className="font-medium text-blue-700">{motoristas.length}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Ganhos Totais</span>
+              <span className="font-medium text-green-600">{formatCurrency(totais.total_ganhos_uber + totais.total_ganhos_bolt)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Dívidas</span>
+              <span className="font-medium text-red-600">{formatCurrency(motoristas.reduce((sum, m) => sum + (m.divida || 0), 0))}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Extras</span>
+              <span className="font-medium text-orange-600">{formatCurrency(totalExtras)}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Caixa Lucro */}
+        <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-xs font-semibold text-purple-700 flex items-center gap-1">
+              <Wallet className="w-3 h-3" /> Lucro Parceiro
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Alugueres</span>
+              <span className="font-medium text-purple-700">{formatCurrency(totalAluguer)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Vendas</span>
+              <span className="font-medium text-purple-700">{formatCurrency(0)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Extras</span>
+              <span className="font-medium text-purple-700">{formatCurrency(totalExtras)}</span>
+            </div>
+            <div className="border-t pt-1 flex justify-between text-xs font-bold">
+              <span>Total</span>
+              <span className={liquidoParceiro >= 0 ? "text-green-800" : "text-red-800"}>{formatCurrency(liquidoParceiro)}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Verificação Totais Empresa vs Motoristas */}
+      <Card className="border-blue-300 bg-blue-50/50">
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="text-xs font-semibold text-blue-800 flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" /> Verificação de Totais (Empresa vs Motoristas)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Uber */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded bg-black text-white flex items-center justify-center text-xs font-bold">U</div>
+                <span className="text-sm font-medium">Uber</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label className="text-slate-500">Recebido da Empresa</label>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    value={totaisEmpresa.uber_recebido || ''}
+                    onChange={(e) => setTotaisEmpresa({...totaisEmpresa, uber_recebido: parseFloat(e.target.value) || 0})}
+                    placeholder="0.00"
+                    className="h-7 text-right"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500">Total Motoristas</label>
+                  <div className="h-7 flex items-center justify-end px-2 bg-slate-100 rounded border text-sm font-medium">
+                    {formatCurrency(totais.total_ganhos_uber)}
+                  </div>
+                </div>
+              </div>
+              {totaisEmpresa.uber_recebido > 0 && (
+                <div className={`text-xs p-2 rounded flex items-center gap-1 ${
+                  Math.abs(totaisEmpresa.uber_recebido - totais.total_ganhos_uber) < 1 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
+                }`}>
+                  {Math.abs(totaisEmpresa.uber_recebido - totais.total_ganhos_uber) < 1 ? (
+                    <>
+                      <CheckCircle className="w-3 h-3" />
+                      Valores conferem ✓
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3 h-3" />
+                      Diferença: {formatCurrency(totaisEmpresa.uber_recebido - totais.total_ganhos_uber)}
+                      {totaisEmpresa.uber_recebido > totais.total_ganhos_uber ? ' (a mais)' : ' (a menos)'}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Bolt */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded bg-green-500 text-white flex items-center justify-center text-xs font-bold">B</div>
+                <span className="text-sm font-medium">Bolt</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label className="text-slate-500">Recebido da Empresa</label>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    value={totaisEmpresa.bolt_recebido || ''}
+                    onChange={(e) => setTotaisEmpresa({...totaisEmpresa, bolt_recebido: parseFloat(e.target.value) || 0})}
+                    placeholder="0.00"
+                    className="h-7 text-right"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500">Total Motoristas</label>
+                  <div className="h-7 flex items-center justify-end px-2 bg-slate-100 rounded border text-sm font-medium">
+                    {formatCurrency(totais.total_ganhos_bolt)}
+                  </div>
+                </div>
+              </div>
+              {totaisEmpresa.bolt_recebido > 0 && (
+                <div className={`text-xs p-2 rounded flex items-center gap-1 ${
+                  Math.abs(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt) < 1 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
+                }`}>
+                  {Math.abs(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt) < 1 ? (
+                    <>
+                      <CheckCircle className="w-3 h-3" />
+                      Valores conferem ✓
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3 h-3" />
+                      Diferença: {formatCurrency(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt)}
+                      {totaisEmpresa.bolt_recebido > totais.total_ganhos_bolt ? ' (a mais)' : ' (a menos)'}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <Button 
+              size="sm" 
+              onClick={saveTotaisEmpresa}
+              disabled={savingTotaisEmpresa}
+              className="h-7 text-xs"
+            >
+              {savingTotaisEmpresa ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Save className="w-3 h-3 mr-1" />}
+              Guardar Totais
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Tabela de Motoristas */}
       <Card>
         <CardHeader className="py-2 px-3">
