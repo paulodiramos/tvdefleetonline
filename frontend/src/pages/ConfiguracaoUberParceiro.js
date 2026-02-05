@@ -534,50 +534,90 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Download className="w-5 h-5 text-green-500" />
-              Extrair Rendimentos
+              Importar Rendimentos
             </CardTitle>
             <CardDescription>
-              Descarregue os seus rendimentos Uber por semana
+              Importe os rendimentos Uber via upload de ficheiro CSV
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-600 mb-1 block">Selecionar Semana</label>
-              <Select value={semanaIndex} onValueChange={setSemanaIndex}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a semana" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">Semana Atual</SelectItem>
-                  <SelectItem value="1">Semana Passada</SelectItem>
-                  <SelectItem value="2">Há 2 Semanas</SelectItem>
-                  <SelectItem value="3">Há 3 Semanas</SelectItem>
-                  <SelectItem value="4">Há 4 Semanas</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Opção 1: Upload Manual de CSV */}
+            <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg">
+              <h4 className="font-medium mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-500" />
+                Upload Manual do CSV
+              </h4>
+              <p className="text-sm text-gray-500 mb-3">
+                1. Aceda ao <a href="https://fleet.uber.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Uber Fleet</a><br/>
+                2. Vá a "Rendimentos" → "Fazer o download do relatório"<br/>
+                3. Faça upload do ficheiro CSV aqui
+              </p>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleUploadCSV}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+              />
             </div>
             
-            <Button 
-              onClick={extrairRendimentos}
-              disabled={extraindo || !sessaoStatus?.valida}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              {extraindo ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  A extrair rendimentos...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Extrair Rendimentos Uber
-                </>
-              )}
-            </Button>
+            {uploadando && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-green-500 mr-2" />
+                <span>A processar ficheiro CSV...</span>
+              </div>
+            )}
             
-            {!sessaoStatus?.valida && (
-              <p className="text-sm text-amber-600 text-center">
-                ⚠️ Configure primeiro as credenciais e faça login
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">ou extração automática</span>
+              </div>
+            </div>
+            
+            {/* Opção 2: Extração Automática */}
+            <div className="space-y-3 opacity-60">
+              <div>
+                <label className="text-sm text-gray-600 mb-1 block">Selecionar Semana</label>
+                <Select value={semanaIndex} onValueChange={setSemanaIndex} disabled={!sessaoStatus?.valida}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a semana" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Semana Atual</SelectItem>
+                    <SelectItem value="1">Semana Passada</SelectItem>
+                    <SelectItem value="2">Há 2 Semanas</SelectItem>
+                    <SelectItem value="3">Há 3 Semanas</SelectItem>
+                    <SelectItem value="4">Há 4 Semanas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button 
+                onClick={extrairRendimentos}
+                disabled={extraindo || !sessaoStatus?.valida}
+                className="w-full bg-gray-400"
+              >
+                {extraindo ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    A extrair rendimentos...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Extração Automática (requer login)
+                  </>
+                )}
+              </Button>
+              
+              {!sessaoStatus?.valida && (
+                <p className="text-sm text-amber-600 text-center">
+                  ⚠️ Extração automática requer login - use o upload manual acima
+                </p>
+              )}
+            </div>
               </p>
             )}
             
