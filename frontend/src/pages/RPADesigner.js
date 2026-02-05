@@ -228,6 +228,246 @@ export default function RPADesigner({ user, onLogout }) {
     }
   };
 
+  // Abrir preview numa janela popup grande
+  const abrirPreviewPopup = (sid) => {
+    const largura = Math.min(1400, window.screen.width - 100);
+    const altura = Math.min(900, window.screen.height - 100);
+    const esquerda = (window.screen.width - largura) / 2;
+    const topo = (window.screen.height - altura) / 2;
+    
+    const popup = window.open(
+      '', 
+      'RPA_Preview',
+      `width=${largura},height=${altura},left=${esquerda},top=${topo},scrollbars=yes,resizable=yes`
+    );
+    
+    if (popup) {
+      popup.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>🎨 RPA Designer - Preview Interativo</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              background: #1a1a2e; 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              color: white;
+              height: 100vh;
+              display: flex;
+              flex-direction: column;
+            }
+            .header {
+              background: #16213e;
+              padding: 12px 20px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              border-bottom: 1px solid #0f3460;
+            }
+            .header h1 { font-size: 16px; color: #e94560; }
+            .url-bar {
+              flex: 1;
+              margin: 0 20px;
+              padding: 8px 15px;
+              background: #0f3460;
+              border-radius: 6px;
+              color: #94a3b8;
+              font-size: 13px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            .status {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 13px;
+            }
+            .status-dot {
+              width: 10px;
+              height: 10px;
+              background: #ef4444;
+              border-radius: 50%;
+              animation: pulse 1s infinite;
+            }
+            @keyframes pulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.5; }
+            }
+            .preview-container {
+              flex: 1;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              padding: 15px;
+              overflow: auto;
+            }
+            #preview-img {
+              max-width: 100%;
+              max-height: 100%;
+              border-radius: 8px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+              cursor: crosshair;
+            }
+            .loading {
+              text-align: center;
+              color: #94a3b8;
+            }
+            .loading-spinner {
+              width: 50px;
+              height: 50px;
+              border: 4px solid #0f3460;
+              border-top-color: #e94560;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              margin: 0 auto 15px;
+            }
+            @keyframes spin { to { transform: rotate(360deg); } }
+            .controls {
+              background: #16213e;
+              padding: 15px 20px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              border-top: 1px solid #0f3460;
+            }
+            .controls input {
+              flex: 1;
+              min-width: 150px;
+              padding: 10px 15px;
+              background: #0f3460;
+              border: 1px solid #1a3a5c;
+              border-radius: 6px;
+              color: white;
+              font-size: 14px;
+            }
+            .controls input:focus {
+              outline: none;
+              border-color: #e94560;
+            }
+            .controls button {
+              padding: 10px 20px;
+              background: #e94560;
+              border: none;
+              border-radius: 6px;
+              color: white;
+              cursor: pointer;
+              font-size: 14px;
+              transition: background 0.2s;
+            }
+            .controls button:hover { background: #d1344f; }
+            .controls button.secondary {
+              background: #0f3460;
+            }
+            .controls button.secondary:hover { background: #1a4a7c; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🎨 RPA Preview</h1>
+            <div class="url-bar" id="url-display">A carregar...</div>
+            <div class="status">
+              <div class="status-dot"></div>
+              <span>A GRAVAR</span>
+            </div>
+          </div>
+          <div class="preview-container">
+            <div class="loading" id="loading">
+              <div class="loading-spinner"></div>
+              <p>A iniciar browser...</p>
+              <p style="font-size: 12px; margin-top: 10px; color: #64748b;">
+                Clique na imagem para interagir com a página
+              </p>
+            </div>
+            <img id="preview-img" style="display: none;" alt="Preview" />
+          </div>
+          <div class="controls">
+            <input type="text" id="text-input" placeholder="Digite texto e pressione Enter..." />
+            <button onclick="enviarTexto()">Enviar</button>
+            <button class="secondary" onclick="enviarTecla('Enter')">↵ Enter</button>
+            <button class="secondary" onclick="enviarTecla('Tab')">⇥ Tab</button>
+            <button class="secondary" onclick="scroll('down')">↓ Scroll</button>
+            <button class="secondary" onclick="scroll('up')">↑ Scroll</button>
+          </div>
+          <script>
+            const sessionId = '${sid}';
+            let ws = null;
+            
+            function conectar() {
+              const wsUrl = '${API_URL}'.replace('https://', 'wss://').replace('http://', 'ws://');
+              ws = new WebSocket(wsUrl + '/api/rpa-designer/ws/design/' + sessionId);
+              
+              ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.tipo === 'screenshot') {
+                  document.getElementById('loading').style.display = 'none';
+                  const img = document.getElementById('preview-img');
+                  img.style.display = 'block';
+                  img.src = 'data:image/jpeg;base64,' + data.data;
+                  if (data.url) {
+                    document.getElementById('url-display').textContent = data.url;
+                  }
+                }
+              };
+              
+              ws.onclose = function() {
+                document.querySelector('.status-dot').style.background = '#6b7280';
+                document.querySelector('.status span').textContent = 'DESCONECTADO';
+              };
+            }
+            
+            document.getElementById('preview-img').onclick = function(e) {
+              if (!ws || ws.readyState !== WebSocket.OPEN) return;
+              const rect = this.getBoundingClientRect();
+              const scaleX = 1280 / rect.width;
+              const scaleY = 720 / rect.height;
+              const x = Math.round((e.clientX - rect.left) * scaleX);
+              const y = Math.round((e.clientY - rect.top) * scaleY);
+              ws.send(JSON.stringify({ tipo: 'click', x: x, y: y }));
+            };
+            
+            function enviarTexto() {
+              const input = document.getElementById('text-input');
+              if (input.value && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: 'type', texto: input.value }));
+                input.value = '';
+              }
+            }
+            
+            function enviarTecla(tecla) {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: 'press', tecla: tecla }));
+              }
+            }
+            
+            function scroll(direcao) {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: 'scroll', delta: direcao === 'down' ? 300 : -300 }));
+              }
+            }
+            
+            document.getElementById('text-input').onkeydown = function(e) {
+              if (e.key === 'Enter') enviarTexto();
+            };
+            
+            conectar();
+          </script>
+        </body>
+        </html>
+      `);
+      
+      setPreviewWindow(popup);
+      
+      // Fechar popup quando a sessão terminar
+      popup.onbeforeunload = () => {
+        // Não fazer nada aqui, deixar o utilizador fechar
+      };
+    } else {
+      toast.error('Popup bloqueado! Permita popups para esta página.');
+    }
+  };
+
   // Conectar WebSocket
   const conectarWebSocket = (sid) => {
     const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
