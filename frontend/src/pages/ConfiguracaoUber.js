@@ -7,75 +7,91 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
-  Car, CheckCircle, AlertCircle, RefreshCw, 
-  Clock, Building, Loader2, Shield, Users, Eye
+  Car, CheckCircle, AlertCircle, RefreshCw, Loader2,
+  Building, Users, DollarSign, Download, Play, Clock, FileText
 } from 'lucide-react';
 
 const ConfiguracaoUber = ({ user, onLogout }) => {
-  const [parceiros, setParceiros] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sessaoStatus, setSessaoStatus] = useState({});
+  const [parceiros, setParceiros] = useState([]);
+  const [historico, setHistorico] = useState([]);
+  const [extraindo, setExtraindo] = useState({});
+  const [extraindoTodos, setExtraindoTodos] = useState(false);
 
   useEffect(() => {
-    fetchParceiros();
+    carregarDados();
   }, []);
 
-  const fetchParceiros = async () => {
+  const carregarDados = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/parceiros`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setParceiros(response.data);
       
-      // Verificar status de sessão para cada parceiro
-      for (const parceiro of response.data) {
-        checkSessaoUber(parceiro.id);
-      }
+      const [parceirosRes, historicoRes] = await Promise.all([
+        axios.get(`${API}/uber/admin/parceiros`, { headers: { Authorization: `Bearer ${token}` }}),
+        axios.get(`${API}/uber/admin/historico`, { headers: { Authorization: `Bearer ${token}` }})
+      ]);
+      
+      setParceiros(parceirosRes.data || []);
+      setHistorico(historicoRes.data || []);
     } catch (error) {
-      console.error('Erro ao carregar parceiros:', error);
-      toast.error('Erro ao carregar parceiros');
+      console.error('Erro:', error);
+      toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
   };
 
-  const checkSessaoUber = async (parceiroId) => {
+  const extrairParceiro = async (parceiroId) => {
+    setExtraindo(prev => ({ ...prev, [parceiroId]: true }));
+    
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/rpa/uber/sessao-status/${parceiroId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      toast.info('A extrair rendimentos... aguarde.');
+      
+      const response = await axios.post(`${API}/uber/admin/extrair/${parceiroId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 180000
       });
-      setSessaoStatus(prev => ({ ...prev, [parceiroId]: response.data }));
+      
+      if (response.data.sucesso) {
+        toast.success(`Extração concluída! ${response.data.total_motoristas} motoristas, €${response.data.total_rendimentos?.toFixed(2)}`);
+        carregarDados();
+      } else {
+        toast.error(response.data.erro || 'Extração falhou');
+      }
     } catch (error) {
-      setSessaoStatus(prev => ({ ...prev, [parceiroId]: { valida: false, erro: true } }));
+      toast.error('Erro na extração');
+    } finally {
+      setExtraindo(prev => ({ ...prev, [parceiroId]: false }));
     }
   };
 
-  const getSessaoStatusBadge = (parceiroId) => {
-    const status = sessaoStatus[parceiroId];
-    if (!status) return <Badge variant="outline">A verificar...</Badge>;
-    if (status.erro) return <Badge variant="destructive">Erro</Badge>;
-    if (status.valida) {
-      return (
-        <Badge className="bg-green-600">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Ativa
-        </Badge>
-      );
+  const extrairTodos = async () => {
+    setExtraindoTodos(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      toast.info('A extrair rendimentos de todos os parceiros...');
+      
+      const response = await axios.post(`${API}/uber/admin/extrair-todos`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 600000 // 10 minutos
+      });
+      
+      toast.success(`Concluído! ${response.data.sucesso}/${response.data.total} extrações bem sucedidas`);
+      carregarDados();
+    } catch (error) {
+      toast.error('Erro na extração');
+    } finally {
+      setExtraindoTodos(false);
     }
-    return (
-      <Badge variant="destructive">
-        <AlertCircle className="w-3 h-3 mr-1" />
-        Expirada
-      </Badge>
-    );
   };
 
-  // Contagens
+  // Estatísticas
   const totalParceiros = parceiros.length;
-  const sessoesAtivas = Object.values(sessaoStatus).filter(s => s?.valida).length;
-  const sessoesExpiradas = totalParceiros - sessoesAtivas;
+  const sessoesAtivas = parceiros.filter(p => p.sessao_ativa).length;
+  const comCredenciais = parceiros.filter(p => p.tem_credenciais).length;
 
   if (loading) {
     return (
@@ -95,16 +111,30 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Car className="w-7 h-7 text-blue-500" />
-              Monitorização Uber Fleet
+              Gestão Uber Fleet
             </h1>
             <p className="text-gray-500 mt-1">
-              Acompanhe o estado das sessões Uber de todos os parceiros
+              Monitorize sessões e extraia rendimentos dos parceiros
             </p>
           </div>
-          <Button variant="outline" onClick={fetchParceiros}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Atualizar
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={carregarDados}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar
+            </Button>
+            <Button 
+              onClick={extrairTodos} 
+              disabled={extraindoTodos || sessoesAtivas === 0}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {extraindoTodos ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Extrair Todos
+            </Button>
+          </div>
         </div>
 
         {/* Estatísticas */}
@@ -141,11 +171,11 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Sessões Expiradas</p>
-                  <p className="text-3xl font-bold text-red-600">{sessoesExpiradas}</p>
+                  <p className="text-sm text-gray-500">Com Credenciais</p>
+                  <p className="text-3xl font-bold text-yellow-600">{comCredenciais}</p>
                 </div>
-                <div className="p-3 bg-red-100 rounded-full">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
+                <div className="p-3 bg-yellow-100 rounded-full">
+                  <Users className="w-6 h-6 text-yellow-600" />
                 </div>
               </div>
             </CardContent>
@@ -155,12 +185,9 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
         {/* Lista de Parceiros */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Estado dos Parceiros
-            </CardTitle>
+            <CardTitle>Parceiros</CardTitle>
             <CardDescription>
-              Parceiros com sessão expirada precisam fazer login manual na área deles
+              Parceiros com sessão ativa podem ter rendimentos extraídos automaticamente
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -168,69 +195,117 @@ const ConfiguracaoUber = ({ user, onLogout }) => {
               <p className="text-gray-500 text-center py-8">Nenhum parceiro encontrado</p>
             ) : (
               <div className="space-y-3">
-                {parceiros.map((parceiro) => {
-                  const status = sessaoStatus[parceiro.id];
-                  return (
-                    <div
-                      key={parceiro.id}
-                      className={`p-4 rounded-lg border ${
-                        status?.valida 
-                          ? 'border-green-200 bg-green-50' 
-                          : 'border-red-200 bg-red-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${
-                            status?.valida ? 'bg-green-200' : 'bg-red-200'
-                          }`}>
-                            <Building className={`w-4 h-4 ${
-                              status?.valida ? 'text-green-700' : 'text-red-700'
-                            }`} />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{parceiro.nome || parceiro.name}</h3>
-                            <p className="text-sm text-gray-500">{parceiro.email}</p>
-                          </div>
+                {parceiros.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`p-4 rounded-lg border ${
+                      p.sessao_ativa 
+                        ? 'border-green-200 bg-green-50' 
+                        : p.tem_credenciais 
+                          ? 'border-yellow-200 bg-yellow-50'
+                          : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${
+                          p.sessao_ativa ? 'bg-green-200' : p.tem_credenciais ? 'bg-yellow-200' : 'bg-gray-200'
+                        }`}>
+                          <Building className={`w-4 h-4 ${
+                            p.sessao_ativa ? 'text-green-700' : p.tem_credenciais ? 'text-yellow-700' : 'text-gray-700'
+                          }`} />
                         </div>
-                        <div className="flex items-center gap-3">
-                          {status?.valida && status?.expira && (
-                            <span className="text-xs text-gray-500 flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              Expira: {new Date(status.expira).toLocaleDateString('pt-PT')}
-                            </span>
-                          )}
-                          {getSessaoStatusBadge(parceiro.id)}
+                        <div>
+                          <h3 className="font-semibold">{p.name}</h3>
+                          <p className="text-sm text-gray-500">{p.email}</p>
                         </div>
                       </div>
+                      
+                      <div className="flex items-center gap-3">
+                        {/* Badges de estado */}
+                        {!p.tem_credenciais && (
+                          <Badge variant="outline" className="text-gray-500">
+                            Sem credenciais
+                          </Badge>
+                        )}
+                        
+                        {p.tem_credenciais && !p.sessao_ativa && (
+                          <Badge variant="outline" className="text-yellow-600 border-yellow-300">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            Sessão expirada
+                          </Badge>
+                        )}
+                        
+                        {p.sessao_ativa && (
+                          <Badge className="bg-green-600">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Ativa ({p.sessao_dias}d)
+                          </Badge>
+                        )}
+                        
+                        {/* Botão de extração */}
+                        <Button
+                          size="sm"
+                          onClick={() => extrairParceiro(p.id)}
+                          disabled={!p.sessao_ativa || extraindo[p.id]}
+                          className={p.sessao_ativa ? 'bg-green-600 hover:bg-green-700' : ''}
+                        >
+                          {extraindo[p.id] ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Play className="w-4 h-4 mr-1" />
+                              Extrair
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Informações */}
-        <Card className="bg-slate-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Shield className="w-6 h-6 text-blue-600" />
+        {/* Histórico */}
+        {historico.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Histórico de Importações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {historico.slice(0, 10).map((imp, i) => (
+                  <div key={i} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm">
+                        {new Date(imp.created_at).toLocaleString('pt-PT')}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {imp.parceiro_id?.slice(0, 8)}...
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-600">
+                        <Users className="w-3 h-3 inline mr-1" />
+                        {imp.total_motoristas}
+                      </span>
+                      <span className="text-sm font-semibold text-green-600">
+                        <DollarSign className="w-3 h-3 inline" />
+                        €{imp.total_rendimentos?.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <h4 className="font-medium mb-1">Como funciona?</h4>
-                <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-                  <li>Cada parceiro configura as suas credenciais na área própria</li>
-                  <li>O parceiro faz login manual quando há CAPTCHA</li>
-                  <li>O parceiro extrai os seus próprios rendimentos</li>
-                  <li>Esta página mostra apenas o estado das sessões</li>
-                  <li>Contacte parceiros com sessão expirada para renovarem o login</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </Layout>
   );
