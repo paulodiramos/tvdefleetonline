@@ -898,6 +898,16 @@ function App() {
             }
           />
           <Route
+            path="/admin/sincronizacao-hub"
+            element={
+              user && user.role === 'admin' ? (
+                <SincronizacaoHub user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/admin/comissoes"
             element={
               user && user.role === 'admin' ? (
