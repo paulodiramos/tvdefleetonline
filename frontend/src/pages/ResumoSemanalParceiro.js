@@ -1109,14 +1109,10 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-xs font-semibold text-blue-700 flex items-center gap-1">
-              <Users className="w-3 h-3" /> Motoristas
+              <Users className="w-3 h-3" /> Motoristas ({motoristas.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-3 space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-600">Nº Motoristas</span>
-              <span className="font-medium text-blue-700">{motoristas.length}</span>
-            </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Ganhos Totais</span>
               <span className="font-medium text-green-600">{formatCurrency(totais.total_ganhos_uber + totais.total_ganhos_bolt)}</span>
@@ -1128,6 +1124,10 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Extras</span>
               <span className="font-medium text-orange-600">{formatCurrency(totalExtras)}</span>
+            </div>
+            <div className="border-t pt-1 flex justify-between text-xs font-bold">
+              <span>Total Pagamentos</span>
+              <span className="text-blue-800">{formatCurrency(motoristas.reduce((sum, m) => sum + (m.liquido || 0), 0))}</span>
             </div>
           </CardContent>
         </Card>
