@@ -581,6 +581,62 @@ export default function RPADesigner({ user, onLogout }) {
                       </div>
                     )}
                     
+                    {/* Credenciais de teste para login */}
+                    {plataformaSelecionada && (
+                      <div className="mb-3 p-3 bg-gray-700/50 rounded border border-gray-600">
+                        <div className="flex items-center gap-2 mb-2">
+                          <input
+                            type="checkbox"
+                            id="usar_credenciais"
+                            checked={credenciaisTeste.usar_credenciais}
+                            onChange={(e) => setCredenciaisTeste(prev => ({
+                              ...prev, 
+                              usar_credenciais: e.target.checked
+                            }))}
+                            className="rounded"
+                          />
+                          <label htmlFor="usar_credenciais" className="text-sm text-gray-300 flex items-center gap-1">
+                            <Key className="w-3 h-3" /> Usar credenciais de teste para login
+                          </label>
+                        </div>
+                        
+                        {credenciaisTeste.usar_credenciais && (
+                          <div className="space-y-2 mt-2">
+                            <div>
+                              <label className="text-xs text-gray-400 mb-1 block">
+                                {plataformaSelecionada.nome?.includes('Prio') ? 'Nº Cliente / Utilizador' : 'Email / Utilizador'}
+                              </label>
+                              <Input
+                                placeholder="Introduza o utilizador..."
+                                value={credenciaisTeste.username}
+                                onChange={(e) => setCredenciaisTeste(prev => ({
+                                  ...prev, 
+                                  username: e.target.value
+                                }))}
+                                className="bg-gray-800 border-gray-600 text-white text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-400 mb-1 block">Password</label>
+                              <Input
+                                type="password"
+                                placeholder="Introduza a password..."
+                                value={credenciaisTeste.password}
+                                onChange={(e) => setCredenciaisTeste(prev => ({
+                                  ...prev, 
+                                  password: e.target.value
+                                }))}
+                                className="bg-gray-800 border-gray-600 text-white text-sm"
+                              />
+                            </div>
+                            <p className="text-xs text-blue-400">
+                              💡 O sistema fará login automático antes de iniciar a gravação
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
                     <Button 
                       className="w-full bg-green-600 hover:bg-green-700"
                       onClick={iniciarSessao}
