@@ -181,6 +181,100 @@ async def escrever_browser(
         return {"sucesso": False, "erro": str(e)}
 
 
+@router.post("/preencher-email")
+async def preencher_email_browser(
+    current_user: dict = Depends(get_current_user)
+):
+    """Preencher email automaticamente no campo de login"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    try:
+        from services.browser_interativo import browsers_ativos
+        
+        if parceiro_id not in browsers_ativos:
+            return {"sucesso": False, "erro": "Browser não iniciado"}
+        
+        # Buscar credenciais
+        cred = await db.credenciais_uber.find_one({"parceiro_id": parceiro_id})
+        if not cred or not cred.get("email"):
+            return {"sucesso": False, "erro": "Email não configurado"}
+        
+        browser = browsers_ativos[parceiro_id]
+        email = cred["email"]
+        
+        # Preencher email
+        email_field = browser.page.locator('input[name="email"], input[type="email"], input[type="text"], input[id*="email"], input[id*="PHONE"]').first
+        if await email_field.count() > 0:
+            await email_field.click()
+            await asyncio.sleep(0.3)
+            await email_field.fill(email)
+            await asyncio.sleep(0.5)
+            
+            screenshot = await browser.screenshot()
+            return {
+                "sucesso": True,
+                "screenshot": screenshot,
+                "mensagem": f"Email preenchido: {email}"
+            }
+        else:
+            return {"sucesso": False, "erro": "Campo de email não encontrado"}
+        
+    except Exception as e:
+        logger.error(f"Erro ao preencher email: {e}")
+        return {"sucesso": False, "erro": str(e)}
+
+
+@router.post("/preencher-password")
+async def preencher_password_browser(
+    current_user: dict = Depends(get_current_user)
+):
+    """Preencher password automaticamente"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    try:
+        from services.browser_interativo import browsers_ativos
+        
+        if parceiro_id not in browsers_ativos:
+            return {"sucesso": False, "erro": "Browser não iniciado"}
+        
+        # Buscar credenciais
+        cred = await db.credenciais_uber.find_one({"parceiro_id": parceiro_id})
+        if not cred or not cred.get("password"):
+            return {"sucesso": False, "erro": "Password não configurada"}
+        
+        browser = browsers_ativos[parceiro_id]
+        password = cred["password"]
+        
+        # Preencher password
+        pwd_field = browser.page.locator('input[name="password"], input[type="password"]').first
+        if await pwd_field.count() > 0:
+            await pwd_field.click()
+            await asyncio.sleep(0.3)
+            await pwd_field.fill(password)
+            await asyncio.sleep(0.5)
+            
+            screenshot = await browser.screenshot()
+            return {
+                "sucesso": True,
+                "screenshot": screenshot,
+                "mensagem": "Password preenchida"
+            }
+        else:
+            return {"sucesso": False, "erro": "Campo de password não encontrado"}
+        
+    except Exception as e:
+        logger.error(f"Erro ao preencher password: {e}")
+        return {"sucesso": False, "erro": str(e)}
+
+
 @router.post("/verificar-login")
 async def verificar_login_browser(
     current_user: dict = Depends(get_current_user)
