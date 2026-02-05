@@ -1315,6 +1315,11 @@ async def websocket_design_browser(
                     
                 elif data.get("tipo") == "scroll":
                     delta = data.get("delta", 0)
+                    direcao = data.get("direcao", "")
+                    if direcao == "down":
+                        delta = 300
+                    elif direcao == "up":
+                        delta = -300
                     await page.evaluate(f"window.scrollBy(0, {delta})")
                     
                 # Enviar screenshot atualizado
