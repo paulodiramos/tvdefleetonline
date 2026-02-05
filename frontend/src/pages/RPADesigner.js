@@ -602,7 +602,7 @@ export default function RPADesigner({ user, onLogout }) {
               <div class="field-group">
                 <label>📧 Email</label>
                 <div class="field-row">
-                  <input type="text" id="campo-email" placeholder="Email..." />
+                  <input type="text" id="campo-email" placeholder="Email..." value="${credenciaisParaPopup.email}" />
                   <button onclick="inserirCampo('email')">Inserir</button>
                 </div>
               </div>
@@ -610,7 +610,7 @@ export default function RPADesigner({ user, onLogout }) {
               <div class="field-group">
                 <label>🔑 Senha</label>
                 <div class="field-row">
-                  <input type="password" id="campo-password" placeholder="Senha..." />
+                  <input type="password" id="campo-password" placeholder="Senha..." value="${credenciaisParaPopup.password}" />
                   <button onclick="inserirCampo('password')">Inserir</button>
                 </div>
               </div>
@@ -618,7 +618,7 @@ export default function RPADesigner({ user, onLogout }) {
               <div class="field-group">
                 <label>📱 Telefone</label>
                 <div class="field-row">
-                  <input type="text" id="campo-telefone" placeholder="Telefone..." />
+                  <input type="text" id="campo-telefone" placeholder="Telefone..." value="${credenciaisParaPopup.telefone}" />
                   <button onclick="inserirCampo('telefone')">Inserir</button>
                 </div>
               </div>
@@ -626,7 +626,7 @@ export default function RPADesigner({ user, onLogout }) {
               <div class="field-group">
                 <label>📲 Código SMS</label>
                 <div class="field-row">
-                  <input type="text" id="campo-sms" placeholder="Código..." maxlength="6" />
+                  <input type="text" id="campo-sms" placeholder="Código..." maxlength="6" value="${credenciaisParaPopup.codigo_sms}" />
                   <button class="green" onclick="inserirCampo('codigo_sms')">Enviar</button>
                 </div>
               </div>
