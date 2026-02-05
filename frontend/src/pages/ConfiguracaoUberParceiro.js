@@ -34,6 +34,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
   const [semanaIndex, setSemanaIndex] = useState("0");
   const [resultadoExtracao, setResultadoExtracao] = useState(null);
   const [historico, setHistorico] = useState([]);
+  const [uploadando, setUploadando] = useState(false);
 
   useEffect(() => {
     carregarDados();
