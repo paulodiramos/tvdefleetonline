@@ -69,7 +69,8 @@ async def create_motorista_for_parceiro(
     motorista_dict = motorista_data.model_dump()
     motorista_dict.pop("password", None)
     motorista_dict["id"] = user_dict["id"]
-    motorista_dict["parceiro_atribuido"] = parceiro_id
+    motorista_dict["parceiro_id"] = parceiro_id  # Campo principal para filtrar
+    motorista_dict["parceiro_atribuido"] = parceiro_id  # Compatibilidade
     motorista_dict["id_cartao_frota_combustivel"] = f"FROTA-{str(uuid.uuid4())[:8].upper()}"
     motorista_dict["documents"] = {
         "license_photo": None, 
