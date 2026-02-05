@@ -1271,6 +1271,54 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
               </CardContent>
             </Card>
 
+            {/* Prio Energy */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-lg">⛽</span>
+                  </div>
+                  Prio Energy
+                  <span className="text-xs text-slate-500 font-normal">(Combustível + Elétrico)</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Nº Cliente / Utilizador</Label>
+                    <Input
+                      placeholder="Ex: 196635"
+                      value={credenciais.prio_usuario}
+                      onChange={(e) => setCredenciais(prev => ({ ...prev, prio_usuario: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Password</Label>
+                    <div className="relative">
+                      <Input
+                        type={showPasswords.prio ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={credenciais.prio_password}
+                        onChange={(e) => setCredenciais(prev => ({ ...prev, prio_password: e.target.value }))}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={() => togglePasswordVisibility('prio')}
+                      >
+                        {showPasswords.prio ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500">
+                  As mesmas credenciais são usadas para extrair dados de combustível e carregamento elétrico.
+                </p>
+              </CardContent>
+            </Card>
+
             <Button onClick={handleSaveCredenciais} disabled={saving} className="w-full">
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Guardar Credenciais
