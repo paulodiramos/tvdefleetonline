@@ -1243,11 +1243,11 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               </div>
               {totaisEmpresa.bolt_recebido > 0 && (
                 <div className={`text-xs p-2 rounded flex items-center gap-1 ${
-                  Math.abs(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt) < 1 
+                  Math.abs(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt) < 0.01 
                     ? 'bg-green-100 text-green-700' 
                     : 'bg-red-100 text-red-700'
                 }`}>
-                  {Math.abs(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt) < 1 ? (
+                  {Math.abs(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt) < 0.01 ? (
                     <>
                       <CheckCircle className="w-3 h-3" />
                       Valores conferem ✓
