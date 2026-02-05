@@ -1223,11 +1223,13 @@ async def websocket_design_browser(
         session["browser"] = browser
         session["page"] = page
         
-        # Navegar para URL base
-        url_base = session["plataforma"]["url_base"]
-        logger.info(f"A navegar para: {url_base}")
+        # Navegar para URL inicial (pode ser diferente da URL base se usar sessão pós-login)
+        url_inicial = session.get("url_inicial") or session["plataforma"]["url_base"]
+        usando_sessao = session.get("usar_sessao_parceiro") is not None
         
-        await page.goto(url_base, wait_until="domcontentloaded", timeout=30000)
+        logger.info(f"A navegar para: {url_inicial} (usando sessão parceiro: {usando_sessao})")
+        
+        await page.goto(url_inicial, wait_until="domcontentloaded", timeout=30000)
         
         # Pequena espera para parecer mais humano
         await asyncio.sleep(1)
