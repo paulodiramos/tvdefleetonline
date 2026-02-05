@@ -491,6 +491,71 @@ export default function RPADesigner({ user, onLogout }) {
               <CardContent className="space-y-2">
                 {!gravando ? (
                   <>
+                    {/* Usar sessão de parceiro */}
+                    {plataformaSelecionada && (
+                      <div className="mb-3 p-2 bg-gray-700/50 rounded">
+                        <label className="text-xs text-gray-400 flex items-center gap-1 mb-1">
+                          <User className="w-3 h-3" /> Usar sessão de parceiro
+                        </label>
+                        <select
+                          className="w-full bg-gray-700 border-gray-600 rounded p-2 text-sm text-white"
+                          value={sessaoParceiroSelecionada?.parceiro_id || ''}
+                          onChange={(e) => {
+                            const sessao = sessoesParceiros.find(s => 
+                              s.parceiro_id === e.target.value && 
+                              s.plataforma === (plataformaSelecionada?.nome?.toLowerCase().includes('uber') ? 'uber' : 
+                                               plataformaSelecionada?.nome?.toLowerCase().includes('bolt') ? 'bolt' : 
+                                               plataformaSelecionada?.nome?.toLowerCase().includes('via') ? 'viaverde' : '')
+                            );
+                            setSessaoParceiroSelecionada(sessao || null);
+                          }}
+                        >
+                          <option value="">Não usar (começar do zero)</option>
+                          {sessoesParceiros
+                            .filter(s => {
+                              const platNome = plataformaSelecionada?.nome?.toLowerCase() || '';
+                              return (platNome.includes('uber') && s.plataforma === 'uber') ||
+                                     (platNome.includes('bolt') && s.plataforma === 'bolt') ||
+                                     (platNome.includes('via') && s.plataforma === 'viaverde');
+                            })
+                            .map(s => (
+                              <option key={s.parceiro_id} value={s.parceiro_id}>
+                                {s.parceiro_nome} ({s.idade_dias}d)
+                              </option>
+                            ))
+                          }
+                        </select>
+                        
+                        {sessaoParceiroSelecionada && (
+                          <p className="text-xs text-green-400 mt-1">
+                            ✓ Vai usar cookies de {sessaoParceiroSelecionada.parceiro_nome} - sem CAPTCHA!
+                          </p>
+                        )}
+                        
+                        {!sessaoParceiroSelecionada && sessoesParceiros.length === 0 && (
+                          <p className="text-xs text-orange-400 mt-1">
+                            Nenhum parceiro fez login recente. O design começará do zero.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* URL inicial customizada */}
+                    {plataformaSelecionada && (
+                      <div className="mb-3">
+                        <label className="text-xs text-gray-400 mb-1 block">URL inicial (opcional)</label>
+                        <Input
+                          placeholder={plataformaSelecionada?.url_base || 'URL para começar...'}
+                          value={urlInicial}
+                          onChange={(e) => setUrlInicial(e.target.value)}
+                          className="bg-gray-700 border-gray-600 text-white text-sm"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Deixe vazio para usar URL base da plataforma
+                        </p>
+                      </div>
+                    )}
+                    
                     <Button 
                       className="w-full bg-green-600 hover:bg-green-700"
                       onClick={iniciarSessao}
@@ -501,9 +566,11 @@ export default function RPADesigner({ user, onLogout }) {
                     
                     {/* Info sobre CAPTCHA */}
                     <div className="text-xs text-yellow-400 bg-yellow-900/30 p-2 rounded">
-                      ⚠️ <strong>Uber/Bolt</strong>: Têm CAPTCHA. O design deve começar APÓS o login.
-                      <br/>
-                      O parceiro faz login manual 1x e o sistema guarda a sessão.
+                      ⚠️ <strong>Uber/Bolt</strong>: Têm CAPTCHA. 
+                      {sessaoParceiroSelecionada 
+                        ? ' Usando sessão do parceiro evita o login!'
+                        : ' Selecione uma sessão de parceiro acima para evitar.'
+                      }
                     </div>
                   </>
                 ) : (
