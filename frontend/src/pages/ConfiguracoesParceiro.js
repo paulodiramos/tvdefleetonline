@@ -285,7 +285,9 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     bolt_client_secret: '',
     bolt_api_configured: false,
     viaverde_usuario: '',
-    viaverde_password: ''
+    viaverde_password: '',
+    prio_usuario: '',
+    prio_password: ''
   });
   
   // Estado para teste de API Bolt
