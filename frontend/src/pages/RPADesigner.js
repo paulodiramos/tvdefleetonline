@@ -1156,14 +1156,6 @@ export default function RPADesigner({ user, onLogout }) {
                 >
                   <Plus className="w-4 h-4 mr-2" /> Adicionar Passo Manual
                 </Button>
-                
-                <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  onClick={guardarDesign}
-                  disabled={passos.length === 0 || loading}
-                >
-                  <Save className="w-4 h-4 mr-2" /> Guardar Design
-                </Button>
               </CardContent>
             </Card>
 
