@@ -371,21 +371,36 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
             
             {/* Botão de Extração quando sessão ativa */}
             {sessao?.ativa && (
-              <div className="mt-4 pt-4 border-t border-green-200">
-                <Button 
-                  onClick={extrairRendimentos}
-                  disabled={atualizando}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  size="lg"
-                >
-                  {atualizando ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4 mr-2" />
-                  )}
-                  Extrair Rendimentos da Semana
-                </Button>
-                <p className="text-xs text-green-600 mt-2 text-center">
+              <div className="mt-4 pt-4 border-t border-green-200 space-y-3">
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <label className="text-sm text-green-700 mb-1 block">Semana a Sincronizar</label>
+                    <select
+                      value={semanaSelecionada}
+                      onChange={(e) => setSemanaSelecionada(e.target.value)}
+                      className="w-full p-2 border border-green-300 rounded-lg bg-white"
+                    >
+                      <option value="0">Semana Atual</option>
+                      <option value="1">Semana Passada</option>
+                      <option value="2">Há 2 Semanas</option>
+                      <option value="3">Há 3 Semanas</option>
+                      <option value="4">Há 4 Semanas</option>
+                    </select>
+                  </div>
+                  <Button 
+                    onClick={extrairRendimentos}
+                    disabled={extraindo}
+                    className="bg-green-600 hover:bg-green-700 px-6"
+                  >
+                    {extraindo ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Sincronizar Uber
+                  </Button>
+                </div>
+                <p className="text-xs text-green-600 text-center">
                   Os dados serão importados automaticamente para o Resumo Semanal
                 </p>
               </div>
