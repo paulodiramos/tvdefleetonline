@@ -794,7 +794,14 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               <Button variant="ghost" size="sm" onClick={handlePreviousWeek} className="h-6 w-6 p-0">
                 <ChevronLeft className="w-3 h-3" />
               </Button>
-              <span className="text-xs font-medium min-w-[80px] text-center">S{semana}/{ano}</span>
+              <div className="text-center min-w-[120px]">
+                <span className="text-xs font-medium">S{semana}/{ano}</span>
+                {datasSemana && (
+                  <div className="text-[10px] text-slate-500">
+                    {datasSemana.inicio} - {datasSemana.fim}
+                  </div>
+                )}
+              </div>
               <Button variant="ghost" size="sm" onClick={handleNextWeek} className="h-6 w-6 p-0">
               <ChevronRight className="w-3 h-3" />
             </Button>
