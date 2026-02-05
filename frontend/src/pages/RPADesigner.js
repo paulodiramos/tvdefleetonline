@@ -566,18 +566,199 @@ export default function RPADesigner({ user, onLogout }) {
 
                 {/* Controlos do browser */}
                 {gravando && (
-                  <div className="mt-4 flex gap-2">
-                    <Input
-                      placeholder="Digite texto e pressione Enter..."
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          enviarAcao('type', { texto: e.target.value });
-                          e.target.value = '';
-                        }
-                      }}
-                      className="bg-gray-700 border-gray-600"
-                    />
-                    <Button variant="outline" onClick={() => enviarAcao('press', { tecla: 'Enter' })}>
+                  <div className="mt-4 space-y-3">
+                    {/* Campos de credenciais */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">📧 Email</label>
+                        <div className="flex gap-1">
+                          <Input
+                            id="campo-email"
+                            placeholder="Email..."
+                            className="bg-gray-700 border-gray-600 text-sm"
+                          />
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              const email = document.getElementById('campo-email').value;
+                              if (email) {
+                                enviarAcao('type', { texto: email });
+                                // Gravar como credencial
+                                const novoPasso = {
+                                  ordem: passos.length + 1,
+                                  tipo: 'fill_credential',
+                                  campo_credencial: 'email',
+                                  descricao: '🔐 email'
+                                };
+                                setPassos(prev => [...prev, novoPasso]);
+                                document.getElementById('campo-email').value = '';
+                                toast.success('Email inserido e gravado');
+                              }
+                            }}
+                          >
+                            Inserir
+                          </Button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">🔑 Senha</label>
+                        <div className="flex gap-1">
+                          <Input
+                            id="campo-senha"
+                            type="password"
+                            placeholder="Senha..."
+                            className="bg-gray-700 border-gray-600 text-sm"
+                          />
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              const senha = document.getElementById('campo-senha').value;
+                              if (senha) {
+                                enviarAcao('type', { texto: senha });
+                                // Gravar como credencial
+                                const novoPasso = {
+                                  ordem: passos.length + 1,
+                                  tipo: 'fill_credential',
+                                  campo_credencial: 'password',
+                                  descricao: '🔐 password'
+                                };
+                                setPassos(prev => [...prev, novoPasso]);
+                                document.getElementById('campo-senha').value = '';
+                                toast.success('Senha inserida e gravada');
+                              }
+                            }}
+                          >
+                            Inserir
+                          </Button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">📱 Telefone</label>
+                        <div className="flex gap-1">
+                          <Input
+                            id="campo-telefone"
+                            placeholder="Telefone..."
+                            className="bg-gray-700 border-gray-600 text-sm"
+                          />
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              const tel = document.getElementById('campo-telefone').value;
+                              if (tel) {
+                                enviarAcao('type', { texto: tel });
+                                const novoPasso = {
+                                  ordem: passos.length + 1,
+                                  tipo: 'fill_credential',
+                                  campo_credencial: 'telefone',
+                                  descricao: '🔐 telefone'
+                                };
+                                setPassos(prev => [...prev, novoPasso]);
+                                document.getElementById('campo-telefone').value = '';
+                                toast.success('Telefone inserido e gravado');
+                              }
+                            }}
+                          >
+                            Inserir
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Texto livre */}
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">⌨️ Texto livre</label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="campo-texto"
+                          placeholder="Digite texto e pressione Enter ou clique Enviar..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              enviarAcao('type', { texto: e.target.value });
+                              const novoPasso = {
+                                ordem: passos.length + 1,
+                                tipo: 'type',
+                                valor: e.target.value,
+                                descricao: `⌨️ "${e.target.value}"`
+                              };
+                              setPassos(prev => [...prev, novoPasso]);
+                              e.target.value = '';
+                            }
+                          }}
+                          className="bg-gray-700 border-gray-600"
+                        />
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            const texto = document.getElementById('campo-texto').value;
+                            if (texto) {
+                              enviarAcao('type', { texto });
+                              const novoPasso = {
+                                ordem: passos.length + 1,
+                                tipo: 'type',
+                                valor: texto,
+                                descricao: `⌨️ "${texto}"`
+                              };
+                              setPassos(prev => [...prev, novoPasso]);
+                              document.getElementById('campo-texto').value = '';
+                            }
+                          }}
+                        >
+                          Enviar
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Botões de ação */}
+                    <div className="flex gap-2 flex-wrap">
+                      <Button size="sm" variant="outline" onClick={() => enviarAcao('press', { tecla: 'Enter' })}>
+                        ⏎ Enter
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => enviarAcao('press', { tecla: 'Tab' })}>
+                        ⇥ Tab
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => enviarAcao('scroll', { delta: 300 })}>
+                        ↓ Scroll
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => enviarAcao('scroll', { delta: -300 })}>
+                        ↑ Scroll
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          // Adicionar passo de espera
+                          const novoPasso = {
+                            ordem: passos.length + 1,
+                            tipo: 'wait',
+                            timeout: 2000,
+                            descricao: '⏳ Esperar 2s'
+                          };
+                          setPassos(prev => [...prev, novoPasso]);
+                          toast.info('Passo de espera adicionado');
+                        }}
+                      >
+                        ⏳ +Espera
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          // Adicionar passo de download
+                          const novoPasso = {
+                            ordem: passos.length + 1,
+                            tipo: 'download',
+                            timeout: 60000,
+                            descricao: '📥 Aguardar download'
+                          };
+                          setPassos(prev => [...prev, novoPasso]);
+                          toast.info('Passo de download adicionado');
+                        }}
+                      >
+                        📥 +Download
+                      </Button>
+                    </div>
+                  </div>
+                )}
                       Enter
                     </Button>
                     <Button variant="outline" onClick={() => enviarAcao('scroll', { delta: 300 })}>
