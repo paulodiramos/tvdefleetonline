@@ -771,6 +771,86 @@ async def testar_minha_sessao_uber(
 
 
 
+from fastapi import File, UploadFile
+
+@router.post("/upload-csv")
+async def upload_csv_rendimentos(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro faz upload manual do CSV de rendimentos Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    if not file.filename.endswith('.csv'):
+        return {"sucesso": False, "erro": "Ficheiro deve ser CSV"}
+    
+    try:
+        import csv
+        import io
+        
+        # Ler conteúdo do ficheiro
+        content = await file.read()
+        content_str = content.decode('utf-8-sig')
+        
+        # Detectar delimitador
+        delimiter = ';' if ';' in content_str else ','
+        
+        reader = csv.DictReader(io.StringIO(content_str), delimiter=delimiter)
+        
+        motoristas_data = []
+        for row in reader:
+            motorista = {
+                "nome": row.get("Nome do motorista", row.get("Driver name", row.get("Nome", row.get("name", "")))),
+                "rendimentos_totais": parse_valor(row.get("Rendimentos totais", row.get("Total earnings", row.get("Gross earnings", "0")))),
+                "reembolsos_despesas": parse_valor(row.get("Reembolsos e despesas", row.get("Reimbursements and expenses", "0"))),
+                "ajustes": parse_valor(row.get("Ajustes", row.get("Adjustments", "0"))),
+                "pagamento": parse_valor(row.get("Pagamento", row.get("Payment", "0"))),
+                "rendimentos_liquidos": parse_valor(row.get("Rendimentos líquidos", row.get("Net earnings", row.get("Net payout", "0")))),
+            }
+            if motorista["nome"]:
+                motoristas_data.append(motorista)
+        
+        if not motoristas_data:
+            return {"sucesso": False, "erro": "CSV não contém dados válidos de motoristas"}
+        
+        total_rendimentos = sum(m.get("rendimentos_liquidos", 0) for m in motoristas_data)
+        
+        # Guardar na base de dados
+        now = datetime.now(timezone.utc)
+        hoje = datetime.now()
+        
+        await db.importacoes_uber.insert_one({
+            "parceiro_id": parceiro_id,
+            "data_inicio": (hoje - timedelta(days=7)).strftime('%Y-%m-%d'),
+            "data_fim": hoje.strftime('%Y-%m-%d'),
+            "motoristas": motoristas_data,
+            "total_motoristas": len(motoristas_data),
+            "total_rendimentos": total_rendimentos,
+            "ficheiro_csv": file.filename,
+            "tipo": "upload_manual",
+            "created_at": now.isoformat(),
+            "created_by": current_user["id"]
+        })
+        
+        logger.info(f"CSV importado: {len(motoristas_data)} motoristas, €{total_rendimentos:.2f}")
+        
+        return {
+            "sucesso": True,
+            "mensagem": f"CSV importado! {len(motoristas_data)} motoristas, total €{total_rendimentos:.2f}",
+            "motoristas": motoristas_data,
+            "total_motoristas": len(motoristas_data),
+            "total_rendimentos": total_rendimentos
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao processar CSV: {e}")
+        return {"sucesso": False, "erro": f"Erro ao processar ficheiro: {str(e)}"}
+
+
 
 @router.post("/minha-extracao")
 async def extrair_meus_rendimentos_uber(
