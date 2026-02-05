@@ -185,6 +185,129 @@ async def get_meu_historico(
     return await cursor.to_list(length=10)
 
 
+class SincronizarRequest(BaseModel):
+    semana_index: int = 0
+
+
+@router.post("/sincronizar")
+async def sincronizar_uber(
+    data: SincronizarRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro sincroniza rendimentos Uber usando sessão guardada"""
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    session_path = f"/tmp/uber_sessao_{parceiro_id}.json"
+    
+    # Verificar se tem sessão
+    if not os.path.exists(session_path):
+        return {"sucesso": False, "erro": "Sessão não encontrada. Faça login manual primeiro."}
+    
+    # Verificar se sessão não expirou
+    mtime = os.path.getmtime(session_path)
+    idade_dias = (datetime.now().timestamp() - mtime) / 86400
+    if idade_dias >= 30:
+        return {"sucesso": False, "erro": "Sessão expirada. Faça login manual novamente."}
+    
+    # Buscar credenciais
+    cred = await db.credenciais_uber.find_one({"parceiro_id": parceiro_id})
+    if not cred:
+        return {"sucesso": False, "erro": "Credenciais não configuradas"}
+    
+    try:
+        from services.uber_extractor import UberExtractor
+        
+        logger.info(f"Iniciando sincronização Uber para parceiro {parceiro_id}, semana {data.semana_index}")
+        
+        extractor = UberExtractor(parceiro_id, cred["email"], cred["password"])
+        await extractor.iniciar(usar_sessao=True)
+        
+        # Verificar login
+        status = await extractor.verificar_login()
+        if not status.get("logado"):
+            await extractor.fechar()
+            return {"sucesso": False, "erro": "Sessão expirada. Faça login manual novamente."}
+        
+        # Extrair rendimentos
+        resultado = await extractor.extrair_rendimentos()
+        
+        await extractor.fechar()
+        
+        if resultado.get("sucesso"):
+            now = datetime.now(timezone.utc)
+            motoristas_importados = resultado.get("motoristas", [])
+            
+            # Calcular período baseado na semana selecionada
+            hoje = datetime.now()
+            dias_atras = data.semana_index * 7
+            periodo_fim = (hoje - timedelta(days=dias_atras)).strftime('%Y-%m-%d')
+            periodo_inicio = (hoje - timedelta(days=dias_atras + 7)).strftime('%Y-%m-%d')
+            
+            # Guardar cada motorista em ganhos_uber
+            for mot in motoristas_importados:
+                nome_motorista = mot.get("nome", "")
+                
+                motorista_db = await db.motoristas.find_one({
+                    "$or": [
+                        {"nome": {"$regex": nome_motorista, "$options": "i"}},
+                        {"name": {"$regex": nome_motorista, "$options": "i"}}
+                    ]
+                })
+                
+                motorista_id = motorista_db.get("id") if motorista_db else None
+                
+                ganho = {
+                    "id": str(uuid.uuid4()),
+                    "motorista_id": motorista_id,
+                    "nome_motorista": nome_motorista,
+                    "parceiro_id": parceiro_id,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "pago_total": mot.get("rendimentos_liquidos", 0),
+                    "rendimentos_total": mot.get("rendimentos_totais", 0),
+                    "reembolsos": mot.get("reembolsos", 0),
+                    "ajustes": mot.get("ajustes", 0),
+                    "data_importacao": now,
+                    "importado_por": current_user["id"],
+                    "fonte": "sincronizacao_manual"
+                }
+                
+                await db.ganhos_uber.insert_one(ganho)
+            
+            # Guardar resumo
+            await db.importacoes_uber.insert_one({
+                "parceiro_id": parceiro_id,
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "motoristas": motoristas_importados,
+                "total_motoristas": len(motoristas_importados),
+                "total_rendimentos": resultado.get("total_rendimentos", 0),
+                "ficheiro_csv": resultado.get("ficheiro"),
+                "semana_index": data.semana_index,
+                "created_at": now.isoformat(),
+                "created_by": current_user["id"]
+            })
+            
+            logger.info(f"Sincronização concluída: {len(motoristas_importados)} motoristas")
+            
+            return {
+                "sucesso": True,
+                "motoristas": motoristas_importados,
+                "total_motoristas": len(motoristas_importados),
+                "total_rendimentos": resultado.get("total_rendimentos", 0),
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim
+            }
+        else:
+            return resultado
+            
+    except Exception as e:
+        logger.error(f"Erro na sincronização: {e}")
+        return {"sucesso": False, "erro": str(e)}
+
+
 # ==================== ENDPOINTS PARA ADMIN ====================
 
 @router.get("/admin/parceiros")
