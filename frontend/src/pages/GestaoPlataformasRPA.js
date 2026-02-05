@@ -171,8 +171,8 @@ export default function GestaoPlataformasRPA() {
         <div className="grid grid-cols-4 gap-4 mb-6">
           <Card className="bg-gray-800 border-gray-700">
             <CardContent className="pt-4">
-              <div className="text-2xl font-bold">{plataformas.length}</div>
-              <div className="text-gray-400 text-sm">Plataformas</div>
+              <div className="text-2xl font-bold text-white">{plataformas.length}</div>
+              <div className="text-gray-300 text-sm">Plataformas</div>
             </CardContent>
           </Card>
           <Card className="bg-gray-800 border-gray-700">
@@ -180,7 +180,7 @@ export default function GestaoPlataformasRPA() {
               <div className="text-2xl font-bold text-green-400">
                 {plataformas.filter(p => p.designs_completos).length}
               </div>
-              <div className="text-gray-400 text-sm">Com Designs Completos</div>
+              <div className="text-gray-300 text-sm">Com Designs Completos</div>
             </CardContent>
           </Card>
           <Card className="bg-gray-800 border-gray-700">
@@ -188,15 +188,15 @@ export default function GestaoPlataformasRPA() {
               <div className="text-2xl font-bold text-yellow-400">
                 {plataformas.filter(p => !p.designs_completos && p.designs_count > 0).length}
               </div>
-              <div className="text-gray-400 text-sm">Em Progresso</div>
+              <div className="text-gray-300 text-sm">Em Progresso</div>
             </CardContent>
           </Card>
           <Card className="bg-gray-800 border-gray-700">
             <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-gray-400">
+              <div className="text-2xl font-bold text-orange-400">
                 {plataformas.filter(p => p.designs_count === 0).length}
               </div>
-              <div className="text-gray-400 text-sm">Sem Designs</div>
+              <div className="text-gray-300 text-sm">Sem Designs</div>
             </CardContent>
           </Card>
         </div>
