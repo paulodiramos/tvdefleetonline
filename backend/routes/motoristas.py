@@ -243,11 +243,23 @@ async def get_motorista_despesas_extras(
 
 
 @router.post("/motoristas/register", response_model=Motorista)
-async def register_motorista(motorista_data: MotoristaCreate):
-    """Register a new motorista"""
+async def register_motorista(
+    motorista_data: MotoristaCreate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Register a new motorista
+    
+    Se o utilizador logado for um parceiro, o parceiro_id é atribuído automaticamente.
+    Se for admin/gestão, usa o parceiro_id do body (se fornecido).
+    """
     existing = await db.users.find_one({"email": motorista_data.email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Verificar permissões
+    user_role = current_user.get("role")
+    if user_role not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado a criar motoristas")
     
     # Generate provisional password if needed
     if motorista_data.senha_provisoria or not motorista_data.password:
@@ -273,6 +285,22 @@ async def register_motorista(motorista_data: MotoristaCreate):
     motorista_dict = motorista_data.model_dump()
     motorista_dict.pop("password", None)
     motorista_dict["id"] = user_dict["id"]
+    
+    # CORREÇÃO: Atribuir parceiro_id automaticamente se o utilizador for parceiro
+    if user_role in [UserRole.PARCEIRO, "parceiro"]:
+        # Parceiro cria motorista -> associar automaticamente ao parceiro
+        motorista_dict["parceiro_id"] = current_user["id"]
+        motorista_dict["parceiro_atribuido"] = current_user["id"]
+        logger.info(f"Motorista {motorista_data.name} criado pelo parceiro {current_user['id']} - parceiro_id atribuído automaticamente")
+    else:
+        # Admin/Gestão -> usar parceiro_id do body se fornecido
+        if motorista_data.parceiro_atribuido:
+            motorista_dict["parceiro_id"] = motorista_data.parceiro_atribuido
+            motorista_dict["parceiro_atribuido"] = motorista_data.parceiro_atribuido
+            logger.info(f"Motorista {motorista_data.name} criado por admin/gestão com parceiro_id: {motorista_data.parceiro_atribuido}")
+        else:
+            logger.info(f"Motorista {motorista_data.name} criado por admin/gestão sem parceiro_id")
+    
     # Generate automatic ID for fleet card
     motorista_dict["id_cartao_frota_combustivel"] = f"FROTA-{str(uuid.uuid4())[:8].upper()}"
     motorista_dict["documents"] = {
