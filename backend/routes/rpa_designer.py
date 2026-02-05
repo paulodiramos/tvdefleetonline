@@ -1242,7 +1242,7 @@ async def websocket_design_browser(
             "url": page.url
         })
         
-        logger.info(f"Screenshot inicial enviado")
+        logger.info("Screenshot inicial enviado")
         
         # Loop de eventos
         while True:
