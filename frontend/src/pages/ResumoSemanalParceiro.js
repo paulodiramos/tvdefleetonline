@@ -1154,10 +1154,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                       {isEditing ? (
                         <>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.ganhos_uber} onChange={(e) => setEditForm({...editForm, ganhos_uber: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
-                          <td className="p-1"><Input type="number" step="0.01" value={editForm.valor_real_uber} onChange={(e) => setEditForm({...editForm, valor_real_uber: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1 bg-blue-50 border-blue-300" placeholder="Real" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.uber_portagens || 0} onChange={(e) => setEditForm({...editForm, uber_portagens: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.ganhos_bolt} onChange={(e) => setEditForm({...editForm, ganhos_bolt: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
-                          <td className="p-1"><Input type="number" step="0.01" value={editForm.valor_real_bolt} onChange={(e) => setEditForm({...editForm, valor_real_bolt: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1 bg-blue-50 border-blue-300" placeholder="Real" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.via_verde} onChange={(e) => setEditForm({...editForm, via_verde: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.combustivel} onChange={(e) => setEditForm({...editForm, combustivel: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.eletrico} onChange={(e) => setEditForm({...editForm, eletrico: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
@@ -1167,36 +1165,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                       ) : (
                         <>
                           <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_uber)}</td>
-                          <td className="p-2 text-right">
-                            {m.valor_real_uber > 0 ? (
-                              <div className="flex flex-col items-end">
-                                <span className="text-blue-600 font-medium">{formatCurrency(m.valor_real_uber)}</span>
-                                {Math.abs((m.valor_real_uber || 0) - (m.ganhos_uber || 0)) > 0.5 && (
-                                  <span className={`text-[9px] ${(m.valor_real_uber || 0) > (m.ganhos_uber || 0) ? 'text-green-600' : 'text-red-600'}`}>
-                                    {(m.valor_real_uber || 0) > (m.ganhos_uber || 0) ? '↑' : '↓'} {formatCurrency(Math.abs((m.valor_real_uber || 0) - (m.ganhos_uber || 0)))}
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-slate-300">-</span>
-                            )}
-                          </td>
                           <td className="p-2 text-right text-emerald-500 text-[10px]">{formatCurrency(m.uber_portagens || 0)}</td>
                           <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_bolt)}</td>
-                          <td className="p-2 text-right">
-                            {m.valor_real_bolt > 0 ? (
-                              <div className="flex flex-col items-end">
-                                <span className="text-blue-600 font-medium">{formatCurrency(m.valor_real_bolt)}</span>
-                                {Math.abs((m.valor_real_bolt || 0) - (m.ganhos_bolt || 0)) > 0.5 && (
-                                  <span className={`text-[9px] ${(m.valor_real_bolt || 0) > (m.ganhos_bolt || 0) ? 'text-green-600' : 'text-red-600'}`}>
-                                    {(m.valor_real_bolt || 0) > (m.ganhos_bolt || 0) ? '↑' : '↓'} {formatCurrency(Math.abs((m.valor_real_bolt || 0) - (m.ganhos_bolt || 0)))}
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-slate-300">-</span>
-                            )}
-                          </td>
                           <td className="p-2 text-right">
                             <div className="flex flex-col items-end">
                               <span className={m.acumular_viaverde ? "text-slate-400 line-through" : "text-red-600"}>
