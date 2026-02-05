@@ -361,6 +361,28 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                 <AlertCircle className="w-6 h-6 text-red-600" />
               )}
             </div>
+            
+            {/* Botão de Extração quando sessão ativa */}
+            {sessao?.ativa && (
+              <div className="mt-4 pt-4 border-t border-green-200">
+                <Button 
+                  onClick={extrairRendimentos}
+                  disabled={atualizando}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  size="lg"
+                >
+                  {atualizando ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  Extrair Rendimentos da Semana
+                </Button>
+                <p className="text-xs text-green-600 mt-2 text-center">
+                  Os dados serão importados automaticamente para o Resumo Semanal
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
