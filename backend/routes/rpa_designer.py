@@ -4,6 +4,7 @@ Rotas para o RPA Designer Visual
 - Parceiro: configurar agendamentos e executar
 """
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone, timedelta
 import logging
