@@ -161,22 +161,37 @@ export default function RPADesigner({ user, onLogout }) {
 
     setLoading(true);
     try {
-      // Construir URL com parâmetros opcionais
-      let url = `${API_URL}/api/rpa-designer/sessao/iniciar?plataforma_id=${plataformaSelecionada.id}&semana_offset=${semanaSelecionada}`;
+      // Construir body com parâmetros
+      const body = {
+        plataforma_id: plataformaSelecionada.id,
+        semana_offset: semanaSelecionada
+      };
       
       // Adicionar sessão do parceiro se selecionada
       if (sessaoParceiroSelecionada) {
-        url += `&parceiro_id=${sessaoParceiroSelecionada.parceiro_id}`;
+        body.parceiro_id = sessaoParceiroSelecionada.parceiro_id;
       }
       
       // Adicionar URL inicial se definida
       if (urlInicial) {
-        url += `&url_inicial=${encodeURIComponent(urlInicial)}`;
+        body.url_inicial = urlInicial;
       }
       
-      const res = await fetch(url, {
+      // Adicionar credenciais de teste se definidas
+      if (credenciaisTeste.usar_credenciais && credenciaisTeste.username) {
+        body.credenciais_teste = {
+          username: credenciaisTeste.username,
+          password: credenciaisTeste.password
+        };
+      }
+      
+      const res = await fetch(`${API_URL}/api/rpa-designer/sessao/iniciar`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
       });
       const data = await res.json();
       
@@ -186,6 +201,8 @@ export default function RPADesigner({ user, onLogout }) {
         
         if (data.usando_sessao_parceiro) {
           toast.success('Sessão iniciada com cookies do parceiro! Browser a carregar...');
+        } else if (credenciaisTeste.usar_credenciais) {
+          toast.success('Sessão iniciada com credenciais de teste! Browser a carregar...');
         } else {
           toast.success('Sessão iniciada! Browser a carregar...');
         }
