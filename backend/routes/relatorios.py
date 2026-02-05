@@ -2442,6 +2442,66 @@ async def delete_motorista_weekly_data(
     })
     deleted_counts["extras"] = result.deleted_count
     
+
+
+
+# ==================== TOTAIS EMPRESA (Verificação Uber/Bolt) ====================
+
+@router.get("/parceiro/totais-empresa")
+async def get_totais_empresa(
+    semana: int,
+    ano: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter totais recebidos da empresa para uma semana"""
+    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.ADMIN, UserRole.GESTAO, "parceiro", "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user["id"] if current_user["role"] in [UserRole.PARCEIRO, "parceiro"] else None
+    
+    query = {"semana": semana, "ano": ano}
+    if parceiro_id:
+        query["parceiro_id"] = parceiro_id
+    
+    totais = await db.totais_empresa.find_one(query, {"_id": 0})
+    
+    return totais or {"uber_recebido": 0, "bolt_recebido": 0}
+
+
+@router.post("/parceiro/totais-empresa")
+async def save_totais_empresa(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Guardar totais recebidos da empresa para uma semana"""
+    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.ADMIN, UserRole.GESTAO, "parceiro", "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    semana = data.get("semana")
+    ano = data.get("ano")
+    
+    if not semana or not ano:
+        raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios")
+    
+    parceiro_id = current_user["id"] if current_user["role"] in [UserRole.PARCEIRO, "parceiro"] else data.get("parceiro_id") or current_user["id"]
+    
+    doc = {
+        "parceiro_id": parceiro_id,
+        "semana": semana,
+        "ano": ano,
+        "uber_recebido": float(data.get("uber_recebido", 0)),
+        "bolt_recebido": float(data.get("bolt_recebido", 0)),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    await db.totais_empresa.update_one(
+        {"parceiro_id": parceiro_id, "semana": semana, "ano": ano},
+        {"$set": doc},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Totais guardados"}
     # Eliminar ajustes manuais
     result = await db.ajustes_semanais.delete_many({
         "motorista_id": motorista_id,
