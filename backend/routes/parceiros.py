@@ -1004,6 +1004,8 @@ async def update_credenciais_plataformas(
         creds_data["bolt_password"] = existing_creds.get("bolt_password")
     if creds_data.get("viaverde_password") == "********":
         creds_data["viaverde_password"] = existing_creds.get("viaverde_password")
+    if creds_data.get("prio_password") == "********":
+        creds_data["prio_password"] = existing_creds.get("prio_password")
     
     await collection.update_one(
         {"id": parceiro_id},
