@@ -933,6 +933,7 @@ async def get_resumo_semanal_parceiro(
         
         # ============ GANHOS BOLT ============
         ganhos_bolt = 0.0
+        ganhos_campanha_bolt = 0.0  # Ganhos de campanha/bónus (não disponível via API)
         bolt_query_conditions = [{"motorista_id": motorista_id}]
         if id_bolt:
             bolt_query_conditions.append({"identificador_motorista_bolt": id_bolt})
@@ -1127,6 +1128,7 @@ async def get_resumo_semanal_parceiro(
             ganhos_uber = ajuste_manual.get("ganhos_uber", ganhos_uber)
             uber_portagens = ajuste_manual.get("uber_portagens", uber_portagens)
             ganhos_bolt = ajuste_manual.get("ganhos_bolt", ganhos_bolt)
+            ganhos_campanha_bolt = ajuste_manual.get("ganhos_campanha_bolt", ganhos_campanha_bolt)
             via_verde_total = ajuste_manual.get("via_verde", via_verde_total)
             combustivel_total = ajuste_manual.get("combustivel", combustivel_total)
             eletrico_total = ajuste_manual.get("eletrico", eletrico_total)
@@ -1135,8 +1137,8 @@ async def get_resumo_semanal_parceiro(
             logger.info(f"📝 Ajuste manual aplicado para {motorista.get('name')} - S{semana}/{ano}")
         
         # ============ CALCULAR TOTAIS ============
-        # Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt
-        total_ganhos = ganhos_uber + uber_portagens + ganhos_bolt
+        # Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt + Ganhos Campanha Bolt
+        total_ganhos = ganhos_uber + uber_portagens + ganhos_bolt + ganhos_campanha_bolt
         
         # Se acumular_viaverde está activo, Via Verde vai para o acumulado (não desconta)
         via_verde_a_descontar = 0.0 if acumular_viaverde else via_verde_total
@@ -1169,6 +1171,7 @@ async def get_resumo_semanal_parceiro(
             "ganhos_uber": round(ganhos_uber, 2),
             "uber_portagens": round(uber_portagens, 2),  # NOVO: Portagens reembolsadas pela Uber
             "ganhos_bolt": round(ganhos_bolt, 2),
+            "ganhos_campanha_bolt": round(ganhos_campanha_bolt, 2),  # Ganhos de campanha Bolt (manual)
             "total_ganhos": round(total_ganhos, 2),
             # Valores reais recebidos (introduzidos manualmente para comparação)
             "valor_real_uber": round(ajuste_manual.get("valor_real_uber", 0) if ajuste_manual else 0, 2),
