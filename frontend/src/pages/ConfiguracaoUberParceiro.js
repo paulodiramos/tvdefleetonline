@@ -209,6 +209,48 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     }
   };
   
+  const preencherEmail = async () => {
+    setAtualizando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/browser/preencher-email`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.sucesso) {
+        setScreenshot(response.data.screenshot);
+        toast.success('Email preenchido!');
+      } else {
+        toast.error(response.data.erro || 'Erro');
+      }
+    } catch (error) {
+      toast.error('Erro ao preencher email');
+    } finally {
+      setAtualizando(false);
+    }
+  };
+  
+  const preencherPassword = async () => {
+    setAtualizando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/browser/preencher-password`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.sucesso) {
+        setScreenshot(response.data.screenshot);
+        toast.success('Password preenchida!');
+      } else {
+        toast.error(response.data.erro || 'Erro');
+      }
+    } catch (error) {
+      toast.error('Erro ao preencher password');
+    } finally {
+      setAtualizando(false);
+    }
+  };
+  
   const verificarLogin = async () => {
     setAtualizando(true);
     try {
