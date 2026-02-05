@@ -628,6 +628,22 @@ export default function RPADesigner({ user, onLogout }) {
               }
             }
             
+            function pararSessao() {
+              if (confirm('Tem a certeza que quer parar a gravação?')) {
+                if (window.opener && window.opener.pararSessaoFromPopup) {
+                  window.opener.pararSessaoFromPopup();
+                }
+                window.close();
+              }
+            }
+            
+            function guardarDesign() {
+              const nome = prompt('Nome do design:', '${plataformaSelecionada?.nome || 'Design'} - Semana ${semanaSelecionada === 0 ? 'Atual' : '-' + semanaSelecionada}');
+              if (nome && window.opener && window.opener.guardarDesignFromPopup) {
+                window.opener.guardarDesignFromPopup(nome);
+              }
+            }
+            
             document.getElementById('text-input').onkeydown = function(e) {
               if (e.key === 'Enter') enviarTexto();
             };
