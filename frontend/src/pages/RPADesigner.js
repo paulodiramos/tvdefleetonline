@@ -241,6 +241,15 @@ export default function RPADesigner({ user, onLogout }) {
       `width=${largura},height=${altura},left=${esquerda},top=${topo},scrollbars=yes,resizable=yes`
     );
     
+    // Preparar credenciais para o popup
+    const credenciaisData = JSON.stringify({
+      email: credenciaisTeste.email || '',
+      password: credenciaisTeste.password || '',
+      telefone: credenciaisTeste.telefone || '',
+      codigo_sms: credenciaisTeste.codigo_sms || '',
+      texto_livre: credenciaisTeste.texto_livre || ''
+    });
+    
     if (popup) {
       popup.document.write(`
         <!DOCTYPE html>
@@ -259,7 +268,7 @@ export default function RPADesigner({ user, onLogout }) {
             }
             .header {
               background: #16213e;
-              padding: 12px 20px;
+              padding: 10px 20px;
               display: flex;
               align-items: center;
               justify-content: space-between;
@@ -295,6 +304,11 @@ export default function RPADesigner({ user, onLogout }) {
               0%, 100% { opacity: 1; }
               50% { opacity: 0.5; }
             }
+            .main-content {
+              flex: 1;
+              display: flex;
+              overflow: hidden;
+            }
             .preview-container {
               flex: 1;
               display: flex;
@@ -302,6 +316,7 @@ export default function RPADesigner({ user, onLogout }) {
               align-items: center;
               padding: 15px;
               overflow: auto;
+              background: #0d1117;
             }
             #preview-img {
               max-width: 100%;
@@ -324,43 +339,124 @@ export default function RPADesigner({ user, onLogout }) {
               margin: 0 auto 15px;
             }
             @keyframes spin { to { transform: rotate(360deg); } }
-            .controls {
+            
+            /* Painel lateral de credenciais */
+            .sidebar {
+              width: 320px;
               background: #16213e;
-              padding: 15px 20px;
-              display: flex;
-              gap: 10px;
-              flex-wrap: wrap;
-              border-top: 1px solid #0f3460;
+              border-left: 1px solid #0f3460;
+              padding: 15px;
+              overflow-y: auto;
             }
-            .controls input {
+            .sidebar h3 {
+              font-size: 14px;
+              color: #e94560;
+              margin-bottom: 15px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }
+            .field-group {
+              margin-bottom: 12px;
+            }
+            .field-group label {
+              display: block;
+              font-size: 12px;
+              color: #94a3b8;
+              margin-bottom: 5px;
+            }
+            .field-row {
+              display: flex;
+              gap: 6px;
+            }
+            .field-row input {
               flex: 1;
-              min-width: 150px;
-              padding: 10px 15px;
+              padding: 10px 12px;
               background: #0f3460;
               border: 1px solid #1a3a5c;
               border-radius: 6px;
               color: white;
               font-size: 14px;
             }
-            .controls input:focus {
+            .field-row input:focus {
               outline: none;
               border-color: #e94560;
             }
-            .controls button {
-              padding: 10px 20px;
+            .field-row button {
+              padding: 10px 14px;
+              background: #3b82f6;
+              border: none;
+              border-radius: 6px;
+              color: white;
+              cursor: pointer;
+              font-size: 13px;
+              white-space: nowrap;
+            }
+            .field-row button:hover { background: #2563eb; }
+            .field-row button.green { background: #22c55e; }
+            .field-row button.green:hover { background: #16a34a; }
+            
+            /* Secção de ações rápidas */
+            .quick-actions {
+              margin-top: 20px;
+              padding-top: 15px;
+              border-top: 1px solid #0f3460;
+            }
+            .quick-actions h4 {
+              font-size: 12px;
+              color: #64748b;
+              margin-bottom: 10px;
+            }
+            .action-buttons {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 6px;
+            }
+            .action-buttons button {
+              padding: 8px 12px;
+              background: #0f3460;
+              border: none;
+              border-radius: 6px;
+              color: #94a3b8;
+              cursor: pointer;
+              font-size: 12px;
+            }
+            .action-buttons button:hover { 
+              background: #1a4a7c; 
+              color: white;
+            }
+            
+            /* Texto livre na parte inferior */
+            .bottom-controls {
+              background: #16213e;
+              padding: 12px 20px;
+              display: flex;
+              gap: 10px;
+              border-top: 1px solid #0f3460;
+            }
+            .bottom-controls input {
+              flex: 1;
+              padding: 12px 15px;
+              background: #0f3460;
+              border: 1px solid #1a3a5c;
+              border-radius: 6px;
+              color: white;
+              font-size: 14px;
+            }
+            .bottom-controls input:focus {
+              outline: none;
+              border-color: #e94560;
+            }
+            .bottom-controls button {
+              padding: 12px 20px;
               background: #e94560;
               border: none;
               border-radius: 6px;
               color: white;
               cursor: pointer;
               font-size: 14px;
-              transition: background 0.2s;
             }
-            .controls button:hover { background: #d1344f; }
-            .controls button.secondary {
-              background: #0f3460;
-            }
-            .controls button.secondary:hover { background: #1a4a7c; }
+            .bottom-controls button:hover { background: #d1344f; }
           </style>
         </head>
         <body>
@@ -372,27 +468,86 @@ export default function RPADesigner({ user, onLogout }) {
               <span>A GRAVAR</span>
             </div>
           </div>
-          <div class="preview-container">
-            <div class="loading" id="loading">
-              <div class="loading-spinner"></div>
-              <p>A iniciar browser...</p>
-              <p style="font-size: 12px; margin-top: 10px; color: #64748b;">
-                Clique na imagem para interagir com a página
-              </p>
+          
+          <div class="main-content">
+            <div class="preview-container">
+              <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>A iniciar browser...</p>
+                <p style="font-size: 12px; margin-top: 10px; color: #64748b;">
+                  Clique na imagem para interagir
+                </p>
+              </div>
+              <img id="preview-img" style="display: none;" alt="Preview" />
             </div>
-            <img id="preview-img" style="display: none;" alt="Preview" />
+            
+            <div class="sidebar">
+              <h3>🔧 Dados para Design RPA</h3>
+              
+              <div class="field-group">
+                <label>📧 Email</label>
+                <div class="field-row">
+                  <input type="text" id="campo-email" placeholder="Email..." />
+                  <button onclick="inserirCampo('email')">Inserir</button>
+                </div>
+              </div>
+              
+              <div class="field-group">
+                <label>🔑 Senha</label>
+                <div class="field-row">
+                  <input type="password" id="campo-password" placeholder="Senha..." />
+                  <button onclick="inserirCampo('password')">Inserir</button>
+                </div>
+              </div>
+              
+              <div class="field-group">
+                <label>📱 Telefone</label>
+                <div class="field-row">
+                  <input type="text" id="campo-telefone" placeholder="Telefone..." />
+                  <button onclick="inserirCampo('telefone')">Inserir</button>
+                </div>
+              </div>
+              
+              <div class="field-group">
+                <label>📲 Código SMS</label>
+                <div class="field-row">
+                  <input type="text" id="campo-sms" placeholder="Código..." maxlength="6" />
+                  <button class="green" onclick="inserirCampo('codigo_sms')">Enviar</button>
+                </div>
+              </div>
+              
+              <div class="quick-actions">
+                <h4>⚡ Ações Rápidas</h4>
+                <div class="action-buttons">
+                  <button onclick="enviarTecla('Enter')">↵ Enter</button>
+                  <button onclick="enviarTecla('Tab')">⇥ Tab</button>
+                  <button onclick="enviarTecla('Escape')">✕ Esc</button>
+                  <button onclick="scroll('down')">↓ Scroll</button>
+                  <button onclick="scroll('up')">↑ Scroll</button>
+                  <button onclick="adicionarEspera()">⏳ +Espera</button>
+                  <button onclick="adicionarDownload()">📥 +Download</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="controls">
-            <input type="text" id="text-input" placeholder="Digite texto e pressione Enter..." />
+          
+          <div class="bottom-controls">
+            <input type="text" id="text-input" placeholder="⌨️ Texto livre - Digite e pressione Enter..." />
             <button onclick="enviarTexto()">Enviar</button>
-            <button class="secondary" onclick="enviarTecla('Enter')">↵ Enter</button>
-            <button class="secondary" onclick="enviarTecla('Tab')">⇥ Tab</button>
-            <button class="secondary" onclick="scroll('down')">↓ Scroll</button>
-            <button class="secondary" onclick="scroll('up')">↑ Scroll</button>
           </div>
+          
           <script>
             const sessionId = '${sid}';
+            const credenciais = ${credenciaisData};
             let ws = null;
+            
+            // Preencher campos com credenciais pré-definidas
+            window.onload = function() {
+              if (credenciais.email) document.getElementById('campo-email').value = credenciais.email;
+              if (credenciais.password) document.getElementById('campo-password').value = credenciais.password;
+              if (credenciais.telefone) document.getElementById('campo-telefone').value = credenciais.telefone;
+              if (credenciais.codigo_sms) document.getElementById('campo-sms').value = credenciais.codigo_sms;
+            };
             
             function conectar() {
               const wsUrl = '${API_URL}'.replace('https://', 'wss://').replace('http://', 'ws://');
@@ -427,29 +582,65 @@ export default function RPADesigner({ user, onLogout }) {
               ws.send(JSON.stringify({ tipo: 'click', x: x, y: y }));
             };
             
+            function inserirCampo(campo) {
+              const ids = {
+                'email': 'campo-email',
+                'password': 'campo-password',
+                'telefone': 'campo-telefone',
+                'codigo_sms': 'campo-sms'
+              };
+              const input = document.getElementById(ids[campo]);
+              if (input && input.value && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: 'inserir_texto', texto: input.value }));
+              }
+            }
+            
             function enviarTexto() {
               const input = document.getElementById('text-input');
               if (input.value && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ tipo: 'type', texto: input.value }));
+                ws.send(JSON.stringify({ tipo: 'inserir_texto', texto: input.value }));
                 input.value = '';
               }
             }
             
             function enviarTecla(tecla) {
               if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ tipo: 'press', tecla: tecla }));
+                ws.send(JSON.stringify({ tipo: 'tecla', tecla: tecla }));
               }
             }
             
             function scroll(direcao) {
               if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ tipo: 'scroll', delta: direcao === 'down' ? 300 : -300 }));
+                ws.send(JSON.stringify({ tipo: 'scroll', direcao: direcao }));
+              }
+            }
+            
+            function adicionarEspera() {
+              const segundos = prompt('Segundos de espera:', '3');
+              if (segundos && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: 'espera', segundos: parseInt(segundos) }));
+              }
+            }
+            
+            function adicionarDownload() {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: 'aguardar_download' }));
               }
             }
             
             document.getElementById('text-input').onkeydown = function(e) {
               if (e.key === 'Enter') enviarTexto();
             };
+            
+            // Enter nos campos de credenciais
+            ['campo-email', 'campo-password', 'campo-telefone', 'campo-sms'].forEach(function(id) {
+              document.getElementById(id).onkeydown = function(e) {
+                if (e.key === 'Enter') {
+                  const campo = id.replace('campo-', '').replace('sms', 'codigo_sms');
+                  inserirCampo(campo);
+                }
+              };
+            });
             
             conectar();
           </script>
