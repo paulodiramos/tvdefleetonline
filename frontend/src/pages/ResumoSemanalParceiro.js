@@ -90,6 +90,13 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [showSyncMenu, setShowSyncMenu] = useState(false);
   const [uploadingViaVerde, setUploadingViaVerde] = useState(false);
 
+  // Estados para totais recebidos da empresa (Uber/Bolt)
+  const [totaisEmpresa, setTotaisEmpresa] = useState({
+    uber_recebido: 0,
+    bolt_recebido: 0
+  });
+  const [savingTotaisEmpresa, setSavingTotaisEmpresa] = useState(false);
+
   const STATUS_LABELS = {
     pendente: { label: 'Pendente', color: 'bg-slate-100 text-slate-700' },
     aprovado: { label: 'Aprovado', color: 'bg-blue-100 text-blue-700' },
