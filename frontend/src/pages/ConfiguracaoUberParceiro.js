@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import Layout from '@/components/Layout';
@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { 
   Car, CheckCircle, AlertCircle, Loader2, Shield, Key, 
-  Lock, Smartphone, Clock, FileText, Calendar, Users, DollarSign
+  Lock, Clock, FileText, Calendar, Users, DollarSign,
+  Monitor, Play, Square, RefreshCw, Keyboard
 } from 'lucide-react';
 
 const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
@@ -17,13 +18,20 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
   const [sessao, setSessao] = useState(null);
   const [historico, setHistorico] = useState([]);
   
-  // Estados de login
-  const [fazendoLogin, setFazendoLogin] = useState(false);
-  const [precisaSMS, setPrecisaSMS] = useState(false);
-  const [codigoSMS, setCodigoSMS] = useState('');
+  // Estados do browser remoto
+  const [browserAtivo, setBrowserAtivo] = useState(false);
+  const [screenshot, setScreenshot] = useState(null);
+  const [atualizando, setAtualizando] = useState(false);
+  const [textoInput, setTextoInput] = useState('');
+  
+  const imgRef = useRef(null);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     carregarDados();
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
 
   const carregarDados = async () => {
@@ -74,71 +82,172 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     }
   };
 
-  const fazerLogin = async () => {
-    if (!credenciais.email || !credenciais.password) {
-      toast.error('Preencha as credenciais primeiro');
-      return;
+  // ===== FUNÇÕES DO BROWSER REMOTO =====
+  
+  const iniciarBrowser = async () => {
+    // Guardar credenciais primeiro
+    if (credenciais.email && credenciais.password) {
+      await guardarCredenciais();
     }
     
-    // Guardar credenciais primeiro
-    await guardarCredenciais();
-    
-    setFazendoLogin(true);
-    setPrecisaSMS(false);
-    
+    setAtualizando(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/uber/fazer-login`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 120000
+      const response = await axios.post(`${API}/browser/iniciar`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data.sucesso) {
-        toast.success('Login realizado com sucesso!');
-        carregarDados();
-      } else if (response.data.precisa_sms) {
-        setPrecisaSMS(true);
-        toast.info('Introduza o código SMS enviado para o seu telefone');
-      } else if (response.data.precisa_captcha) {
-        toast.warning('CAPTCHA detectado. Por favor, contacte o administrador.');
+        setBrowserAtivo(true);
+        setScreenshot(response.data.screenshot);
+        toast.success('Browser iniciado! Complete o login.');
+        
+        // Atualizar screenshots a cada 2 segundos
+        intervalRef.current = setInterval(atualizarScreenshot, 2000);
       } else {
-        toast.error(response.data.erro || 'Erro no login');
+        toast.error(response.data.erro || 'Erro ao iniciar browser');
       }
     } catch (error) {
-      toast.error('Erro ao fazer login');
+      toast.error('Erro ao iniciar browser');
     } finally {
-      setFazendoLogin(false);
+      setAtualizando(false);
     }
   };
-
-  const confirmarSMS = async () => {
-    if (!codigoSMS || codigoSMS.length < 4) {
-      toast.error('Introduza o código de 4 dígitos');
-      return;
-    }
-    
-    setFazendoLogin(true);
-    
+  
+  const atualizarScreenshot = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/uber/confirmar-sms`, { codigo: codigoSMS }, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 120000
+      const response = await axios.post(`${API}/browser/screenshot`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data.sucesso) {
-        toast.success('Login completo!');
-        setPrecisaSMS(false);
-        setCodigoSMS('');
-        carregarDados();
-      } else {
-        toast.error(response.data.erro || 'Código inválido');
+        setScreenshot(response.data.screenshot);
+        
+        // Verificar se está logado
+        if (response.data.logado) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          toast.success('Login detectado! Sessão guardada por 30 dias.');
+          carregarDados();
+        }
       }
     } catch (error) {
-      toast.error('Erro ao confirmar SMS');
-    } finally {
-      setFazendoLogin(false);
+      console.error('Erro no screenshot:', error);
     }
+  };
+  
+  const handleImageClick = async (event) => {
+    if (!browserAtivo || !imgRef.current) return;
+    
+    const rect = imgRef.current.getBoundingClientRect();
+    const scaleX = 1280 / rect.width;
+    const scaleY = 800 / rect.height;
+    
+    const x = Math.round((event.clientX - rect.left) * scaleX);
+    const y = Math.round((event.clientY - rect.top) * scaleY);
+    
+    setAtualizando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/browser/clicar`, { x, y }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.sucesso) {
+        setScreenshot(response.data.screenshot);
+        if (response.data.logado) {
+          toast.success('Login confirmado!');
+          carregarDados();
+        }
+      }
+    } catch (error) {
+      toast.error('Erro ao clicar');
+    } finally {
+      setAtualizando(false);
+    }
+  };
+  
+  const enviarTexto = async () => {
+    if (!textoInput) return;
+    
+    setAtualizando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/browser/escrever`, { texto: textoInput }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.sucesso) {
+        setScreenshot(response.data.screenshot);
+        setTextoInput('');
+      }
+    } catch (error) {
+      toast.error('Erro ao escrever');
+    } finally {
+      setAtualizando(false);
+    }
+  };
+  
+  const enviarTecla = async (tecla) => {
+    setAtualizando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/browser/escrever`, { tecla }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.sucesso) {
+        setScreenshot(response.data.screenshot);
+      }
+    } catch (error) {
+      toast.error('Erro');
+    } finally {
+      setAtualizando(false);
+    }
+  };
+  
+  const verificarLogin = async () => {
+    setAtualizando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/browser/verificar-login`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.logado) {
+        toast.success('Login confirmado! Sessão ativa por ~30 dias.');
+        fecharBrowser();
+        carregarDados();
+      } else {
+        toast.info('Ainda não está logado. Continue o processo.');
+      }
+    } catch (error) {
+      toast.error('Erro ao verificar');
+    } finally {
+      setAtualizando(false);
+    }
+  };
+  
+  const fecharBrowser = async () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/browser/fechar`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error('Erro:', error);
+    }
+    
+    setBrowserAtivo(false);
+    setScreenshot(null);
   };
 
   if (loading) {
@@ -153,7 +262,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
 
   return (
     <Layout user={user} onLogout={onLogout}>
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-6 max-w-4xl mx-auto">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -161,7 +270,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
             Sincronização Uber Fleet
           </h1>
           <p className="text-gray-500 mt-1">
-            Configure as suas credenciais para extração automática de rendimentos
+            Faça login uma vez - sessão dura ~30 dias
           </p>
         </div>
 
@@ -175,8 +284,8 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                   <p className="font-medium">Estado da Sessão</p>
                   <p className={`text-sm ${sessao?.ativa ? 'text-green-600' : 'text-red-600'}`}>
                     {sessao?.ativa 
-                      ? `Ativa - expira em ${sessao.dias_restantes} dias` 
-                      : 'Sessão expirada - faça login'}
+                      ? `✓ Ativa - expira em ${sessao.dias_restantes} dias` 
+                      : '✗ Sessão expirada - faça login manual abaixo'}
                   </p>
                 </div>
               </div>
@@ -196,124 +305,141 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
               <Key className="w-5 h-5 text-yellow-500" />
               Credenciais Uber Fleet
             </CardTitle>
-            <CardDescription>
-              Introduza os dados de acesso ao portal Uber Fleet
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-600 mb-1 block">Email Uber</label>
-              <Input
-                type="email"
-                placeholder="seu.email@exemplo.com"
-                value={credenciais.email}
-                onChange={(e) => setCredenciais({ ...credenciais, email: e.target.value })}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm text-gray-600 mb-1 block">Email</label>
+                <Input
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={credenciais.email}
+                  onChange={(e) => setCredenciais({ ...credenciais, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600 mb-1 block">Password</label>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={credenciais.password}
+                  onChange={(e) => setCredenciais({ ...credenciais, password: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600 mb-1 block">Telefone</label>
+                <Input
+                  type="tel"
+                  placeholder="910000000"
+                  value={credenciais.telefone}
+                  onChange={(e) => setCredenciais({ ...credenciais, telefone: e.target.value })}
+                />
+              </div>
             </div>
-            
-            <div>
-              <label className="text-sm text-gray-600 mb-1 block">Password</label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={credenciais.password}
-                onChange={(e) => setCredenciais({ ...credenciais, password: e.target.value })}
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm text-gray-600 mb-1 block">Telefone (para SMS)</label>
-              <Input
-                type="tel"
-                placeholder="910000000"
-                value={credenciais.telefone}
-                onChange={(e) => setCredenciais({ ...credenciais, telefone: e.target.value })}
-              />
-            </div>
-            
-            <Button onClick={guardarCredenciais} variant="outline" className="w-full">
+            <Button onClick={guardarCredenciais} variant="outline">
               Guardar Credenciais
             </Button>
           </CardContent>
         </Card>
 
-        {/* Login */}
+        {/* Login Manual via Browser Remoto */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5 text-blue-500" />
-              Autenticação
+              <Monitor className="w-5 h-5 text-blue-500" />
+              Login Manual (Browser Remoto)
             </CardTitle>
+            <CardDescription>
+              Clique na imagem para interagir. Resolva o CAPTCHA e complete o login normalmente.
+              A sessão fica guardada por ~30 dias.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!precisaSMS ? (
+            {!browserAtivo ? (
               <Button 
-                onClick={fazerLogin} 
-                disabled={fazendoLogin || !credenciais.email || !credenciais.password}
-                className="w-full"
+                onClick={iniciarBrowser} 
+                disabled={atualizando}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                size="lg"
               >
-                {fazendoLogin ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    A fazer login...
-                  </>
+                {atualizando ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Fazer Login na Uber
-                  </>
+                  <Play className="w-4 h-4 mr-2" />
                 )}
+                Iniciar Login Manual
               </Button>
             ) : (
-              <div className="space-y-3">
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-yellow-700 mb-2">
-                    <Smartphone className="w-5 h-5" />
-                    <span className="font-medium">Código SMS Enviado</span>
-                  </div>
-                  <p className="text-sm text-yellow-600">
-                    Introduza o código de 4 dígitos
-                  </p>
+              <>
+                {/* Área do Screenshot */}
+                <div className="relative border-2 border-blue-200 rounded-lg overflow-hidden bg-gray-100">
+                  {screenshot ? (
+                    <img
+                      ref={imgRef}
+                      src={`data:image/jpeg;base64,${screenshot}`}
+                      alt="Uber Fleet"
+                      className="w-full cursor-crosshair"
+                      onClick={handleImageClick}
+                      style={{ maxHeight: '500px', objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <div className="h-64 flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                    </div>
+                  )}
+                  
+                  {atualizando && (
+                    <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                      A processar...
+                    </div>
+                  )}
                 </div>
                 
-                <Input
-                  type="text"
-                  placeholder="0000"
-                  maxLength={4}
-                  value={codigoSMS}
-                  onChange={(e) => setCodigoSMS(e.target.value.replace(/\D/g, ''))}
-                  className="text-center text-2xl tracking-widest"
-                />
+                {/* Controlos */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <div className="flex-1 flex gap-2">
+                    <Input
+                      placeholder="Escrever texto (email, password, código SMS)..."
+                      value={textoInput}
+                      onChange={(e) => setTextoInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && enviarTexto()}
+                    />
+                    <Button onClick={enviarTexto} variant="outline" size="icon" title="Enviar texto">
+                      <Keyboard className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Button onClick={() => enviarTecla('Enter')} variant="outline" size="sm">
+                    Enter
+                  </Button>
+                  <Button onClick={() => enviarTecla('Tab')} variant="outline" size="sm">
+                    Tab
+                  </Button>
+                  <Button onClick={atualizarScreenshot} variant="outline" size="icon" title="Atualizar">
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
                 
+                {/* Ações */}
                 <div className="flex gap-2">
                   <Button 
-                    variant="outline" 
-                    onClick={() => { setPrecisaSMS(false); setCodigoSMS(''); }}
-                    className="flex-1"
+                    onClick={verificarLogin} 
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    disabled={atualizando}
                   >
-                    Cancelar
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Confirmar Login
                   </Button>
-                  <Button 
-                    onClick={confirmarSMS}
-                    disabled={fazendoLogin || codigoSMS.length < 4}
-                    className="flex-1"
-                  >
-                    {fazendoLogin ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
+                  <Button onClick={fecharBrowser} variant="destructive">
+                    <Square className="w-4 h-4 mr-2" />
+                    Fechar
                   </Button>
                 </div>
-              </div>
-            )}
-            
-            {sessao?.ativa && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-2 text-green-700">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-medium">Sessão Ativa!</span>
+                
+                <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+                  <strong>Dica:</strong> Clique na imagem para interagir. Use o campo de texto para escrever 
+                  email/password. Resolva o puzzle CAPTCHA clicando diretamente.
                 </div>
-                <p className="text-sm text-green-600 mt-1">
-                  O administrador pode agora extrair os seus rendimentos automaticamente.
-                </p>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -362,13 +488,14 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                 <Shield className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h4 className="font-medium mb-1">Como funciona?</h4>
+                <h4 className="font-medium mb-2">Como funciona?</h4>
                 <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
-                  <li>Introduza as suas credenciais Uber Fleet</li>
-                  <li>Clique em "Fazer Login na Uber"</li>
-                  <li>Se receber SMS, introduza o código</li>
+                  <li>Clique em <strong>"Iniciar Login Manual"</strong></li>
+                  <li>Clique no campo de email na imagem e escreva o email</li>
+                  <li>Resolva o puzzle CAPTCHA clicando na imagem</li>
+                  <li>Complete o login (SMS se necessário)</li>
+                  <li>Clique em <strong>"Confirmar Login"</strong></li>
                   <li>A sessão fica ativa por ~30 dias</li>
-                  <li>O administrador extrai os rendimentos automaticamente</li>
                 </ol>
               </div>
             </div>
