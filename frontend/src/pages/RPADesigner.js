@@ -216,6 +216,9 @@ export default function RPADesigner({ user, onLogout }) {
         
         // Conectar WebSocket
         conectarWebSocket(data.session_id);
+        
+        // Abrir janela popup grande para preview
+        abrirPreviewPopup(data.session_id);
       }
     } catch (error) {
       toast.error('Erro ao iniciar sessão');
