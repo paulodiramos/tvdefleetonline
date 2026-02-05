@@ -162,6 +162,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       fetchResumo();
       fetchHistorico();
       fetchStatusAprovacao();
+      fetchTotaisEmpresa();
     }
   }, [semana, ano]);
 
@@ -179,6 +180,45 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       toast.error('Erro ao carregar resumo semanal');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Carregar totais recebidos da empresa
+  const fetchTotaisEmpresa = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/api/relatorios/parceiro/totais-empresa?semana=${semana}&ano=${ano}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data) {
+        setTotaisEmpresa({
+          uber_recebido: response.data.uber_recebido || 0,
+          bolt_recebido: response.data.bolt_recebido || 0
+        });
+      }
+    } catch (error) {
+      // Não há dados ainda, ignorar
+      setTotaisEmpresa({ uber_recebido: 0, bolt_recebido: 0 });
+    }
+  };
+
+  // Guardar totais recebidos da empresa
+  const saveTotaisEmpresa = async () => {
+    try {
+      setSavingTotaisEmpresa(true);
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/api/relatorios/parceiro/totais-empresa`,
+        { semana, ano, ...totaisEmpresa },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Totais da empresa guardados');
+    } catch (error) {
+      console.error('Erro ao guardar totais:', error);
+      toast.error('Erro ao guardar totais');
+    } finally {
+      setSavingTotaisEmpresa(false);
     }
   };
 
