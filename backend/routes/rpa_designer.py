@@ -958,7 +958,7 @@ async def websocket_design_browser(
         # Iniciar browser com configurações anti-detecção avançadas
         playwright_instance = await async_playwright().start()
         browser = await playwright_instance.chromium.launch(
-            headless=False,  # Usar headed mode para evitar detecção
+            headless=True,
             args=[
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
@@ -966,12 +966,14 @@ async def websocket_design_browser(
                 '--disable-blink-features=AutomationControlled',
                 '--disable-infobars',
                 '--window-size=1280,720',
-                '--start-maximized',
                 '--disable-extensions',
                 '--disable-plugins-discovery',
                 '--disable-background-timer-throttling',
                 '--disable-backgrounding-occluded-windows',
-                '--disable-renderer-backgrounding'
+                '--disable-renderer-backgrounding',
+                '--no-first-run',
+                '--no-default-browser-check',
+                '--disable-default-apps'
             ]
         )
         
@@ -989,21 +991,35 @@ async def websocket_design_browser(
             is_mobile=False
         )
         
-        # Scripts anti-detecção
+        # Scripts anti-detecção avançados
         await context.add_init_script("""
             // Esconder webdriver
             Object.defineProperty(navigator, 'webdriver', {
                 get: () => undefined
             });
             
-            // Esconder automação
+            // Esconder automação - Chrome
+            delete Object.getPrototypeOf(navigator).webdriver;
+            
+            // Mock plugins
             Object.defineProperty(navigator, 'plugins', {
-                get: () => [1, 2, 3, 4, 5]
+                get: () => {
+                    const plugins = [
+                        { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer' },
+                        { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai' },
+                        { name: 'Native Client', filename: 'internal-nacl-plugin' }
+                    ];
+                    plugins.length = 3;
+                    return plugins;
+                }
             });
             
             // Chrome runtime
             window.chrome = {
-                runtime: {}
+                runtime: {},
+                loadTimes: function() {},
+                csi: function() {},
+                app: {}
             };
             
             // Permissions
@@ -1017,6 +1033,31 @@ async def websocket_design_browser(
             // Languages
             Object.defineProperty(navigator, 'languages', {
                 get: () => ['pt-PT', 'pt', 'en-US', 'en']
+            });
+            
+            // Platform
+            Object.defineProperty(navigator, 'platform', {
+                get: () => 'Win32'
+            });
+            
+            // Hardware concurrency
+            Object.defineProperty(navigator, 'hardwareConcurrency', {
+                get: () => 8
+            });
+            
+            // Device memory
+            Object.defineProperty(navigator, 'deviceMemory', {
+                get: () => 8
+            });
+            
+            // Connection
+            Object.defineProperty(navigator, 'connection', {
+                get: () => ({
+                    effectiveType: '4g',
+                    rtt: 50,
+                    downlink: 10,
+                    saveData: false
+                })
             });
         """)
         
