@@ -759,16 +759,6 @@ export default function RPADesigner({ user, onLogout }) {
                     </div>
                   </div>
                 )}
-                      Enter
-                    </Button>
-                    <Button variant="outline" onClick={() => enviarAcao('scroll', { delta: 300 })}>
-                      ↓
-                    </Button>
-                    <Button variant="outline" onClick={() => enviarAcao('scroll', { delta: -300 })}>
-                      ↑
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
