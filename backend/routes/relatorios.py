@@ -2280,6 +2280,9 @@ async def update_motorista_weekly_data(
         "eletrico": float(data.get("eletrico", 0)),
         "aluguer": float(data.get("aluguer", 0)),
         "extras": float(data.get("extras", 0)),
+        # Novos campos para valores reais recebidos
+        "valor_real_uber": float(data.get("valor_real_uber", 0)),
+        "valor_real_bolt": float(data.get("valor_real_bolt", 0)),
         "parceiro_id": current_user["id"] if current_user["role"] == UserRole.PARCEIRO else motorista.get("parceiro_id"),
         "editado_por": current_user["id"],
         "editado_em": datetime.now(timezone.utc).isoformat(),
