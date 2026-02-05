@@ -150,13 +150,14 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <Layout user={user} onLogout={onLogout}>
+    <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">📋 Gestão de Plataformas RPA</h1>
-            <p className="text-gray-400">Configure as plataformas disponíveis para automação</p>
+            <h1 className="text-2xl font-bold text-gray-900">📋 Gestão de Plataformas RPA</h1>
+            <p className="text-gray-600">Configure as plataformas disponíveis para automação</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/rpa-designer')}>
@@ -170,9 +171,9 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
 
         {/* Estatísticas */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-white">{plataformas.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{plataformas.length}</div>
               <div className="text-gray-300 text-sm">Plataformas</div>
             </CardContent>
           </Card>
