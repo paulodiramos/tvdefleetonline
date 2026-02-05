@@ -64,8 +64,11 @@ export default function RPADesigner({ user, onLogout }) {
   
   // Estado para credenciais de teste (antes de gravar)
   const [credenciaisTeste, setCredenciaisTeste] = useState({
-    username: '',
+    email: '',
     password: '',
+    telefone: '',
+    codigo_sms: '',
+    texto_livre: '',
     usar_credenciais: false
   });
   const [showCredenciaisModal, setShowCredenciaisModal] = useState(false);
