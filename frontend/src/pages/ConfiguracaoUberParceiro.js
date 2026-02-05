@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { 
   Car, CheckCircle, AlertCircle, Loader2, Shield, Key, 
   Lock, Clock, FileText, Calendar, Users, DollarSign,
-  Monitor, Play, Square, RefreshCw, Keyboard
+  Monitor, Play, Square, RefreshCw, Keyboard, Download
 } from 'lucide-react';
 
 const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
