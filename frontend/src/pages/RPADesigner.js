@@ -851,31 +851,7 @@ export default function RPADesigner({ user, onLogout }) {
 
   // Parar sessão
   const pararSessao = async () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-    
-    // Fechar popup de preview se estiver aberto
-    if (previewWindow && !previewWindow.closed) {
-      previewWindow.close();
-      setPreviewWindow(null);
-    }
-    
-    if (sessionId) {
-      try {
-        await fetch(`${API_URL}/api/rpa-designer/sessao/${sessionId}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-      } catch (error) {
-        console.error('Erro ao cancelar sessão:', error);
-      }
-    }
-    
-    setSessionId(null);
-    setGravando(false);
-    setScreenshot(null);
-    toast.info('Sessão terminada');
+    await pararSessaoInternal();
   };
 
   // Guardar design
@@ -891,59 +867,8 @@ export default function RPADesigner({ user, onLogout }) {
     );
     
     if (!nome) return;
-
-    setLoading(true);
-    try {
-      // Se tiver sessão ativa, guardar via sessão
-      if (sessionId) {
-        const res = await fetch(
-          `${API_URL}/api/rpa-designer/sessao/${sessionId}/guardar?nome=${encodeURIComponent(nome)}`,
-          {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-          }
-        );
-        const data = await res.json();
-        
-        if (data.sucesso) {
-          toast.success('Design guardado com sucesso!');
-          pararSessao();
-          carregarDesigns();
-        } else {
-          toast.error(data.detail || 'Erro ao guardar');
-        }
-      } else {
-        // Guardar design diretamente
-        const res = await fetch(`${API_URL}/api/rpa-designer/designs`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            plataforma_id: plataformaSelecionada.id,
-            nome: nome,
-            semana_offset: semanaSelecionada,
-            passos: passos,
-            variaveis: ['SEMANA_INICIO', 'SEMANA_FIM']
-          })
-        });
-        
-        const data = await res.json();
-        
-        if (data.sucesso || data.design_id) {
-          toast.success('Design guardado com sucesso!');
-          carregarDesigns();
-        } else {
-          toast.error(data.detail || 'Erro ao guardar');
-        }
-      }
-    } catch (error) {
-      toast.error('Erro ao guardar design');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+    
+    await guardarDesignInternal(nome);
   };
 
   // Adicionar passo manual
