@@ -1238,17 +1238,22 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                 <div>
                   <label className="text-slate-500">Total Motoristas</label>
                   <div className="h-7 flex items-center justify-end px-2 bg-slate-100 rounded border text-sm font-medium">
-                    {formatCurrency(totais.total_ganhos_bolt)}
+                    {formatCurrency((totais.total_ganhos_bolt || 0) + (totais.total_ganhos_campanha_bolt || 0))}
                   </div>
+                  {(totais.total_ganhos_campanha_bolt || 0) > 0 && (
+                    <div className="text-[9px] text-slate-500 mt-0.5">
+                      (Bolt: {formatCurrency(totais.total_ganhos_bolt)} + Camp.: {formatCurrency(totais.total_ganhos_campanha_bolt)})
+                    </div>
+                  )}
                 </div>
               </div>
               {totaisEmpresa.bolt_recebido > 0 && (
                 <div className={`text-xs p-2 rounded flex items-center gap-1 ${
-                  Math.abs(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt) < 0.01 
+                  Math.abs(totaisEmpresa.bolt_recebido - ((totais.total_ganhos_bolt || 0) + (totais.total_ganhos_campanha_bolt || 0))) < 0.01 
                     ? 'bg-green-100 text-green-700' 
                     : 'bg-red-100 text-red-700'
                 }`}>
-                  {Math.abs(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt) < 0.01 ? (
+                  {Math.abs(totaisEmpresa.bolt_recebido - ((totais.total_ganhos_bolt || 0) + (totais.total_ganhos_campanha_bolt || 0))) < 0.01 ? (
                     <>
                       <CheckCircle className="w-3 h-3" />
                       Valores conferem ✓
@@ -1256,8 +1261,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                   ) : (
                     <>
                       <AlertTriangle className="w-3 h-3" />
-                      Diferença: {formatCurrency(totaisEmpresa.bolt_recebido - totais.total_ganhos_bolt)}
-                      {totaisEmpresa.bolt_recebido > totais.total_ganhos_bolt ? ' (a mais)' : ' (a menos)'}
+                      Diferença: {formatCurrency(totaisEmpresa.bolt_recebido - ((totais.total_ganhos_bolt || 0) + (totais.total_ganhos_campanha_bolt || 0)))}
+                      {totaisEmpresa.bolt_recebido > ((totais.total_ganhos_bolt || 0) + (totais.total_ganhos_campanha_bolt || 0)) ? ' (a mais)' : ' (a menos)'}
                     </>
                   )}
                 </div>
