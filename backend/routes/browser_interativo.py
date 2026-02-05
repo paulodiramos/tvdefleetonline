@@ -39,15 +39,31 @@ async def iniciar_browser_uber(
     try:
         from services.browser_interativo import get_browser
         
+        # Buscar credenciais guardadas
+        cred = await db.credenciais_uber.find_one({"parceiro_id": parceiro_id})
+        
         browser = await get_browser(parceiro_id)
-        await browser.navegar("https://auth.uber.com/v2/?next_url=https%3A%2F%2Ffleet.uber.com%2F")
+        await browser.navegar("https://auth.uber.com/v2/?next_url=https%3A%2F%2Fsupplier.uber.com%2F")
+        
+        await asyncio.sleep(2)
+        
+        # Se tiver credenciais, preencher email automaticamente
+        if cred and cred.get("email"):
+            email = cred["email"]
+            # Clicar no campo de email
+            email_field = browser.page.locator('input[name="email"], input[type="email"], input[type="text"]').first
+            if await email_field.count() > 0:
+                await email_field.click()
+                await asyncio.sleep(0.3)
+                await email_field.fill(email)
+                logger.info(f"Email preenchido automaticamente: {email}")
         
         screenshot = await browser.screenshot()
         
         return {
             "sucesso": True,
             "screenshot": screenshot,
-            "mensagem": "Browser iniciado - faça login"
+            "mensagem": "Browser iniciado - email preenchido automaticamente"
         }
         
     except Exception as e:
