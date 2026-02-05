@@ -278,12 +278,14 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
   };
   
   const extrairRendimentos = async () => {
-    setAtualizando(true);
+    setExtraindo(true);
     try {
       const token = localStorage.getItem('token');
       toast.info('A extrair rendimentos da Uber... aguarde.');
       
-      const response = await axios.post(`${API}/browser/extrair`, {}, {
+      const response = await axios.post(`${API}/uber/sincronizar`, {
+        semana_index: parseInt(semanaSelecionada)
+      }, {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 180000
       });
@@ -295,9 +297,10 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
         toast.error(response.data.erro || 'Erro na extração');
       }
     } catch (error) {
-      toast.error('Erro na extração');
+      console.error('Erro:', error);
+      toast.error(error.response?.data?.erro || 'Erro na extração');
     } finally {
-      setAtualizando(false);
+      setExtraindo(false);
     }
   };
   
