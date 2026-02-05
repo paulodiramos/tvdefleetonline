@@ -235,6 +235,7 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     uber: false,
     bolt: false,
     viaverde: false,
+    prio: false,
     terabox: false,
     whatsapp: false
   });
