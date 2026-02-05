@@ -318,22 +318,35 @@ class IniciarSessaoRequest(BaseModel):
 
 @router.post("/sessao/iniciar")
 async def iniciar_sessao_design(
-    plataforma_id: str,
-    semana_offset: int = 0,
-    parceiro_id: Optional[str] = None,
-    url_inicial: Optional[str] = None,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """Iniciar sessão de gravação de design (admin only)
     
-    Args:
+    Body JSON:
         plataforma_id: ID da plataforma
         semana_offset: Offset da semana (0=atual, 1=-1 semana, etc)
         parceiro_id: ID do parceiro cuja sessão usar (opcional)
-        url_inicial: URL para começar em vez da URL base (opcional, útil para pós-login)
+        url_inicial: URL para começar em vez da URL base (opcional)
+        credenciais_teste: {username, password} para login automático (opcional)
     """
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Apenas admin pode criar designs")
+    
+    # Parse body
+    try:
+        body = await request.json()
+    except:
+        body = {}
+    
+    plataforma_id = body.get("plataforma_id")
+    semana_offset = body.get("semana_offset", 0)
+    parceiro_id = body.get("parceiro_id")
+    url_inicial = body.get("url_inicial")
+    credenciais_teste = body.get("credenciais_teste")
+    
+    if not plataforma_id:
+        raise HTTPException(status_code=400, detail="plataforma_id é obrigatório")
         
     # Verificar plataforma
     plataforma = await db.plataformas_rpa.find_one({"id": plataforma_id})
@@ -352,6 +365,8 @@ async def iniciar_sessao_design(
             session_path = f"/tmp/bolt_sessao_{parceiro_id}.json"
         elif "via verde" in plataforma_nome or "viaverde" in plataforma_nome:
             session_path = f"/tmp/viaverde_sessao_{parceiro_id}.json"
+        elif "prio" in plataforma_nome:
+            session_path = f"/tmp/prio_sessao_{parceiro_id}.json"
         else:
             session_path = f"/tmp/sessao_{parceiro_id}.json"
         
@@ -379,6 +394,7 @@ async def iniciar_sessao_design(
         "page": None,
         "playwright": None,
         "usar_sessao_parceiro": usar_sessao_parceiro,
+        "credenciais_teste": credenciais_teste,  # Guardar credenciais de teste
         "url_inicial": url_inicial or plataforma["url_base"],
         "criado_em": datetime.now(timezone.utc).isoformat()
     }
@@ -390,6 +406,7 @@ async def iniciar_sessao_design(
         "url_inicial": url_inicial or plataforma["url_base"],
         "semana_offset": semana_offset,
         "usando_sessao_parceiro": usar_sessao_parceiro is not None,
+        "usando_credenciais_teste": credenciais_teste is not None,
         "parceiro_id": parceiro_id
     }
 
