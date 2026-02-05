@@ -181,10 +181,13 @@ export default function RPADesigner({ user, onLogout }) {
       }
       
       // Adicionar credenciais de teste se definidas
-      if (credenciaisTeste.usar_credenciais && credenciaisTeste.username) {
+      if (credenciaisTeste.email || credenciaisTeste.password) {
         body.credenciais_teste = {
-          username: credenciaisTeste.username,
-          password: credenciaisTeste.password
+          email: credenciaisTeste.email,
+          password: credenciaisTeste.password,
+          telefone: credenciaisTeste.telefone,
+          codigo_sms: credenciaisTeste.codigo_sms,
+          texto_livre: credenciaisTeste.texto_livre
         };
       }
       
