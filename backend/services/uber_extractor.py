@@ -233,6 +233,9 @@ class UberExtractor:
             intervalo_dropdown = self.page.get_by_role("button", name="Intervalo")
             if await intervalo_dropdown.count() == 0:
                 intervalo_dropdown = self.page.locator('[data-testid*="time-range"]')
+            if await intervalo_dropdown.count() == 0:
+                # Tentar outros seletores comuns
+                intervalo_dropdown = self.page.locator('button:has-text("Selecionar intervalo")')
             if await intervalo_dropdown.count() > 0:
                 await intervalo_dropdown.first.click()
                 await asyncio.sleep(1)
@@ -242,14 +245,19 @@ class UberExtractor:
                 if await primeira_opcao.count() > 0:
                     await primeira_opcao.click()
                     await asyncio.sleep(1)
+            else:
+                logger.warning("⚠️ Dropdown de intervalo não encontrado")
             
             # 5. Selecionar organização
             logger.info("Passo 5: Selecionar organização")
             org_dropdown = self.page.get_by_role("button", name="organizações")
             if await org_dropdown.count() == 0:
                 org_dropdown = self.page.locator('[data-testid*="org"]')
+            if await org_dropdown.count() == 0:
+                org_dropdown = self.page.locator('button:has-text("Selecionar organiza")')
             
             # Verificar se o dropdown está visível antes de clicar
+            org_selected = False
             if await org_dropdown.count() > 0:
                 try:
                     # Aguardar que o elemento esteja visível (timeout curto)
@@ -257,39 +265,74 @@ class UberExtractor:
                     await org_dropdown.first.click()
                     await asyncio.sleep(1)
                     
-                    # Selecionar primeiro checkbox
+                    # Selecionar primeiro checkbox ou opção
                     checkbox = self.page.locator('input[type="checkbox"]').first
                     if await checkbox.count() > 0:
-                        await checkbox.click()
-                        await asyncio.sleep(1)
+                        is_checked = await checkbox.is_checked()
+                        if not is_checked:
+                            await checkbox.click()
+                            await asyncio.sleep(1)
+                        org_selected = True
+                    else:
+                        # Tentar clicar na primeira opção do dropdown
+                        option = self.page.locator('[role="option"]').first
+                        if await option.count() > 0:
+                            await option.click()
+                            await asyncio.sleep(1)
+                            org_selected = True
                 except Exception as e:
                     logger.warning(f"Dropdown de organização não visível, continuando... {e}")
             
-            # 6. Clicar em Gerar
+            # 6. Clicar em Gerar - com retry
             logger.info("Passo 6: Clicar em Gerar")
             gerar_final_btn = self.page.get_by_role("button", name="Gerar", exact=True)
             if await gerar_final_btn.count() > 0:
-                try:
-                    # Aguardar que o botão esteja habilitado (max 10 segundos)
-                    await gerar_final_btn.first.wait_for(state="visible", timeout=5000)
-                    
-                    # Verificar se está habilitado
-                    is_disabled = await gerar_final_btn.first.is_disabled()
-                    if is_disabled:
-                        logger.warning("Botão 'Gerar' está desabilitado - verifique se todos os campos foram preenchidos")
-                        # Tentar scroll para garantir visibilidade
-                        await gerar_final_btn.first.scroll_into_view_if_needed()
-                        await asyncio.sleep(2)
+                max_retries = 3
+                for retry in range(max_retries):
+                    try:
+                        # Aguardar que o botão esteja habilitado
+                        await gerar_final_btn.first.wait_for(state="visible", timeout=5000)
                         
-                        # Verificar novamente
+                        # Verificar se está habilitado
                         is_disabled = await gerar_final_btn.first.is_disabled()
                         if is_disabled:
-                            return {"sucesso": False, "erro": "Botão 'Gerar' desabilitado - selecione organização e período"}
-                    
-                    await gerar_final_btn.first.click()
-                    await asyncio.sleep(5)  # Aguardar geração
-                except Exception as e:
-                    logger.warning(f"Erro ao clicar em Gerar: {e}")
+                            logger.warning(f"Botão 'Gerar' desabilitado (tentativa {retry+1}/{max_retries})")
+                            
+                            # Screenshot para debug
+                            await self.page.screenshot(path=f'/tmp/uber_gerar_disabled_{retry}.png')
+                            
+                            if retry < max_retries - 1:
+                                # Tentar scroll e esperar mais
+                                await gerar_final_btn.first.scroll_into_view_if_needed()
+                                await asyncio.sleep(3)
+                                
+                                # Tentar selecionar organização novamente se não foi selecionada
+                                if not org_selected:
+                                    logger.info("Tentando selecionar organização novamente...")
+                                    all_checkboxes = self.page.locator('input[type="checkbox"]')
+                                    count = await all_checkboxes.count()
+                                    for i in range(count):
+                                        cb = all_checkboxes.nth(i)
+                                        if await cb.is_visible():
+                                            is_checked = await cb.is_checked()
+                                            if not is_checked:
+                                                await cb.click()
+                                                await asyncio.sleep(1)
+                                                break
+                                continue
+                            else:
+                                return {"sucesso": False, "erro": "Botão 'Gerar' desabilitado - selecione organização e período. Verifique as credenciais e permissões."}
+                        
+                        await gerar_final_btn.first.click()
+                        await asyncio.sleep(5)  # Aguardar geração
+                        logger.info("✅ Botão Gerar clicado com sucesso")
+                        break
+                    except Exception as e:
+                        logger.warning(f"Erro ao clicar em Gerar (tentativa {retry+1}): {e}")
+                        if retry == max_retries - 1:
+                            return {"sucesso": False, "erro": f"Falha ao clicar no botão Gerar: {str(e)}"}
+            else:
+                return {"sucesso": False, "erro": "Botão 'Gerar' não encontrado na página"}
             
             # 7. Fazer download
             logger.info("Passo 7: Fazer download")
