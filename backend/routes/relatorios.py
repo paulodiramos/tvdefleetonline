@@ -220,8 +220,11 @@ async def gerar_relatorio_semanal(
     # 1. Check ganhos_bolt collection (new imports from CSV)
     ganhos_bolt_records = await db.ganhos_bolt.find(bolt_query_simple, {"_id": 0}).to_list(1000)
     for record in ganhos_bolt_records:
-        # Use ganhos_liquidos field from Bolt CSV import
-        total_ganhos_bolt += record.get("ganhos_liquidos", 0) or record.get("ganhos", 0) or record.get("earnings", 0) or 0
+        # Use ganhos field (que inclui campanha) ou ganhos_liquidos + ganhos_campanha
+        ganhos_base = record.get("ganhos_liquidos", 0) or 0
+        ganhos_campanha = record.get("ganhos_campanha", 0) or 0
+        ganhos_total = record.get("ganhos", 0) or (ganhos_base + ganhos_campanha)
+        total_ganhos_bolt += ganhos_total or record.get("earnings", 0) or 0
         total_viagens_bolt += record.get("viagens", 1)
     
     # 2. Check viagens_bolt collection (legacy or individual trips)
