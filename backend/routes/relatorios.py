@@ -1210,6 +1210,7 @@ async def get_resumo_semanal_parceiro(
         totais["total_ganhos_uber"] += ganhos_uber
         totais["total_uber_portagens"] = totais.get("total_uber_portagens", 0) + uber_portagens  # NOVO
         totais["total_ganhos_bolt"] += ganhos_bolt
+        totais["total_ganhos_campanha_bolt"] = totais.get("total_ganhos_campanha_bolt", 0) + ganhos_campanha_bolt
         totais["total_ganhos"] += total_ganhos
         totais["total_combustivel"] += combustivel_total
         totais["total_eletrico"] += eletrico_total
