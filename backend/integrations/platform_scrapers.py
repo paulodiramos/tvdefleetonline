@@ -878,6 +878,266 @@ class GPSScraper(BaseScraper):
         }
 
 
+class PrioScraper(BaseScraper):
+    """Scraper para Prio Energy - Portal MyPRIO"""
+    
+    def __init__(self, headless: bool = True):
+        super().__init__(headless)
+        self.platform_name = "Prio"
+        self.login_url = "https://www.myprio.com/MyPrioReactiveTheme/Login"
+    
+    async def login(self, username: str, password: str, **kwargs) -> Dict:
+        """Login no portal MyPRIO"""
+        try:
+            logger.info(f"🔑 {self.platform_name}: Login com utilizador {username}")
+            
+            # Navegar para página de login
+            await self.page.goto(self.login_url, wait_until='networkidle')
+            await asyncio.sleep(2)
+            
+            await self.page.screenshot(path='/tmp/prio_01_login_page.png')
+            
+            # Preencher utilizador
+            username_input = self.page.locator('#Input_Username')
+            if await username_input.count() > 0:
+                await username_input.fill(username)
+                logger.info(f"✅ Utilizador preenchido: {username}")
+            else:
+                logger.error("❌ Campo de utilizador não encontrado")
+                return {"success": False, "error": "Campo de utilizador não encontrado"}
+            
+            await asyncio.sleep(0.5)
+            
+            # Preencher password
+            password_input = self.page.locator('#Input_Password')
+            if await password_input.count() > 0:
+                await password_input.fill(password)
+                logger.info("✅ Password preenchida")
+            else:
+                logger.error("❌ Campo de password não encontrado")
+                return {"success": False, "error": "Campo de password não encontrado"}
+            
+            await self.page.screenshot(path='/tmp/prio_02_credentials_filled.png')
+            
+            # Clicar no botão de login
+            login_btn = self.page.locator('button:has-text("INICIAR SESSÃO")')
+            if await login_btn.count() == 0:
+                login_btn = self.page.locator('input[type="submit"]')
+            if await login_btn.count() == 0:
+                login_btn = self.page.get_by_role("button", name="INICIAR SESSÃO")
+            
+            if await login_btn.count() > 0:
+                await login_btn.first.click()
+                logger.info("✅ Botão de login clicado")
+            else:
+                logger.error("❌ Botão de login não encontrado")
+                return {"success": False, "error": "Botão de login não encontrado"}
+            
+            # Aguardar navegação
+            await asyncio.sleep(5)
+            
+            await self.page.screenshot(path='/tmp/prio_03_after_login.png')
+            
+            # Verificar se login foi bem sucedido
+            current_url = self.page.url
+            page_content = await self.page.content()
+            
+            # Verificar erros de login
+            error_selectors = [
+                '.error-message',
+                '.alert-danger',
+                '[class*="error"]',
+                'text=credenciais inválidas',
+                'text=utilizador ou password incorretos'
+            ]
+            
+            for selector in error_selectors:
+                try:
+                    if await self.page.locator(selector).count() > 0:
+                        error_text = await self.page.locator(selector).first.text_content()
+                        logger.error(f"❌ Erro de login: {error_text}")
+                        return {"success": False, "error": error_text}
+                except Exception:
+                    continue
+            
+            # Verificar se saiu da página de login
+            if "Login" not in current_url or "Dashboard" in current_url or "Home" in current_url:
+                logger.info("✅ Login Prio bem sucedido!")
+                return {"success": True}
+            
+            # Verificar elementos típicos de área logada
+            dashboard_indicators = [
+                'text=Bem-vindo',
+                'text=Dashboard',
+                'text=Minha Conta',
+                'text=Consumos',
+                'text=Faturas',
+                '[class*="dashboard"]',
+                '[class*="menu"]'
+            ]
+            
+            for indicator in dashboard_indicators:
+                try:
+                    if await self.page.locator(indicator).count() > 0:
+                        logger.info(f"✅ Login confirmado - encontrado: {indicator}")
+                        return {"success": True}
+                except Exception:
+                    continue
+            
+            logger.warning("⚠️ Estado de login incerto")
+            return {"success": True, "warning": "Login pode ter sido bem sucedido, mas não foi possível confirmar"}
+            
+        except Exception as e:
+            logger.error(f"❌ Erro durante login Prio: {e}")
+            await self.page.screenshot(path='/tmp/prio_99_error.png')
+            return {"success": False, "error": str(e)}
+    
+    async def extract_data(self, start_date: str = None, end_date: str = None, **kwargs) -> Dict:
+        """Extrair dados de consumo/faturas do portal Prio"""
+        try:
+            logger.info("📊 Prio: Iniciando extração de dados...")
+            
+            await self.page.screenshot(path='/tmp/prio_04_dashboard.png')
+            
+            # Navegar para secção de consumos/faturas
+            # Procurar menu de consumos
+            consumos_selectors = [
+                'a:has-text("Consumos")',
+                'a:has-text("Movimentos")',
+                '[href*="consumos"]',
+                '[href*="movements"]',
+                'text=Consultar Consumos'
+            ]
+            
+            clicked_consumos = False
+            for selector in consumos_selectors:
+                try:
+                    locator = self.page.locator(selector)
+                    if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
+                        await locator.first.click()
+                        await asyncio.sleep(3)
+                        clicked_consumos = True
+                        logger.info(f"✅ Navegou para consumos: {selector}")
+                        break
+                except Exception:
+                    continue
+            
+            if not clicked_consumos:
+                logger.warning("⚠️ Secção de consumos não encontrada")
+            
+            await self.page.screenshot(path='/tmp/prio_05_consumos.png')
+            
+            # Preencher filtros de data se disponíveis
+            if start_date and end_date:
+                logger.info(f"📅 Aplicando filtro de datas: {start_date} a {end_date}")
+                
+                # Formato de data para o portal (DD/MM/YYYY)
+                start_formatted = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d/%m/%Y')
+                end_formatted = datetime.strptime(end_date, '%Y-%m-%d').strftime('%d/%m/%Y')
+                
+                date_from_selectors = [
+                    'input[id*="DataInicio"]',
+                    'input[id*="StartDate"]',
+                    'input[name*="startDate"]',
+                    'input[placeholder*="início"]',
+                    'input[placeholder*="De"]'
+                ]
+                
+                date_to_selectors = [
+                    'input[id*="DataFim"]',
+                    'input[id*="EndDate"]',
+                    'input[name*="endDate"]',
+                    'input[placeholder*="fim"]',
+                    'input[placeholder*="Até"]'
+                ]
+                
+                # Preencher data inicial
+                for selector in date_from_selectors:
+                    try:
+                        locator = self.page.locator(selector).first
+                        if await locator.is_visible(timeout=1000):
+                            await locator.fill(start_formatted)
+                            logger.info(f"✅ Data inicial: {start_formatted}")
+                            break
+                    except Exception:
+                        continue
+                
+                # Preencher data final
+                for selector in date_to_selectors:
+                    try:
+                        locator = self.page.locator(selector).first
+                        if await locator.is_visible(timeout=1000):
+                            await locator.fill(end_formatted)
+                            logger.info(f"✅ Data final: {end_formatted}")
+                            break
+                    except Exception:
+                        continue
+                
+                # Clicar em pesquisar/filtrar
+                search_btn = self.page.locator('button:has-text("Pesquisar"), button:has-text("Filtrar"), input[type="submit"]').first
+                if await search_btn.count() > 0:
+                    await search_btn.click()
+                    await asyncio.sleep(3)
+            
+            await self.page.screenshot(path='/tmp/prio_06_results.png')
+            
+            # Tentar extrair dados da tabela
+            data = []
+            table = self.page.locator('table').first
+            if await table.count() > 0:
+                rows = await self.page.locator('table tbody tr').all()
+                logger.info(f"📊 Encontradas {len(rows)} linhas na tabela")
+                
+                for row in rows[:50]:  # Limitar a 50 registos
+                    try:
+                        cells = await row.locator('td').all()
+                        row_data = []
+                        for cell in cells:
+                            text = await cell.text_content()
+                            row_data.append(text.strip() if text else '')
+                        if row_data:
+                            data.append(row_data)
+                    except Exception:
+                        continue
+            
+            # Tentar exportar CSV se disponível
+            export_selectors = [
+                'button:has-text("Exportar")',
+                'a:has-text("Exportar")',
+                'button:has-text("Excel")',
+                'button:has-text("CSV")',
+                '[title*="Exportar"]'
+            ]
+            
+            for selector in export_selectors:
+                try:
+                    locator = self.page.locator(selector)
+                    if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
+                        logger.info(f"✅ Botão de exportar encontrado: {selector}")
+                        # Não clicar automaticamente, apenas informar
+                        break
+                except Exception:
+                    continue
+            
+            await self.page.screenshot(path='/tmp/prio_07_final.png')
+            
+            return {
+                "success": True,
+                "platform": "prio",
+                "data": data,
+                "rows_extracted": len(data)
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao extrair dados Prio: {e}")
+            await self.page.screenshot(path='/tmp/prio_99_extract_error.png')
+            return {
+                "success": False,
+                "platform": "prio",
+                "error": str(e)
+            }
+
+
 class CombustivelScraper(BaseScraper):
     """Scraper para sistemas de gestão de combustível"""
     
