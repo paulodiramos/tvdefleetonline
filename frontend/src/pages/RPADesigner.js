@@ -1114,12 +1114,20 @@ export default function RPADesigner({ user, onLogout }) {
                     </div>
                   </>
                 ) : (
-                  <Button 
-                    className="w-full bg-red-600 hover:bg-red-700"
-                    onClick={pararSessao}
-                  >
-                    <Square className="w-4 h-4 mr-2" /> Parar
-                  </Button>
+                  <>
+                    <Button 
+                      className="w-full bg-red-600 hover:bg-red-700"
+                      onClick={pararSessao}
+                    >
+                      <Square className="w-4 h-4 mr-2" /> Parar
+                    </Button>
+                    <Button 
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      onClick={() => abrirPreviewPopup(sessionId)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" /> Abrir Preview Grande
+                    </Button>
+                  </>
                 )}
                 
                 <Button 
