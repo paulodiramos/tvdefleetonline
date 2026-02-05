@@ -37,6 +37,10 @@ class UberRPA:
         """Iniciar browser Playwright com suporte a sessão persistente e anti-detecção"""
         from playwright.async_api import async_playwright
         import json
+        import os
+        
+        # Definir caminho do Playwright
+        os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
         
         self.playwright = await async_playwright().start()
         
