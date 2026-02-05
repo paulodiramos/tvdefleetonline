@@ -933,6 +933,9 @@ class CredenciaisPlataforma(BaseModel):
     # Via Verde
     viaverde_usuario: Optional[str] = None
     viaverde_password: Optional[str] = None
+    # Prio Energy
+    prio_usuario: Optional[str] = None
+    prio_password: Optional[str] = None
 
 
 @router.get("/{parceiro_id}/credenciais-plataformas")
