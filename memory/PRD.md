@@ -3,6 +3,99 @@
 ## Visão Geral
 Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro, automações RPA, sistema de permissões granular, e **App Móvel para Motoristas**.
 
+## ✅ NOVO: RPA Designer Visual (05/02/2026)
+
+### Descrição
+Sistema onde o Admin desenha/grava fluxos de automação uma vez, e esses designs ficam disponíveis para todos os parceiros executarem automaticamente.
+
+### Arquitectura
+```
+ADMIN (1 vez)                    PARCEIRO (automático)
+─────────────                    ────────────────────
+1. Escolhe plataforma            1. Vai a "Resumo Semanal"
+2. Usa credenciais teste         2. Clica "Sincronizar"
+3. Grava passos no browser       3. Sistema usa design admin
+4. Define variáveis (semanas)    4. Executa com creds parceiro
+5. Guarda 4 designs (semanas)    5. Dados importados ✅
+```
+
+### Funcionalidades Implementadas
+- **Gestão de Plataformas**: Criar/editar plataformas (Uber, Bolt, Via Verde, etc.)
+- **Designs por Semana**: Cada plataforma pode ter até 4 designs (semana atual, -1, -2, -3)
+- **Browser Interativo**: Admin navega no site e o sistema grava os cliques
+- **Tipos de Passos Suportados**:
+  - `goto` - Navegar URL
+  - `click` - Clicar em elemento
+  - `type` - Escrever texto
+  - `fill_credential` - Preencher com credencial do parceiro
+  - `select` - Selecionar opção
+  - `wait` - Esperar X ms
+  - `wait_selector` - Esperar elemento aparecer
+  - `press` - Pressionar tecla (Enter, Tab, etc.)
+  - `scroll` - Scroll na página
+  - `download` - Aguardar download de ficheiro
+  - `screenshot` - Tirar screenshot (debug)
+- **Variáveis Dinâmicas**: `{{SEMANA_INICIO}}`, `{{SEMANA_FIM}}`, `{{SEMANA_OFFSET}}`
+- **Agendamento por Parceiro**: Manual ou automático (diário/semanal/mensal)
+
+### Endpoints Backend
+**Admin - Plataformas:**
+- `GET /api/rpa-designer/plataformas` - Listar plataformas
+- `POST /api/rpa-designer/plataformas` - Criar plataforma
+- `PUT /api/rpa-designer/plataformas/{id}` - Atualizar
+- `DELETE /api/rpa-designer/plataformas/{id}` - Desativar
+- `POST /api/rpa-designer/seed-plataformas` - Criar predefinidas (Uber, Bolt, Via Verde)
+
+**Admin - Designs:**
+- `GET /api/rpa-designer/designs` - Listar designs
+- `POST /api/rpa-designer/designs` - Criar design
+- `PUT /api/rpa-designer/designs/{id}` - Atualizar
+- `DELETE /api/rpa-designer/designs/{id}` - Eliminar
+
+**Admin - Sessão de Gravação:**
+- `POST /api/rpa-designer/sessao/iniciar` - Iniciar sessão de design
+- `POST /api/rpa-designer/sessao/{id}/gravar-passo` - Gravar passo
+- `GET /api/rpa-designer/sessao/{id}/passos` - Obter passos
+- `POST /api/rpa-designer/sessao/{id}/guardar` - Guardar como design
+- `DELETE /api/rpa-designer/sessao/{id}` - Cancelar sessão
+- `WS /api/rpa-designer/ws/design/{id}` - WebSocket para browser interativo
+
+**Parceiro - Agendamento:**
+- `GET /api/rpa-designer/agendamentos` - Listar agendamentos
+- `POST /api/rpa-designer/agendamentos` - Configurar agendamento
+
+**Parceiro - Execução:**
+- `POST /api/rpa-designer/executar` - Executar design manual
+- `GET /api/rpa-designer/execucoes` - Histórico de execuções
+- `GET /api/rpa-designer/execucoes/{id}` - Detalhes execução
+
+**Credenciais:**
+- `GET /api/rpa-designer/credenciais/{plataforma_id}` - Obter credenciais
+- `POST /api/rpa-designer/credenciais/{plataforma_id}` - Guardar credenciais
+
+### Páginas Frontend
+- `/rpa-designer` - Interface de gravação de designs (Admin)
+- `/gestao-plataformas-rpa` - Gestão de plataformas (Admin)
+
+### Ficheiros Criados
+- `/app/backend/models/rpa_designer.py` - Modelos Pydantic
+- `/app/backend/services/rpa_executor.py` - Motor de execução
+- `/app/backend/routes/rpa_designer.py` - Endpoints API
+- `/app/frontend/src/pages/RPADesigner.js` - UI Designer
+- `/app/frontend/src/pages/GestaoPlataformasRPA.js` - UI Gestão
+
+### Plataformas Predefinidas Criadas
+1. **Uber Fleet** - https://supplier.uber.com
+2. **Bolt Partner** - https://fleets.bolt.eu
+3. **Via Verde Empresas** - https://www.viaverde.pt/empresas
+
+### Próximos Passos
+1. Admin grava designs para cada plataforma (4 semanas)
+2. Parceiros configuram credenciais e agendamentos
+3. Sistema executa automaticamente ou parceiro clica "Sincronizar"
+
+---
+
 ## ✅ Extração CSV Rendimentos Uber (04/02/2026)
 
 ### Separação de Responsabilidades (Segurança)
