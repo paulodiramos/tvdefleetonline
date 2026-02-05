@@ -34,7 +34,7 @@ const SELETORES_TIPO = [
   { value: 'role', label: 'Role (button, link...)' },
 ];
 
-export default function RPADesigner() {
+export default function RPADesigner({ user, onLogout }) {
   const navigate = useNavigate();
   const [plataformas, setPlataformas] = useState([]);
   const [plataformaSelecionada, setPlataformaSelecionada] = useState(null);
