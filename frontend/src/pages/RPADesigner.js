@@ -343,16 +343,16 @@ export default function RPADesigner({ user, onLogout }) {
 
   return (
     <Layout user={user} onLogout={onLogout}>
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">🎨 RPA Designer</h1>
-            <p className="text-gray-600">Grave fluxos de automação para extração de dados</p>
+            <h1 className="text-2xl font-bold text-white">🎨 RPA Designer</h1>
+            <p className="text-gray-400">Grave fluxos de automação para extração de dados</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/gestao-plataformas-rpa')}>
+            <Button variant="outline" className="text-white border-gray-600 hover:bg-gray-800" onClick={() => navigate('/gestao-plataformas-rpa')}>
               <Settings className="w-4 h-4 mr-2" /> Gerir Plataformas
             </Button>
             {plataformas.length === 0 && (
