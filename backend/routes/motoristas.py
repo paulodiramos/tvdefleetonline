@@ -314,6 +314,8 @@ async def register_motorista(
         "additional_docs": []
     }
     motorista_dict["approved"] = False
+    motorista_dict["ativo"] = True  # Motorista ativo por defeito
+    motorista_dict["status_motorista"] = "ativo"  # Status ativo por defeito
     motorista_dict["senha_provisoria"] = senha_provisoria
     motorista_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
