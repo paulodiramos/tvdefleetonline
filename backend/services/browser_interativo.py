@@ -1,0 +1,275 @@
+"""
+Serviço de Browser Interativo para Login Uber
+Permite ao utilizador ver e interagir com o browser Playwright via WebSocket
+"""
+import asyncio
+import base64
+import json
+import logging
+import os
+from datetime import datetime, timezone
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+# Configurar Playwright
+os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
+
+
+class BrowserInterativo:
+    """Browser Playwright com interface interativa via screenshots"""
+    
+    def __init__(self, parceiro_id: str):
+        self.parceiro_id = parceiro_id
+        self.playwright = None
+        self.browser = None
+        self.context = None
+        self.page = None
+        self.ativo = False
+        self.ultimo_screenshot = None
+        self.session_path = f"/tmp/uber_sessao_{parceiro_id}.json"
+        
+    async def iniciar(self):
+        """Iniciar browser em modo headless com screenshots"""
+        from playwright.async_api import async_playwright
+        
+        self.playwright = await async_playwright().start()
+        
+        self.browser = await self.playwright.chromium.launch(
+            headless=True,
+            args=[
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-blink-features=AutomationControlled',
+                '--window-size=1280,800'
+            ]
+        )
+        
+        # Tentar carregar sessão existente
+        storage_state = None
+        if os.path.exists(self.session_path):
+            try:
+                storage_state = self.session_path
+                logger.info(f"Carregando sessão existente: {self.session_path}")
+            except Exception as e:
+                logger.warning(f"Erro ao carregar sessão: {e}")
+        
+        self.context = await self.browser.new_context(
+            viewport={"width": 1280, "height": 800},
+            accept_downloads=True,
+            storage_state=storage_state,
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+            locale='pt-PT',
+            timezone_id='Europe/Lisbon'
+        )
+        
+        # Anti-detecção
+        await self.context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+        """)
+        
+        self.page = await self.context.new_page()
+        self.ativo = True
+        
+        logger.info(f"Browser interativo iniciado para parceiro {self.parceiro_id}")
+        return True
+        
+    async def navegar(self, url: str):
+        """Navegar para URL"""
+        if not self.page:
+            return False
+        await self.page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        await asyncio.sleep(1)
+        return True
+        
+    async def screenshot(self) -> Optional[str]:
+        """Capturar screenshot como base64"""
+        if not self.page:
+            return None
+        try:
+            screenshot_bytes = await self.page.screenshot(type="jpeg", quality=50)
+            self.ultimo_screenshot = base64.b64encode(screenshot_bytes).decode('utf-8')
+            return self.ultimo_screenshot
+        except Exception as e:
+            logger.error(f"Erro no screenshot: {e}")
+            return None
+            
+    async def clicar(self, x: int, y: int):
+        """Clicar numa posição"""
+        if not self.page:
+            return False
+        await self.page.mouse.click(x, y)
+        await asyncio.sleep(0.5)
+        return True
+        
+    async def escrever(self, texto: str):
+        """Escrever texto"""
+        if not self.page:
+            return False
+        await self.page.keyboard.type(texto, delay=50)
+        return True
+        
+    async def tecla(self, tecla: str):
+        """Pressionar tecla (Enter, Tab, etc)"""
+        if not self.page:
+            return False
+        await self.page.keyboard.press(tecla)
+        await asyncio.sleep(0.3)
+        return True
+        
+    async def verificar_login(self) -> dict:
+        """Verificar se está logado no Uber"""
+        if not self.page:
+            return {"logado": False, "erro": "Browser não iniciado"}
+            
+        url = self.page.url
+        
+        # Se está na página do fleet sem auth, está logado
+        if "fleet.uber.com" in url and "auth" not in url:
+            return {"logado": True, "url": url}
+        if "supplier.uber.com" in url and "auth" not in url:
+            return {"logado": True, "url": url}
+            
+        return {"logado": False, "url": url}
+        
+    async def guardar_sessao(self):
+        """Guardar estado da sessão"""
+        if not self.context:
+            return False
+        try:
+            await self.context.storage_state(path=self.session_path)
+            logger.info(f"Sessão guardada: {self.session_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Erro ao guardar sessão: {e}")
+            return False
+            
+    async def extrair_rendimentos(self) -> dict:
+        """Extrair rendimentos após login"""
+        if not self.page:
+            return {"sucesso": False, "erro": "Browser não iniciado"}
+            
+        try:
+            # Verificar se está logado
+            status = await self.verificar_login()
+            if not status["logado"]:
+                return {"sucesso": False, "erro": "Não está logado"}
+                
+            # Navegar para rendimentos
+            logger.info("A navegar para Rendimentos...")
+            
+            # Tentar encontrar link de rendimentos
+            rendimentos_link = self.page.locator('a:has-text("Rendimentos"), a:has-text("Earnings"), [href*="earnings"]').first
+            
+            if await rendimentos_link.count() > 0:
+                await rendimentos_link.click()
+                await asyncio.sleep(3)
+            else:
+                # Tentar URL direta
+                current_url = self.page.url
+                if '/orgs/' in current_url:
+                    org_id = current_url.split('/orgs/')[1].split('/')[0]
+                    await self.page.goto(f"https://supplier.uber.com/orgs/{org_id}/earnings", wait_until="domcontentloaded")
+                else:
+                    await self.page.goto("https://fleet.uber.com/p3/earnings", wait_until="domcontentloaded")
+                await asyncio.sleep(3)
+                
+            # Fazer download do relatório
+            logger.info("A fazer download do relatório...")
+            download_btn = self.page.locator('button:has-text("Fazer o download"), button:has-text("Download")').first
+            
+            motoristas_data = []
+            
+            if await download_btn.count() > 0 and await download_btn.is_visible():
+                try:
+                    os.makedirs("/tmp/uber_downloads", exist_ok=True)
+                    
+                    async with self.page.expect_download(timeout=60000) as download_info:
+                        await download_btn.click()
+                    
+                    download = await download_info.value
+                    
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"/tmp/uber_downloads/uber_{self.parceiro_id}_{timestamp}.csv"
+                    await download.save_as(filename)
+                    
+                    logger.info(f"CSV descarregado: {filename}")
+                    
+                    # Processar CSV
+                    import csv
+                    import io
+                    
+                    with open(filename, 'r', encoding='utf-8-sig') as f:
+                        content = f.read()
+                    
+                    delimiter = ';' if ';' in content else ','
+                    reader = csv.DictReader(io.StringIO(content), delimiter=delimiter)
+                    
+                    for row in reader:
+                        nome = row.get("Nome do motorista", row.get("Driver name", row.get("Nome", "")))
+                        if nome:
+                            motoristas_data.append({
+                                "nome": nome,
+                                "rendimentos_totais": self._parse_valor(row.get("Rendimentos totais", row.get("Total earnings", "0"))),
+                                "rendimentos_liquidos": self._parse_valor(row.get("Rendimentos líquidos", row.get("Net earnings", "0"))),
+                            })
+                    
+                    total = sum(m.get("rendimentos_liquidos", 0) for m in motoristas_data)
+                    
+                    return {
+                        "sucesso": True,
+                        "motoristas": motoristas_data,
+                        "total_motoristas": len(motoristas_data),
+                        "total_rendimentos": total,
+                        "ficheiro": filename
+                    }
+                    
+                except Exception as e:
+                    logger.warning(f"Download falhou: {e}")
+                    return {"sucesso": False, "erro": f"Erro no download: {str(e)}"}
+            else:
+                return {"sucesso": False, "erro": "Botão de download não encontrado"}
+                
+        except Exception as e:
+            logger.error(f"Erro na extração: {e}")
+            return {"sucesso": False, "erro": str(e)}
+            
+    def _parse_valor(self, valor_str: str) -> float:
+        """Converter string de valor monetário para float"""
+        if not valor_str:
+            return 0.0
+        valor = valor_str.replace("€", "").replace("$", "").replace(" ", "").strip()
+        valor = valor.replace(",", ".")
+        try:
+            return float(valor)
+        except:
+            return 0.0
+            
+    async def fechar(self):
+        """Fechar browser"""
+        self.ativo = False
+        if self.browser:
+            await self.browser.close()
+        if self.playwright:
+            await self.playwright.stop()
+        logger.info(f"Browser fechado para parceiro {self.parceiro_id}")
+
+
+# Dicionário global de browsers ativos
+browsers_ativos = {}
+
+
+async def get_browser(parceiro_id: str) -> BrowserInterativo:
+    """Obter ou criar browser para parceiro"""
+    if parceiro_id not in browsers_ativos or not browsers_ativos[parceiro_id].ativo:
+        browser = BrowserInterativo(parceiro_id)
+        await browser.iniciar()
+        browsers_ativos[parceiro_id] = browser
+    return browsers_ativos[parceiro_id]
+
+
+async def fechar_browser(parceiro_id: str):
+    """Fechar browser de um parceiro"""
+    if parceiro_id in browsers_ativos:
+        await browsers_ativos[parceiro_id].fechar()
+        del browsers_ativos[parceiro_id]
