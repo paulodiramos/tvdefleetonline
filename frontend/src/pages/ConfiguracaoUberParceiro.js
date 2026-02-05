@@ -273,6 +273,30 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     }
   };
   
+  const extrairRendimentos = async () => {
+    setAtualizando(true);
+    try {
+      const token = localStorage.getItem('token');
+      toast.info('A extrair rendimentos da Uber... aguarde.');
+      
+      const response = await axios.post(`${API}/browser/extrair`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 180000
+      });
+      
+      if (response.data.sucesso) {
+        toast.success(`Extração concluída! ${response.data.total_motoristas} motoristas, €${response.data.total_rendimentos?.toFixed(2)}`);
+        carregarDados();
+      } else {
+        toast.error(response.data.erro || 'Erro na extração');
+      }
+    } catch (error) {
+      toast.error('Erro na extração');
+    } finally {
+      setAtualizando(false);
+    }
+  };
+  
   const fecharBrowser = async () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
