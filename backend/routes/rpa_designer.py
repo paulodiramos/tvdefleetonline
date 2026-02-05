@@ -955,22 +955,71 @@ async def websocket_design_browser(
         
         logger.info(f"A iniciar browser para sessão {session_id}")
         
-        # Iniciar browser
+        # Iniciar browser com configurações anti-detecção avançadas
         playwright_instance = await async_playwright().start()
         browser = await playwright_instance.chromium.launch(
-            headless=True,
+            headless=False,  # Usar headed mode para evitar detecção
             args=[
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
+                '--disable-blink-features=AutomationControlled',
+                '--disable-infobars',
+                '--window-size=1280,720',
+                '--start-maximized',
+                '--disable-extensions',
+                '--disable-plugins-discovery',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding'
             ]
         )
         
+        # Contexto com configurações anti-detecção
         context = await browser.new_context(
             viewport={"width": 1280, "height": 720},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            locale="pt-PT",
+            timezone_id="Europe/Lisbon",
+            geolocation={"latitude": 38.7223, "longitude": -9.1393},
+            permissions=["geolocation"],
+            color_scheme="light",
+            java_script_enabled=True,
+            has_touch=False,
+            is_mobile=False
         )
+        
+        # Scripts anti-detecção
+        await context.add_init_script("""
+            // Esconder webdriver
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined
+            });
+            
+            // Esconder automação
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5]
+            });
+            
+            // Chrome runtime
+            window.chrome = {
+                runtime: {}
+            };
+            
+            // Permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
+            
+            // Languages
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['pt-PT', 'pt', 'en-US', 'en']
+            });
+        """)
+        
         page = await context.new_page()
         
         session["playwright"] = playwright_instance
@@ -982,6 +1031,9 @@ async def websocket_design_browser(
         logger.info(f"A navegar para: {url_base}")
         
         await page.goto(url_base, wait_until="domcontentloaded", timeout=30000)
+        
+        # Pequena espera para parecer mais humano
+        await asyncio.sleep(1)
         
         # Enviar screenshot inicial
         screenshot = await page.screenshot(type="jpeg", quality=50)
