@@ -758,5 +758,6 @@ export default function RPADesigner({ user, onLogout }) {
         )}
       </div>
     </div>
+    </Layout>
   );
 }
