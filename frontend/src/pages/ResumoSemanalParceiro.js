@@ -98,6 +98,49 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     liquidado: { label: 'Liquidado', color: 'bg-green-100 text-green-700' }
   };
 
+  // Calcular datas de início (segunda) e fim (domingo) da semana
+  const calcularDatasSemana = (semanaNum, anoNum) => {
+    // Encontrar primeira segunda-feira do ano (semana ISO)
+    const primeiroJan = new Date(anoNum, 0, 1);
+    const diaSemana = primeiroJan.getDay(); // 0=Dom, 1=Seg, ..., 6=Sab
+    
+    // Ajustar para encontrar a primeira segunda-feira
+    // Se 1 de janeiro é segunda (1), começamos aí
+    // Se é terça-sábado (2-6), voltamos para a segunda anterior
+    // Se é domingo (0), avançamos para segunda
+    let primeiraSegunda;
+    if (diaSemana === 1) {
+      primeiraSegunda = new Date(anoNum, 0, 1);
+    } else if (diaSemana === 0) {
+      primeiraSegunda = new Date(anoNum, 0, 2); // Próxima segunda
+    } else {
+      // Voltar para segunda anterior (pode ser no ano anterior)
+      primeiraSegunda = new Date(anoNum, 0, 1 - (diaSemana - 1));
+    }
+    
+    // Calcular início da semana desejada
+    const inicioSemana = new Date(primeiraSegunda);
+    inicioSemana.setDate(primeiraSegunda.getDate() + (semanaNum - 1) * 7);
+    
+    // Fim da semana (domingo)
+    const fimSemana = new Date(inicioSemana);
+    fimSemana.setDate(inicioSemana.getDate() + 6);
+    
+    // Formatar datas
+    const formatarData = (data) => {
+      return data.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
+    };
+    
+    return {
+      inicio: formatarData(inicioSemana),
+      fim: formatarData(fimSemana),
+      inicioCompleto: inicioSemana.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }),
+      fimCompleto: fimSemana.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' })
+    };
+  };
+
+  const datasSemana = semana && ano ? calcularDatasSemana(semana, ano) : null;
+
   useEffect(() => {
     const now = new Date();
     const startOfYear = new Date(now.getFullYear(), 0, 1);
