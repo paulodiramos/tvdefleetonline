@@ -102,6 +102,7 @@ from routes.rpa_automacao import router as rpa_automacao_router
 from routes.rpa_designer import router as rpa_designer_router
 from routes.rpa_uber_config import router as rpa_uber_config_router
 from routes.browser_interativo import router as browser_interativo_router
+from routes.uber_sync import router as uber_sync_router
 from routes.credenciais import router as credenciais_router
 from routes.admin_servicos import router as admin_servicos_router
 from routes.importacao_rpa import router as importacao_rpa_router
