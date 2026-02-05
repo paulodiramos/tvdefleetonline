@@ -415,7 +415,7 @@ export default function RPADesigner({ user, onLogout }) {
                           className={`p-2 rounded text-sm flex items-center justify-between ${
                             semanaSelecionada === s
                               ? 'bg-blue-600 text-gray-900'
-                              : 'bg-gray-700 hover:bg-gray-600'
+                              : 'bg-gray-100 hover:bg-gray-200'
                           }`}
                         >
                           <span>{s === 0 ? 'Atual' : `-${s}`}</span>
@@ -602,9 +602,9 @@ export default function RPADesigner({ user, onLogout }) {
                     passos.map((passo, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2 p-2 bg-gray-700 rounded text-sm group"
+                        className="flex items-center gap-2 p-2 bg-gray-100 rounded text-sm group"
                       >
-                        <span className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-xs">
+                        <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs">
                           {passo.ordem}
                         </span>
                         <div className="flex-1 truncate">
