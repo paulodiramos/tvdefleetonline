@@ -577,7 +577,7 @@ export default function RPADesigner({ user, onLogout }) {
                 {gravando && (
                   <div className="mt-4 space-y-3">
                     {/* Campos de credenciais */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       <div>
                         <label className="text-xs text-gray-400 mb-1 block">📧 Email</label>
                         <div className="flex gap-1">
@@ -592,7 +592,6 @@ export default function RPADesigner({ user, onLogout }) {
                               const email = document.getElementById('campo-email').value;
                               if (email) {
                                 enviarAcao('type', { texto: email });
-                                // Gravar como credencial
                                 const novoPasso = {
                                   ordem: passos.length + 1,
                                   tipo: 'fill_credential',
@@ -601,7 +600,7 @@ export default function RPADesigner({ user, onLogout }) {
                                 };
                                 setPassos(prev => [...prev, novoPasso]);
                                 document.getElementById('campo-email').value = '';
-                                toast.success('Email inserido e gravado');
+                                toast.success('Email inserido');
                               }
                             }}
                           >
