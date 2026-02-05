@@ -61,6 +61,22 @@ export default function RPADesigner({ user, onLogout }) {
 
   const token = localStorage.getItem('token');
 
+  // Atalho de teclado Ctrl+Z para anular último passo
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        if (passos.length > 0) {
+          setPassos(prev => prev.slice(0, -1).map((p, i) => ({...p, ordem: i + 1})));
+          toast.info('Último passo anulado (Ctrl+Z)');
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [passos]);
+
   // Carregar plataformas
   useEffect(() => {
     carregarPlataformas();
