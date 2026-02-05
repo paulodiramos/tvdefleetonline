@@ -308,13 +308,29 @@ async def eliminar_design(
 
 # ==================== SESSÃO DE DESIGN (Browser Interativo) ====================
 
+class IniciarSessaoRequest(BaseModel):
+    """Request para iniciar sessão de design"""
+    plataforma_id: str
+    semana_offset: int = 0
+    usar_sessao_parceiro: Optional[Dict[str, Any]] = None  # {parceiro_id, session_path}
+    url_inicial: Optional[str] = None  # URL para começar (pós-login)
+
 @router.post("/sessao/iniciar")
 async def iniciar_sessao_design(
     plataforma_id: str,
     semana_offset: int = 0,
+    parceiro_id: Optional[str] = None,
+    url_inicial: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Iniciar sessão de gravação de design (admin only)"""
+    """Iniciar sessão de gravação de design (admin only)
+    
+    Args:
+        plataforma_id: ID da plataforma
+        semana_offset: Offset da semana (0=atual, 1=-1 semana, etc)
+        parceiro_id: ID do parceiro cuja sessão usar (opcional)
+        url_inicial: URL para começar em vez da URL base (opcional, útil para pós-login)
+    """
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Apenas admin pode criar designs")
         
@@ -322,6 +338,30 @@ async def iniciar_sessao_design(
     plataforma = await db.plataformas_rpa.find_one({"id": plataforma_id})
     if not plataforma:
         raise HTTPException(status_code=404, detail="Plataforma não encontrada")
+    
+    # Verificar sessão do parceiro se fornecido
+    usar_sessao_parceiro = None
+    if parceiro_id:
+        import os
+        # Mapear nome da plataforma para prefixo do ficheiro
+        plataforma_nome = plataforma.get("nome", "").lower()
+        if "uber" in plataforma_nome:
+            session_path = f"/tmp/uber_sessao_{parceiro_id}.json"
+        elif "bolt" in plataforma_nome:
+            session_path = f"/tmp/bolt_sessao_{parceiro_id}.json"
+        elif "via verde" in plataforma_nome or "viaverde" in plataforma_nome:
+            session_path = f"/tmp/viaverde_sessao_{parceiro_id}.json"
+        else:
+            session_path = f"/tmp/sessao_{parceiro_id}.json"
+        
+        if os.path.exists(session_path):
+            usar_sessao_parceiro = {
+                "parceiro_id": parceiro_id,
+                "session_path": session_path
+            }
+            logger.info(f"Usando sessão do parceiro {parceiro_id}: {session_path}")
+        else:
+            logger.warning(f"Sessão do parceiro {parceiro_id} não encontrada: {session_path}")
         
     session_id = str(uuid.uuid4())
     
@@ -337,6 +377,8 @@ async def iniciar_sessao_design(
         "browser": None,
         "page": None,
         "playwright": None,
+        "usar_sessao_parceiro": usar_sessao_parceiro,
+        "url_inicial": url_inicial or plataforma["url_base"],
         "criado_em": datetime.now(timezone.utc).isoformat()
     }
     
@@ -344,7 +386,10 @@ async def iniciar_sessao_design(
         "session_id": session_id,
         "plataforma": plataforma["nome"],
         "url_base": plataforma["url_base"],
-        "semana_offset": semana_offset
+        "url_inicial": url_inicial or plataforma["url_base"],
+        "semana_offset": semana_offset,
+        "usando_sessao_parceiro": usar_sessao_parceiro is not None,
+        "parceiro_id": parceiro_id
     }
 
 
