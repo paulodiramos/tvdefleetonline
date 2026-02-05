@@ -1167,6 +1167,9 @@ async def get_resumo_semanal_parceiro(
             "uber_portagens": round(uber_portagens, 2),  # NOVO: Portagens reembolsadas pela Uber
             "ganhos_bolt": round(ganhos_bolt, 2),
             "total_ganhos": round(total_ganhos, 2),
+            # Valores reais recebidos (introduzidos manualmente para comparação)
+            "valor_real_uber": round(ajuste_manual.get("valor_real_uber", 0) if ajuste_manual else 0, 2),
+            "valor_real_bolt": round(ajuste_manual.get("valor_real_bolt", 0) if ajuste_manual else 0, 2),
             # Despesas Operacionais
             "combustivel": round(combustivel_total, 2),
             "carregamento_eletrico": round(eletrico_total, 2),
