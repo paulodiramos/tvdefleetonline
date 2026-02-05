@@ -584,59 +584,170 @@ export default function RPADesigner({ user, onLogout }) {
                       </div>
                     )}
                     
-                    {/* Credenciais de teste para login */}
+                    {/* Credenciais e Dados de Teste para Design RPA */}
                     {plataformaSelecionada && (
-                      <div className="mb-3 p-3 bg-gray-700/50 rounded border border-gray-600">
-                        <div className="flex items-center gap-2 mb-2">
-                          <input
-                            type="checkbox"
-                            id="usar_credenciais"
-                            checked={credenciaisTeste.usar_credenciais}
-                            onChange={(e) => setCredenciaisTeste(prev => ({
-                              ...prev, 
-                              usar_credenciais: e.target.checked
-                            }))}
-                            className="rounded"
-                          />
-                          <label htmlFor="usar_credenciais" className="text-sm text-gray-300 flex items-center gap-1">
-                            <Key className="w-3 h-3" /> Usar credenciais de teste para login
-                          </label>
-                        </div>
+                      <div className="mb-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                        <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                          <Key className="w-4 h-4" /> Dados para Design RPA
+                        </h4>
                         
-                        {credenciaisTeste.usar_credenciais && (
-                          <div className="space-y-2 mt-2">
-                            <div>
-                              <label className="text-xs text-gray-400 mb-1 block">
-                                {plataformaSelecionada.nome?.includes('Prio') ? 'Nº Cliente / Utilizador' : 'Email / Utilizador'}
-                              </label>
+                        <div className="space-y-3">
+                          {/* Email */}
+                          <div>
+                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
+                              📧 Email
+                            </label>
+                            <div className="flex gap-2">
                               <Input
-                                placeholder="Introduza o utilizador..."
-                                value={credenciaisTeste.username}
+                                placeholder="Email..."
+                                value={credenciaisTeste.email}
                                 onChange={(e) => setCredenciaisTeste(prev => ({
                                   ...prev, 
-                                  username: e.target.value
+                                  email: e.target.value
                                 }))}
-                                className="bg-gray-800 border-gray-600 text-white text-sm"
+                                className="flex-1 bg-gray-800 border-gray-500 text-white h-10"
                               />
+                              <Button 
+                                size="sm"
+                                variant="secondary"
+                                className="h-10 px-4"
+                                onClick={() => {
+                                  if (credenciaisTeste.email) {
+                                    toast.success(`Email copiado: ${credenciaisTeste.email}`);
+                                  }
+                                }}
+                              >
+                                Inserir
+                              </Button>
                             </div>
-                            <div>
-                              <label className="text-xs text-gray-400 mb-1 block">Password</label>
+                          </div>
+                          
+                          {/* Senha */}
+                          <div>
+                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
+                              🔑 Senha
+                            </label>
+                            <div className="flex gap-2">
                               <Input
                                 type="password"
-                                placeholder="Introduza a password..."
+                                placeholder="Senha..."
                                 value={credenciaisTeste.password}
                                 onChange={(e) => setCredenciaisTeste(prev => ({
                                   ...prev, 
                                   password: e.target.value
                                 }))}
-                                className="bg-gray-800 border-gray-600 text-white text-sm"
+                                className="flex-1 bg-gray-800 border-gray-500 text-white h-10"
                               />
+                              <Button 
+                                size="sm"
+                                variant="secondary"
+                                className="h-10 px-4"
+                                onClick={() => {
+                                  if (credenciaisTeste.password) {
+                                    toast.success('Senha pronta para inserir');
+                                  }
+                                }}
+                              >
+                                Inserir
+                              </Button>
                             </div>
-                            <p className="text-xs text-blue-400">
-                              💡 O sistema fará login automático antes de iniciar a gravação
-                            </p>
                           </div>
-                        )}
+                          
+                          {/* Telefone */}
+                          <div>
+                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
+                              📱 Telefone
+                            </label>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Telefone..."
+                                value={credenciaisTeste.telefone}
+                                onChange={(e) => setCredenciaisTeste(prev => ({
+                                  ...prev, 
+                                  telefone: e.target.value
+                                }))}
+                                className="flex-1 bg-gray-800 border-gray-500 text-white h-10"
+                              />
+                              <Button 
+                                size="sm"
+                                variant="secondary"
+                                className="h-10 px-4"
+                                onClick={() => {
+                                  if (credenciaisTeste.telefone) {
+                                    toast.success(`Telefone: ${credenciaisTeste.telefone}`);
+                                  }
+                                }}
+                              >
+                                Inserir
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          {/* Código SMS */}
+                          <div>
+                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
+                              📲 Código SMS
+                            </label>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Código..."
+                                value={credenciaisTeste.codigo_sms}
+                                onChange={(e) => setCredenciaisTeste(prev => ({
+                                  ...prev, 
+                                  codigo_sms: e.target.value
+                                }))}
+                                className="flex-1 bg-gray-800 border-gray-500 text-white h-10"
+                              />
+                              <Button 
+                                size="sm"
+                                variant="outline"
+                                className="h-10 px-4 border-orange-500 text-orange-400 hover:bg-orange-500/20"
+                                onClick={() => {
+                                  if (credenciaisTeste.codigo_sms) {
+                                    toast.success(`Código SMS: ${credenciaisTeste.codigo_sms}`);
+                                  }
+                                }}
+                              >
+                                Enviar
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          {/* Texto Livre */}
+                          <div>
+                            <label className="text-sm text-gray-300 mb-1.5 flex items-center gap-2">
+                              ⌨️ Texto Livre
+                            </label>
+                            <div className="flex gap-2">
+                              <textarea
+                                placeholder="Qualquer texto para inserir durante a gravação..."
+                                value={credenciaisTeste.texto_livre}
+                                onChange={(e) => setCredenciaisTeste(prev => ({
+                                  ...prev, 
+                                  texto_livre: e.target.value
+                                }))}
+                                rows={2}
+                                className="flex-1 bg-gray-800 border border-gray-500 text-white rounded-md px-3 py-2 text-sm resize-none"
+                              />
+                              <Button 
+                                size="sm"
+                                variant="secondary"
+                                className="h-auto px-4 self-stretch"
+                                onClick={() => {
+                                  if (credenciaisTeste.texto_livre) {
+                                    toast.success('Texto pronto para inserir');
+                                  }
+                                }}
+                              >
+                                Inserir
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-blue-400 mt-2">
+                            💡 Preencha os dados antes de iniciar a gravação. Use os botões "Inserir" durante a gravação para preencher campos automaticamente.
+                          </p>
+                        </div>
                       </div>
                     )}
                     
