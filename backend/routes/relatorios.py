@@ -2285,6 +2285,7 @@ async def update_motorista_weekly_data(
         "ganhos_uber": float(data.get("ganhos_uber", 0)),
         "uber_portagens": float(data.get("uber_portagens", 0)),
         "ganhos_bolt": float(data.get("ganhos_bolt", 0)),
+        "ganhos_campanha_bolt": float(data.get("ganhos_campanha_bolt", 0)),  # Ganhos de campanha Bolt
         "via_verde": float(data.get("via_verde", 0)),
         "combustivel": float(data.get("combustivel", 0)),
         "eletrico": float(data.get("eletrico", 0)),
