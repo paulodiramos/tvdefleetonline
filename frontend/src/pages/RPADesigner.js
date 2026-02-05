@@ -207,7 +207,7 @@ export default function RPADesigner({ user, onLogout }) {
         
         if (data.usando_sessao_parceiro) {
           toast.success('Sessão iniciada com cookies do parceiro! Browser a carregar...');
-        } else if (credenciaisTeste.usar_credenciais) {
+        } else if (credenciaisTeste.email || credenciaisTeste.password) {
           toast.success('Sessão iniciada com credenciais de teste! Browser a carregar...');
         } else {
           toast.success('Sessão iniciada! Browser a carregar...');
