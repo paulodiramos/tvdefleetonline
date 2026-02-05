@@ -847,6 +847,16 @@ function App() {
             }
           />
           <Route
+            path="/gestao-plataformas-rpa"
+            element={
+              user && user.role === 'admin' ? (
+                <GestaoPlataformasRPA user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/importacao-rpa"
             element={
               user && ['admin', 'parceiro', 'gestao'].includes(user.role) ? (
