@@ -1321,6 +1321,14 @@ async def websocket_design_browser(
                     elif direcao == "up":
                         delta = -300
                     await page.evaluate(f"window.scrollBy(0, {delta})")
+                
+                elif data.get("tipo") == "espera":
+                    segundos = data.get("segundos", 3)
+                    await asyncio.sleep(segundos)
+                
+                elif data.get("tipo") == "aguardar_download":
+                    # Aguardar download - apenas um placeholder por agora
+                    await asyncio.sleep(2)
                     
                 # Enviar screenshot atualizado
                 await asyncio.sleep(0.3)
