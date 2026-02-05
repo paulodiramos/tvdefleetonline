@@ -1,1489 +1,368 @@
 """
-Sistema RPA Completo - Extração Automática de Plataformas
-Suporta: Uber, Bolt, Via Verde, Prio Combustível, Prio Elétrico
-
-Este módulo contém os scripts de automação com Playwright para cada plataforma.
+Motor de Execução RPA
+Executa designs gravados pelo admin para cada parceiro
 """
-
 import asyncio
-import logging
 import os
-import json
-import re
+import logging
+import uuid
+import csv
+import io
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional
-from playwright.async_api import async_playwright, Browser, Page, TimeoutError as PlaywrightTimeout
-import base64
+from typing import Optional, Dict, Any, List
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Diretório para screenshots e downloads
-DOWNLOADS_DIR = "/app/backend/rpa_downloads"
-SCREENSHOTS_DIR = "/app/backend/rpa_screenshots"
-
-# Criar diretórios se não existirem
-os.makedirs(DOWNLOADS_DIR, exist_ok=True)
-os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+# Configurar Playwright
+os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
 
 
 class RPAExecutor:
-    """Executor base para automações RPA"""
+    """Executor de designs RPA gravados"""
     
-    def __init__(self, parceiro_id: str, execucao_id: str):
+    def __init__(self, parceiro_id: str, plataforma_id: str):
         self.parceiro_id = parceiro_id
-        self.execucao_id = execucao_id
-        self.browser: Optional[Browser] = None
-        self.page: Optional[Page] = None
-        self.logs: List[Dict] = []
+        self.plataforma_id = plataforma_id
+        self.playwright = None
+        self.browser = None
+        self.context = None
+        self.page = None
+        self.session_path = f"/tmp/rpa_sessao_{parceiro_id}_{plataforma_id}.json"
+        self.downloads_path = Path("/tmp/rpa_downloads")
+        self.downloads_path.mkdir(exist_ok=True)
+        self.screenshots_path = Path("/tmp/rpa_screenshots")
+        self.screenshots_path.mkdir(exist_ok=True)
+        self.logs: List[str] = []
         self.screenshots: List[str] = []
-        self.dados_extraidos: List[Dict] = []
-        self.erros: List[str] = []
+        self.downloaded_file = None
         
-    def log(self, mensagem: str, nivel: str = "info"):
-        """Adicionar log da execução"""
-        entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "nivel": nivel,
-            "mensagem": mensagem
+    def _log(self, msg: str):
+        """Adicionar log"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        log_entry = f"[{timestamp}] {msg}"
+        self.logs.append(log_entry)
+        logger.info(f"[RPA {self.parceiro_id}] {msg}")
+        
+    async def iniciar(self, usar_sessao: bool = True) -> bool:
+        """Iniciar browser"""
+        from playwright.async_api import async_playwright
+        
+        self._log("A iniciar browser...")
+        self.playwright = await async_playwright().start()
+        
+        self.browser = await self.playwright.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
+        )
+        
+        # Carregar sessão se existir
+        storage_state = None
+        if usar_sessao and os.path.exists(self.session_path):
+            storage_state = self.session_path
+            self._log(f"Sessão carregada: {self.session_path}")
+        
+        self.context = await self.browser.new_context(
+            viewport={"width": 1920, "height": 1080},
+            accept_downloads=True,
+            storage_state=storage_state,
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+            locale='pt-PT'
+        )
+        
+        # Anti-detecção
+        await self.context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+        """)
+        
+        self.page = await self.context.new_page()
+        self._log("Browser iniciado com sucesso")
+        return True
+        
+    async def guardar_sessao(self):
+        """Guardar sessão atual"""
+        if self.context:
+            await self.context.storage_state(path=self.session_path)
+            self._log(f"Sessão guardada: {self.session_path}")
+            
+    async def tirar_screenshot(self, nome: str = None) -> str:
+        """Tirar screenshot da página atual"""
+        if not nome:
+            nome = f"screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        filepath = f"{self.screenshots_path}/{self.parceiro_id}_{nome}.png"
+        await self.page.screenshot(path=filepath, full_page=False)
+        self.screenshots.append(filepath)
+        self._log(f"Screenshot: {filepath}")
+        return filepath
+        
+    async def executar_passo(self, passo: Dict[str, Any], credenciais: Dict[str, str], variaveis: Dict[str, Any]) -> bool:
+        """Executar um passo individual"""
+        tipo = passo.get("tipo")
+        self._log(f"Passo {passo.get('ordem')}: {tipo} - {passo.get('descricao', '')}")
+        
+        try:
+            if tipo == "goto":
+                url = passo.get("valor", "")
+                # Substituir variáveis na URL
+                for var_nome, var_valor in variaveis.items():
+                    url = url.replace(f"{{{{{var_nome}}}}}", str(var_valor))
+                await self.page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                await asyncio.sleep(2)
+                
+            elif tipo == "click":
+                elemento = await self._encontrar_elemento(passo)
+                if elemento:
+                    await elemento.click()
+                    await asyncio.sleep(1)
+                else:
+                    self._log(f"⚠️ Elemento não encontrado: {passo.get('seletor')}")
+                    return False
+                    
+            elif tipo == "type":
+                elemento = await self._encontrar_elemento(passo)
+                if elemento:
+                    valor = passo.get("valor", "")
+                    # Substituir variáveis
+                    for var_nome, var_valor in variaveis.items():
+                        valor = valor.replace(f"{{{{{var_nome}}}}}", str(var_valor))
+                    await elemento.fill(valor)
+                    await asyncio.sleep(0.5)
+                else:
+                    return False
+                    
+            elif tipo == "fill_credential":
+                elemento = await self._encontrar_elemento(passo)
+                if elemento:
+                    campo = passo.get("campo_credencial", "")
+                    valor = credenciais.get(campo, "")
+                    if not valor:
+                        self._log(f"⚠️ Credencial não encontrada: {campo}")
+                        return False
+                    await elemento.fill(valor)
+                    await asyncio.sleep(0.5)
+                else:
+                    return False
+                    
+            elif tipo == "select":
+                elemento = await self._encontrar_elemento(passo)
+                if elemento:
+                    valor = passo.get("valor", "")
+                    await elemento.select_option(valor)
+                    await asyncio.sleep(1)
+                else:
+                    return False
+                    
+            elif tipo == "wait":
+                ms = passo.get("timeout", 2000)
+                await asyncio.sleep(ms / 1000)
+                
+            elif tipo == "wait_selector":
+                seletor = passo.get("seletor", "")
+                timeout = passo.get("timeout", 10000)
+                await self.page.wait_for_selector(seletor, timeout=timeout)
+                
+            elif tipo == "press":
+                tecla = passo.get("tecla", "Enter")
+                await self.page.keyboard.press(tecla)
+                await asyncio.sleep(0.5)
+                
+            elif tipo == "scroll":
+                direcao = passo.get("direcao", "down")
+                pixels = passo.get("pixels", 300)
+                if direcao == "down":
+                    await self.page.evaluate(f"window.scrollBy(0, {pixels})")
+                elif direcao == "up":
+                    await self.page.evaluate(f"window.scrollBy(0, -{pixels})")
+                await asyncio.sleep(0.5)
+                
+            elif tipo == "hover":
+                elemento = await self._encontrar_elemento(passo)
+                if elemento:
+                    await elemento.hover()
+                    await asyncio.sleep(0.5)
+                    
+            elif tipo == "screenshot":
+                nome = passo.get("valor", f"passo_{passo.get('ordem')}")
+                await self.tirar_screenshot(nome)
+                
+            elif tipo == "download":
+                timeout = passo.get("timeout", 60000)
+                return await self._aguardar_download(timeout)
+                
+            elif tipo == "variable":
+                # Variáveis são processadas na substituição, este passo é informativo
+                pass
+                
+            return True
+            
+        except Exception as e:
+            self._log(f"❌ Erro no passo {passo.get('ordem')}: {str(e)}")
+            return False
+            
+    async def _encontrar_elemento(self, passo: Dict[str, Any]):
+        """Encontrar elemento na página"""
+        seletor = passo.get("seletor", "")
+        seletor_tipo = passo.get("seletor_tipo", "css")
+        
+        try:
+            if seletor_tipo == "css":
+                elemento = self.page.locator(seletor).first
+            elif seletor_tipo == "xpath":
+                elemento = self.page.locator(f"xpath={seletor}").first
+            elif seletor_tipo == "text":
+                elemento = self.page.get_by_text(seletor).first
+            elif seletor_tipo == "role":
+                # Formato: "button:Gerar relatório"
+                parts = seletor.split(":", 1)
+                role = parts[0]
+                name = parts[1] if len(parts) > 1 else None
+                elemento = self.page.get_by_role(role, name=name).first
+            else:
+                elemento = self.page.locator(seletor).first
+                
+            if await elemento.count() > 0:
+                return elemento
+            return None
+            
+        except Exception as e:
+            self._log(f"Erro ao encontrar elemento: {e}")
+            return None
+            
+    async def _aguardar_download(self, timeout: int = 60000) -> bool:
+        """Aguardar e processar download"""
+        try:
+            # Procurar botão de download
+            download_btns = [
+                self.page.get_by_role("button", name="download"),
+                self.page.get_by_role("link", name="download"),
+                self.page.get_by_text("Download"),
+                self.page.get_by_text("Exportar"),
+                self.page.locator('a[download]').first,
+            ]
+            
+            for btn in download_btns:
+                if await btn.count() > 0:
+                    async with self.page.expect_download(timeout=timeout) as download_info:
+                        await btn.click()
+                    
+                    download = await download_info.value
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{self.downloads_path}/{self.parceiro_id}_{self.plataforma_id}_{timestamp}.csv"
+                    await download.save_as(filename)
+                    
+                    self._log(f"✅ Ficheiro descarregado: {filename}")
+                    self.downloaded_file = filename
+                    return True
+                    
+            self._log("⚠️ Nenhum botão de download encontrado")
+            return False
+            
+        except Exception as e:
+            self._log(f"❌ Erro no download: {e}")
+            return False
+            
+    async def executar_design(self, design: Dict[str, Any], credenciais: Dict[str, str], variaveis: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Executar um design completo"""
+        if variaveis is None:
+            variaveis = {}
+            
+        self.downloaded_file = None
+        resultado = {
+            "sucesso": False,
+            "passos_executados": 0,
+            "passos_total": len(design.get("passos", [])),
+            "ficheiro": None,
+            "logs": [],
+            "screenshots": [],
+            "erro": None
         }
-        self.logs.append(entry)
         
-        if nivel == "error":
-            logger.error(f"[RPA {self.execucao_id}] {mensagem}")
-            self.erros.append(mensagem)
-        else:
-            logger.info(f"[RPA {self.execucao_id}] {mensagem}")
-    
-    async def screenshot(self, nome: str) -> str:
-        """Tirar screenshot e guardar"""
-        if self.page:
-            filename = f"{self.execucao_id}_{nome}_{datetime.now().strftime('%H%M%S')}.png"
-            filepath = os.path.join(SCREENSHOTS_DIR, filename)
-            await self.page.screenshot(path=filepath)
-            self.screenshots.append(filename)
-            self.log(f"Screenshot guardado: {filename}")
-            return filename
-        return ""
-    
-    async def iniciar_browser(self, headless: bool = True):
-        """Iniciar browser Playwright"""
-        self.log("A iniciar browser...")
-        playwright = await async_playwright().start()
-        self.browser = await playwright.chromium.launch(
-            headless=headless,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
-        )
-        context = await self.browser.new_context(
-            viewport={'width': 1920, 'height': 1080},
-            locale='pt-PT',
-            timezone_id='Europe/Lisbon'
-        )
-        self.page = await context.new_page()
-        self.log("Browser iniciado com sucesso")
-    
-    async def fechar_browser(self):
+        try:
+            self._log(f"A executar design: {design.get('nome')}")
+            
+            # Calcular variáveis de semana
+            semana_offset = design.get("semana_offset", 0)
+            hoje = datetime.now()
+            
+            # Calcular datas da semana
+            dias_atras = semana_offset * 7
+            fim_semana = hoje - timedelta(days=dias_atras)
+            inicio_semana = fim_semana - timedelta(days=7)
+            
+            variaveis.update({
+                "SEMANA_OFFSET": semana_offset,
+                "SEMANA_INICIO": inicio_semana.strftime("%d/%m/%Y"),
+                "SEMANA_FIM": fim_semana.strftime("%d/%m/%Y"),
+                "SEMANA_INICIO_ISO": inicio_semana.strftime("%Y-%m-%d"),
+                "SEMANA_FIM_ISO": fim_semana.strftime("%Y-%m-%d"),
+                "DATA_ATUAL": hoje.strftime("%d/%m/%Y"),
+            })
+            
+            self._log(f"Variáveis: {variaveis}")
+            
+            # Executar passos
+            passos = design.get("passos", [])
+            for passo in passos:
+                sucesso = await self.executar_passo(passo, credenciais, variaveis)
+                resultado["passos_executados"] += 1
+                
+                if not sucesso and passo.get("tipo") not in ["screenshot", "variable"]:
+                    # Passo crítico falhou
+                    resultado["erro"] = f"Passo {passo.get('ordem')} falhou"
+                    break
+                    
+            # Guardar sessão após execução
+            await self.guardar_sessao()
+            
+            # Verificar se houve download
+            if self.downloaded_file:
+                resultado["ficheiro"] = self.downloaded_file
+                resultado["sucesso"] = True
+            elif resultado["passos_executados"] == resultado["passos_total"]:
+                resultado["sucesso"] = True
+                
+            resultado["logs"] = self.logs
+            resultado["screenshots"] = self.screenshots
+            
+            self._log(f"Execução concluída: {'✅ Sucesso' if resultado['sucesso'] else '❌ Falhou'}")
+            
+        except Exception as e:
+            resultado["erro"] = str(e)
+            resultado["logs"] = self.logs
+            self._log(f"❌ Erro na execução: {e}")
+            
+        return resultado
+        
+    async def fechar(self):
         """Fechar browser"""
         if self.browser:
             await self.browser.close()
-            self.log("Browser fechado")
-    
-    def get_resultado(self) -> Dict:
-        """Obter resultado da execução"""
-        return {
-            "logs": self.logs,
-            "screenshots": self.screenshots,
-            "dados_extraidos": self.dados_extraidos,
-            "erros": self.erros,
-            "total_registos": len(self.dados_extraidos)
-        }
+        if self.playwright:
+            await self.playwright.stop()
+        self._log("Browser fechado")
 
 
-class UberRPA(RPAExecutor):
-    """Automação para extração de dados do Uber Driver"""
-    
-    URLS = {
-        "login": "https://auth.uber.com/v2/",
-        "dashboard": "https://drivers.uber.com/p3/",
-        "earnings": "https://drivers.uber.com/p3/payments/statements",
-        "trips": "https://drivers.uber.com/p3/trips"
-    }
-    
-    async def login(self, email: str, password: str) -> bool:
-        """Fazer login no Uber"""
-        try:
-            self.log("A aceder à página de login Uber...")
-            await self.page.goto(self.URLS["login"], wait_until="networkidle")
-            await self.screenshot("uber_login_page")
-            
-            # Inserir email
-            self.log("A inserir email...")
-            email_input = await self.page.wait_for_selector("#useridInput, input[name='email']", timeout=10000)
-            await email_input.fill(email)
-            
-            # Clicar em continuar
-            continue_btn = await self.page.wait_for_selector("#forward-button, button[type='submit']", timeout=5000)
-            await continue_btn.click()
-            await self.page.wait_for_timeout(2000)
-            
-            # Verificar se pede password
-            try:
-                password_input = await self.page.wait_for_selector("#password, input[type='password']", timeout=10000)
-                self.log("A inserir password...")
-                await password_input.fill(password)
-                
-                # Submeter
-                submit_btn = await self.page.wait_for_selector("#forward-button, button[type='submit']", timeout=5000)
-                await submit_btn.click()
-                await self.page.wait_for_timeout(3000)
-                
-            except PlaywrightTimeout:
-                self.log("Campo de password não encontrado - pode ser 2FA", "warning")
-            
-            await self.screenshot("uber_after_login")
-            
-            # Verificar se login foi bem sucedido
-            current_url = self.page.url
-            if "drivers.uber.com" in current_url or "partner" in current_url:
-                self.log("Login Uber bem sucedido!")
-                return True
-            else:
-                self.log(f"Login Uber pode ter falhado. URL atual: {current_url}", "warning")
-                return False
-                
-        except Exception as e:
-            self.log(f"Erro no login Uber: {str(e)}", "error")
-            await self.screenshot("uber_login_error")
-            return False
-    
-    async def extrair_ganhos_semanal(self, data_inicio: str = None, data_fim: str = None) -> List[Dict]:
-        """Extrair ganhos semanais do Uber"""
-        try:
-            self.log("A aceder à página de ganhos...")
-            await self.page.goto(self.URLS["earnings"], wait_until="networkidle")
-            await self.page.wait_for_timeout(2000)
-            await self.screenshot("uber_earnings_page")
-            
-            ganhos = []
-            
-            # Tentar extrair da tabela de pagamentos
-            try:
-                # Procurar elementos de pagamento/statement
-                statements = await self.page.query_selector_all("[data-testid='statement-row'], .statement-row, tr[class*='payment']")
-                
-                if statements:
-                    self.log(f"Encontrados {len(statements)} registos de pagamento")
-                    
-                    for statement in statements:
-                        try:
-                            # Extrair data
-                            date_el = await statement.query_selector("[data-testid='date'], .date, td:first-child")
-                            date_text = await date_el.inner_text() if date_el else ""
-                            
-                            # Extrair valor
-                            amount_el = await statement.query_selector("[data-testid='amount'], .amount, td:last-child")
-                            amount_text = await amount_el.inner_text() if amount_el else "0"
-                            
-                            # Limpar e converter valor
-                            amount_clean = re.sub(r'[^\d,.]', '', amount_text).replace(',', '.')
-                            
-                            ganho = {
-                                "plataforma": "uber",
-                                "tipo": "ganho_semanal",
-                                "data": date_text,
-                                "valor_bruto": float(amount_clean) if amount_clean else 0,
-                                "moeda": "EUR",
-                                "extraido_em": datetime.now(timezone.utc).isoformat()
-                            }
-                            ganhos.append(ganho)
-                            
-                        except Exception as e:
-                            self.log(f"Erro ao processar registo: {e}", "warning")
-                else:
-                    # Tentar extrair de elementos visíveis na página
-                    self.log("A tentar extração alternativa...")
-                    
-                    # Procurar valor total na página
-                    total_elements = await self.page.query_selector_all("[class*='total'], [class*='earnings'], [class*='amount']")
-                    for el in total_elements:
-                        text = await el.inner_text()
-                        if '€' in text or 'EUR' in text:
-                            amount_match = re.search(r'[\d.,]+', text)
-                            if amount_match:
-                                ganhos.append({
-                                    "plataforma": "uber",
-                                    "tipo": "ganho_total",
-                                    "valor_bruto": float(amount_match.group().replace(',', '.')),
-                                    "moeda": "EUR",
-                                    "extraido_em": datetime.now(timezone.utc).isoformat()
-                                })
-                                break
-                                
-            except Exception as e:
-                self.log(f"Erro na extração de ganhos: {e}", "error")
-            
-            self.dados_extraidos.extend(ganhos)
-            self.log(f"Total de {len(ganhos)} registos de ganhos extraídos do Uber")
-            return ganhos
-            
-        except Exception as e:
-            self.log(f"Erro ao extrair ganhos Uber: {str(e)}", "error")
-            await self.screenshot("uber_earnings_error")
-            return []
-
-
-class BoltRPA(RPAExecutor):
-    """Automação para extração de dados do Bolt Fleet"""
-    
-    URLS = {
-        "login": "https://fleets.bolt.eu/login",
-        "dashboard": "https://fleets.bolt.eu/",
-        "earnings": "https://fleets.bolt.eu/reports",
-        "drivers": "https://fleets.bolt.eu/drivers"
-    }
-    
-    async def login(self, email: str, password: str) -> bool:
-        """Fazer login no Bolt Fleet"""
-        try:
-            self.log("A aceder à página de login Bolt...")
-            await self.page.goto(self.URLS["login"], wait_until="networkidle")
-            await self.screenshot("bolt_login_page")
-            
-            # Inserir email
-            self.log("A inserir credenciais...")
-            email_input = await self.page.wait_for_selector("input[name='email'], input[type='email']", timeout=10000)
-            await email_input.fill(email)
-            
-            # Inserir password
-            password_input = await self.page.wait_for_selector("input[name='password'], input[type='password']", timeout=5000)
-            await password_input.fill(password)
-            
-            # Submeter
-            submit_btn = await self.page.wait_for_selector("button[type='submit']", timeout=5000)
-            await submit_btn.click()
-            await self.page.wait_for_timeout(3000)
-            
-            await self.screenshot("bolt_after_login")
-            
-            # Verificar login
-            current_url = self.page.url
-            if "login" not in current_url.lower():
-                self.log("Login Bolt bem sucedido!")
-                return True
-            else:
-                self.log("Login Bolt pode ter falhado", "warning")
-                return False
-                
-        except Exception as e:
-            self.log(f"Erro no login Bolt: {str(e)}", "error")
-            await self.screenshot("bolt_login_error")
-            return False
-    
-    async def extrair_ganhos_semanal(self, data_inicio: str = None, data_fim: str = None) -> List[Dict]:
-        """Extrair ganhos semanais do Bolt"""
-        try:
-            self.log("A aceder à página de relatórios...")
-            await self.page.goto(self.URLS["earnings"], wait_until="networkidle")
-            await self.page.wait_for_timeout(2000)
-            await self.screenshot("bolt_reports_page")
-            
-            ganhos = []
-            
-            # Tentar extrair da tabela
-            try:
-                rows = await self.page.query_selector_all("table tbody tr, [class*='report-row']")
-                
-                if rows:
-                    self.log(f"Encontradas {len(rows)} linhas de relatório")
-                    
-                    for row in rows:
-                        try:
-                            cells = await row.query_selector_all("td")
-                            if len(cells) >= 2:
-                                date_text = await cells[0].inner_text() if cells else ""
-                                amount_text = await cells[-1].inner_text() if cells else "0"
-                                
-                                amount_clean = re.sub(r'[^\d,.]', '', amount_text).replace(',', '.')
-                                
-                                ganhos.append({
-                                    "plataforma": "bolt",
-                                    "tipo": "ganho_semanal",
-                                    "data": date_text.strip(),
-                                    "valor_bruto": float(amount_clean) if amount_clean else 0,
-                                    "moeda": "EUR",
-                                    "extraido_em": datetime.now(timezone.utc).isoformat()
-                                })
-                        except Exception as e:
-                            self.log(f"Erro ao processar linha: {e}", "warning")
-                else:
-                    # Extração alternativa
-                    self.log("A tentar extração alternativa de valores...")
-                    page_text = await self.page.inner_text("body")
-                    
-                    # Procurar padrões de valores monetários
-                    amounts = re.findall(r'€\s*([\d.,]+)|(\d+[.,]\d{2})\s*€', page_text)
-                    for match in amounts[:5]:  # Limitar a 5
-                        value = match[0] or match[1]
-                        if value:
-                            ganhos.append({
-                                "plataforma": "bolt",
-                                "tipo": "valor_extraido",
-                                "valor_bruto": float(value.replace(',', '.')),
-                                "moeda": "EUR",
-                                "extraido_em": datetime.now(timezone.utc).isoformat()
-                            })
-                            
-            except Exception as e:
-                self.log(f"Erro na extração de ganhos Bolt: {e}", "error")
-            
-            self.dados_extraidos.extend(ganhos)
-            self.log(f"Total de {len(ganhos)} registos extraídos do Bolt")
-            return ganhos
-            
-        except Exception as e:
-            self.log(f"Erro ao extrair ganhos Bolt: {str(e)}", "error")
-            await self.screenshot("bolt_earnings_error")
-            return []
-
-
-class ViaVerdeRPA(RPAExecutor):
-    """Automação para extração de dados da Via Verde Empresas"""
-    
-    URLS = {
-        "home": "https://www.viaverde.pt/empresas",
-        "extratos": "https://www.viaverde.pt/empresas/minha-via-verde/extratos-e-movimentos"
-    }
-    
-    async def login(self, username: str, password: str) -> bool:
-        """Fazer login na Via Verde Empresas via popup"""
-        try:
-            self.log("A aceder à página Via Verde Empresas...")
-            await self.page.goto(self.URLS["home"], wait_until="networkidle")
-            await self.page.wait_for_timeout(2000)
-            await self.screenshot("viaverde_home")
-            
-            # Fechar banner de cookies se existir
-            try:
-                cookie_btn = await self.page.query_selector("button:has-text('Aceitar'), #onetrust-accept-btn-handler, [id*='cookie'] button")
-                if cookie_btn:
-                    await cookie_btn.click()
-                    self.log("Banner de cookies fechado")
-                    await self.page.wait_for_timeout(500)
-            except:
-                pass
-            
-            # Clicar no botão "Login" no header (canto superior direito)
-            self.log("A clicar no botão Login do header...")
-            try:
-                # O botão Login está no header, texto branco em fundo escuro
-                login_btn = await self.page.wait_for_selector("header button:has-text('Login'), nav button:has-text('Login'), button:has-text('Login')", timeout=5000)
-                await login_btn.click()
-                self.log("Botão Login clicado - a abrir popup")
-                await self.page.wait_for_timeout(2000)
-            except Exception as e:
-                self.log(f"Erro ao clicar no Login: {e}", "error")
-                await self.screenshot("viaverde_no_login_btn")
-                return False
-            
-            await self.screenshot("viaverde_popup_open")
-            
-            # Aguardar pelo popup "A Minha Via Verde"
-            self.log("A aguardar popup 'A Minha Via Verde'...")
-            
-            # O popup tem: Email field, Password field (com ícone de olho), botão Login verde
-            # Preencher Email
-            self.log("A preencher email...")
-            try:
-                # Encontrar campo de email no popup
-                email_input = await self.page.wait_for_selector("input[type='email'], input[name='email'], input[placeholder*='Email']", timeout=5000)
-                await email_input.click()
-                await email_input.fill(username)
-                self.log(f"Email preenchido: {username[:3]}***")
-            except Exception as e:
-                self.log(f"Erro ao preencher email: {e}", "error")
-                await self.screenshot("viaverde_no_email")
-                return False
-            
-            await self.page.wait_for_timeout(300)
-            
-            # Preencher Password (campo com ícone de olho à direita)
-            self.log("A preencher password...")
-            try:
-                password_input = await self.page.wait_for_selector("input[type='password']", timeout=5000)
-                await password_input.click()
-                await password_input.fill(password)
-                self.log("Password preenchida")
-            except Exception as e:
-                self.log(f"Erro ao preencher password: {e}", "error")
-                await self.screenshot("viaverde_no_password")
-                return False
-            
-            await self.page.wait_for_timeout(300)
-            await self.screenshot("viaverde_credentials_filled")
-            
-            # Clicar no botão Login verde dentro do popup
-            self.log("A clicar no botão Login do popup...")
-            try:
-                # Botão verde com texto "Login" dentro do modal
-                # Usar seletor mais específico para o botão dentro do popup (não o do header)
-                submit_buttons = await self.page.query_selector_all("button:has-text('Login')")
-                
-                # Encontrar o botão verde (segundo botão Login na página, dentro do modal)
-                for btn in submit_buttons:
-                    is_visible = await btn.is_visible()
-                    if is_visible:
-                        # Verificar se é o botão do popup (geralmente tem classe btn ou é verde)
-                        btn_class = await btn.get_attribute("class") or ""
-                        btn_text = await btn.inner_text()
-                        
-                        # Ignorar o botão do header (geralmente menor ou tem classe diferente)
-                        if "Login" in btn_text:
-                            await btn.click()
-                            self.log("Botão Login do popup clicado")
-                            break
-                
-            except Exception as e:
-                self.log(f"Erro ao clicar submit, a tentar Enter: {e}", "warning")
-                await self.page.keyboard.press("Enter")
-            
-            # Aguardar redirecionamento após login
-            self.log("A aguardar login...")
-            await self.page.wait_for_timeout(5000)
-            await self.screenshot("viaverde_after_login")
-            
-            # Verificar se login foi bem sucedido
-            # Após login, URL deve conter "minha-via-verde"
-            current_url = self.page.url
-            page_content = await self.page.content()
-            
-            login_success = (
-                "minha-via-verde" in current_url or
-                "extratos" in current_url or
-                "Sair" in page_content or
-                "Os meus dados" in page_content or
-                "Extratos e Movimentos" in page_content
-            )
-            
-            if login_success:
-                self.log("✅ Login Via Verde bem sucedido!")
-                return True
-            else:
-                # Verificar mensagens de erro
-                try:
-                    error_el = await self.page.query_selector(".error, .alert-danger, [class*='error']")
-                    if error_el:
-                        error_text = await error_el.inner_text()
-                        self.log(f"Erro de login: {error_text}", "error")
-                except:
-                    pass
-                
-                self.log(f"Login pode ter falhado. URL: {current_url}", "warning")
-                return False
-                
-        except Exception as e:
-            self.log(f"Erro no login Via Verde: {str(e)}", "error")
-            await self.screenshot("viaverde_login_error")
-            return False
-    
-    async def extrair_portagens(self, data_inicio: str = None, data_fim: str = None) -> List[Dict]:
-        """Extrair movimentos de portagens com data, hora, local e valor"""
-        try:
-            # Navegar para Extratos e Movimentos
-            self.log("A navegar para Extratos e Movimentos...")
-            
-            # Tentar clicar no menu "Extratos e Movimentos" ou ir direto ao URL
-            try:
-                menu_link = await self.page.query_selector("a:has-text('Extratos e Movimentos'), [href*='extratos']")
-                if menu_link:
-                    await menu_link.click()
-                    self.log("Menu 'Extratos e Movimentos' clicado")
-                    await self.page.wait_for_timeout(3000)
-                else:
-                    await self.page.goto(self.URLS["extratos"], wait_until="networkidle")
-            except:
-                await self.page.goto(self.URLS["extratos"], wait_until="networkidle")
-            
-            await self.page.wait_for_timeout(2000)
-            await self.screenshot("viaverde_extratos_page")
-            
-            # Clicar na tab "Movimentos" (a segunda tab)
-            self.log("A clicar na tab Movimentos...")
-            try:
-                movimentos_tab = await self.page.query_selector("button:has-text('Movimentos'), a:has-text('Movimentos'), [role='tab']:has-text('Movimentos')")
-                if movimentos_tab:
-                    await movimentos_tab.click()
-                    self.log("Tab Movimentos clicada")
-                    await self.page.wait_for_timeout(2000)
-            except Exception as e:
-                self.log(f"Tab Movimentos não encontrada: {e}", "warning")
-            
-            await self.screenshot("viaverde_movimentos_tab")
-            
-            # Aplicar filtros de data se fornecidos
-            if data_inicio or data_fim:
-                self.log("A aplicar filtros de data...")
-                
-                # Campo "De" (data início)
-                if data_inicio:
-                    try:
-                        # Clicar no ícone de calendário do campo "De"
-                        de_calendar = await self.page.query_selector("input[placeholder*='De'], input[name*='dataInicio'], input[id*='from']")
-                        if de_calendar:
-                            await de_calendar.click()
-                            await de_calendar.fill(data_inicio)
-                            self.log(f"Data início definida: {data_inicio}")
-                    except Exception as e:
-                        self.log(f"Erro ao definir data início: {e}", "warning")
-                
-                # Campo "Até" (data fim)
-                if data_fim:
-                    try:
-                        ate_calendar = await self.page.query_selector("input[placeholder*='Até'], input[name*='dataFim'], input[id*='to']")
-                        if ate_calendar:
-                            await ate_calendar.click()
-                            await ate_calendar.fill(data_fim)
-                            self.log(f"Data fim definida: {data_fim}")
-                    except Exception as e:
-                        self.log(f"Erro ao definir data fim: {e}", "warning")
-                
-                # Clicar no botão "Filtrar" (verde)
-                try:
-                    filtrar_btn = await self.page.query_selector("button:has-text('Filtrar')")
-                    if filtrar_btn:
-                        await filtrar_btn.click()
-                        self.log("Botão Filtrar clicado")
-                        await self.page.wait_for_timeout(3000)
-                except Exception as e:
-                    self.log(f"Botão Filtrar não encontrado: {e}", "warning")
-            
-            await self.screenshot("viaverde_filtered")
-            
-            # Extrair dados da tabela de movimentos
-            portagens = []
-            self.log("A extrair movimentos da tabela...")
-            
-            # Procurar tabela de movimentos
-            try:
-                rows = await self.page.query_selector_all("table tbody tr, .movimento-item, [class*='transaction-row']")
-                self.log(f"Encontradas {len(rows)} linhas de movimentos")
-                
-                for idx, row in enumerate(rows):
-                    try:
-                        row_text = await row.inner_text()
-                        
-                        # Ignorar linhas vazias ou de cabeçalho
-                        if not row_text.strip() or len(row_text) < 10:
-                            continue
-                        
-                        cells = await row.query_selector_all("td")
-                        
-                        if len(cells) >= 3:
-                            # Extrair data e hora
-                            date_text = ""
-                            time_text = ""
-                            
-                            cell_0_text = await cells[0].inner_text() if len(cells) > 0 else ""
-                            
-                            # Procurar padrão de data DD/MM/YYYY
-                            date_match = re.search(r'(\d{2}/\d{2}/\d{4})', cell_0_text)
-                            if date_match:
-                                date_text = date_match.group(1)
-                            
-                            # Procurar padrão de hora HH:MM
-                            time_match = re.search(r'(\d{2}:\d{2})', cell_0_text)
-                            if time_match:
-                                time_text = time_match.group(1)
-                            
-                            # Extrair descrição/local
-                            desc_text = ""
-                            for i in range(1, min(3, len(cells))):
-                                cell_text = await cells[i].inner_text()
-                                if cell_text and not re.match(r'^[\d,.\s€-]+$', cell_text.strip()):
-                                    desc_text = cell_text.strip()
-                                    break
-                            
-                            # Extrair matrícula
-                            matricula = ""
-                            for cell in cells:
-                                cell_text = await cell.inner_text()
-                                mat_match = re.search(r'([A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-\d{2})', cell_text)
-                                if mat_match:
-                                    matricula = mat_match.group(1)
-                                    break
-                            
-                            # Extrair valor (última célula geralmente)
-                            valor = 0
-                            for cell in reversed(cells):
-                                cell_text = await cell.inner_text()
-                                valor_match = re.search(r'([\d.,]+)\s*€|€\s*([\d.,]+)|([\d]+[,.][\d]{2})', cell_text)
-                                if valor_match:
-                                    valor_str = valor_match.group(1) or valor_match.group(2) or valor_match.group(3)
-                                    valor_str = valor_str.replace('.', '').replace(',', '.')
-                                    try:
-                                        valor = float(valor_str)
-                                        break
-                                    except:
-                                        pass
-                            
-                            if date_text or valor > 0:
-                                portagem = {
-                                    "plataforma": "viaverde",
-                                    "tipo": "portagem",
-                                    "data": date_text,
-                                    "hora": time_text,
-                                    "data_hora": f"{date_text} {time_text}".strip(),
-                                    "descricao": desc_text,
-                                    "local": desc_text,
-                                    "matricula": matricula,
-                                    "valor": valor,
-                                    "moeda": "EUR",
-                                    "extraido_em": datetime.now(timezone.utc).isoformat()
-                                }
-                                portagens.append(portagem)
-                                
-                                if idx < 5:  # Log apenas primeiros 5
-                                    self.log(f"  → {date_text} {time_text} | {matricula} | {desc_text[:25]}... | {valor}€")
-                                    
-                    except Exception as e:
-                        self.log(f"Erro ao processar linha {idx}: {e}", "warning")
-                        
-            except Exception as e:
-                self.log(f"Erro ao extrair tabela: {e}", "error")
-            
-            # Tentar exportar CSV se disponível
-            await self._tentar_exportar_csv()
-            
-            self.dados_extraidos.extend(portagens)
-            self.log(f"✅ Total de {len(portagens)} portagens extraídas")
-            await self.screenshot("viaverde_extraction_complete")
-            
-            return portagens
-            
-        except Exception as e:
-            self.log(f"Erro ao extrair portagens: {str(e)}", "error")
-            await self.screenshot("viaverde_error")
-            return []
-    
-    async def _tentar_exportar_csv(self):
-        """Tentar exportar dados para CSV/Excel"""
-        try:
-            self.log("A tentar exportar CSV...")
-            
-            # Procurar botão "Exportar"
-            exportar_btn = await self.page.query_selector("button:has-text('Exportar'), a:has-text('Exportar')")
-            if exportar_btn:
-                await exportar_btn.click()
-                self.log("Botão Exportar clicado")
-                await self.page.wait_for_timeout(1000)
-                
-                # Clicar em "Excel" no dropdown
-                excel_option = await self.page.query_selector("button:has-text('Excel'), a:has-text('Excel'), li:has-text('Excel')")
-                if excel_option:
-                    await excel_option.click()
-                    self.log("Exportação Excel iniciada")
-                    await self.page.wait_for_timeout(3000)
-                    await self.screenshot("viaverde_export_done")
-        except Exception as e:
-            self.log(f"Exportação CSV não disponível: {e}", "warning")
-    
-    async def extrair_consumos_por_matricula(self) -> List[Dict]:
-        """Extrair consumos agrupados por matrícula/veículo"""
-        try:
-            self.log("A extrair consumos por matrícula...")
-            
-            # Primeiro extrair todas as portagens
-            portagens = await self.extrair_portagens()
-            
-            # Agrupar por matrícula
-            consumos_por_matricula = {}
-            for p in portagens:
-                mat = p.get("matricula", "SEM_MATRICULA")
-                if mat not in consumos_por_matricula:
-                    consumos_por_matricula[mat] = {
-                        "matricula": mat,
-                        "total_valor": 0,
-                        "total_movimentos": 0,
-                        "movimentos": []
-                    }
-                consumos_por_matricula[mat]["total_valor"] += p.get("valor", 0)
-                consumos_por_matricula[mat]["total_movimentos"] += 1
-                consumos_por_matricula[mat]["movimentos"].append(p)
-            
-            resultado = list(consumos_por_matricula.values())
-            self.log(f"✅ Consumos agrupados por {len(resultado)} matrículas")
-            
-            return resultado
-            
-        except Exception as e:
-            self.log(f"Erro ao extrair consumos por matrícula: {str(e)}", "error")
-            return []
-    
-    async def login(self, username: str, password: str) -> bool:
-        """Fazer login na Via Verde Empresas via popup"""
-        try:
-            self.log("A aceder à página Via Verde Empresas...")
-            await self.page.goto(self.URLS["home"], wait_until="networkidle")
-            await self.page.wait_for_timeout(2000)
-            await self.screenshot("viaverde_home")
-            
-            # Fechar banner de cookies se existir
-            try:
-                cookie_btn = await self.page.query_selector("button:has-text('Aceitar'), button:has-text('Accept'), #onetrust-accept-btn-handler")
-                if cookie_btn:
-                    await cookie_btn.click()
-                    self.log("Banner de cookies fechado")
-                    await self.page.wait_for_timeout(500)
-            except:
-                pass
-            
-            # Clicar no botão de Login para abrir o popup
-            self.log("A abrir popup de login...")
-            try:
-                login_selectors = [
-                    "button:has-text('Login')",
-                    "a:has-text('Login')",
-                    "a:has-text('Entrar')",
-                    "[href*='login']",
-                    ".login-btn",
-                    ".btn-login"
-                ]
-                
-                for selector in login_selectors:
-                    try:
-                        login_btn = await self.page.wait_for_selector(selector, timeout=2000)
-                        if login_btn:
-                            await login_btn.click()
-                            self.log(f"Botão login clicado: {selector}")
-                            break
-                    except:
-                        continue
-                
-                await self.page.wait_for_timeout(2000)
-            except:
-                self.log("Botão de login não encontrado, verificando se popup já está aberto...")
-            
-            await self.screenshot("viaverde_popup_open")
-            
-            # Aguardar pelo popup/modal de login "A Minha Via Verde"
-            self.log("A aguardar popup de login...")
-            await self.page.wait_for_timeout(1000)
-            
-            # IMPORTANTE: Encontrar o MODAL primeiro e procurar inputs DENTRO dele
-            modal = None
-            modal_selectors = [
-                "[role='dialog']",
-                ".modal.show",
-                ".modal[style*='display: block']",
-                "[class*='modal'][class*='show']",
-                ".ReactModal__Content",
-                "[aria-modal='true']",
-                ".popup-login",
-                "[class*='login-modal']"
-            ]
-            
-            for selector in modal_selectors:
-                try:
-                    modal = await self.page.wait_for_selector(selector, timeout=2000)
-                    if modal:
-                        self.log(f"Modal encontrado: {selector}")
-                        break
-                except:
-                    continue
-            
-            # Se não encontrou modal específico, usar a página toda mas ser mais específico com os inputs
-            if not modal:
-                self.log("Modal específico não encontrado, a procurar formulário de login...")
-                modal = self.page  # Fallback para a página
-            
-            # Encontrar inputs VISÍVEIS do tipo email/text e password
-            self.log("A procurar campos de login...")
-            
-            # Estratégia: Usar evaluate para encontrar inputs visíveis no DOM
-            form_inputs = await self.page.evaluate('''() => {
-                // Procurar todos os inputs visíveis
-                const inputs = document.querySelectorAll('input');
-                const visibleInputs = [];
-                
-                inputs.forEach((input, idx) => {
-                    const rect = input.getBoundingClientRect();
-                    const style = window.getComputedStyle(input);
-                    const isVisible = rect.width > 0 && rect.height > 0 && 
-                                     style.display !== 'none' && 
-                                     style.visibility !== 'hidden' &&
-                                     style.opacity !== '0';
-                    
-                    if (isVisible) {
-                        visibleInputs.push({
-                            index: idx,
-                            type: input.type,
-                            name: input.name,
-                            placeholder: input.placeholder,
-                            id: input.id,
-                            className: input.className.substring(0, 50)
-                        });
-                    }
-                });
-                
-                return visibleInputs;
-            }''')
-            
-            self.log(f"Inputs visíveis encontrados: {len(form_inputs)}")
-            for inp in form_inputs[:5]:
-                self.log(f"  - type={inp['type']}, name={inp['name']}, placeholder={inp['placeholder'][:30] if inp['placeholder'] else ''}")
-            
-            # Encontrar campo de email (input visível do tipo text ou email)
-            email_input = None
-            for inp in form_inputs:
-                if inp['type'] in ['email', 'text'] and inp['type'] != 'hidden':
-                    # Provavelmente é o email se for o primeiro text/email visível
-                    if inp['name'] in ['email', 'username', 'user', 'login'] or \
-                       'email' in inp['placeholder'].lower() or \
-                       'email' in inp['id'].lower() or \
-                       inp['type'] == 'email':
-                        try:
-                            email_input = await self.page.query_selector(f"input[type='{inp['type']}'][name='{inp['name']}']") if inp['name'] else None
-                            if not email_input:
-                                email_input = await self.page.query_selector(f"input#{inp['id']}") if inp['id'] else None
-                            if email_input:
-                                self.log(f"Campo email identificado: name={inp['name']}, type={inp['type']}")
-                                break
-                        except:
-                            pass
-            
-            # Se não encontrou por atributos específicos, usar primeiro input visível de email/text
-            if not email_input:
-                for inp in form_inputs:
-                    if inp['type'] in ['email', 'text']:
-                        try:
-                            if inp['id']:
-                                email_input = await self.page.query_selector(f"input#{inp['id']}")
-                            elif inp['name']:
-                                email_input = await self.page.query_selector(f"input[name='{inp['name']}']")
-                            else:
-                                # Usar nth selector
-                                visible_texts = [i for i in form_inputs if i['type'] in ['email', 'text']]
-                                if visible_texts:
-                                    email_input = await self.page.query_selector(f"input[type='{visible_texts[0]['type']}']:visible")
-                            if email_input:
-                                self.log(f"Campo email selecionado (primeiro visível)")
-                                break
-                        except:
-                            pass
-            
-            if not email_input:
-                # Último recurso - primeiro input visível
-                email_input = await self.page.query_selector("input[type='email']:visible, input[type='text']:visible")
-                if email_input:
-                    self.log("Email input encontrado via seletor genérico")
-            
-            if not email_input:
-                self.log("Campo de email não encontrado no popup", "error")
-                await self.screenshot("viaverde_no_email_field")
-                return False
-            
-            # Preencher email - garantir que está visível e focado
-            self.log("A inserir email...")
-            try:
-                await email_input.scroll_into_view_if_needed()
-                await email_input.click(timeout=5000)
-                await self.page.wait_for_timeout(200)
-                await email_input.fill(username)
-                self.log(f"Email preenchido: {username[:3]}***")
-            except Exception as e:
-                self.log(f"Erro ao preencher email: {e}", "warning")
-                # Tentar método alternativo
-                await self.page.type("input[type='email'], input[type='text']", username, delay=50)
-            
-            await self.page.wait_for_timeout(500)
-            
-            # Encontrar campo de password
-            self.log("A procurar campo de password...")
-            password_input = None
-            
-            # Encontrar input de password visível
-            for inp in form_inputs:
-                if inp['type'] == 'password':
-                    try:
-                        if inp['id']:
-                            password_input = await self.page.query_selector(f"input#{inp['id']}")
-                        elif inp['name']:
-                            password_input = await self.page.query_selector(f"input[name='{inp['name']}']")
-                        else:
-                            password_input = await self.page.query_selector("input[type='password']")
-                        
-                        if password_input:
-                            self.log(f"Campo password identificado")
-                            break
-                    except:
-                        pass
-            
-            if not password_input:
-                password_input = await self.page.query_selector("input[type='password']:visible")
-            
-            if not password_input:
-                password_input = await self.page.query_selector("input[type='password']")
-            
-            if not password_input:
-                self.log("Campo de password não encontrado", "error")
-                await self.screenshot("viaverde_no_password_field")
-                return False
-            
-            # Preencher password
-            self.log("A inserir password...")
-            try:
-                await password_input.scroll_into_view_if_needed()
-                await password_input.click(timeout=5000)
-                await self.page.wait_for_timeout(200)
-                await password_input.fill(password)
-                self.log("Password preenchida")
-            except Exception as e:
-                self.log(f"Erro ao clicar no password, tentando método alternativo: {e}", "warning")
-                # Método alternativo - usar Tab do campo email e digitar
-                await email_input.press("Tab")
-                await self.page.wait_for_timeout(300)
-                await self.page.keyboard.type(password, delay=50)
-                self.log("Password preenchida via Tab")
-            
-            await self.page.wait_for_timeout(500)
-            await self.screenshot("viaverde_credentials_filled")
-            
-            # Clicar no botão de Login dentro do popup
-            self.log("A procurar botão de submit...")
-            submit_btn = None
-            submit_selectors = [
-                "button:has-text('Login')",
-                "button[type='submit']",
-                "input[type='submit']",
-                ".btn-primary:has-text('Login')",
-                "form button",
-                ".modal button:has-text('Login')"
-            ]
-            
-            for selector in submit_selectors:
-                try:
-                    buttons = await self.page.query_selector_all(selector)
-                    for btn in buttons:
-                        is_visible = await btn.is_visible()
-                        if is_visible:
-                            submit_btn = btn
-                            self.log(f"Botão submit encontrado: {selector}")
-                            break
-                    if submit_btn:
-                        break
-                except:
-                    continue
-            
-            if submit_btn:
-                await submit_btn.click()
-                self.log("Botão de login clicado")
-            else:
-                # Tentar pressionar Enter
-                self.log("Botão não encontrado, a tentar Enter...")
-                await self.page.keyboard.press("Enter")
-            
-            await self.page.wait_for_timeout(5000)
-            await self.screenshot("viaverde_after_login")
-            
-            # Verificar login
-            current_url = self.page.url
-            page_content = await self.page.content()
-            
-            login_success_indicators = [
-                "área reservada" in page_content.lower(),
-                "minha conta" in page_content.lower(),
-                "sair" in page_content.lower(),
-                "logout" in page_content.lower(),
-                "area-reservada" in current_url,
-                "dashboard" in current_url,
-                "bem-vindo" in page_content.lower(),
-                "os meus dados" in page_content.lower()
-            ]
-            
-            if any(login_success_indicators):
-                self.log("✅ Login Via Verde bem sucedido!")
-                return True
-            else:
-                error_selectors = [".error", ".alert-danger", ".alert-error", "[class*='error']"]
-                for selector in error_selectors:
-                    try:
-                        error_el = await self.page.query_selector(selector)
-                        if error_el:
-                            is_visible = await error_el.is_visible()
-                            if is_visible:
-                                error_text = await error_el.inner_text()
-                                if error_text.strip():
-                                    self.log(f"Erro de login: {error_text}", "error")
-                                    break
-                    except:
-                        continue
-                
-                self.log(f"Login pode ter falhado. URL: {current_url}", "warning")
-                return False
-                
-        except Exception as e:
-            self.log(f"Erro no login Via Verde: {str(e)}", "error")
-            await self.screenshot("viaverde_login_error")
-            return False
-    
-    async def extrair_portagens(self, data_inicio: str = None, data_fim: str = None) -> List[Dict]:
-        """Extrair movimentos de portagens com data, hora, local e valor"""
-        try:
-            self.log("A aceder à página de extratos e movimentos...")
-            
-            # Tentar navegar para a página de movimentos
-            try:
-                await self.page.goto(self.URLS["movimentos"], wait_until="networkidle")
-            except:
-                await self.page.goto(self.URLS["extratos"], wait_until="networkidle")
-            
-            await self.page.wait_for_timeout(3000)
-            await self.screenshot("viaverde_movimentos_page")
-            
-            portagens = []
-            
-            # Aplicar filtros de data se fornecidos
-            if data_inicio or data_fim:
-                self.log("A aplicar filtros de data...")
-                try:
-                    if data_inicio:
-                        date_from = await self.page.query_selector("input[name*='data_inicio'], input[type='date']:first-of-type, #dataInicio")
-                        if date_from:
-                            await date_from.fill(data_inicio)
-                    
-                    if data_fim:
-                        date_to = await self.page.query_selector("input[name*='data_fim'], input[type='date']:last-of-type, #dataFim")
-                        if date_to:
-                            await date_to.fill(data_fim)
-                    
-                    # Clicar em pesquisar/filtrar
-                    filter_btn = await self.page.query_selector("button:has-text('Pesquisar'), button:has-text('Filtrar'), button[type='submit']")
-                    if filter_btn:
-                        await filter_btn.click()
-                        await self.page.wait_for_timeout(2000)
-                except Exception as e:
-                    self.log(f"Erro ao aplicar filtros: {e}", "warning")
-            
-            # Extrair da tabela de movimentos
-            self.log("A extrair movimentos da tabela...")
-            
-            # Procurar tabela de movimentos
-            table_selectors = [
-                "table tbody tr",
-                ".movimento-row",
-                ".transaction-row",
-                "[class*='movement'] tr",
-                ".table-movimentos tr",
-                ".lista-movimentos .item"
-            ]
-            
-            rows = []
-            for selector in table_selectors:
-                try:
-                    rows = await self.page.query_selector_all(selector)
-                    if rows and len(rows) > 0:
-                        self.log(f"Tabela encontrada com seletor: {selector} ({len(rows)} linhas)")
-                        break
-                except:
-                    continue
-            
-            if rows:
-                self.log(f"A processar {len(rows)} movimentos...")
-                
-                for idx, row in enumerate(rows):
-                    try:
-                        # Extrair todo o texto da linha
-                        row_text = await row.inner_text()
-                        
-                        # Ignorar linhas de cabeçalho ou vazias
-                        if not row_text.strip() or "data" in row_text.lower() and "hora" in row_text.lower():
-                            continue
-                        
-                        cells = await row.query_selector_all("td, .cell, [class*='col']")
-                        
-                        if len(cells) >= 2:
-                            # Extrair data e hora
-                            date_text = ""
-                            time_text = ""
-                            
-                            # Primeira célula geralmente tem data/hora
-                            first_cell = await cells[0].inner_text() if cells else ""
-                            
-                            # Tentar extrair data no formato DD/MM/YYYY ou YYYY-MM-DD
-                            date_match = re.search(r'(\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2})', first_cell)
-                            if date_match:
-                                date_text = date_match.group(1)
-                            
-                            # Tentar extrair hora no formato HH:MM
-                            time_match = re.search(r'(\d{2}:\d{2})', first_cell)
-                            if time_match:
-                                time_text = time_match.group(1)
-                            
-                            # Se não encontrou na primeira célula, procurar nas outras
-                            if not date_text:
-                                for cell in cells:
-                                    cell_text = await cell.inner_text()
-                                    date_match = re.search(r'(\d{2}[/-]\d{2}[/-]\d{4})', cell_text)
-                                    if date_match:
-                                        date_text = date_match.group(1)
-                                        time_match = re.search(r'(\d{2}:\d{2})', cell_text)
-                                        if time_match:
-                                            time_text = time_match.group(1)
-                                        break
-                            
-                            # Extrair local/descrição (geralmente segunda ou terceira célula)
-                            desc_text = ""
-                            for i, cell in enumerate(cells):
-                                if i > 0:  # Pular primeira célula (data)
-                                    cell_text = await cell.inner_text()
-                                    # Verificar se parece ser uma descrição (não é só números)
-                                    if cell_text and not re.match(r'^[\d,.\s€]+$', cell_text.strip()):
-                                        desc_text = cell_text.strip()
-                                        break
-                            
-                            # Extrair matrícula
-                            matricula = ""
-                            for cell in cells:
-                                cell_text = await cell.inner_text()
-                                # Formatos de matrícula portuguesa
-                                mat_patterns = [
-                                    r'[A-Z]{2}-\d{2}-[A-Z]{2}',  # AA-00-AA
-                                    r'\d{2}-[A-Z]{2}-\d{2}',     # 00-AA-00
-                                    r'\d{2}-\d{2}-[A-Z]{2}',     # 00-00-AA
-                                    r'[A-Z]{2}-\d{2}-\d{2}'      # AA-00-00
-                                ]
-                                for pattern in mat_patterns:
-                                    mat_match = re.search(pattern, cell_text)
-                                    if mat_match:
-                                        matricula = mat_match.group()
-                                        break
-                                if matricula:
-                                    break
-                            
-                            # Extrair valor (última célula geralmente)
-                            valor = 0
-                            for cell in reversed(cells):
-                                cell_text = await cell.inner_text()
-                                # Procurar valores monetários
-                                valor_match = re.search(r'([\d.,]+)\s*€|€\s*([\d.,]+)', cell_text)
-                                if valor_match:
-                                    valor_str = valor_match.group(1) or valor_match.group(2)
-                                    valor_str = valor_str.replace('.', '').replace(',', '.')
-                                    try:
-                                        valor = float(valor_str)
-                                        break
-                                    except:
-                                        pass
-                            
-                            # Criar registo de portagem
-                            if date_text or valor > 0:  # Só adicionar se tiver data ou valor
-                                portagem = {
-                                    "plataforma": "viaverde",
-                                    "tipo": "portagem",
-                                    "data": date_text,
-                                    "hora": time_text,
-                                    "data_hora": f"{date_text} {time_text}".strip(),
-                                    "descricao": desc_text,
-                                    "local": desc_text,  # Alias
-                                    "matricula": matricula,
-                                    "valor": valor,
-                                    "moeda": "EUR",
-                                    "linha_original": row_text[:200],  # Para debug
-                                    "extraido_em": datetime.now(timezone.utc).isoformat()
-                                }
-                                portagens.append(portagem)
-                                self.log(f"  → {date_text} {time_text} | {matricula} | {desc_text[:30]}... | {valor}€")
-                                
-                    except Exception as e:
-                        self.log(f"Erro ao processar linha {idx}: {e}", "warning")
-            else:
-                self.log("Nenhuma tabela de movimentos encontrada", "warning")
-                
-                # Tentar extração alternativa do conteúdo da página
-                self.log("A tentar extração alternativa...")
-                page_text = await self.page.inner_text("body")
-                
-                # Procurar padrões de movimentos no texto
-                # Formato típico: data hora local matrícula valor
-                movimento_pattern = r'(\d{2}[/-]\d{2}[/-]\d{4})\s+(\d{2}:\d{2})?\s*([A-Za-záéíóúãõç\s]+?)\s+([A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-\d{2})?\s*([\d.,]+)\s*€'
-                
-                matches = re.findall(movimento_pattern, page_text)
-                for match in matches[:50]:  # Limitar a 50
-                    portagens.append({
-                        "plataforma": "viaverde",
-                        "tipo": "portagem",
-                        "data": match[0],
-                        "hora": match[1] or "",
-                        "data_hora": f"{match[0]} {match[1]}".strip(),
-                        "descricao": match[2].strip(),
-                        "local": match[2].strip(),
-                        "matricula": match[3] or "",
-                        "valor": float(match[4].replace('.', '').replace(',', '.')) if match[4] else 0,
-                        "moeda": "EUR",
-                        "extraido_em": datetime.now(timezone.utc).isoformat()
-                    })
-            
-            self.dados_extraidos.extend(portagens)
-            self.log(f"✅ Total de {len(portagens)} portagens extraídas")
-            
-            await self.screenshot("viaverde_extraction_complete")
-            
-            return portagens
-            
-        except Exception as e:
-            self.log(f"Erro ao extrair portagens Via Verde: {str(e)}", "error")
-            await self.screenshot("viaverde_error")
-            return []
-    
-    async def extrair_consumos_por_matricula(self) -> List[Dict]:
-        """Extrair consumos agrupados por matrícula/veículo"""
-        try:
-            self.log("A extrair consumos por matrícula...")
-            
-            # Primeiro extrair todas as portagens
-            portagens = await self.extrair_portagens()
-            
-            # Agrupar por matrícula
-            consumos_por_matricula = {}
-            for p in portagens:
-                mat = p.get("matricula", "SEM_MATRICULA")
-                if mat not in consumos_por_matricula:
-                    consumos_por_matricula[mat] = {
-                        "matricula": mat,
-                        "total_valor": 0,
-                        "total_movimentos": 0,
-                        "movimentos": []
-                    }
-                consumos_por_matricula[mat]["total_valor"] += p.get("valor", 0)
-                consumos_por_matricula[mat]["total_movimentos"] += 1
-                consumos_por_matricula[mat]["movimentos"].append(p)
-            
-            resultado = list(consumos_por_matricula.values())
-            self.log(f"✅ Consumos agrupados por {len(resultado)} matrículas")
-            
-            return resultado
-            
-        except Exception as e:
-            self.log(f"Erro ao extrair consumos por matrícula: {str(e)}", "error")
-            return []
-
-
-class PrioRPA(RPAExecutor):
-    """Automação para extração de dados da Prio (Combustível e Elétrico)"""
-    
-    URLS = {
-        "login": "https://areaprivada.prio.pt/login",
-        "dashboard": "https://areaprivada.prio.pt/",
-        "consumos": "https://areaprivada.prio.pt/consumos",
-        "faturas": "https://areaprivada.prio.pt/faturas"
-    }
-    
-    async def login(self, email: str, password: str) -> bool:
-        """Fazer login na área privada Prio"""
-        try:
-            self.log("A aceder à página de login Prio...")
-            await self.page.goto(self.URLS["login"], wait_until="networkidle")
-            await self.screenshot("prio_login_page")
-            
-            # Inserir email
-            self.log("A inserir credenciais...")
-            email_input = await self.page.wait_for_selector("input[type='email'], input[name='email'], #email", timeout=10000)
-            await email_input.fill(email)
-            
-            # Inserir password
-            password_input = await self.page.wait_for_selector("input[type='password'], input[name='password'], #password", timeout=5000)
-            await password_input.fill(password)
-            
-            # Submeter
-            submit_btn = await self.page.wait_for_selector("button[type='submit'], input[type='submit']", timeout=5000)
-            await submit_btn.click()
-            await self.page.wait_for_timeout(3000)
-            
-            await self.screenshot("prio_after_login")
-            
-            # Verificar login
-            current_url = self.page.url
-            if "login" not in current_url.lower():
-                self.log("Login Prio bem sucedido!")
-                return True
-            else:
-                self.log("Login Prio pode ter falhado", "warning")
-                return False
-                
-        except Exception as e:
-            self.log(f"Erro no login Prio: {str(e)}", "error")
-            await self.screenshot("prio_login_error")
-            return False
-    
-    async def extrair_consumos(self, tipo: str = "todos") -> List[Dict]:
-        """Extrair consumos de combustível e/ou elétrico"""
-        try:
-            self.log("A aceder à página de consumos...")
-            await self.page.goto(self.URLS["consumos"], wait_until="networkidle")
-            await self.page.wait_for_timeout(2000)
-            await self.screenshot("prio_consumos_page")
-            
-            consumos = []
-            
-            # Tentar extrair da tabela de consumos
-            try:
-                rows = await self.page.query_selector_all("table tbody tr, [class*='consumo'], [class*='transaction']")
-                
-                if rows:
-                    self.log(f"Encontrados {len(rows)} consumos")
-                    
-                    for row in rows:
-                        try:
-                            cells = await row.query_selector_all("td")
-                            if len(cells) >= 3:
-                                row_text = await row.inner_text()
-                                
-                                # Determinar tipo (combustível ou elétrico)
-                                tipo_consumo = "combustivel"
-                                if "kwh" in row_text.lower() or "elétrico" in row_text.lower() or "eletrico" in row_text.lower():
-                                    tipo_consumo = "eletrico"
-                                
-                                # Extrair data/hora
-                                date_text = await cells[0].inner_text() if cells else ""
-                                
-                                # Extrair local/posto
-                                local_text = ""
-                                for cell in cells[1:-1]:
-                                    text = await cell.inner_text()
-                                    if not re.match(r'^[\d.,]+$', text.strip()):
-                                        local_text = text.strip()
-                                        break
-                                
-                                # Extrair quantidade (litros ou kWh)
-                                quantidade = 0
-                                for cell in cells:
-                                    text = await cell.inner_text()
-                                    qty_match = re.search(r'([\d.,]+)\s*(L|l|litros?|kWh|kwh)?', text)
-                                    if qty_match:
-                                        quantidade = float(qty_match.group(1).replace(',', '.'))
-                                        if qty_match.group(2) and 'kw' in qty_match.group(2).lower():
-                                            tipo_consumo = "eletrico"
-                                        break
-                                
-                                # Extrair valor
-                                amount_el = cells[-1]
-                                amount_text = await amount_el.inner_text() if amount_el else "0"
-                                amount_clean = re.sub(r'[^\d,.]', '', amount_text).replace(',', '.')
-                                
-                                # Extrair matrícula
-                                matricula = ""
-                                for cell in cells:
-                                    cell_text = await cell.inner_text()
-                                    mat_match = re.search(r'[A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-\d{2}', cell_text)
-                                    if mat_match:
-                                        matricula = mat_match.group()
-                                        break
-                                
-                                consumo = {
-                                    "plataforma": "prio",
-                                    "tipo": tipo_consumo,
-                                    "data_hora": date_text.strip(),
-                                    "local": local_text,
-                                    "matricula": matricula,
-                                    "quantidade": quantidade,
-                                    "unidade": "kWh" if tipo_consumo == "eletrico" else "L",
-                                    "valor": float(amount_clean) if amount_clean else 0,
-                                    "moeda": "EUR",
-                                    "extraido_em": datetime.now(timezone.utc).isoformat()
-                                }
-                                
-                                # Filtrar por tipo se especificado
-                                if tipo == "todos" or tipo == tipo_consumo:
-                                    consumos.append(consumo)
-                                    
-                        except Exception as e:
-                            self.log(f"Erro ao processar consumo: {e}", "warning")
-                else:
-                    self.log("Nenhum consumo encontrado na página", "warning")
-                    
-            except Exception as e:
-                self.log(f"Erro na extração de consumos: {e}", "error")
-            
-            self.dados_extraidos.extend(consumos)
-            self.log(f"Total de {len(consumos)} consumos extraídos")
-            return consumos
-            
-        except Exception as e:
-            self.log(f"Erro ao extrair consumos Prio: {str(e)}", "error")
-            await self.screenshot("prio_error")
-            return []
-
-
-# Função principal para executar automação
-async def executar_automacao(
-    plataforma: str,
+async def executar_design_parceiro(
     parceiro_id: str,
-    execucao_id: str,
-    credenciais: Dict[str, str],
-    tipo_extracao: str = "ganhos",
-    data_inicio: str = None,
-    data_fim: str = None
-) -> Dict:
-    """
-    Executar automação para uma plataforma específica
-    
-    Args:
-        plataforma: uber, bolt, viaverde, prio
-        parceiro_id: ID do parceiro
-        execucao_id: ID único desta execução
-        credenciais: {email, password} ou {username, password}
-        tipo_extracao: ganhos, portagens, combustivel, eletrico, todos
-        data_inicio: Data início do período (opcional)
-        data_fim: Data fim do período (opcional)
-    
-    Returns:
-        Dict com logs, screenshots, dados_extraidos, erros
-    """
-    
-    executor = None
+    plataforma_id: str,
+    design: Dict[str, Any],
+    credenciais: Dict[str, str]
+) -> Dict[str, Any]:
+    """Função helper para executar design de um parceiro"""
+    executor = RPAExecutor(parceiro_id, plataforma_id)
     
     try:
-        # Selecionar executor baseado na plataforma
-        if plataforma == "uber":
-            executor = UberRPA(parceiro_id, execucao_id)
-        elif plataforma == "bolt":
-            executor = BoltRPA(parceiro_id, execucao_id)
-        elif plataforma == "viaverde":
-            executor = ViaVerdeRPA(parceiro_id, execucao_id)
-        elif plataforma == "prio":
-            executor = PrioRPA(parceiro_id, execucao_id)
-        else:
-            return {"error": f"Plataforma não suportada: {plataforma}"}
-        
-        # Iniciar browser
-        await executor.iniciar_browser(headless=True)
-        
-        # Fazer login
-        email = credenciais.get("email") or credenciais.get("username", "")
-        password = credenciais.get("password", "")
-        
-        login_ok = await executor.login(email, password)
-        
-        if not login_ok:
-            executor.log("Login falhou - verificar credenciais", "error")
-            return executor.get_resultado()
-        
-        # Executar extração baseada no tipo
-        if plataforma in ["uber", "bolt"]:
-            await executor.extrair_ganhos_semanal(data_inicio, data_fim)
-        elif plataforma == "viaverde":
-            await executor.extrair_portagens(data_inicio, data_fim)
-        elif plataforma == "prio":
-            await executor.extrair_consumos(tipo_extracao)
-        
-        return executor.get_resultado()
+        await executor.iniciar()
+        resultado = await executor.executar_design(design, credenciais)
+        await executor.fechar()
+        return resultado
         
     except Exception as e:
-        error_msg = f"Erro fatal na execução: {str(e)}"
-        logger.error(error_msg)
-        if executor:
-            executor.log(error_msg, "error")
-            return executor.get_resultado()
-        return {"error": error_msg}
-        
-    finally:
-        if executor:
-            await executor.fechar_browser()
+        await executor.fechar()
+        return {
+            "sucesso": False,
+            "erro": str(e),
+            "logs": executor.logs,
+            "screenshots": executor.screenshots
+        }
