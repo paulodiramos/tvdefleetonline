@@ -659,8 +659,6 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                 </p>
               )}
             </div>
-              </p>
-            )}
             
             {/* Resultado da Extração */}
             {resultadoExtracao && (
