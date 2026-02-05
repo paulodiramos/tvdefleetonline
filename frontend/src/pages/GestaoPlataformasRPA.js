@@ -433,5 +433,6 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
         )}
       </div>
     </div>
+    </Layout>
   );
 }
