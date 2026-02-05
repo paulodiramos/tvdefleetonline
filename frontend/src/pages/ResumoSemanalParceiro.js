@@ -1457,7 +1457,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                   );
                 })}
                 {motoristas.length === 0 && (
-                  <tr><td colSpan="10" className="text-center py-6 text-slate-500">Nenhum dado encontrado</td></tr>
+                  <tr><td colSpan="11" className="text-center py-6 text-slate-500">Nenhum dado encontrado</td></tr>
                 )}
               </tbody>
               {motoristas.length > 0 && (
@@ -1468,6 +1468,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_uber)}</td>
                     <td className="p-2 text-right text-emerald-600 text-[10px]">{formatCurrency(totais.total_uber_portagens || 0)}</td>
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</td>
+                    <td className="p-2 text-right text-green-600 text-[10px]" title="Total Ganhos Campanha Bolt">{formatCurrency(totais.total_ganhos_campanha_bolt || 0)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_via_verde)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_combustivel)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_eletrico)}</td>
