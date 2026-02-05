@@ -426,7 +426,10 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       combustivel: motorista.combustivel || 0,
       eletrico: motorista.carregamento_eletrico || 0,
       aluguer: motorista.aluguer_veiculo || 0,
-      extras: motorista.extras || 0
+      extras: motorista.extras || 0,
+      // Novos campos para valores reais recebidos
+      valor_real_uber: motorista.valor_real_uber || 0,
+      valor_real_bolt: motorista.valor_real_bolt || 0
     });
   };
 
