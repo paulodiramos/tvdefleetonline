@@ -8,10 +8,11 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { toast } from 'sonner';
+import Layout from '../components/Layout';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function GestaoPlataformasRPA() {
+export default function GestaoPlataformasRPA({ user, onLogout }) {
   const navigate = useNavigate();
   const [plataformas, setPlataformas] = useState([]);
   const [loading, setLoading] = useState(true);
