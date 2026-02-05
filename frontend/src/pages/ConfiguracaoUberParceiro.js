@@ -287,6 +287,46 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     }
   };
 
+  const handleUploadCSV = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Por favor selecione um ficheiro CSV');
+      return;
+    }
+    
+    setUploadando(true);
+    setResultadoExtracao(null);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(`${API}/rpa/uber/upload-csv`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (response.data.sucesso) {
+        toast.success(response.data.mensagem);
+        setResultadoExtracao(response.data);
+        carregarDados();
+      } else {
+        toast.error(response.data.erro || 'Erro ao processar CSV');
+      }
+    } catch (error) {
+      console.error('Erro upload:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao fazer upload do CSV');
+    } finally {
+      setUploadando(false);
+      event.target.value = '';
+    }
+  };
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
