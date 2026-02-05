@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Play, Pause, Square, Save, Plus, Trash2, Settings, 
   Monitor, MousePointer, Type, Clock, Download, Eye,
-  ChevronRight, RefreshCw, CheckCircle, XCircle, AlertCircle
+  ChevronRight, RefreshCw, CheckCircle, XCircle, AlertCircle,
+  User, Key
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
