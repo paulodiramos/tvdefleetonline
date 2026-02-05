@@ -57,6 +57,11 @@ export default function RPADesigner({ user, onLogout }) {
     campo_credencial: ''
   });
   
+  // Estado para sessões de parceiros
+  const [sessoesParceiros, setSessoesParceiros] = useState([]);
+  const [sessaoParceiroSelecionada, setSessaoParceiroSelecionada] = useState(null);
+  const [urlInicial, setUrlInicial] = useState('');
+  
   const wsRef = useRef(null);
   const canvasRef = useRef(null);
 
