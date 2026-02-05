@@ -929,6 +929,105 @@ async def seed_plataformas_predefinidas(
     return {"sucesso": True, "plataformas_criadas": criadas}
 
 
+# ==================== PARCEIROS COM SESSÕES ATIVAS ====================
+
+@router.get("/sessoes-parceiros")
+async def listar_sessoes_parceiros(
+    plataforma: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar parceiros com sessões ativas (admin only)
+    
+    Retorna parceiros que já fizeram login manual e têm sessões válidas
+    que podem ser usadas para gravar designs sem CAPTCHA
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode ver sessões")
+    
+    import os
+    from datetime import datetime, timezone
+    
+    sessoes = []
+    
+    # Buscar todos os parceiros
+    parceiros = await db.parceiros.find({}, {"_id": 0, "id": 1, "nome": 1, "nome_empresa": 1, "email": 1}).to_list(100)
+    users_parceiros = await db.users.find({"role": "parceiro"}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(100)
+    
+    # Combinar listas
+    todos_parceiros = {}
+    for p in parceiros:
+        todos_parceiros[p["id"]] = {"nome": p.get("nome_empresa") or p.get("nome"), "email": p.get("email")}
+    for u in users_parceiros:
+        if u["id"] not in todos_parceiros:
+            todos_parceiros[u["id"]] = {"nome": u.get("name"), "email": u.get("email")}
+    
+    # Verificar sessões existentes
+    for parceiro_id, info in todos_parceiros.items():
+        # Verificar Uber
+        uber_session_path = f"/tmp/uber_sessao_{parceiro_id}.json"
+        if os.path.exists(uber_session_path):
+            mtime = os.path.getmtime(uber_session_path)
+            idade_dias = (datetime.now().timestamp() - mtime) / 86400
+            
+            if idade_dias < 30:  # Sessão válida por 30 dias
+                sessoes.append({
+                    "parceiro_id": parceiro_id,
+                    "parceiro_nome": info["nome"],
+                    "parceiro_email": info["email"],
+                    "plataforma": "uber",
+                    "plataforma_nome": "Uber Fleet",
+                    "session_path": uber_session_path,
+                    "idade_dias": round(idade_dias, 1),
+                    "valida": True
+                })
+        
+        # Verificar Bolt (se existir)
+        bolt_session_path = f"/tmp/bolt_sessao_{parceiro_id}.json"
+        if os.path.exists(bolt_session_path):
+            mtime = os.path.getmtime(bolt_session_path)
+            idade_dias = (datetime.now().timestamp() - mtime) / 86400
+            
+            if idade_dias < 30:
+                sessoes.append({
+                    "parceiro_id": parceiro_id,
+                    "parceiro_nome": info["nome"],
+                    "parceiro_email": info["email"],
+                    "plataforma": "bolt",
+                    "plataforma_nome": "Bolt Partner",
+                    "session_path": bolt_session_path,
+                    "idade_dias": round(idade_dias, 1),
+                    "valida": True
+                })
+        
+        # Verificar Via Verde (se existir)
+        viaverde_session_path = f"/tmp/viaverde_sessao_{parceiro_id}.json"
+        if os.path.exists(viaverde_session_path):
+            mtime = os.path.getmtime(viaverde_session_path)
+            idade_dias = (datetime.now().timestamp() - mtime) / 86400
+            
+            if idade_dias < 30:
+                sessoes.append({
+                    "parceiro_id": parceiro_id,
+                    "parceiro_nome": info["nome"],
+                    "parceiro_email": info["email"],
+                    "plataforma": "viaverde",
+                    "plataforma_nome": "Via Verde Empresas",
+                    "session_path": viaverde_session_path,
+                    "idade_dias": round(idade_dias, 1),
+                    "valida": True
+                })
+    
+    # Filtrar por plataforma se especificado
+    if plataforma:
+        sessoes = [s for s in sessoes if s["plataforma"] == plataforma]
+    
+    return {
+        "sessoes": sessoes,
+        "total": len(sessoes),
+        "mensagem": f"{len(sessoes)} sessões ativas encontradas"
+    }
+
+
 # ==================== WEBSOCKET PARA BROWSER INTERATIVO ====================
 
 @router.websocket("/ws/design/{session_id}")
@@ -955,6 +1054,16 @@ async def websocket_design_browser(
         
         logger.info(f"A iniciar browser para sessão {session_id}")
         
+        # Verificar se deve usar sessão de um parceiro
+        usar_sessao_parceiro = session.get("usar_sessao_parceiro")
+        storage_state = None
+        
+        if usar_sessao_parceiro:
+            session_path = usar_sessao_parceiro.get("session_path")
+            if session_path and os.path.exists(session_path):
+                storage_state = session_path
+                logger.info(f"Usando sessão do parceiro: {session_path}")
+        
         # Iniciar browser com configurações anti-detecção avançadas
         playwright_instance = await async_playwright().start()
         browser = await playwright_instance.chromium.launch(
@@ -977,7 +1086,7 @@ async def websocket_design_browser(
             ]
         )
         
-        # Contexto com configurações anti-detecção
+        # Contexto com configurações anti-detecção E sessão do parceiro (se disponível)
         context = await browser.new_context(
             viewport={"width": 1280, "height": 720},
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
@@ -988,7 +1097,8 @@ async def websocket_design_browser(
             color_scheme="light",
             java_script_enabled=True,
             has_touch=False,
-            is_mobile=False
+            is_mobile=False,
+            storage_state=storage_state  # Usar cookies do parceiro se disponível
         )
         
         # Scripts anti-detecção avançados
