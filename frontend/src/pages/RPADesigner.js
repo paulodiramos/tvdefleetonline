@@ -86,6 +86,7 @@ export default function RPADesigner({ user, onLogout }) {
   // Carregar plataformas
   useEffect(() => {
     carregarPlataformas();
+    carregarSessoesParceiros();
   }, []);
 
   const carregarPlataformas = async () => {
@@ -97,6 +98,19 @@ export default function RPADesigner({ user, onLogout }) {
       setPlataformas(data);
     } catch (error) {
       console.error('Erro ao carregar plataformas:', error);
+    }
+  };
+
+  // Carregar sessões de parceiros disponíveis
+  const carregarSessoesParceiros = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/rpa-designer/sessoes-parceiros`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setSessoesParceiros(data.sessoes || []);
+    } catch (error) {
+      console.error('Erro ao carregar sessões:', error);
     }
   };
 
