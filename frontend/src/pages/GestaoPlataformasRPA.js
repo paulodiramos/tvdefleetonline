@@ -259,15 +259,15 @@ export default function GestaoPlataformasRPA() {
                             />
                           ))}
                         </div>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-300">
                           {plat.designs_count}/{plat.max_semanas} designs
                         </span>
                       </div>
 
                       {/* Estatísticas */}
                       <div className="text-center">
-                        <div className="text-lg font-bold">{plat.total_execucoes || 0}</div>
-                        <span className="text-xs text-gray-400">execuções</span>
+                        <div className="text-lg font-bold text-white">{plat.total_execucoes || 0}</div>
+                        <span className="text-xs text-gray-300">execuções</span>
                       </div>
 
                       {/* Ações */}
