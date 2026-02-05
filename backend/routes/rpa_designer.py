@@ -945,48 +945,71 @@ async def websocket_design_browser(
         return
         
     session = active_design_sessions[session_id]
+    playwright_instance = None
+    browser = None
     
     try:
         from playwright.async_api import async_playwright
+        import os
+        os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
+        
+        logger.info(f"A iniciar browser para sessão {session_id}")
         
         # Iniciar browser
-        session["playwright"] = await async_playwright().start()
-        session["browser"] = await session["playwright"].chromium.launch(
+        playwright_instance = await async_playwright().start()
+        browser = await playwright_instance.chromium.launch(
             headless=True,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
+            args=[
+                '--no-sandbox', 
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu'
+            ]
         )
         
-        context = await session["browser"].new_context(
-            viewport={"width": 1280, "height": 720}
+        context = await browser.new_context(
+            viewport={"width": 1280, "height": 720},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
         )
-        session["page"] = await context.new_page()
+        page = await context.new_page()
+        
+        session["playwright"] = playwright_instance
+        session["browser"] = browser
+        session["page"] = page
         
         # Navegar para URL base
-        await session["page"].goto(session["plataforma"]["url_base"])
+        url_base = session["plataforma"]["url_base"]
+        logger.info(f"A navegar para: {url_base}")
+        
+        await page.goto(url_base, wait_until="domcontentloaded", timeout=30000)
         
         # Enviar screenshot inicial
-        screenshot = await session["page"].screenshot(type="jpeg", quality=50)
+        screenshot = await page.screenshot(type="jpeg", quality=50)
         await websocket.send_json({
             "tipo": "screenshot",
-            "data": base64.b64encode(screenshot).decode()
+            "data": base64.b64encode(screenshot).decode(),
+            "url": page.url
         })
+        
+        logger.info(f"Screenshot inicial enviado")
         
         # Loop de eventos
         while True:
             try:
-                data = await asyncio.wait_for(websocket.receive_json(), timeout=1.0)
+                data = await asyncio.wait_for(websocket.receive_json(), timeout=2.0)
                 
                 if data.get("tipo") == "click":
                     x, y = data.get("x", 0), data.get("y", 0)
-                    await session["page"].mouse.click(x, y)
+                    await page.mouse.click(x, y)
+                    await asyncio.sleep(0.5)
                     
                     # Tentar capturar seletor do elemento
-                    seletor = await session["page"].evaluate(f"""
+                    seletor = await page.evaluate(f"""
                         (function() {{
                             const el = document.elementFromPoint({x}, {y});
                             if (!el) return null;
                             if (el.id) return '#' + el.id;
-                            if (el.className) return el.tagName.toLowerCase() + '.' + el.className.split(' ').join('.');
+                            if (el.className && typeof el.className === 'string') return el.tagName.toLowerCase() + '.' + el.className.split(' ').join('.');
                             return el.tagName.toLowerCase();
                         }})()
                     """)
@@ -1002,46 +1025,59 @@ async def websocket_design_browser(
                     
                 elif data.get("tipo") == "type":
                     texto = data.get("texto", "")
-                    await session["page"].keyboard.type(texto)
+                    await page.keyboard.type(texto)
                     
                 elif data.get("tipo") == "press":
                     tecla = data.get("tecla", "Enter")
-                    await session["page"].keyboard.press(tecla)
+                    await page.keyboard.press(tecla)
                     
                 elif data.get("tipo") == "goto":
                     url = data.get("url", "")
-                    await session["page"].goto(url)
+                    await page.goto(url, wait_until="domcontentloaded", timeout=30000)
                     
                 elif data.get("tipo") == "scroll":
                     delta = data.get("delta", 0)
-                    await session["page"].evaluate(f"window.scrollBy(0, {delta})")
+                    await page.evaluate(f"window.scrollBy(0, {delta})")
                     
                 # Enviar screenshot atualizado
-                await asyncio.sleep(0.5)
-                screenshot = await session["page"].screenshot(type="jpeg", quality=50)
+                await asyncio.sleep(0.3)
+                screenshot = await page.screenshot(type="jpeg", quality=50)
                 await websocket.send_json({
                     "tipo": "screenshot",
                     "data": base64.b64encode(screenshot).decode(),
-                    "url": session["page"].url
+                    "url": page.url
                 })
                 
             except asyncio.TimeoutError:
                 # Enviar screenshot periódico
-                screenshot = await session["page"].screenshot(type="jpeg", quality=50)
-                await websocket.send_json({
-                    "tipo": "screenshot",
-                    "data": base64.b64encode(screenshot).decode(),
-                    "url": session["page"].url
-                })
+                try:
+                    screenshot = await page.screenshot(type="jpeg", quality=50)
+                    await websocket.send_json({
+                        "tipo": "screenshot",
+                        "data": base64.b64encode(screenshot).decode(),
+                        "url": page.url
+                    })
+                except Exception:
+                    pass
                 
     except WebSocketDisconnect:
         logger.info(f"WebSocket desconectado: {session_id}")
     except Exception as e:
         logger.error(f"Erro no WebSocket: {e}")
-        await websocket.send_json({"erro": str(e)})
+        try:
+            await websocket.send_json({"erro": str(e)})
+        except Exception:
+            pass
     finally:
         # Limpar recursos
-        if session.get("browser"):
-            await session["browser"].close()
-        if session.get("playwright"):
-            await session["playwright"].stop()
+        logger.info(f"A limpar recursos da sessão {session_id}")
+        if browser:
+            try:
+                await browser.close()
+            except Exception:
+                pass
+        if playwright_instance:
+            try:
+                await playwright_instance.stop()
+            except Exception:
+                pass
