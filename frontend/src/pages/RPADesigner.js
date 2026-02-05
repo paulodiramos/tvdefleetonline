@@ -589,15 +589,15 @@ export default function RPADesigner({ user, onLogout }) {
                     
                     {/* Dados para Design RPA - Layout Grid */}
                     <div className="mb-4 p-4 bg-gray-800/80 rounded-lg border border-gray-600">
-                      <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                         🔧 Dados para Design RPA
                       </h4>
                       
-                      {/* Grid horizontal - Email, Senha, Telefone, Código SMS */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      {/* Grid 2x2 - Email, Senha, Telefone, Código SMS */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
                         {/* Email */}
-                        <div>
-                          <label className="text-sm text-gray-300 mb-2 flex items-center gap-1 font-medium">
+                        <div className="space-y-2">
+                          <label className="text-sm text-gray-300 flex items-center gap-2 font-medium">
                             📧 Email
                           </label>
                           <Input
@@ -607,11 +607,11 @@ export default function RPADesigner({ user, onLogout }) {
                               ...prev, 
                               email: e.target.value
                             }))}
-                            className="w-full bg-white text-black h-10 text-sm mb-2"
+                            className="w-full bg-white text-black h-11 text-base"
                           />
                           <Button 
                             size="sm"
-                            className="w-full h-9 bg-gray-600 hover:bg-gray-500 text-white text-sm"
+                            className="w-full h-10 bg-gray-600 hover:bg-gray-500 text-white"
                             onClick={() => {
                               if (credenciaisTeste.email && wsRef.current) {
                                 wsRef.current.send(JSON.stringify({
@@ -627,8 +627,8 @@ export default function RPADesigner({ user, onLogout }) {
                         </div>
                         
                         {/* Senha */}
-                        <div>
-                          <label className="text-sm text-gray-300 mb-2 flex items-center gap-1 font-medium">
+                        <div className="space-y-2">
+                          <label className="text-sm text-gray-300 flex items-center gap-2 font-medium">
                             🔑 Senha
                           </label>
                           <Input
@@ -639,11 +639,11 @@ export default function RPADesigner({ user, onLogout }) {
                               ...prev, 
                               password: e.target.value
                             }))}
-                            className="w-full bg-white text-black h-10 text-sm mb-2"
+                            className="w-full bg-white text-black h-11 text-base"
                           />
                           <Button 
                             size="sm"
-                            className="w-full h-9 bg-gray-600 hover:bg-gray-500 text-white text-sm"
+                            className="w-full h-10 bg-gray-600 hover:bg-gray-500 text-white"
                             onClick={() => {
                               if (credenciaisTeste.password && wsRef.current) {
                                 wsRef.current.send(JSON.stringify({
@@ -659,8 +659,8 @@ export default function RPADesigner({ user, onLogout }) {
                         </div>
                         
                         {/* Telefone */}
-                        <div>
-                          <label className="text-sm text-gray-300 mb-2 flex items-center gap-1 font-medium">
+                        <div className="space-y-2">
+                          <label className="text-sm text-gray-300 flex items-center gap-2 font-medium">
                             📱 Telefone
                           </label>
                           <Input
@@ -670,11 +670,11 @@ export default function RPADesigner({ user, onLogout }) {
                               ...prev, 
                               telefone: e.target.value
                             }))}
-                            className="w-full bg-gray-600 text-white h-10 text-sm mb-2 placeholder:text-gray-400"
+                            className="w-full bg-gray-700 text-white h-11 text-base placeholder:text-gray-400 border-gray-600"
                           />
                           <Button 
                             size="sm"
-                            className="w-full h-9 bg-gray-600 hover:bg-gray-500 text-white text-sm"
+                            className="w-full h-10 bg-gray-600 hover:bg-gray-500 text-white"
                             onClick={() => {
                               if (credenciaisTeste.telefone && wsRef.current) {
                                 wsRef.current.send(JSON.stringify({
@@ -690,8 +690,8 @@ export default function RPADesigner({ user, onLogout }) {
                         </div>
                         
                         {/* Código SMS */}
-                        <div>
-                          <label className="text-sm text-gray-300 mb-2 flex items-center gap-1 font-medium">
+                        <div className="space-y-2">
+                          <label className="text-sm text-gray-300 flex items-center gap-2 font-medium">
                             📲 Código SMS
                           </label>
                           <Input
@@ -701,11 +701,11 @@ export default function RPADesigner({ user, onLogout }) {
                               ...prev, 
                               codigo_sms: e.target.value
                             }))}
-                            className="w-full bg-gray-600 text-white h-10 text-sm mb-2 placeholder:text-gray-400"
+                            className="w-full bg-gray-700 text-white h-11 text-base placeholder:text-gray-400 border-gray-600"
                           />
                           <Button 
                             size="sm"
-                            className="w-full h-9 bg-green-600 hover:bg-green-700 text-white text-sm"
+                            className="w-full h-10 bg-green-600 hover:bg-green-700 text-white"
                             onClick={() => {
                               if (credenciaisTeste.codigo_sms && wsRef.current) {
                                 wsRef.current.send(JSON.stringify({
