@@ -248,15 +248,22 @@ class UberExtractor:
             org_dropdown = self.page.get_by_role("button", name="organizações")
             if await org_dropdown.count() == 0:
                 org_dropdown = self.page.locator('[data-testid*="org"]')
+            
+            # Verificar se o dropdown está visível antes de clicar
             if await org_dropdown.count() > 0:
-                await org_dropdown.first.click()
-                await asyncio.sleep(1)
-                
-                # Selecionar primeiro checkbox
-                checkbox = self.page.locator('input[type="checkbox"]').first
-                if await checkbox.count() > 0:
-                    await checkbox.click()
+                try:
+                    # Aguardar que o elemento esteja visível (timeout curto)
+                    await org_dropdown.first.wait_for(state="visible", timeout=5000)
+                    await org_dropdown.first.click()
                     await asyncio.sleep(1)
+                    
+                    # Selecionar primeiro checkbox
+                    checkbox = self.page.locator('input[type="checkbox"]').first
+                    if await checkbox.count() > 0:
+                        await checkbox.click()
+                        await asyncio.sleep(1)
+                except Exception as e:
+                    logger.warning(f"Dropdown de organização não visível, continuando... {e}")
             
             # 6. Clicar em Gerar
             logger.info("Passo 6: Clicar em Gerar")
