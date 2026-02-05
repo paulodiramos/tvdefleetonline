@@ -71,6 +71,25 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     }
   };
 
+  // Carregar password quando utilizador clica no olho
+  const toggleMostrarPassword = async () => {
+    if (!mostrarPassword && !credenciais.password) {
+      // Carregar password do servidor
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API}/uber/minhas-credenciais?incluir_password=true`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data?.password) {
+          setCredenciais(prev => ({ ...prev, password: res.data.password }));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar password:', error);
+      }
+    }
+    setMostrarPassword(!mostrarPassword);
+  };
+
   const guardarCredenciais = async () => {
     if (!credenciais.email || !credenciais.password) {
       toast.error('Preencha email e password');
