@@ -302,16 +302,6 @@ async def extrair_rendimentos_parceiro(
     except Exception as e:
         logger.error(f"Erro na extração: {e}")
         return {"sucesso": False, "erro": str(e)}
-                "ficheiro": resultado.get("ficheiro"),
-                "created_at": now.isoformat(),
-                "created_by": current_user["id"]
-            })
-        
-        return resultado
-        
-    except Exception as e:
-        logger.error(f"Erro na extração: {e}")
-        return {"sucesso": False, "erro": str(e)}
 
 
 @router.post("/admin/extrair-todos")
