@@ -6,9 +6,10 @@ Rotas para Sincronização Uber
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import logging
 import os
+import uuid
 
 from utils.database import get_database
 from utils.auth import get_current_user
