@@ -949,6 +949,14 @@ async def seed_plataformas_predefinidas(
             "descricao": "Extração de rendimentos do portal Bolt Fleet",
             "campos_credenciais": ["email", "password"],
             "tipo_ficheiro": "csv"
+        },
+        {
+            "nome": "Prio Energy",
+            "url_base": "https://www.myprio.com/MyPrioReactiveTheme/Login",
+            "icone": "⛽",
+            "descricao": "Extração de consumos e faturas do portal MyPRIO",
+            "campos_credenciais": ["username", "password"],
+            "tipo_ficheiro": "xlsx"
         }
     ]
     
