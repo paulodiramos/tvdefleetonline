@@ -662,11 +662,37 @@ export default function RPADesigner({ user, onLogout }) {
                                 };
                                 setPassos(prev => [...prev, novoPasso]);
                                 document.getElementById('campo-telefone').value = '';
-                                toast.success('Telefone inserido e gravado');
+                                toast.success('Telefone inserido');
                               }
                             }}
                           >
                             Inserir
+                          </Button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">📲 Código SMS</label>
+                        <div className="flex gap-1">
+                          <Input
+                            id="campo-sms"
+                            placeholder="Código..."
+                            className="bg-gray-700 border-gray-600 text-sm"
+                            maxLength={6}
+                          />
+                          <Button 
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => {
+                              const codigo = document.getElementById('campo-sms').value;
+                              if (codigo) {
+                                // Enviar código caractere a caractere com delay
+                                enviarAcao('type', { texto: codigo });
+                                document.getElementById('campo-sms').value = '';
+                                toast.success('Código SMS inserido');
+                              }
+                            }}
+                          >
+                            Enviar
                           </Button>
                         </div>
                       </div>
