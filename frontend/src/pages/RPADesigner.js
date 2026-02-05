@@ -72,6 +72,7 @@ export default function RPADesigner({ user, onLogout }) {
     usar_credenciais: false
   });
   const [showCredenciaisModal, setShowCredenciaisModal] = useState(false);
+  const [previewWindow, setPreviewWindow] = useState(null);
   
   const wsRef = useRef(null);
   const canvasRef = useRef(null);
