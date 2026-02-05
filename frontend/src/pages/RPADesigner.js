@@ -367,13 +367,13 @@ export default function RPADesigner({ user, onLogout }) {
           {/* Painel Esquerdo - Configuração */}
           <div className="col-span-3 space-y-4">
             {/* Seleção de Plataforma */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-gray-800 border-gray-700">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600">Plataforma</CardTitle>
+                <CardTitle className="text-sm text-gray-300">Plataforma</CardTitle>
               </CardHeader>
               <CardContent>
                 <select
-                  className="w-full bg-gray-50 border-gray-300 rounded p-2 text-gray-900"
+                  className="w-full bg-gray-700 border-gray-600 rounded p-2 text-white"
                   value={plataformaSelecionada?.id || ''}
                   onChange={(e) => {
                     const plat = plataformas.find(p => p.id === e.target.value);
@@ -393,9 +393,9 @@ export default function RPADesigner({ user, onLogout }) {
 
             {/* Seleção de Semana */}
             {plataformaSelecionada && (
-              <Card className="bg-white border-gray-200 shadow-sm">
+              <Card className="bg-gray-800 border-gray-700">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600">Semana do Design</CardTitle>
+                  <CardTitle className="text-sm text-gray-300">Semana do Design</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-2">
@@ -415,7 +415,7 @@ export default function RPADesigner({ user, onLogout }) {
                           className={`p-2 rounded text-sm flex items-center justify-between ${
                             semanaSelecionada === s
                               ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                              : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                           }`}
                         >
                           <span>{s === 0 ? 'Atual' : `Semana -${s}`}</span>
@@ -433,9 +433,9 @@ export default function RPADesigner({ user, onLogout }) {
             )}
 
             {/* Controles */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-gray-800 border-gray-700">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600">Controles</CardTitle>
+                <CardTitle className="text-sm text-gray-300">Controles</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {!gravando ? (
@@ -475,15 +475,15 @@ export default function RPADesigner({ user, onLogout }) {
 
             {/* Info */}
             {plataformaSelecionada && (
-              <Card className="bg-white border-gray-200 shadow-sm">
+              <Card className="bg-gray-800 border-gray-700">
                 <CardContent className="pt-4">
                   <div className="text-sm space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Designs:</span>
+                      <span className="text-gray-300">Designs:</span>
                       <span>{designs.length}/{plataformaSelecionada.max_semanas}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">URL Base:</span>
+                      <span className="text-gray-300">URL Base:</span>
                       <span className="truncate ml-2 text-blue-400">
                         {plataformaSelecionada.url_base}
                       </span>
@@ -496,10 +496,10 @@ export default function RPADesigner({ user, onLogout }) {
 
           {/* Painel Central - Browser/Preview */}
           <div className="col-span-6">
-            <Card className="bg-white border-gray-200 shadow-sm h-full">
+            <Card className="bg-gray-800 border-gray-700 h-full">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm text-gray-600 flex items-center">
+                  <CardTitle className="text-sm text-gray-300 flex items-center">
                     <Monitor className="w-4 h-4 mr-2" />
                     {gravando ? 'Browser Interativo' : 'Preview'}
                   </CardTitle>
@@ -559,7 +559,7 @@ export default function RPADesigner({ user, onLogout }) {
                           e.target.value = '';
                         }
                       }}
-                      className="bg-gray-50 border-gray-300"
+                      className="bg-gray-700 border-gray-600"
                     />
                     <Button variant="outline" onClick={() => enviarAcao('press', { tecla: 'Enter' })}>
                       Enter
@@ -578,9 +578,9 @@ export default function RPADesigner({ user, onLogout }) {
 
           {/* Painel Direito - Passos */}
           <div className="col-span-3">
-            <Card className="bg-white border-gray-200 shadow-sm h-full">
+            <Card className="bg-gray-800 border-gray-700 h-full">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600 flex items-center justify-between">
+                <CardTitle className="text-sm text-gray-300 flex items-center justify-between">
                   <span>📝 Passos Gravados ({passos.length})</span>
                   {passos.length > 0 && (
                     <Button 
@@ -607,9 +607,9 @@ export default function RPADesigner({ user, onLogout }) {
                     passos.map((passo, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2 p-2 bg-gray-100 rounded text-sm group"
+                        className="flex items-center gap-2 p-2 bg-gray-700 rounded text-sm group"
                       >
-                        <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs">
+                        <span className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-xs">
                           {passo.ordem}
                         </span>
                         <div className="flex-1 truncate">
@@ -643,9 +643,9 @@ export default function RPADesigner({ user, onLogout }) {
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-gray-600">Tipo de Passo</label>
+                  <label className="text-sm text-gray-300">Tipo de Passo</label>
                   <select
-                    className="w-full bg-gray-50 border-gray-300 rounded p-2 mt-1"
+                    className="w-full bg-gray-700 border-gray-600 rounded p-2 mt-1"
                     value={novoPasso.tipo}
                     onChange={(e) => setNovoPasso({ ...novoPasso, tipo: e.target.value })}
                   >
@@ -660,9 +660,9 @@ export default function RPADesigner({ user, onLogout }) {
                 {['click', 'type', 'select', 'wait_selector', 'hover'].includes(novoPasso.tipo) && (
                   <>
                     <div>
-                      <label className="text-sm text-gray-600">Tipo de Seletor</label>
+                      <label className="text-sm text-gray-300">Tipo de Seletor</label>
                       <select
-                        className="w-full bg-gray-50 border-gray-300 rounded p-2 mt-1"
+                        className="w-full bg-gray-700 border-gray-600 rounded p-2 mt-1"
                         value={novoPasso.seletor_tipo}
                         onChange={(e) => setNovoPasso({ ...novoPasso, seletor_tipo: e.target.value })}
                       >
@@ -672,12 +672,12 @@ export default function RPADesigner({ user, onLogout }) {
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm text-gray-600">Seletor</label>
+                      <label className="text-sm text-gray-300">Seletor</label>
                       <Input
                         placeholder="Ex: #botao-login, button.submit"
                         value={novoPasso.seletor}
                         onChange={(e) => setNovoPasso({ ...novoPasso, seletor: e.target.value })}
-                        className="bg-gray-50 border-gray-300 mt-1"
+                        className="bg-gray-700 border-gray-600 mt-1"
                       />
                     </div>
                   </>
@@ -685,23 +685,23 @@ export default function RPADesigner({ user, onLogout }) {
 
                 {['type', 'goto', 'screenshot'].includes(novoPasso.tipo) && (
                   <div>
-                    <label className="text-sm text-gray-600">
+                    <label className="text-sm text-gray-300">
                       {novoPasso.tipo === 'goto' ? 'URL' : novoPasso.tipo === 'type' ? 'Texto' : 'Nome'}
                     </label>
                     <Input
                       placeholder={novoPasso.tipo === 'goto' ? 'https://...' : '...'}
                       value={novoPasso.valor}
                       onChange={(e) => setNovoPasso({ ...novoPasso, valor: e.target.value })}
-                      className="bg-gray-50 border-gray-300 mt-1"
+                      className="bg-gray-700 border-gray-600 mt-1"
                     />
                   </div>
                 )}
 
                 {novoPasso.tipo === 'fill_credential' && (
                   <div>
-                    <label className="text-sm text-gray-600">Campo de Credencial</label>
+                    <label className="text-sm text-gray-300">Campo de Credencial</label>
                     <select
-                      className="w-full bg-gray-50 border-gray-300 rounded p-2 mt-1"
+                      className="w-full bg-gray-700 border-gray-600 rounded p-2 mt-1"
                       value={novoPasso.campo_credencial}
                       onChange={(e) => setNovoPasso({ ...novoPasso, campo_credencial: e.target.value })}
                     >
@@ -715,21 +715,21 @@ export default function RPADesigner({ user, onLogout }) {
 
                 {['wait', 'wait_selector', 'download'].includes(novoPasso.tipo) && (
                   <div>
-                    <label className="text-sm text-gray-600">Timeout (ms)</label>
+                    <label className="text-sm text-gray-300">Timeout (ms)</label>
                     <Input
                       type="number"
                       value={novoPasso.timeout}
                       onChange={(e) => setNovoPasso({ ...novoPasso, timeout: parseInt(e.target.value) })}
-                      className="bg-gray-50 border-gray-300 mt-1"
+                      className="bg-gray-700 border-gray-600 mt-1"
                     />
                   </div>
                 )}
 
                 {novoPasso.tipo === 'press' && (
                   <div>
-                    <label className="text-sm text-gray-600">Tecla</label>
+                    <label className="text-sm text-gray-300">Tecla</label>
                     <select
-                      className="w-full bg-gray-50 border-gray-300 rounded p-2 mt-1"
+                      className="w-full bg-gray-700 border-gray-600 rounded p-2 mt-1"
                       value={novoPasso.valor}
                       onChange={(e) => setNovoPasso({ ...novoPasso, valor: e.target.value })}
                     >
