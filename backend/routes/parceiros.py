@@ -966,6 +966,8 @@ async def get_credenciais_plataformas(
         creds["bolt_password"] = "********"
     if creds.get("viaverde_password"):
         creds["viaverde_password"] = "********"
+    if creds.get("prio_password"):
+        creds["prio_password"] = "********"
     
     return creds
 
