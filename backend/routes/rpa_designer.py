@@ -1118,7 +1118,9 @@ async def websocket_design_browser(
                     
                 elif data.get("tipo") == "type":
                     texto = data.get("texto", "")
-                    await page.keyboard.type(texto)
+                    # Digitar letra a letra com delay para parecer humano
+                    await page.keyboard.type(texto, delay=100)
+                    await asyncio.sleep(0.3)
                     
                 elif data.get("tipo") == "press":
                     tecla = data.get("tecla", "Enter")
