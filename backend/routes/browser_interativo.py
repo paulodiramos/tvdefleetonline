@@ -345,19 +345,63 @@ async def extrair_rendimentos_browser(
         if resultado.get("sucesso"):
             # Guardar na base de dados
             now = datetime.now(timezone.utc)
+            from datetime import timedelta
+            import uuid
             
+            motoristas_importados = resultado.get("motoristas", [])
+            
+            # Calcular período (última semana)
+            hoje = datetime.now()
+            periodo_fim = hoje.strftime('%Y-%m-%d')
+            periodo_inicio = (hoje - timedelta(days=7)).strftime('%Y-%m-%d')
+            
+            # Guardar cada motorista em ganhos_uber (para o resumo semanal)
+            for mot in motoristas_importados:
+                nome_motorista = mot.get("nome", "")
+                
+                # Tentar encontrar motorista na base de dados
+                motorista_db = await db.motoristas.find_one({
+                    "$or": [
+                        {"nome": {"$regex": nome_motorista, "$options": "i"}},
+                        {"name": {"$regex": nome_motorista, "$options": "i"}}
+                    ]
+                })
+                
+                motorista_id = motorista_db.get("id") if motorista_db else None
+                
+                ganho = {
+                    "id": str(uuid.uuid4()),
+                    "motorista_id": motorista_id,
+                    "nome_motorista": nome_motorista,
+                    "parceiro_id": parceiro_id,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "pago_total": mot.get("rendimentos_liquidos", 0),
+                    "rendimentos_total": mot.get("rendimentos_totais", 0),
+                    "reembolsos": mot.get("reembolsos", 0),
+                    "ajustes": mot.get("ajustes", 0),
+                    "data_importacao": now,
+                    "importado_por": current_user["id"],
+                    "fonte": "browser_interativo"
+                }
+                
+                await db.ganhos_uber.insert_one(ganho)
+            
+            # Guardar resumo em importacoes_uber
             await db.importacoes_uber.insert_one({
                 "parceiro_id": parceiro_id,
-                "data_inicio": now.strftime('%Y-%m-%d'),
-                "data_fim": now.strftime('%Y-%m-%d'),
-                "motoristas": resultado.get("motoristas", []),
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "motoristas": motoristas_importados,
                 "total_motoristas": resultado.get("total_motoristas", 0),
                 "total_rendimentos": resultado.get("total_rendimentos", 0),
                 "ficheiro_csv": resultado.get("ficheiro"),
-                "tipo": "extracao_automatica",
+                "tipo": "browser_interativo",
                 "created_at": now.isoformat(),
                 "created_by": current_user["id"]
             })
+            
+            logger.info(f"Importados {len(motoristas_importados)} motoristas para ganhos_uber")
             
             # Guardar sessão
             await browser.guardar_sessao()
