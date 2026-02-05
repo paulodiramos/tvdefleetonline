@@ -174,31 +174,31 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
           <Card className="bg-white border-gray-200 shadow-sm">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-gray-900">{plataformas.length}</div>
-              <div className="text-gray-300 text-sm">Plataformas</div>
+              <div className="text-gray-700 text-sm">Plataformas</div>
             </CardContent>
           </Card>
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-green-400">
                 {plataformas.filter(p => p.designs_completos).length}
               </div>
-              <div className="text-gray-300 text-sm">Com Designs Completos</div>
+              <div className="text-gray-700 text-sm">Com Designs Completos</div>
             </CardContent>
           </Card>
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-yellow-400">
                 {plataformas.filter(p => !p.designs_completos && p.designs_count > 0).length}
               </div>
-              <div className="text-gray-300 text-sm">Em Progresso</div>
+              <div className="text-gray-700 text-sm">Em Progresso</div>
             </CardContent>
           </Card>
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-orange-400">
                 {plataformas.filter(p => p.designs_count === 0).length}
               </div>
-              <div className="text-gray-300 text-sm">Sem Designs</div>
+              <div className="text-gray-700 text-sm">Sem Designs</div>
             </CardContent>
           </Card>
         </div>
@@ -209,11 +209,11 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-gray-500" />
           </div>
         ) : plataformas.length === 0 ? (
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardContent className="py-12 text-center">
               <Settings className="w-16 h-16 mx-auto text-gray-600 mb-4" />
               <h3 className="text-lg font-medium mb-2">Nenhuma plataforma configurada</h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-gray-600 mb-4">
                 Crie plataformas predefinidas ou adicione uma nova manualmente
               </p>
               <div className="flex gap-2 justify-center">
@@ -231,17 +231,17 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
             {plataformas.map(plat => (
               <Card 
                 key={plat.id} 
-                className={`bg-gray-800 border-gray-700 ${!plat.ativo ? 'opacity-50' : ''}`}
+                className={`bg-white border-gray-200 shadow-sm ${!plat.ativo ? 'opacity-50' : ''}`}
               >
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">{plat.icone}</div>
                       <div>
-                        <h3 className="font-bold text-lg text-white">{plat.nome}</h3>
+                        <h3 className="font-bold text-lg text-gray-900">{plat.nome}</h3>
                         <p className="text-blue-300 text-sm">{plat.url_base}</p>
                         {plat.descricao && (
-                          <p className="text-gray-300 text-xs mt-1">{plat.descricao}</p>
+                          <p className="text-gray-700 text-xs mt-1">{plat.descricao}</p>
                         )}
                       </div>
                     </div>
@@ -256,20 +256,20 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
                               className={`w-3 h-3 rounded-full ${
                                 i < plat.designs_count
                                   ? 'bg-green-500'
-                                  : 'bg-gray-600'
+                                  : 'bg-gray-200'
                               }`}
                             />
                           ))}
                         </div>
-                        <span className="text-xs text-gray-300">
+                        <span className="text-xs text-gray-700">
                           {plat.designs_count}/{plat.max_semanas} designs
                         </span>
                       </div>
 
                       {/* Estatísticas */}
                       <div className="text-center">
-                        <div className="text-lg font-bold text-white">{plat.total_execucoes || 0}</div>
-                        <span className="text-xs text-gray-300">execuções</span>
+                        <div className="text-lg font-bold text-gray-900">{plat.total_execucoes || 0}</div>
+                        <span className="text-xs text-gray-700">execuções</span>
                       </div>
 
                       {/* Ações */}
@@ -315,63 +315,63 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
               <div className="space-y-4">
                 <div className="grid grid-cols-4 gap-2">
                   <div>
-                    <label className="text-sm text-gray-400">Ícone</label>
+                    <label className="text-sm text-gray-600">Ícone</label>
                     <Input
                       value={formData.icone}
                       onChange={(e) => setFormData({ ...formData, icone: e.target.value })}
-                      className="bg-gray-700 border-gray-600 text-center text-2xl"
+                      className="bg-gray-100 border-gray-600 text-center text-2xl"
                       maxLength={2}
                     />
                   </div>
                   <div className="col-span-3">
-                    <label className="text-sm text-gray-400">Nome</label>
+                    <label className="text-sm text-gray-600">Nome</label>
                     <Input
                       value={formData.nome}
                       onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                       placeholder="Ex: Uber Fleet"
-                      className="bg-gray-700 border-gray-600"
+                      className="bg-gray-100 border-gray-600"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm text-gray-400">URL Base</label>
+                  <label className="text-sm text-gray-600">URL Base</label>
                   <Input
                     value={formData.url_base}
                     onChange={(e) => setFormData({ ...formData, url_base: e.target.value })}
                     placeholder="https://..."
-                    className="bg-gray-700 border-gray-600"
+                    className="bg-gray-100 border-gray-600"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm text-gray-400">Descrição</label>
+                  <label className="text-sm text-gray-600">Descrição</label>
                   <Input
                     value={formData.descricao}
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                     placeholder="Descrição da plataforma..."
-                    className="bg-gray-700 border-gray-600"
+                    className="bg-gray-100 border-gray-600"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-gray-400">Máximo de Semanas</label>
+                    <label className="text-sm text-gray-600">Máximo de Semanas</label>
                     <Input
                       type="number"
                       min="1"
                       max="8"
                       value={formData.max_semanas}
                       onChange={(e) => setFormData({ ...formData, max_semanas: parseInt(e.target.value) })}
-                      className="bg-gray-700 border-gray-600"
+                      className="bg-gray-100 border-gray-600"
                     />
                   </div>
                   <div>
-                    <label className="text-sm text-gray-400">Tipo de Ficheiro</label>
+                    <label className="text-sm text-gray-600">Tipo de Ficheiro</label>
                     <select
                       value={formData.tipo_ficheiro}
                       onChange={(e) => setFormData({ ...formData, tipo_ficheiro: e.target.value })}
-                      className="w-full bg-gray-700 border-gray-600 rounded p-2"
+                      className="w-full bg-gray-100 border-gray-600 rounded p-2"
                     >
                       <option value="csv">CSV</option>
                       <option value="xlsx">Excel (XLSX)</option>
@@ -381,7 +381,7 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
                 </div>
 
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Campos de Credenciais</label>
+                  <label className="text-sm text-gray-600 mb-2 block">Campos de Credenciais</label>
                   <div className="flex flex-wrap gap-2">
                     {['email', 'password', 'telefone', 'username', 'api_key'].map(campo => (
                       <button
@@ -389,8 +389,8 @@ export default function GestaoPlataformasRPA({ user, onLogout }) {
                         onClick={() => toggleCampoCredencial(campo)}
                         className={`px-3 py-1 rounded text-sm ${
                           formData.campos_credenciais.includes(campo)
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-700 text-gray-400'
+                            ? 'bg-blue-600 text-gray-900'
+                            : 'bg-gray-100 text-gray-600'
                         }`}
                       >
                         {campo}
