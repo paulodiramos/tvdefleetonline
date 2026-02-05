@@ -513,8 +513,8 @@ export default function RPADesigner({ user, onLogout }) {
               <CardContent>
                 <div 
                   ref={canvasRef}
-                  className="relative bg-black rounded-lg overflow-hidden"
-                  style={{ aspectRatio: '16/9' }}
+                  className="relative bg-gray-800 rounded-lg overflow-hidden"
+                  style={{ aspectRatio: '16/9', minHeight: '400px' }}
                   onClick={handleCanvasClick}
                 >
                   {screenshot ? (
@@ -524,11 +524,16 @@ export default function RPADesigner({ user, onLogout }) {
                       className="w-full h-full object-contain cursor-crosshair"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                       <div className="text-center">
                         <Monitor className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p>Clique em "Iniciar Gravação" para começar</p>
-                        <p className="text-sm mt-2">
+                        <p className="text-lg font-medium">
+                          {plataformaSelecionada 
+                            ? 'Clique em "Iniciar Gravação" para começar'
+                            : 'Selecione uma plataforma primeiro'
+                          }
+                        </p>
+                        <p className="text-sm mt-2 text-gray-500">
                           O browser irá carregar a página da plataforma
                         </p>
                       </div>
@@ -536,7 +541,7 @@ export default function RPADesigner({ user, onLogout }) {
                   )}
                   
                   {gravando && (
-                    <div className="absolute top-2 left-2 flex items-center gap-2 bg-red-600 px-2 py-1 rounded text-xs">
+                    <div className="absolute top-2 left-2 flex items-center gap-2 bg-red-600 px-2 py-1 rounded text-xs text-white">
                       <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
                       A GRAVAR
                     </div>
