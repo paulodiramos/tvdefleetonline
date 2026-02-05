@@ -536,6 +536,12 @@ export default function RPADesigner({ user, onLogout }) {
       wsRef.current.close();
     }
     
+    // Fechar popup de preview se estiver aberto
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.close();
+      setPreviewWindow(null);
+    }
+    
     if (sessionId) {
       try {
         await fetch(`${API_URL}/api/rpa-designer/sessao/${sessionId}`, {
