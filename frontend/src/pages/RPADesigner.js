@@ -79,6 +79,108 @@ export default function RPADesigner({ user, onLogout }) {
 
   const token = localStorage.getItem('token');
 
+  // Expor funções para o popup chamar
+  useEffect(() => {
+    window.pararSessaoFromPopup = () => {
+      pararSessaoInternal();
+    };
+    window.guardarDesignFromPopup = (nome) => {
+      guardarDesignInternal(nome);
+    };
+    return () => {
+      delete window.pararSessaoFromPopup;
+      delete window.guardarDesignFromPopup;
+    };
+  }, [sessionId, passos, plataformaSelecionada, semanaSelecionada]);
+
+  // Funções internas para parar e guardar
+  const pararSessaoInternal = async () => {
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.close();
+      setPreviewWindow(null);
+    }
+    
+    if (sessionId) {
+      try {
+        await fetch(`${API_URL}/api/rpa-designer/sessao/${sessionId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (error) {
+        console.error('Erro ao cancelar sessão:', error);
+      }
+    }
+    
+    setSessionId(null);
+    setGravando(false);
+    setScreenshot(null);
+    toast.info('Sessão terminada');
+  };
+
+  const guardarDesignInternal = async (nome) => {
+    if (passos.length === 0) {
+      toast.error('Adicione pelo menos um passo antes de guardar');
+      return;
+    }
+
+    if (!nome) return;
+
+    setLoading(true);
+    try {
+      if (sessionId) {
+        const res = await fetch(
+          `${API_URL}/api/rpa-designer/sessao/${sessionId}/guardar?nome=${encodeURIComponent(nome)}`,
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
+        const data = await res.json();
+        
+        if (data.sucesso) {
+          toast.success('Design guardado com sucesso!');
+          pararSessaoInternal();
+          carregarDesigns();
+        } else {
+          toast.error(data.detail || 'Erro ao guardar');
+        }
+      } else {
+        const res = await fetch(`${API_URL}/api/rpa-designer/designs`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            plataforma_id: plataformaSelecionada.id,
+            nome: nome,
+            semana_offset: semanaSelecionada,
+            passos: passos,
+            variaveis: ['SEMANA_INICIO', 'SEMANA_FIM']
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (data.sucesso || data.design_id) {
+          toast.success('Design guardado com sucesso!');
+          carregarDesigns();
+        } else {
+          toast.error(data.detail || 'Erro ao guardar');
+        }
+      }
+    } catch (error) {
+      toast.error('Erro ao guardar design');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Atalho de teclado Ctrl+Z para anular último passo
   useEffect(() => {
     const handleKeyDown = (e) => {
