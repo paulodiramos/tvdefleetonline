@@ -44,7 +44,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Carregar credenciais
+      // Carregar credenciais (sem password por segurança)
       const credRes = await axios.get(`${API}/uber/minhas-credenciais`, {
         headers: { Authorization: `Bearer ${token}` }
       });
