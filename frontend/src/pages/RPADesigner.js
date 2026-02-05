@@ -9,6 +9,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { toast } from 'sonner';
+import Layout from '../components/Layout';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
