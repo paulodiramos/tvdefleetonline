@@ -100,16 +100,28 @@ const RPA_AUTOMATIONS = [
     issue: 'Bug: Filtro de datas não funciona'
   },
   {
-    id: 'prio_rpa',
-    name: 'Prio Energy',
-    description: 'Extração de faturas e consumos de combustível',
+    id: 'prio_combustivel_rpa',
+    name: 'Prio Combustível',
+    description: 'Extração de consumos de combustível do portal MyPRIO',
     icon: <Fuel className="w-6 h-6 text-orange-500" />,
     status: 'active',
-    dataTypes: ['Faturas', 'Consumos', 'Cartões Frota'],
+    dataTypes: ['Consumos', 'Faturas', 'Cartões Frota'],
     configPath: '/admin/rpa-designer',
     designerPath: '/admin/rpa-designer',
     color: 'green',
     note: 'Login testado com sucesso'
+  },
+  {
+    id: 'prio_eletrica_rpa',
+    name: 'Prio Elétrica',
+    description: 'Extração de carregamentos elétricos do portal MyPRIO',
+    icon: <Zap className="w-6 h-6 text-blue-500" />,
+    status: 'active',
+    dataTypes: ['Carregamentos', 'Faturas', 'Cartões'],
+    configPath: '/admin/rpa-designer',
+    designerPath: '/admin/rpa-designer',
+    color: 'green',
+    note: 'Mesmas credenciais da Prio Combustível'
   }
 ];
 
