@@ -236,10 +236,10 @@ export default function GestaoPlataformasRPA() {
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">{plat.icone}</div>
                       <div>
-                        <h3 className="font-bold text-lg">{plat.nome}</h3>
-                        <p className="text-gray-400 text-sm">{plat.url_base}</p>
+                        <h3 className="font-bold text-lg text-white">{plat.nome}</h3>
+                        <p className="text-blue-300 text-sm">{plat.url_base}</p>
                         {plat.descricao && (
-                          <p className="text-gray-500 text-xs mt-1">{plat.descricao}</p>
+                          <p className="text-gray-300 text-xs mt-1">{plat.descricao}</p>
                         )}
                       </div>
                     </div>
