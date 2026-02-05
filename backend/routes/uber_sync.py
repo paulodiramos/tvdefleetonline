@@ -33,17 +33,27 @@ class SMSCode(BaseModel):
 
 @router.get("/minhas-credenciais")
 async def get_minhas_credenciais(
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    incluir_password: bool = False
 ):
-    """Parceiro obtém as suas credenciais Uber"""
+    """Parceiro obtém as suas credenciais Uber
+    
+    Args:
+        incluir_password: Se True, inclui a password na resposta
+    """
     if current_user["role"] not in ["parceiro", "admin"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
     
+    # Definir projeção baseada no parâmetro
+    projection = {"_id": 0}
+    if not incluir_password:
+        projection["password"] = 0
+    
     cred = await db.credenciais_uber.find_one(
         {"parceiro_id": parceiro_id},
-        {"_id": 0, "password": 0}
+        projection
     )
     
     return cred or {}
