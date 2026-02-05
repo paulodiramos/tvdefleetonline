@@ -103,16 +103,26 @@ class UberExtractor:
                 await asyncio.sleep(2)
             
             # Clicar em "Mais opções" se aparecer
-            mais_opcoes = self.page.locator('text=Mais opções, text=More options')
+            mais_opcoes = self.page.get_by_text("Mais opções")
             if await mais_opcoes.count() > 0:
-                await mais_opcoes.click()
+                await mais_opcoes.first.click()
                 await asyncio.sleep(1)
+            else:
+                mais_opcoes_en = self.page.get_by_text("More options")
+                if await mais_opcoes_en.count() > 0:
+                    await mais_opcoes_en.first.click()
+                    await asyncio.sleep(1)
             
             # Clicar em opção de password
-            password_option = self.page.locator('text=palavra-passe, text=password')
+            password_option = self.page.get_by_text("palavra-passe")
             if await password_option.count() > 0:
-                await password_option.click()
+                await password_option.first.click()
                 await asyncio.sleep(1)
+            else:
+                password_option_en = self.page.get_by_text("password")
+                if await password_option_en.count() > 0:
+                    await password_option_en.first.click()
+                    await asyncio.sleep(1)
             
             # Preencher password
             password_input = self.page.locator('input[name="password"], input[type="password"]')
@@ -175,59 +185,71 @@ class UberExtractor:
             await asyncio.sleep(2)
             
             # Clicar no menu Relatórios
-            relatorios_menu = self.page.locator('a:has-text("Relatórios"), [href*="reports"]').first
+            relatorios_menu = self.page.get_by_role("link", name="Relatórios")
             if await relatorios_menu.count() > 0:
-                await relatorios_menu.click()
+                await relatorios_menu.first.click()
                 await asyncio.sleep(2)
             else:
-                # Tentar URL direta
-                current_url = self.page.url
-                if '/orgs/' in current_url:
-                    org_id = current_url.split('/orgs/')[1].split('/')[0]
-                    await self.page.goto(f"https://supplier.uber.com/orgs/{org_id}/reports", wait_until="domcontentloaded")
-                await asyncio.sleep(2)
+                # Tentar link por href
+                relatorios_link = self.page.locator('a[href*="reports"]').first
+                if await relatorios_link.count() > 0:
+                    await relatorios_link.click()
+                    await asyncio.sleep(2)
+                else:
+                    # Tentar URL direta
+                    current_url = self.page.url
+                    if '/orgs/' in current_url:
+                        org_id = current_url.split('/orgs/')[1].split('/')[0]
+                        await self.page.goto(f"https://supplier.uber.com/orgs/{org_id}/reports", wait_until="domcontentloaded")
+                    await asyncio.sleep(2)
             
             # 2. Clicar em "Gerar relatório"
             logger.info("Passo 2: Clicar em Gerar relatório")
-            gerar_btn = self.page.locator('button:has-text("Gerar relatório")').first
+            gerar_btn = self.page.get_by_role("button", name="Gerar relatório")
             if await gerar_btn.count() == 0:
-                gerar_btn = self.page.get_by_text("Gerar relatório").first
+                gerar_btn = self.page.get_by_text("Gerar relatório")
             if await gerar_btn.count() > 0:
-                await gerar_btn.click()
+                await gerar_btn.first.click()
                 await asyncio.sleep(2)
             else:
                 return {"sucesso": False, "erro": "Botão 'Gerar relatório' não encontrado"}
             
             # 3. Selecionar tipo: Pagamentos de motorista
             logger.info("Passo 3: Selecionar tipo de relatório")
-            tipo_dropdown = self.page.locator('[data-testid*="report-type"], select:has-text("Tipo"), button:has-text("Tipo de relatório")').first
+            tipo_dropdown = self.page.locator('[data-testid*="report-type"]').first
+            if await tipo_dropdown.count() == 0:
+                tipo_dropdown = self.page.get_by_role("button", name="Tipo de relatório")
             if await tipo_dropdown.count() > 0:
-                await tipo_dropdown.click()
+                await tipo_dropdown.first.click()
                 await asyncio.sleep(1)
                 
-                pagamentos_option = self.page.locator('text=Pagamentos de motorista, li:has-text("Pagamentos de motorista")').first
+                pagamentos_option = self.page.get_by_text("Pagamentos de motorista")
                 if await pagamentos_option.count() > 0:
-                    await pagamentos_option.click()
+                    await pagamentos_option.first.click()
                     await asyncio.sleep(1)
             
             # 4. Selecionar intervalo de tempo
             logger.info("Passo 4: Selecionar intervalo de tempo")
-            intervalo_dropdown = self.page.locator('button:has-text("Intervalo"), [data-testid*="time-range"]').first
+            intervalo_dropdown = self.page.get_by_role("button", name="Intervalo")
+            if await intervalo_dropdown.count() == 0:
+                intervalo_dropdown = self.page.locator('[data-testid*="time-range"]')
             if await intervalo_dropdown.count() > 0:
-                await intervalo_dropdown.click()
+                await intervalo_dropdown.first.click()
                 await asyncio.sleep(1)
                 
                 # Selecionar a primeira opção disponível (semana mais recente)
-                primeira_opcao = self.page.locator('[role="option"], li[role="option"]').first
+                primeira_opcao = self.page.locator('[role="option"]').first
                 if await primeira_opcao.count() > 0:
                     await primeira_opcao.click()
                     await asyncio.sleep(1)
             
             # 5. Selecionar organização
             logger.info("Passo 5: Selecionar organização")
-            org_dropdown = self.page.locator('button:has-text("organizações"), [data-testid*="org"]').first
+            org_dropdown = self.page.get_by_role("button", name="organizações")
+            if await org_dropdown.count() == 0:
+                org_dropdown = self.page.locator('[data-testid*="org"]')
             if await org_dropdown.count() > 0:
-                await org_dropdown.click()
+                await org_dropdown.first.click()
                 await asyncio.sleep(1)
                 
                 # Selecionar primeiro checkbox
@@ -238,22 +260,31 @@ class UberExtractor:
             
             # 6. Clicar em Gerar
             logger.info("Passo 6: Clicar em Gerar")
-            gerar_final_btn = self.page.locator('button:has-text("Gerar"):not(:has-text("relatório"))').first
+            gerar_final_btn = self.page.get_by_role("button", name="Gerar", exact=True)
             if await gerar_final_btn.count() > 0:
-                await gerar_final_btn.click()
+                await gerar_final_btn.first.click()
                 await asyncio.sleep(5)  # Aguardar geração
             
             # 7. Fazer download
             logger.info("Passo 7: Fazer download")
             
             # Fechar modal se ainda estiver aberto
-            fechar_btn = self.page.locator('button:has-text("Cancelar"), [aria-label="close"]').first
+            fechar_btn = self.page.get_by_role("button", name="Cancelar")
             if await fechar_btn.count() > 0:
-                await fechar_btn.click()
+                await fechar_btn.first.click()
                 await asyncio.sleep(1)
+            else:
+                close_icon = self.page.locator('[aria-label="close"]')
+                if await close_icon.count() > 0:
+                    await close_icon.first.click()
+                    await asyncio.sleep(1)
             
             # Encontrar botão de download na tabela
-            download_btn = self.page.locator('button:has-text("download"), a:has-text("download"), text=Faça o download').first
+            download_btn = self.page.get_by_role("button", name="download")
+            if await download_btn.count() == 0:
+                download_btn = self.page.get_by_role("link", name="download")
+            if await download_btn.count() == 0:
+                download_btn = self.page.get_by_text("Faça o download")
             
             if await download_btn.count() > 0:
                 try:
