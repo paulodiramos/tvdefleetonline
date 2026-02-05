@@ -1,90 +1,97 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas, que evoluiu para a criação de um sistema de automação (RPA) complexo. O requisito mais recente e de maior prioridade é a implementação de um **RPA Designer Visual**. Este sistema permite que um administrador grave visualmente um fluxo de extração de dados (cliques, digitação) num website (ex: Uber, Bolt), utilizando uma conta de teste. Este design gravado pode ser executado automaticamente por outros parceiros com as suas próprias credenciais, quer manualmente quer de forma agendada, para sincronizar os seus dados. O objetivo é criar uma ferramenta que permita ao administrador adicionar novas automações sem necessidade de programação.
+O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas, que evoluiu para a criação de um sistema de automação (RPA) complexo. O requisito mais recente e de maior prioridade é a implementação de um **RPA Designer Visual**. Este sistema permite que um administrador grave visualmente um fluxo de extração de dados num website, que pode ser executado por outros parceiros. Recentemente, o foco mudou para a melhoria e correção de bugs na página de **Resumo Semanal do Parceiro**, incluindo a adição de um novo dashboard de resumo e a resolução de discrepâncias nos dados sincronizados da API da Bolt.
 
 **PRODUCT REQUIREMENTS:**
-1.  **RPA Designer Visual:** Permitir que um admin grave, edite e guarde scripts de automação através de uma interface de browser interativo.
-2.  **Motor de Execução RPA:** O sistema deve ser capaz de executar os scripts gravados para cada parceiro, injetando as suas credenciais de forma dinâmica.
-3.  **Agendamento de Sincronização:** Os parceiros devem poder agendar a execução automática das sincronizações (ex: semanalmente).
-4.  **Suporte Multi-plataforma:** O designer deve ser genérico o suficiente para suportar diferentes plataformas (Uber, Via Verde, Bolt, etc.), que podem ser adicionadas pelo admin.
-5.  **Correção de Bugs Existentes:** Resolver problemas pendentes, como a falha na filtragem de datas da Via Verde e inconsistências na criação de dados (ex: motoristas não associados a parceiros).
+1.  **RPA Designer Visual:** Permitir que um admin grave, edite e guarde scripts de automação.
+2.  **Motor de Execução RPA:** Executar os scripts gravados para cada parceiro.
+3.  **Agendamento de Sincronização:** Permitir o agendamento de execuções.
+4.  **Dashboard de Resumo Semanal (NOVO):**
+    *   Criar um novo layout de dashboard no topo da página com 4 caixas: Receitas, Despesas, Motoristas e Lucro do Parceiro.
+    *   Implementar uma secção para que o parceiro possa introduzir manualmente os valores totais recebidos da Uber e da Bolt.
+    *   O sistema deve comparar os valores manuais com os totais sincronizados dos motoristas e exibir um alerta visual (verde se correto, vermelho se houver diferença).
+5.  **Correção de Bugs:**
+    *   Resolver discrepâncias nos valores sincronizados da API da Bolt (valores de campanha não incluídos).
+    *   Resolver erros de timeout na sincronização da Uber (botão Gerar desativado).
+    *   Corrigir o bug da criação de motoristas que não eram associados automaticamente ao parceiro.
+    *   Resolver a falha na filtragem de datas da Via Verde.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
 - Uma aplicação full-stack (React + FastAPI + MongoDB).
-- A estrutura base para o **RPA Designer Visual** foi implementada, incluindo:
-    - **Backend:** Novos modelos Pydantic (, ), endpoints para gestão das plataformas e dos designs (), e um serviço de execução ().
-    - **Frontend:** Uma nova página de gestão de plataformas () e a página principal do designer ().
-- A interface do  inclui controlos para selecionar plataformas, gerir semanas, gravar/parar, e uma lista de passos gravados com opções de edição (anular, limpar, marcar como credencial).
-- Foram feitas várias melhorias de UI/UX com base no feedback do utilizador, como correção de cores, contraste e a adição do menu de navegação principal às novas páginas.
-- Foram investigados e corrigidos problemas com o browser interativo do Playwright, como a falta de dependências e a aplicação de medidas anti-deteção.
-- Foi investigado um bug de integridade de dados onde um motorista criado por um parceiro não estava a ser associado a ele. O agente identificou a causa, mas não concluiu a implementação da correção.
+- A estrutura base do **RPA Designer Visual** está implementada, com uma solução para contornar CAPTCHAs através da reutilização de sessões de parceiros.
+- A página de **Resumo Semanal do Parceiro** () foi significativamente redesenhada. Inclui um novo dashboard no topo com resumos financeiros (Receitas, Despesas, Lucro) e uma secção para o parceiro introduzir os totais recebidos da Uber/Bolt e comparar com os valores agregados dos motoristas, mostrando alertas visuais.
+- Foram corrigidos vários bugs críticos, incluindo a associação automática de motoristas a parceiros e o status  na criação de motoristas.
+- Foram implementadas melhorias de UI, como um botão para mostrar/esconder passwords e a adição das datas de início/fim da semana nos resumos.
 
 **Last working item**:
-- **Last item agent was working:** O agente estava a investigar porque os motoristas criados por um parceiro não eram automaticamente associados a ele. Foi identificado que o endpoint de criação de motoristas em  não estava a atribuir o  do utilizador logado (se fosse um parceiro).
+- **Last item agent was working:** O agente estava a investigar porque a API da Bolt retornava um valor líquido (€277.73) inferior ao esperado pelo utilizador (€300.54). O utilizador identificou a diferença de €22.81 como ganhos de campanha. O agente confirmou que a API da Bolt não parece ter um endpoint para ganhos de campanha e estava a preparar-se para adicionar um campo manual para que o utilizador pudesse inserir esse valor.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Backend testing. O próximo agente deve corrigir a lógica no ficheiro  e depois testar o fluxo de criação de um motorista enquanto logado como parceiro.
+- **Which testing method agent to use?** Frontend/Backend testing. O próximo agente deve adicionar o campo Ganhos de Campanha ao modelo de dados, ao backend (endpoints GET/PUT) e ao frontend (tabela e formulário de edição do resumo semanal), e depois testar o fluxo.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0) Criação de motorista não atribui  automaticamente.**
-  - **Description:** Quando um utilizador com perfil de 'parceiro' cria um novo motorista, o  não é definido automaticamente. Isto quebra a lógica de negócio, pois o motorista não aparece nos relatórios do parceiro.
-  - **Attempted fixes:** O agente identificou o ficheiro  como o local do problema.
+- **Issue 1: (P0) API da Bolt não inclui ganhos de campanha.**
+  - **Description:** A sincronização via API da Bolt não inclui os ganhos de campanha, resultando em valores líquidos inferiores aos do portal da Bolt. A diferença identificada para a semana 5 foi de €22.81.
+  - **Attempted fixes:** O agente investigou a API da Bolt e confirmou que os endpoints de  e  não parecem conter dados de campanha.
   - **Next debug checklist:**
-    1.  Abrir o ficheiro .
-    2.  Localizar o endpoint  para criar um motorista.
-    3.  Modificar a lógica para verificar se o  tem o perfil 'parceiro'.
-    4.  Se sim, injetar o uid=0(root) gid=0(root) groups=0(root) do parceiro no documento do novo motorista antes de o guardar na base de dados.
-    5.  Se o utilizador for 'admin', o comportamento atual (esperar um  no body) deve ser mantido.
-    6.  Testar o fluxo fazendo login como parceiro e criando um novo motorista.
-  - **Why fix this issue and what will be achieved with the fix?** Corrige uma falha crítica na integridade dos dados e na lógica de negócio principal da aplicação.
-  - **Status:** IN PROGRESS
-  - **Is recurring issue?** Y (inconsistências de dados são um tema recorrente)
-  - **Should Test frontend/backend/both after fix?** Backend
-
-- **Issue 2: (P1) Browser interativo no RPA Designer é bloqueado por CAPTCHA.**
-  - **Description:** Ao tentar gravar um design para a Uber, o browser automatizado é frequentemente bloqueado por CAPTCHAs complexos ou falha no passo do código SMS, impedindo a gravação do fluxo.
-  - **Attempted fixes:** Foram instaladas bibliotecas como  e adicionadas configurações anti-deteção.
-  - **Next debug checklist:**
-    1.  Revisitar a abordagem. Em vez de tentar vencer a proteção anti-bot, implementar um fluxo de trabalho mais robusto:
-    2.  O parceiro faz login manual *uma vez* na sua página , que já tem um sistema funcional para isso, guardando a sessão.
-    3.  O admin, no RPA Designer, grava o fluxo *a partir da página de relatórios* (pós-login), evitando completamente o ecrã de login/CAPTCHA.
-  - **Why fix this issue and what will be achieved with the fix?** Desbloqueia a capacidade do admin de criar os designs de RPA, que é o núcleo da nova funcionalidade.
-  - **Status:** IN PROGRESS
+    1.  Adicionar um campo  ao modelo de dados do resumo semanal no backend.
+    2.  Modificar o endpoint  em  para guardar este novo campo.
+    3.  Modificar o endpoint  para retornar este campo e incluí-lo no cálculo dos totais.
+    4.  No frontend (), adicionar o campo ao formulário de edição e exibi-lo na tabela de motoristas.
+  - **Why fix this issue and what will be achieved with the fix?** Permite que os valores do resumo semanal correspondam à realidade, garantindo a precisão dos cálculos de lucro.
+  - **Status:** NOT STARTED
   - **Is recurring issue?** Y
   - **Should Test frontend/backend/both after fix?** Both
 
+- **Issue 2: (P1) Erro de timeout na sincronização Uber.**
+  - **Description:** A sincronização da Uber falha com um erro de timeout ao tentar clicar no botão Gerar, porque este se encontra desativado. ().
+  - **Attempted fixes:** O agente modificou o ficheiro  para esperar que o botão Gerar esteja ativo antes de clicar. O backend foi reiniciado.
+  - **Next debug checklist:**
+    1.  Pedir ao utilizador para testar novamente a sincronização da Uber.
+    2.  Se o erro persistir, analisar os logs do backend para ver o estado da página no momento do erro e ajustar a lógica de espera/interação no .
+  - **Why fix this issue and what will be achieved with the fix?** Desbloqueia a sincronização automática de dados da Uber.
+  - **Status:** USER VERIFICATION PENDING
+  - **Is recurring issue?** Y
+  - **Should Test frontend/backend/both after fix?** Backend
+
 - **Issue 3: (P2) Falha na Filtragem de Datas do RPA da Via Verde.**
-  - **Description:** Problema recorrente onde a automação descarrega todas as transações em vez de apenas as do período selecionado.
+  - **Description:** Problema recorrente onde a automação da Via Verde descarrega todas as transações em vez de apenas as do período selecionado.
   - **Status:** NOT STARTED
   - **Is recurring issue?** Y
   - **Should Test frontend/backend/both after fix?** Backend
 
 **In progress Task List**:
-- **Task 1: (P0) Finalizar a implementação do Visual RPA Designer.**
-  - **Where to resume:** O trabalho recomeça com a correção do **Issue 1** (atribuição do ). De seguida, deve ser estabilizado o browser interativo (**Issue 2**). Finalmente, é preciso construir o motor de execução no backend para correr os scripts gravados e a UI para o agendamento por parte do parceiro.
-  - **What will be achieved with this?** Uma ferramenta de automação visual completa e funcional, que permite ao admin expandir as integrações da plataforma sem código.
+- **Task 1: (P0) Finalizar o novo dashboard da página de Resumo Semanal.**
+  - **Where to resume:** O layout principal do dashboard foi implementado. Agora é preciso finalizar a correção da discrepância da Bolt, conforme descrito no **Issue 1**.
+  - **What will be achieved with this?** Um dashboard financeiro preciso e funcional que atende aos requisitos do utilizador para verificação de valores.
   - **Status:** IN PROGRESS
   - **Should Test frontend/backend/both after fix?** Both
-  - **Blocked on something:** Issue 1 e Issue 2.
+  - **Blocked on something:** Issue 1.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
+  - (P1) **Motor de Execução RPA:** Construir o serviço de backend que executa os designs de RPA gravados para os parceiros, de forma manual ou agendada.
   - (P1) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria e enviá-lo por email.
   - (P2) **Sistema de Tickets na App Móvel:** Adicionar a funcionalidade de gestão de tickets.
   - (P2) Implementar as integrações com **Ifthenpay** e **Moloni**.
 - **Future Tasks:**
   - (P3) Implementar o envio de relatórios via WhatsApp.
-  - (P3) Refatorar o  para uma estrutura modular.
-  - (P3) Refatorar o  para dividir a lógica em ficheiros mais pequenos.
+  - (P3) Refatorar o  e o .
 
 **Completed work in this session**
-- **Estrutura Base do RPA Designer Visual:** Foram criados os modelos de dados, rotas de API e serviços de backend, bem como as páginas de frontend ( e ).
-- **UI do RPA Designer:** A interface para o admin gravar e gerir os passos da automação foi implementada, incluindo controlos para inserir credenciais e texto.
-- **Melhorias de UI/UX:** Foram corrigidos problemas de layout, como a falta do menu principal e cores de baixo contraste, com base no feedback direto do utilizador.
-- **Depuração do Browser Interativo:** Foram instaladas as dependências do Playwright e aplicadas configurações para tentar contornar a deteção de bots.
-- **Investigação de Bug de Dados:** Foi identificado (mas não totalmente corrigido) o bug que impedia a associação automática de motoristas a parceiros.
+- **Refatoração do Dashboard de Resumo Semanal:**
+  - Removidos cartões de resumo duplicados.
+  - Criado um novo dashboard com 4 caixas principais (Receitas, Despesas, Motoristas, Lucro do Parceiro).
+  - Implementada uma secção para comparar os totais recebidos pela empresa com os totais dos motoristas, com alertas visuais.
+  - A lógica de comparação foi ajustada para ter uma tolerância de €0.01.
+- **Correção do Bug de Criação de Motoristas:** Corrigido o endpoint  para atribuir automaticamente o  e definir  quando um parceiro cria um motorista.
+- **Melhoria na Sincronização Uber RPA:** Adicionada uma verificação no  para esperar que o botão Gerar esteja habilitado antes de clicar, evitando um erro de timeout.
+- **Melhoria de UI/UX:**
+  - Adicionadas as datas de início e fim da semana ao cabeçalho do resumo semanal.
+  - Implementado um botão olho para mostrar/esconder a password na página de configuração da Uber.
+- **Correção de Dados:** Resolvido um bug onde um motorista não aparecia no resumo semanal por não ter o campo  definido.
 
 **Earlier issues found/mentioned but not fixed**
 - O problema da filtragem de datas do RPA da Via Verde continua pendente.
@@ -98,80 +105,78 @@ O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas
 
 
 **Key Technical Concepts**
+- **Dashboard de Verificação Financeira:** Uma interface que permite ao utilizador inserir valores reais recebidos das plataformas e compará-los com os dados agregados do sistema, exibindo alertas para discrepâncias.
 - **Visual RPA Designer:** Um sistema onde um admin grava visualmente uma automação web, que é depois executada parametricamente por outros utilizadores.
-- **Interactive Browser via WebSockets:** O backend executa o Playwright, transmite imagens do browser para o frontend via WebSocket, e recebe de volta eventos de interação (cliques, texto) para controlar a sessão de gravação.
-- **Playwright Anti-Bot Evasion:** Utilização de técnicas e bibliotecas como  para tentar fazer com que o browser automatizado pareça mais humano e evite CAPTCHAs.
-- **Dynamic Credential Injection:** Os designs de RPA são gravados com placeholders para credenciais (ex: ), que são substituídos pelas credenciais do parceiro específico no momento da execução.
+- **Interactive Browser via WebSockets:** O backend executa o Playwright, transmite imagens do browser para o frontend, e recebe eventos de interação para controlar a sessão de gravação.
 
 **key DB schema**
-- ** (Nova):** Armazena as plataformas que podem ser automatizadas (nome, URL base, etc.).
-- ** (Nova):** Armazena a sequência de passos gravados para cada plataforma/semana.
-- ** (Nova):** Guarda as configurações de agendamento de cada parceiro.
-- **:** O campo  é crucial e precisa de ser atribuído corretamente na criação.
-- **:** Contém os perfis dos utilizadores. O uid=0(root) gid=0(root) groups=0(root) de um utilizador 'parceiro' deve corresponder ao  dos seus motoristas.
+- ** (Nova):** Armazena os valores totais recebidos da Uber/Bolt, introduzidos manualmente pelo parceiro, para cada semana (, , , , ).
+- **:** Coleção onde são guardados os dados sincronizados da API da Bolt.
+- **:** O campo  é agora atribuído corretamente na criação.
+- **:** Contém os perfis dos utilizadores.
 
 **All files of reference**
--  (Ficheiro com o bug de atribuição de )
--  (Lógica principal do designer, WebSocket e problemas de anti-bot)
--  (UI do designer)
--  (UI de gestão de plataformas)
--  (Modelos de dados para a nova funcionalidade)
+-  (Ficheiro principal do novo dashboard)
+-  (Endpoints de backend para o resumo semanal e os novos totais)
+-  (Serviço de integração com a API da Bolt)
+-  (Serviço de RPA para a Uber)
+-  (Endpoint de criação de motoristas corrigido)
 
 **Areas that need refactoring**:
-- A lógica do browser interativo é frágil devido às proteções anti-bot. Uma abordagem mais estável (gravar pós-login) deve ser priorizada.
 -  permanece um ficheiro monolítico que beneficiaria de ser dividido.
--  é uma dívida técnica conhecida para a aplicação móvel.
 
 **key api endpoints**
-- : Cria e lista as plataformas RPA.
-- : Inicia uma sessão de gravação para o admin.
-- : WebSocket para a comunicação com o browser interativo.
--  (em ): Endpoint para criar motoristas, que contém o bug a ser corrigido.
+- : Retorna os dados para o resumo semanal, incluindo os totais da empresa.
+- : Obtém os totais manuais para uma dada semana.
+- : Guarda os totais manuais para uma dada semana.
+- : Atualiza os dados de um motorista no resumo semanal.
 
 **Critical Info for New Agent**
-- **Prioridade máxima:** Corrigir o bug da criação de motoristas em . Sem isto, a integridade dos dados da aplicação está comprometida.
-- **Segundo, estabilizar o RPA Designer:** O browser interativo é instável devido a CAPTCHAs. Em vez de continuar a lutar contra a proteção anti-bot, proponha ao utilizador o fluxo alternativo: o parceiro faz login separadamente, e o admin grava o design já dentro da área autenticada. Isto é mais robusto e desbloqueia o desenvolvimento.
-- **Esteja preparado para iteração de UI:** O utilizador está muito atento ao design e usabilidade. Continue a pedir feedback sobre as interfaces e a fazer ajustes.
-- O desenvolvimento da nova funcionalidade **RPA Designer Visual** é a tarefa principal e sobrepõe-se a muitas das tarefas mais antigas.
+- **Prioridade:** O utilizador está muito focado em garantir a precisão dos dados financeiros no resumo semanal. A prioridade máxima é resolver a discrepância da API da Bolt, adicionando o campo manual para ganhos de campanha.
+- **API da Bolt:** A investigação revelou que as credenciais são específicas para cada parceiro (). A API do parceiro Tomas retorna muitas  com valor , que devem ser ignoradas no cálculo. Os ganhos de campanha não estão disponíveis via API e devem ser adicionados manualmente.
+- **Fluxo de trabalho:** O utilizador dá feedback muito específico e iterativo sobre a UI. Esteja preparado para fazer pequenos ajustes visuais e de layout conforme solicitado.
+- Depois de resolver a questão do resumo semanal, o foco deve voltar para a conclusão da funcionalidade principal do **RPA Designer**.
 
 **documents and test reports created in this job**
-- O ficheiro  foi atualizado para incluir os requisitos do RPA Designer.
+- O ficheiro  foi atualizado com as novas funcionalidades.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Pergunta porque é que um motorista não aparece na lista de um parceiro específico (Tomas).
-2.  **User:** Fornece o email do parceiro Tomas: .
-3.  **User:** Questiona um screenshot de um ecrã vazio, que mostra o problema.
-4.  **User:** Questiona um segundo screenshot que mostra o motorista numa lista diferente.
-5.  **User:** Confirma a lógica de negócio: se o admin cria um motorista, tem de o atribuir; se um parceiro cria, deve ser automático. Pergunta se o problema está resolvido de forma definitiva.
-6.  **User:** Reporta erro ao tentar fazer login manual como parceiro: .
-7.  **User:** Pergunta se é possível reduzir a dificuldade do CAPTCHA da Uber.
-8.  **User:** Volta a questionar porque os motoristas do parceiro Tomas não aparecem no resumo semanal.
-9.  **User:** Informa o e-mail do parceiro Tomas: .
-10. **User:** Envia screenshot que mostra o motorista Elson associado ao parceiro Tomas, mas a lista de resumo semanal vazia, e pergunta o que se passa.
+1.  **User:** Pede para criar campos manuais no resumo semanal para introduzir valores recebidos da Uber/Bolt e mostrar um alerta de diferença.
+2.  **User:** Pede para remover cards de resumo repetidos, ajustar o layout do card Motoristas e remover uma linha vertical no header.
+3.  **User:** Confirma que cada parceiro tem as suas próprias credenciais e pede para a verificação de valores considerar cêntimos.
+4.  **User:** Pede para verificar os ganhos de campanha da Bolt, confirmando que o valor em falta é de €22.81.
+5.  **User:** Confirma que a API não tem os ganhos de campanha e pede para adicionar um campo manual para isso.
+6.  **User:** Solicita a correção de valores Bolt errados.
+7.  **User:** Pede para exibir as datas de início e fim da semana no resumo semanal.
+8.  **User:** Reporta que o valor Bolt está incorreto (€185.69 em vez de €300.54) e que a sincronização Uber falha com um erro de botão Gerar desabilitado.
+9.  **User:** Reporta que o resumo semanal do parceiro Tomas não mostra o motorista, embora ele tenha um veículo atribuído.
+10. **User:** Reporta que o valor 220 é guardado como 219.99 e que um veículo criado por um parceiro não fica ativo para ele.
 
 **Project Health Check:**
 - **Broken:**
-    - Lógica de criação de motoristas (associação ao parceiro não é automática).
-    - Browser interativo do RPA Designer (bloqueado por CAPTCHAs).
-    - Filtragem de datas no RPA da Via Verde.
+    - A sincronização da API da Bolt não é totalmente precisa devido à falta de dados de campanha.
+    - A filtragem de datas no RPA da Via Verde.
+- **In Progress:**
+    - O novo dashboard do resumo semanal.
+    - A sincronização RPA da Uber (correção pendente de verificação).
 - **Mocked:**
-    - A execução automática dos designs RPA (são gravados, mas o motor de execução não está completo).
-    - Toda a aplicação móvel ().
+    - O motor de execução dos designs de RPA (são gravados, mas não executados).
 
 **3rd Party Integrations**
-- **Playwright:** Essencial para todas as funcionalidades de RPA, incluindo o novo designer.
+- **Playwright:** Essencial para RPA.
+- **Bolt Fleet API:** Usada para sincronização de dados de ganhos e viagens.
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** Nenhum
-- **Known regressions:** A filtragem de datas no RPA da Via Verde.
+- **Known regressions:** Nenhuma nesta sessão.
 
 **Credentials to test flow:**
 - **Admin:**  / 
-- **Parceiro (Zeny):**  / 
-- **Parceiro (Tomas):**  / 
+- **Parceiro (Tomas):**  /  (password foi redefinida pelo agente)
+- **Bolt API (Tomas):** As credenciais estão na coleção  do MongoDB.
 - **Uber (para login Zeny):**  / 
 
 **What agent forgot to execute**
-- O agente identificou corretamente o bug na lógica de criação de motoristas (o  não era definido automaticamente) e o ficheiro a alterar (), mas não chegou a implementar a alteração no código para corrigir o problema. Esta é a ação pendente mais crítica.</analysis>
+- O agente analisou que a API da Bolt retorna muitas  com preço  e o utilizador pediu para ignorá-las. No entanto, o agente não implementou explicitamente uma modificação no código de sincronização () para filtrar apenas  onde  não é  antes de somar. O foco mudou para a discrepância dos ganhos de campanha.</analysis>
