@@ -1163,6 +1163,7 @@ def get_scraper(platform: str, headless: bool = True):
         'bolt': BoltScraper,
         'uber': UberScraper,
         'via_verde': ViaVerdeScraper,
+        'prio': PrioScraper,
         'gps': GPSScraper,
         'combustivel': CombustivelScraper
     }
