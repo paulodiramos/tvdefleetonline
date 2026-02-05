@@ -189,7 +189,9 @@ class UberExtractor:
             
             # 2. Clicar em "Gerar relatório"
             logger.info("Passo 2: Clicar em Gerar relatório")
-            gerar_btn = self.page.locator('button:has-text("Gerar relatório"), text=Gerar relatório').first
+            gerar_btn = self.page.locator('button:has-text("Gerar relatório")').first
+            if await gerar_btn.count() == 0:
+                gerar_btn = self.page.get_by_text("Gerar relatório").first
             if await gerar_btn.count() > 0:
                 await gerar_btn.click()
                 await asyncio.sleep(2)
