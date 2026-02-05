@@ -656,13 +656,28 @@ export default function RPADesigner({ user, onLogout }) {
             const credenciais = ${credenciaisData};
             let ws = null;
             
-            // Preencher campos com credenciais pré-definidas
-            window.onload = function() {
-              if (credenciais.email) document.getElementById('campo-email').value = credenciais.email;
-              if (credenciais.password) document.getElementById('campo-password').value = credenciais.password;
-              if (credenciais.telefone) document.getElementById('campo-telefone').value = credenciais.telefone;
-              if (credenciais.codigo_sms) document.getElementById('campo-sms').value = credenciais.codigo_sms;
-            };
+            // Preencher campos com credenciais pré-definidas imediatamente
+            (function preencherCredenciais() {
+              console.log('Preenchendo credenciais:', credenciais);
+              setTimeout(function() {
+                if (credenciais.email) {
+                  var emailField = document.getElementById('campo-email');
+                  if (emailField) emailField.value = credenciais.email;
+                }
+                if (credenciais.password) {
+                  var passField = document.getElementById('campo-password');
+                  if (passField) passField.value = credenciais.password;
+                }
+                if (credenciais.telefone) {
+                  var telField = document.getElementById('campo-telefone');
+                  if (telField) telField.value = credenciais.telefone;
+                }
+                if (credenciais.codigo_sms) {
+                  var smsField = document.getElementById('campo-sms');
+                  if (smsField) smsField.value = credenciais.codigo_sms;
+                }
+              }, 100);
+            })();
             
             function conectar() {
               const wsUrl = '${API_URL}'.replace('https://', 'wss://').replace('http://', 'ws://');
