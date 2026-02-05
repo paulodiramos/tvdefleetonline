@@ -1,103 +1,79 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas com múltiplos perfis de utilizador (Motorista, Inspetor, Parceiro, Gestor) para web e mobile.
+O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas com múltiplos perfis de utilizador (Motorista, Inspetor, Parceiro, Gestor). A tarefa principal desta sessão foi implementar uma solução robusta para a extração de dados da Uber, contornando o bloqueio por CAPTCHA, e ajustar o fluxo de trabalho com base no feedback contínuo do utilizador.
 
 **PRODUCT REQUIREMENTS:**
 1.  **Sistema de Perfis:** Implementação de 4 perfis distintos (, , , ).
-2.  **Sistema de Vistorias Avançado:**
-    *   Inspetores realizam vistorias na app móvel.
-    *   Motorista recebe notificação para aprovar/rejeitar a vistoria, podendo ver detalhes e fotos.
-    *   Após aprovação, um relatório PDF deve ser gerado e enviado por email (Pendente).
-    *   Funcionalidades adicionadas: pesquisa de veículo por matrícula (texto e OCR de foto), upload de múltiplas fotos por item, e campo de assinatura digital.
-3.  **WebApp para Parceiros/Gestores:**
-    *   Página para gerir inspetores.
-    *   Página para consultar relatórios de vistorias.
-    *   Página para o admin configurar manualmente a sessão do RPA da Uber.
-4.  **App Móvel Dinâmica:**
-    *   A interface adapta-se ao perfil do utilizador.
-    *   **Novos Requisitos:** Ecrã de Extras corrigido para usar um dropdown de motoristas ativos; dashboard Resumo Semanal para parceiros com totais da empresa e filtro por motorista; novo ecrã Vistorias da Frota para parceiros.
-5.  **Integrações RPA:**
-    *   Corrigir a sincronização com a Via Verde (bug na filtragem de datas).
-    *   Implementar a extração de dados da Uber, contornando o CAPTCHA com um login manual na webapp.
+2.  **Sistema de Vistorias Avançado:** Funcionalidades de inspeção para a app móvel, incluindo aprovação do motorista e geração de relatórios PDF (Pendente).
+3.  **WebApp para Parceiros/Gestores:** Páginas para gerir inspetores, consultar relatórios e configurar o RPA da Uber.
+4.  **Integração RPA da Uber:** O requisito principal evoluiu para um sistema onde o parceiro faz um login manual uma vez para resolver o CAPTCHA, e o sistema guarda essa sessão para extrações automáticas futuras. O parceiro, e não o admin, deve ser responsável por iniciar a extração de dados para a sua própria frota.
+5.  **Integração RPA da Via Verde:** Corrigir a sincronização com a Via Verde (bug na filtragem de datas).
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
 - Uma aplicação full-stack (React + FastAPI + MongoDB).
-- O backend foi corrigido para resolver bugs críticos, incluindo a falha que impedia vistorias pendentes de aparecerem para os motoristas e erros de rota que bloqueavam funcionalidades.
-- A aplicação móvel, prototipada num único ficheiro , foi extensivamente modificada para incluir novas funcionalidades requisitadas pelo utilizador, como pesquisa por matrícula (OCR), upload de múltiplas fotos, assinatura digital, e dashboards melhorados para parceiros.
-- Foi criada uma nova página na webapp () e os respetivos endpoints de backend () para permitir que o administrador faça login manualmente no portal da Uber, capturando a sessão para contornar o bloqueio por CAPTCHA do RPA.
-- Foi criado um guia de deployment detalhado () e um script de instalação () em .
+- Uma solução complexa e funcional para a autenticação na Uber que contorna o CAPTCHA. Utiliza um **browser remoto interativo** (via Playwright e WebSockets) na página do parceiro (), permitindo-lhe fazer login manualmente. A sessão é guardada por ~30 dias.
+- Após a autenticação, a página do parceiro exibe um seletor de semanas e um botão Sincronizar Uber para iniciar a extração automática de dados.
+- A página do administrador () foi transformada num dashboard de monitorização para visualizar o estado da sessão Uber de todos os parceiros.
+- O bug inicial que impedia a visualização do menu Configuração Uber para o admin foi corrigido.
+- As credenciais do parceiro Zeny Macaia foram configuradas e a sessão Uber foi estabelecida com sucesso através do fluxo de login manual.
 
 **Last working item**:
-- **Last item agent was working:** O agente estava a tentar corrigir a visibilidade do novo item de menu Configuração Uber no dropdown Financeiro da webapp. O link foi adicionado ao ficheiro  e protegido por uma verificação de permissão, mas não estava a aparecer para o utilizador administrador durante os testes com a ferramenta de screenshot, que sofriam com expiração de sessão.
+- **Last item agent was working:** O agente estava a depurar uma falha na extração automática de dados da Uber. O utilizador reportou que, após clicar em Sincronizar Uber, a operação falhava e nenhum dado aparecia no Resumo Semanal. A análise dos logs revelou um erro nos seletores CSS do Playwright no script de extração.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent. A sessão precisa ser mantida durante o teste, que envolve: 1. Fazer login como admin. 2. Clicar no menu Financeiro. 3. Verificar se o item Configuração Uber está visível.
-- **User Testing Done:** N
+- **Which testing method agent to use?** Backend testing. O próximo agente deve corrigir os seletores no script Python e depois testar o fluxo de ponta a ponta.
+- **User Testing Done:** N (O utilizador encontrou o bug, mas a correção ainda não foi testada).
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0) Menu Configuração Uber não está visível na WebApp**
-    - **Description:** O link para a nova página de configuração do RPA da Uber não aparece no menu Financeiro para o utilizador administrador, bloqueando o acesso à funcionalidade.
-    - **Attempted fixes:** O agente adicionou o link ao  e envolveu-o numa verificação de permissão (). Os testes foram inconclusivos.
+- **Issue 1: (P0) Extração de dados da Uber falha devido a seletores Playwright inválidos.**
+    - **Description:** A sincronização automática de rendimentos da Uber, iniciada pelo parceiro, falha com o erro . Isto impede que os dados sejam descarregados e importados para o Resumo Semanal.
+    - **Attempted fixes:** O agente identificou que o erro está no ficheiro  devido a seletores CSS mal formados.
     - **Next debug checklist:**
-        1.  Verificar a lógica da função  em .
-        2.  Confirmar que o  do utilizador () está a ser corretamente avaliado para permitir a visualização do item de menu com .
-        3.  Testar o fluxo de login e navegação de forma robusta para garantir que o menu é renderizado corretamente.
-    - **Why fix this issue and what will be achieved with the fix?** É um bloqueador para a solução do RPA da Uber. O utilizador não pode configurar a sessão manual sem acesso a esta página.
+        1.  Abrir o ficheiro .
+        2.  Rever e corrigir todos os seletores  ou , especialmente os que foram baseados no vídeo do utilizador (ex: ). Utilize uma sintaxe Playwright válida como .
+        3.  Após a correção, reiniciar o serviço de backend.
+        4.  Testar o fluxo: fazer login como parceiro  (geral@zmbusines.com / 123456), ir para , selecionar uma semana e clicar em Sincronizar Uber. Verificar os logs do backend em busca de erros e confirmar que os dados são inseridos na coleção  do MongoDB.
+    - **Why fix this issue and what will be achieved with the fix?** Resolver este bug completará a funcionalidade principal da integração com a Uber, que foi o foco de toda a sessão.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Frontend
+    - **Should Test frontend/backend/both after fix?** Backend.
     - **Blocked on other issue:** N/A
 
-- **Issue 2: (P1) Falha na Filtragem de Datas do RPA da Via Verde**
-    - **Description:** Problema crítico e recorrente. A automação descarrega todas as transações em vez de apenas as do período selecionado.
-    - **Attempted fixes:** Nenhuma nesta sessão.
-    - **Next debug checklist:** Executar um teste de ponta a ponta do RPA da Via Verde para confirmar se o problema persiste. Se sim, depurar o script .
-    - **Why fix this issue and what will be achieved with the fix?** Resolve um problema central e recorrente da aplicação.
+- **Issue 2: (P1) Falha na Filtragem de Datas do RPA da Via Verde.**
+    - **Description:** Um problema crítico e recorrente onde a automação descarrega todas as transações da Via Verde em vez de apenas as do período selecionado.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Backend
+    - **Should Test frontend/backend/both after fix?** Backend.
     - **Blocked on other issue:** N/A
 
 **In progress Task List**:
-- **Task 1: (P0) Finalizar a solução para o RPA da Uber**
-    - **Where to resume:** A infraestrutura (página frontend e endpoints backend) para o login manual está criada. O trabalho deve ser retomado após resolver o **Issue 1**. Os próximos passos são:
-        1.  Implementar a lógica na página  para lançar um browser Playwright (ou iframe) onde o admin possa fazer login.
-        2.  Implementar a lógica no backend () para capturar e guardar o estado da sessão (cookies/local storage) após o login bem-sucedido.
-    - **What will be achieved with this?** Uma solução funcional para extrair dados da Uber, contornando o bloqueio do CAPTCHA.
+- **Task 1: (P0) Finalizar e estabilizar a extração de dados da Uber.**
+    - **Where to resume:** A tarefa recomeça com a correção dos seletores do Playwright em **Issue 1**. A arquitetura (login interativo, UI, endpoints) está pronta; falta apenas a execução bem-sucedida do script de extração.
+    - **What will be achieved with this?** Um fluxo funcional onde o parceiro lida com o login/CAPTCHA uma vez por mês e depois extrai os seus rendimentos semanais com um único clique.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Both
-    - **Blocked on something:** Issue 1: Menu Configuração Uber não está visível na WebApp
+    - **Blocked on something:** Issue 1
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - (P0) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria pelo motorista e enviá-lo para o seu email.
-    - (P1) **Sistema de Tickets na App Móvel:** Adicionar a funcionalidade de gestão de tickets (criar/responder) para os perfis de parceiro e gestor.
+  - (P0) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria e enviá-lo por email.
+  - (P1) **Sistema de Tickets na App Móvel:** Adicionar a funcionalidade de gestão de tickets para parceiros e gestores.
 - **Future Tasks:**
-    - (P1) Implementar Integração Ifthenpay e Moloni.
-    - (P2) Implementar o envio de relatórios de vistoria via WhatsApp.
-    - (P3) Refatorar o  para uma estrutura de projeto React Native modular.
-    - (P3) Refatorar  para decompor as abas em componentes mais pequenos.
+  - (P1) Implementar Integração Ifthenpay e Moloni.
+  - (P2) Implementar o envio de relatórios de vistoria via WhatsApp.
+  - (P3) Refatorar o  para uma estrutura de projeto React Native modular.
 
 **Completed work in this session**
-- **Correção de Bugs Críticos de Backend:**
-    - Resolvido um bug em  que impedia vistorias pendentes de serem listadas para os motoristas.
-    - Corrigido um problema de ordenação de rotas em  que fazia com que a rota  fosse incorretamente interpretada.
-    - Corrigidos erros de sintaxe em  que causavam a queda do servidor.
-- **Implementação de Múltiplas Funcionalidades na App Móvel:**
-    - **Vistorias:** Adicionado pesquisa por matrícula (texto e OCR de foto), upload de múltiplas fotos por item e um campo de assinatura digital.
-    - **Ecrãs de Parceiro:** Criado um novo ecrã Vistorias da Frota e melhorado o Resumo Semanal com filtros e totais.
-    - **Ecrã de Extras:** Totalmente refeito para ser mais intuitivo, usando um dropdown para selecionar motoristas ativos.
-- **Solução para o RPA da Uber:**
-    - Identificado que um CAPTCHA avançado (Arkose Labs) bloqueava a automação.
-    - Criada uma nova página de configuração na webapp () e endpoints de suporte para que o administrador possa fazer login manualmente e salvar a sessão para o RPA.
-- **Documentação e Suporte:**
-    - Criado um guia de deployment extremamente detalhado para o servidor PTISP do utilizador ().
-    - Pesquisado e recomendado um plano de alojamento específico para as necessidades da aplicação.
+- **Implementação do Fluxo de Login Manual da Uber:** Foi criada uma solução robusta com um browser remoto interativo para que os parceiros possam resolver o CAPTCHA/2FA. A sessão é guardada para uso futuro.
+- **Separação de Papéis (Admin vs. Parceiro):** O sistema foi reestruturado para que o parceiro seja responsável por configurar e extrair os seus próprios dados, enquanto o admin tem um papel de monitorização.
+- **UI para Extração de Dados:** A página do parceiro () foi equipada com um seletor de semanas e um botão de sincronização que utiliza a sessão guardada.
+- **Correção de Bug de Menu:** O link Configuração Uber foi corrigido para aparecer corretamente no menu do administrador.
+- **Integração com Backend:** Os dados extraídos do CSV da Uber são processados e guardados na coleção  para serem exibidos no Resumo Semanal.
 
 **Earlier issues found/mentioned but not fixed**
-- **Integridade de Dados:** A base de dados pode conter inconsistências, como o mesmo veículo atribuído a múltiplos motoristas ativos.
-- **Dados de Portagens Órfãos:** Registos de portagens para matrículas não existentes são ignorados durante a importação.
+- **Integridade de Dados:** Potenciais inconsistências na base de dados, como um veículo atribuído a múltiplos motoristas.
+- **Dados de Portagens Órfãos:** Registos de portagens para matrículas não existentes são ignorados.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Falha na Filtragem de Datas do RPA da Via Verde.
@@ -108,95 +84,82 @@ O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas
 
 
 **Key Technical Concepts**
-- **RPA CAPTCHA Workaround:** A estratégia mudou de tentar resolver o CAPTCHA para contorná-lo através de uma sessão de login manual iniciada pelo utilizador numa interface web.
-- **FastAPI Route Ordering:** A importância de declarar rotas estáticas (ex: ) antes de rotas dinâmicas (ex: ) foi um ponto de depuração crucial.
-- **Single-File Prototyping:** A complexidade da aplicação móvel está a ser gerida num único ficheiro de 3500+ linhas, o que exige edições muito cuidadosas.
+- **Remote Interactive Browser:** Solução para contornar o CAPTCHA avançado da Uber. O backend executa um browser Playwright, transmite screenshots via WebSocket para o frontend e recebe de volta eventos de clique/texto para controlar a sessão de login manual.
+- **Session Persistence:** A sessão do browser (cookies/storage) é capturada após um login manual bem-sucedido e armazenada no servidor para ser reutilizada por scripts de automação não interativos.
+- **Role-Based Architecture:** A aplicação foi reestruturada para separar claramente as responsabilidades do  (monitorizar) e do  (configurar e executar).
 
 **key DB schema**
-- ****: Atualizado para guardar credenciais e estado da sessão Uber (, , ).
-- ****: Atualizado para associar uma lista de vistorias () a cada veículo.
+- ****: Armazena as credenciais da Uber e o estado da sessão ().
+- ****: Coleção onde são armazenados os dados de rendimento processados do CSV da Uber, prontos para serem lidos pelo dashboard Resumo Semanal.
 
 **All files of reference**
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
+-  (Ficheiro com o bug a corrigir)
+-  (Endpoint que o parceiro chama para sincronizar)
+-  (UI do parceiro)
+-  (Lógica do browser remoto)
+-  (Endpoints do browser remoto)
+-  (UI de monitorização do admin)
 
 **Areas that need refactoring**:
-- O ficheiro  é o maior débito técnico, com mais de 3500 linhas. Uma refatoração para uma estrutura de projeto React Native modular é uma tarefa futura de alta prioridade para garantir a manutenibilidade.
+-  continua a ser o maior débito técnico e deve ser refatorado para uma estrutura modular no futuro.
+- O código relacionado à integração com a Uber foi construído de forma iterativa e pode beneficiar de uma limpeza para remover lógicas antigas e não utilizadas.
 
 **key api endpoints**
-- : Novo endpoint para iniciar o processo de login manual da Uber.
-- : Novo endpoint para listar parceiros e o estado das suas sessões Uber.
-- : Novo endpoint para parceiros obterem a lista completa de vistorias da sua frota.
-- : Novo endpoint para processar uma imagem de matrícula e devolver o texto.
-- : Endpoint corrigido, crucial para o fluxo de aprovação do motorista.
+- : Endpoint principal para o parceiro iniciar a extração de dados da semana selecionada.
+- : Inicia a sessão do browser remoto para o login manual.
+- : Guarda a sessão do browser no servidor após o login bem-sucedido.
+- **WebSockets** em  para a comunicação em tempo real com o browser remoto.
 
 **Critical Info for New Agent**
-- **Prioridade Máxima:** Resolver o **Issue 1** para que o utilizador possa aceder à página de configuração do RPA da Uber. Este é o bloqueador imediato.
-- **RPA da Uber:** A abordagem é o login manual. Não tente resolver o CAPTCHA automaticamente. O fluxo de trabalho é: o admin acede à página de configuração, inicia o processo, faz login numa janela/iframe, e o backend captura a sessão.
-- **RPA da Via Verde:** Este é o próximo bug crítico a ser abordado após a conclusão da tarefa do RPA da Uber.
-- **Cuidado com :** O ficheiro da app móvel é extremamente grande e frágil. Faça alterações pequenas e focadas.
+- **Prioridade Máxima:** A sua primeira tarefa é corrigir os seletores do Playwright em  para resolver o **Issue 1**. Este é o único bloqueador para finalizar a funcionalidade da Uber.
+- **Não mude o fluxo:** O fluxo atual (login manual interativo uma vez, seguido por extrações automáticas via botão) foi o resultado de múltiplas iterações com o utilizador. Não o altere.
+- **Funções dos Utilizadores:** Lembre-se que o **parceiro** executa a extração, e o **admin** apenas monitoriza.
+- **Teste:** Para testar a correção, terá de usar as credenciais do parceiro Zeny, navegar para a sua página de configuração e clicar em Sincronizar Uber. A sessão dele já está ativa, pelo que não precisa de fazer o login manual novamente.
 
 **documents and test reports created in this job**
-- 
-- 
-==============================================
-   TVDEFleet - Instalação Automática
-==============================================
-
-[0;31m[ERROR][0m Por favor, edite o script e configure o seu domínio
-- 
-- 
--  (atualizado)
+- Nenhum documento formal foi criado. O PRD.md foi atualizado ao longo da sessão.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **faz menu:** Pedido para corrigir o menu da webapp que não mostra o novo link Configuração Uber.
-2.  **onde faco configuracao uber:** Pergunta onde está a página de configuração da Uber.
-3.  **User confirma solução de login manual:** Concorda com a abordagem de login manual para o RPA da Uber.
-4.  **User fornece screenshots do fluxo de login:** Mostra o fluxo correto de login manual na Uber (Email -> Mais Opções -> Palavra-passe).
-5.  **faz simulacao para login...:** Pede ao agente para simular o fluxo de login com base nos screenshots.
-6.  **User fornece credenciais Uber:** Partilha credenciais para o parceiro Conde e menciona a verificação por SMS.
-7.  **o que falta fazer? vamos fazer... uber?:** Pergunta sobre as próximas tarefas e sugere trabalhar no RPA da Uber.
-8.  **qual o servidor portugues...:** Pede recomendação de um plano de alojamento em Portugal.
-9.  **podes fazer guia mega detalhado?:** Pede um guia de deployment completo.
-10. **consigo colocar tudo este desvolvimento... no meu servidor ptisp?:** Pergunta sobre a viabilidade de auto-hospedar a aplicação.
+1.  **User:** O login manual está OK se a sessão durar 1 mês.
+2.  **User:** Não consigo colocar o email no campo.
+3.  **Agent:** Adiciona botões de preenchimento automático.
+4.  **User:** Login feito. Como carrego os dados para o resumo semanal?
+5.  **User:** Quem faz a extração é o parceiro, nunca o admin.
+6.  **Agent:** Move a funcionalidade de extração para a página do parceiro.
+7.  **User:** A extração deve ser no botão de sincronização com a semana selecionada.
+8.  **Agent:** Implementa o seletor de semana e o botão de sincronização.
+9.  **User:** Reporta o erro:  e que os dados não chegam ao resumo semanal.
+10. **User:** (Pendendo resposta à questão do agente sobre qual a password do Zeny, mas entretanto o agente conseguiu fazer login).
 
 **Project Health Check:**
 - **Broken:**
-    - Acesso à funcionalidade de configuração do RPA da Uber (link do menu não funciona).
-    - Sincronização com a Via Verde (filtragem de datas).
+  - O script de extração automática de dados da Uber.
+  - A filtragem por data na sincronização da Via Verde.
 - **Mocked:**
-    - A aplicação móvel inteira () é um protótipo, representando um débito técnico significativo.
+  - A aplicação móvel inteira, prototipada no ficheiro .
 
 **3rd Party Integrations**
-- **Playwright:** Usado para os RPAs da Uber e Via Verde. O RPA da Uber está a ser alterado para um fluxo de login semi-manual.
-- **Expo (React Native):** Usado para o protótipo da app móvel.
-- **OpenAI GPT-4 Vision:** Planeado para análise de vistorias, usa **Emergent LLM Key**.
+- **Playwright:** Essencial para a automação da Uber.
+- **Expo (React Native):** Utilizado para a app móvel.
+- **OpenAI GPT-4 Vision:** Planeado para uso futuro.
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** N/A
-- **Known regressions:** O problema do RPA da Via Verde é persistente.
+- **Known regressions:** O problema de filtragem de datas do RPA da Via Verde.
 
 **Credentials to test flow:**
-**WebApp Admin**
--   **Email:** 
--   **Password:** 
-
-**Uber RPA Test (Parceiro)**
--   **Email:** 
--   **Password:** 
-
-**Mobile App Test Users (Password: )**
--   **Parceiro:** 
--   **Inspetor:** 
--   **Motorista:** 
+-   **WebApp Admin:**
+    -   Email: 
+    -   Password: 
+-   **WebApp Parceiro (Zeny Macaia):**
+    -   Email: 
+    -   Password: 
+-   **Credenciais Uber (Zeny Macaia):**
+    -   Email: 
+    -   Password: 
+    -   Telefone: 
 
 **What agent forgot to execute**
-- O agente estava a seguir o fluxo de pedidos do utilizador. As tarefas pendentes de alta prioridade, como a geração de PDF e o sistema de tickets, foram adiadas para resolver os bugs e implementar o RPA da Uber, conforme solicitado.</analysis>
+- O agente identificou corretamente a causa do bug de extração da Uber (seletores inválidos) e o ficheiro a ser corrigido, mas não chegou a implementar a correção antes do final da sessão.</analysis>
