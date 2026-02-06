@@ -1226,24 +1226,45 @@ class PrioScraper(BaseScraper):
                     for row in rows[:100]:  # Limitar a 100 registos
                         try:
                             cells = await row.locator('td').all()
-                            logger.info(f"    Linha com {len(cells)} células")
+                            num_cells = len(cells)
+                            logger.info(f"    Linha com {num_cells} células")
                             
-                            if len(cells) >= 6:
-                                # Extrair campos principais (índices baseados nas colunas)
-                                # 0: POSTO, 2: DATA, 5: LITROS, último: TOTAL
-                                posto = await cells[0].text_content() if len(cells) > 0 else ""
-                                data_trans = await cells[2].text_content() if len(cells) > 2 else ""
-                                litros = await cells[5].text_content() if len(cells) > 5 else "0"
-                                total = await cells[-1].text_content() if cells else "0"
+                            if num_cells >= 6:
+                                # Extrair todos os valores para análise
+                                all_values = []
+                                for i, cell in enumerate(cells):
+                                    text = await cell.text_content()
+                                    all_values.append(f"[{i}]='{text.strip()[:30] if text else ''}'")
+                                logger.info(f"    Células: {' '.join(all_values[:8])}...")
+                                
+                                # Colunas (14 células):
+                                # 0: POSTO, 1: REDE, 2: DATA, 3: CARTÃO, 4: ESTADO, 5: LITROS, 6: COMB., 
+                                # 7: RECIBO, 8: KM'S, 9: ID COND., 10: FATURA, 11: V.UNIT (S/IVA), 12: TOTAL, 13: ???
+                                
+                                posto = await cells[0].text_content() if num_cells > 0 else ""
+                                data_trans = await cells[2].text_content() if num_cells > 2 else ""
+                                litros_raw = await cells[5].text_content() if num_cells > 5 else "0"
+                                
+                                # Procurar a coluna TOTAL (que tem valor €)
+                                # É provável que seja a coluna 11 ou 12 (índice 10, 11 ou 12)
+                                total_raw = "0"
+                                # Tentar diferentes índices para encontrar o valor €
+                                for idx in [12, 11, -2, -3]:
+                                    if abs(idx) < num_cells:
+                                        val = await cells[idx].text_content()
+                                        if val and ('€' in val or val.strip().replace(',', '').replace('.', '').isdigit()):
+                                            total_raw = val
+                                            logger.info(f"    Encontrou total em índice {idx}: '{val}'")
+                                            break
                                 
                                 # Log valores brutos
-                                logger.info(f"    Bruto - posto:'{posto[:20] if posto else ''}' data:'{data_trans}' litros:'{litros}' total:'{total}'")
+                                logger.info(f"    Bruto - posto:'{posto[:20] if posto else ''}' data:'{data_trans}' litros:'{litros_raw}' total:'{total_raw}'")
                                 
                                 # Limpar valores
                                 posto = posto.strip() if posto else ""
                                 data_trans = data_trans.strip() if data_trans else ""
-                                litros_clean = litros.strip().replace(",", ".").replace("L", "").replace(" ", "") if litros else "0"
-                                total_clean = total.strip().replace(",", ".").replace("€", "").replace(" ", "") if total else "0"
+                                litros_clean = litros_raw.strip().replace(",", ".").replace("L", "").replace(" ", "") if litros_raw else "0"
+                                total_clean = total_raw.strip().replace(",", ".").replace("€", "").replace(" ", "") if total_raw else "0"
                                 
                                 # Validar que são números
                                 try:
