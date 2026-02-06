@@ -2240,14 +2240,14 @@ async def executar_sincronizacao_auto(
                                                 "motorista": nome_motorista,
                                                 "motorista_uuid": uuid_motorista,
                                                 "uuid_motorista": uuid_motorista,  # Fallback
-                                                "semana": semana,
-                                                "ano": ano,
+                                                "semana": semana_motorista,  # Usar semana detectada
+                                                "ano": ano_motorista,  # Usar ano detectado
                                                 "rendimentos": motorista_info.get("ganho", 0),
                                                 "pago_total": motorista_info.get("ganho", 0),
                                                 "portagens": 0,
                                                 "plataforma": "uber",
                                                 "fonte": "rpa_uber",
-                                                "periodo_inicio": data_inicio[:10],
+                                                "periodo_inicio": motorista_info.get("periodo_inicio", data_inicio[:10]),
                                                 "periodo_fim": data_fim[:10],
                                                 "synced_at": datetime.now(timezone.utc).isoformat()
                                             }
