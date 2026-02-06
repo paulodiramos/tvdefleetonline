@@ -1075,166 +1075,31 @@ class PrioScraper(BaseScraper):
             
             await self.page.screenshot(path='/tmp/prio_04_dashboard.png')
             
-            # ============ ACEITAR COOKIES - CRÍTICO ============
+            # ============ ACEITAR COOKIES SE APARECER ============
             logger.info("🍪 Aceitando cookie banner...")
             try:
-                # Aguardar um pouco para o banner aparecer
                 await asyncio.sleep(2)
                 
-                # Método 1: Procurar botão "Ok" com diferentes seletores
-                cookie_accepted = False
-                cookie_selectors = [
-                    'button:has-text("Ok")',
-                    'button:has-text("OK")',
-                    'button:has-text("Aceitar")',
-                    'button:has-text("Accept")',
-                    'button:has-text("Concordo")',
-                    '.cookie-consent button',
-                    '#cookie-consent-ok',
-                    '[data-cookie-consent]'
-                ]
-                
-                for selector in cookie_selectors:
-                    try:
-                        btn = self.page.locator(selector)
-                        if await btn.count() > 0:
-                            first_btn = btn.first
-                            if await first_btn.is_visible(timeout=2000):
-                                await first_btn.click(force=True)
-                                cookie_accepted = True
-                                logger.info(f"✅ Cookies aceites via: {selector}")
-                                await asyncio.sleep(2)
-                                break
-                    except Exception:
-                        continue
-                
-                # Método 2: Via JavaScript se não funcionou
-                if not cookie_accepted:
-                    logger.info("  Tentando aceitar cookies via JavaScript...")
-                    accepted = await self.page.evaluate('''() => {
-                        // Procurar por botões com texto Ok/Aceitar
-                        const buttons = document.querySelectorAll('button');
-                        for (let btn of buttons) {
-                            const text = btn.textContent.trim().toLowerCase();
-                            if (text === 'ok' || text.includes('aceitar') || text.includes('concordo')) {
-                                btn.click();
-                                return true;
-                            }
-                        }
-                        // Tentar remover overlay/modal de cookies
-                        const overlays = document.querySelectorAll('[class*="cookie"], [class*="consent"], [class*="modal"], .overlay');
-                        for (let overlay of overlays) {
-                            overlay.remove();
-                        }
-                        return false;
-                    }''')
-                    if accepted:
-                        logger.info("✅ Cookies aceites via JavaScript")
-                        await asyncio.sleep(2)
-                        
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao aceitar cookies: {e}")
+                cookie_btn = self.page.locator('button:has-text("Ok")')
+                if await cookie_btn.count() > 0 and await cookie_btn.first.is_visible(timeout=3000):
+                    await cookie_btn.first.click(force=True)
+                    await asyncio.sleep(2)
+                    logger.info("✅ Cookies aceites")
+            except Exception:
+                logger.debug("Cookie banner não encontrado ou já aceite")
             
-            # ============ PASSO 1: EXPANDIR O MENU "Transações De Cartões" ============
-            logger.info("📍 Passo 1: Navegando para Transações...")
+            # ============ PASSO 1: NAVEGAR DIRETAMENTE PARA PRIO FROTA TRANSAÇÕES ============
+            # URL correta descoberta: https://www.myprio.com/Transactions/Transactions
+            logger.info("📍 Passo 1: Navegando para Prio Frota Transações...")
             
             try:
-                await asyncio.sleep(2)
-                
-                # Estratégia: Usar JavaScript para clicar forçosamente e depois navegar via link href
-                # Primeiro, vamos procurar o href do link "Transações De Cartões"
-                nav_url = await self.page.evaluate('''() => {
-                    const links = document.querySelectorAll('a');
-                    for (let link of links) {
-                        if (link.textContent && link.textContent.includes('Transações')) {
-                            return link.href;
-                        }
-                    }
-                    return null;
-                }''')
-                
-                if nav_url:
-                    logger.info(f"  Navegando para URL: {nav_url}")
-                    await self.page.goto(nav_url, wait_until='networkidle', timeout=30000)
-                    await asyncio.sleep(3)
-                    logger.info("✅ Navegou para página de transações")
-                else:
-                    # Fallback: Clicar via JavaScript forçosamente
-                    await self.page.evaluate('''() => {
-                        // Remover qualquer overlay primeiro
-                        const overlays = document.querySelectorAll('[class*="cookie"], [class*="consent"], .modal, .overlay');
-                        overlays.forEach(o => o.style.display = 'none');
-                        
-                        // Procurar e clicar no menu Transações
-                        const spans = document.querySelectorAll('span');
-                        for (let span of spans) {
-                            if (span.textContent && span.textContent.includes('Transações De Cartões')) {
-                                span.click();
-                                // Também tentar clicar no pai (se for um <a>)
-                                if (span.parentElement) span.parentElement.click();
-                                break;
-                            }
-                        }
-                    }''')
-                    await asyncio.sleep(3)
-                    logger.info("✅ Clicou em Transações via JS")
+                prio_frota_url = "https://www.myprio.com/Transactions/Transactions"
+                await self.page.goto(prio_frota_url, wait_until='networkidle', timeout=30000)
+                await asyncio.sleep(3)
+                logger.info(f"✅ Navegou para: {self.page.url}")
                     
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao navegar: {e}")
-            
-            await self.page.screenshot(path='/tmp/prio_05_after_click.png')
-            logger.info(f"  URL atual: {self.page.url}")
-            
-            # ============ PASSO 2: CLICAR EM "Prio Frota" NO SUBMENU ============
-            logger.info("📍 Passo 2: Clicando em 'Prio Frota'...")
-            
-            try:
-                await asyncio.sleep(1)
-                
-                # Primeiro remover overlays
-                await self.page.evaluate('''() => {
-                    const overlays = document.querySelectorAll('[class*="cookie"], [class*="consent"], .modal, .overlay');
-                    overlays.forEach(o => o.remove());
-                }''')
-                
-                # Procurar o href de "Prio Frota"
-                prio_url = await self.page.evaluate('''() => {
-                    const links = document.querySelectorAll('a');
-                    for (let link of links) {
-                        if (link.textContent && link.textContent.includes('Prio Frota')) {
-                            return link.href;
-                        }
-                    }
-                    return null;
-                }''')
-                
-                if prio_url:
-                    logger.info(f"  Navegando para URL Prio Frota: {prio_url}")
-                    await self.page.goto(prio_url, wait_until='networkidle', timeout=30000)
-                    await asyncio.sleep(3)
-                    logger.info("✅ Navegou para Prio Frota")
-                else:
-                    # Clicar via JavaScript com force
-                    await self.page.evaluate('''() => {
-                        const elements = document.querySelectorAll('*');
-                        for (let el of elements) {
-                            if (el.textContent && el.textContent.trim() === 'Prio Frota') {
-                                // Forçar display visible e clicável
-                                el.style.pointerEvents = 'auto';
-                                el.click();
-                                if (el.parentElement) {
-                                    el.parentElement.style.pointerEvents = 'auto';
-                                    el.parentElement.click();
-                                }
-                                break;
-                            }
-                        }
-                    }''')
-                    await asyncio.sleep(3)
-                    logger.info("✅ Clicou em Prio Frota via JS")
-                    
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao clicar em Prio Frota: {e}")
             
             await self.page.screenshot(path='/tmp/prio_06_after_navigation.png')
             
