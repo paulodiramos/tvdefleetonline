@@ -4,9 +4,11 @@ Suporta: Bolt, Uber, Via Verde, GPS, Combustível
 """
 import asyncio
 import logging
+import os
+import json
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, List, Tuple
-from playwright.async_api import async_playwright, Page, Browser
+from playwright.async_api import async_playwright, Page, Browser, BrowserContext
 import re
 import csv
 
