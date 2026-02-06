@@ -1136,35 +1136,54 @@ class PrioScraper(BaseScraper):
                 logger.warning(f"⚠️ Erro ao aceitar cookies: {e}")
             
             # ============ PASSO 1: EXPANDIR O MENU "Transações De Cartões" ============
-            logger.info("📍 Passo 1: Expandindo menu 'Transações De Cartões'...")
+            logger.info("📍 Passo 1: Navegando para Transações...")
             
             try:
                 await asyncio.sleep(2)
                 
-                # Clicar no menu para expandir (pode ser um acordeão)
-                transacoes_menu = self.page.locator('text="Transações De Cartões"')
-                if await transacoes_menu.count() > 0:
-                    await transacoes_menu.first.click()
-                    await asyncio.sleep(2)
-                    logger.info("✅ Clicou em 'Transações De Cartões' para expandir")
+                # Estratégia: Usar JavaScript para clicar forçosamente e depois navegar via link href
+                # Primeiro, vamos procurar o href do link "Transações De Cartões"
+                nav_url = await self.page.evaluate('''() => {
+                    const links = document.querySelectorAll('a');
+                    for (let link of links) {
+                        if (link.textContent && link.textContent.includes('Transações')) {
+                            return link.href;
+                        }
+                    }
+                    return null;
+                }''')
+                
+                if nav_url:
+                    logger.info(f"  Navegando para URL: {nav_url}")
+                    await self.page.goto(nav_url, wait_until='networkidle', timeout=30000)
+                    await asyncio.sleep(3)
+                    logger.info("✅ Navegou para página de transações")
                 else:
-                    # Tentar via JavaScript
+                    # Fallback: Clicar via JavaScript forçosamente
                     await self.page.evaluate('''() => {
-                        const elements = document.querySelectorAll('*');
-                        for (let el of elements) {
-                            if (el.textContent && el.textContent.trim() === 'Transações De Cartões') {
-                                el.click();
-                                return;
+                        // Remover qualquer overlay primeiro
+                        const overlays = document.querySelectorAll('[class*="cookie"], [class*="consent"], .modal, .overlay');
+                        overlays.forEach(o => o.style.display = 'none');
+                        
+                        // Procurar e clicar no menu Transações
+                        const spans = document.querySelectorAll('span');
+                        for (let span of spans) {
+                            if (span.textContent && span.textContent.includes('Transações De Cartões')) {
+                                span.click();
+                                // Também tentar clicar no pai (se for um <a>)
+                                if (span.parentElement) span.parentElement.click();
+                                break;
                             }
                         }
                     }''')
-                    await asyncio.sleep(2)
-                    logger.info("✅ Clicou via JS para expandir")
+                    await asyncio.sleep(3)
+                    logger.info("✅ Clicou em Transações via JS")
                     
             except Exception as e:
-                logger.warning(f"⚠️ Erro ao expandir menu: {e}")
+                logger.warning(f"⚠️ Erro ao navegar: {e}")
             
-            await self.page.screenshot(path='/tmp/prio_05_menu_expandido.png')
+            await self.page.screenshot(path='/tmp/prio_05_after_click.png')
+            logger.info(f"  URL atual: {self.page.url}")
             
             # ============ PASSO 2: CLICAR EM "Prio Frota" NO SUBMENU ============
             logger.info("📍 Passo 2: Clicando em 'Prio Frota'...")
@@ -1172,29 +1191,47 @@ class PrioScraper(BaseScraper):
             try:
                 await asyncio.sleep(1)
                 
-                # Procurar "Prio Frota" no submenu
-                prio_frota = self.page.locator('text="Prio Frota"')
-                if await prio_frota.count() > 0:
-                    await prio_frota.first.click()
+                # Primeiro remover overlays
+                await self.page.evaluate('''() => {
+                    const overlays = document.querySelectorAll('[class*="cookie"], [class*="consent"], .modal, .overlay');
+                    overlays.forEach(o => o.remove());
+                }''')
+                
+                # Procurar o href de "Prio Frota"
+                prio_url = await self.page.evaluate('''() => {
+                    const links = document.querySelectorAll('a');
+                    for (let link of links) {
+                        if (link.textContent && link.textContent.includes('Prio Frota')) {
+                            return link.href;
+                        }
+                    }
+                    return null;
+                }''')
+                
+                if prio_url:
+                    logger.info(f"  Navegando para URL Prio Frota: {prio_url}")
+                    await self.page.goto(prio_url, wait_until='networkidle', timeout=30000)
                     await asyncio.sleep(3)
-                    logger.info("✅ Clicou em 'Prio Frota'")
+                    logger.info("✅ Navegou para Prio Frota")
                 else:
-                    # Tentar via JavaScript
-                    clicked = await self.page.evaluate('''() => {
+                    # Clicar via JavaScript com force
+                    await self.page.evaluate('''() => {
                         const elements = document.querySelectorAll('*');
                         for (let el of elements) {
                             if (el.textContent && el.textContent.trim() === 'Prio Frota') {
+                                // Forçar display visible e clicável
+                                el.style.pointerEvents = 'auto';
                                 el.click();
-                                return true;
+                                if (el.parentElement) {
+                                    el.parentElement.style.pointerEvents = 'auto';
+                                    el.parentElement.click();
+                                }
+                                break;
                             }
                         }
-                        return false;
                     }''')
-                    if clicked:
-                        await asyncio.sleep(3)
-                        logger.info("✅ Clicou em 'Prio Frota' via JS")
-                    else:
-                        logger.warning("⚠️ Não encontrou 'Prio Frota'")
+                    await asyncio.sleep(3)
+                    logger.info("✅ Clicou em Prio Frota via JS")
                     
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao clicar em Prio Frota: {e}")
