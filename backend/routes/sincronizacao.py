@@ -2161,7 +2161,8 @@ async def executar_sincronizacao_auto(
                                                 "motorista_uuid": motorista_info.get("uuid"),
                                                 "semana": semana,
                                                 "ano": ano,
-                                                "valor_total": motorista_info.get("ganho", 0),
+                                                "rendimentos": motorista_info.get("ganho", 0),  # Campo usado pelo relatorios.py
+                                                "pago_total": motorista_info.get("ganho", 0),   # Fallback
                                                 "portagens": 0,
                                                 "plataforma": "uber",
                                                 "fonte": "rpa_uber",
