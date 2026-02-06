@@ -1090,19 +1090,35 @@ class PrioScraper(BaseScraper):
             logger.info("📍 Passo 1: Navegando para Transações de Cartões...")
             
             try:
-                # Procurar e clicar em "Transações de Cartões"
-                transacoes_menu = self.page.locator('text="Transações de Cartões"').first
-                if await transacoes_menu.count() > 0:
-                    await transacoes_menu.click(timeout=10000)
+                # O menu "Transações De Cartões" pode precisar de expandir primeiro
+                # Tentar clicar com JavaScript para forçar
+                logger.info("  Tentando localizar menu Transações...")
+                
+                # Método 1: Clicar diretamente no texto
+                transacoes_locator = self.page.locator('text="Transações De Cartões"')
+                if await transacoes_locator.count() > 0:
+                    logger.info("  Encontrou 'Transações De Cartões', clicando...")
+                    await transacoes_locator.first.click(timeout=10000, force=True)
                     await asyncio.sleep(2)
                     logger.info("✅ Clicou em Transações de Cartões")
                 else:
-                    # Alternativa: procurar por texto parcial
-                    transacoes_menu = self.page.locator('a:has-text("Transações")').first
-                    if await transacoes_menu.count() > 0:
-                        await transacoes_menu.click(timeout=10000)
-                        await asyncio.sleep(2)
-                        logger.info("✅ Clicou em Transações (alternativo)")
+                    # Método 2: Procurar no menu lateral
+                    logger.info("  Procurando no menu lateral...")
+                    menu_items = self.page.locator('nav a, aside a, [class*="nav"] a, [class*="menu"] a')
+                    count = await menu_items.count()
+                    logger.info(f"  Encontrados {count} itens de menu")
+                    
+                    for i in range(count):
+                        item = menu_items.nth(i)
+                        try:
+                            text = await item.text_content()
+                            if text and 'transaç' in text.lower():
+                                logger.info(f"  Clicando em: {text}")
+                                await item.click(force=True, timeout=5000)
+                                await asyncio.sleep(2)
+                                break
+                        except:
+                            continue
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao clicar em Transações: {e}")
             
