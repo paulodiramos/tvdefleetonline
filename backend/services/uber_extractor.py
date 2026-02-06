@@ -252,87 +252,112 @@ class UberExtractor:
             logger.info("Passo 5: Selecionar organização")
             org_selected = False
             
+            # Tirar screenshot antes de selecionar
+            await self.page.screenshot(path='/tmp/uber_05_before_org.png')
+            
             # Tentar múltiplas abordagens para encontrar e selecionar organização
             try:
-                # Abordagem 1: Clicar no dropdown de organizações pelo texto
-                org_dropdown = self.page.locator('text="Selecione as organizações a incluir no relatório"')
-                if await org_dropdown.count() == 0:
-                    org_dropdown = self.page.locator('[data-baseweb="select"]').filter(has_text="organização")
-                if await org_dropdown.count() == 0:
-                    org_dropdown = self.page.get_by_placeholder("Selecione as organizações")
-                if await org_dropdown.count() == 0:
-                    # Procurar por qualquer dropdown não preenchido no modal
-                    org_dropdown = self.page.locator('div[role="combobox"]').last
+                # Abordagem 1: Procurar dropdown pelo placeholder em português e inglês
+                org_selectors = [
+                    'text="Selecione as organizações"',
+                    'text="Select organizations"',
+                    '[data-baseweb="select"]:has-text("organização")',
+                    '[data-baseweb="select"]:has-text("organization")',
+                    'div[role="combobox"]',
+                    # Dropdown baseado em aria-label
+                    '[aria-label*="organization" i]',
+                    '[aria-label*="organização" i]',
+                    # Por classe de input
+                    'input[id*="org"]',
+                ]
                 
-                if await org_dropdown.count() > 0:
-                    logger.info("  Dropdown de organização encontrado, a clicar...")
-                    await org_dropdown.first.click()
-                    await asyncio.sleep(1)
+                org_dropdown = None
+                for selector in org_selectors:
+                    try:
+                        loc = self.page.locator(selector)
+                        if await loc.count() > 0:
+                            first = loc.first
+                            if await first.is_visible(timeout=1000):
+                                org_dropdown = first
+                                logger.info(f"  Dropdown encontrado: {selector}")
+                                break
+                    except:
+                        continue
+                
+                if org_dropdown:
+                    await org_dropdown.click()
+                    await asyncio.sleep(1.5)
                     
-                    # Tirar screenshot para debug
-                    await self.page.screenshot(path='/tmp/uber_org_dropdown_open.png')
+                    # Tirar screenshot do dropdown aberto
+                    await self.page.screenshot(path='/tmp/uber_06_org_dropdown_open.png')
+                    logger.info("  Screenshot do dropdown aberto")
                     
-                    # Selecionar a primeira opção disponível
-                    # Tentar checkbox primeiro
-                    checkbox = self.page.locator('input[type="checkbox"]').first
-                    if await checkbox.count() > 0 and await checkbox.is_visible():
-                        is_checked = await checkbox.is_checked()
-                        if not is_checked:
-                            await checkbox.click()
-                            logger.info("  ✅ Checkbox de organização clicado")
-                            await asyncio.sleep(1)
-                        org_selected = True
-                    else:
-                        # Tentar opção de lista
-                        option = self.page.locator('[role="option"]').first
-                        if await option.count() > 0:
-                            await option.click()
-                            logger.info("  ✅ Opção de organização selecionada")
-                            await asyncio.sleep(1)
-                            org_selected = True
-                        else:
-                            # Tentar clicar em qualquer item da lista
-                            list_item = self.page.locator('li').first
-                            if await list_item.count() > 0:
-                                await list_item.click()
-                                logger.info("  ✅ Item de lista selecionado")
-                                await asyncio.sleep(1)
-                                org_selected = True
+                    # Tentar selecionar a primeira opção disponível
+                    option_selectors = [
+                        '[role="option"]',
+                        'li[role="option"]',
+                        '[data-baseweb="menu-item"]',
+                        'ul li',
+                        'input[type="checkbox"]'
+                    ]
+                    
+                    for opt_selector in option_selectors:
+                        try:
+                            options = self.page.locator(opt_selector)
+                            count = await options.count()
+                            if count > 0:
+                                first_opt = options.first
+                                if await first_opt.is_visible(timeout=1000):
+                                    await first_opt.click()
+                                    org_selected = True
+                                    logger.info(f"  ✅ Opção selecionada via: {opt_selector}")
+                                    await asyncio.sleep(1)
+                                    break
+                        except:
+                            continue
+                    
+                    # Se não selecionou ainda, tentar checkbox
+                    if not org_selected:
+                        checkboxes = self.page.locator('input[type="checkbox"]')
+                        count = await checkboxes.count()
+                        logger.info(f"  Checkboxes encontrados: {count}")
+                        for i in range(count):
+                            cb = checkboxes.nth(i)
+                            try:
+                                if await cb.is_visible(timeout=500):
+                                    is_checked = await cb.is_checked()
+                                    if not is_checked:
+                                        await cb.click()
+                                        org_selected = True
+                                        logger.info(f"  ✅ Checkbox {i} marcado")
+                                        break
+                            except:
+                                continue
                 else:
                     logger.warning("  ⚠️ Dropdown de organização não encontrado")
                     
-            except Exception as e:
-                logger.warning(f"  Erro ao selecionar organização: {e}")
-            
-            # Se ainda não selecionou, tentar abordagem alternativa
-            if not org_selected:
-                try:
-                    logger.info("  Tentando abordagem alternativa para organização...")
-                    # Procurar todos os elementos clicáveis no modal que possam ser organizações
+                    # Tentar procurar dentro do modal
                     modal = self.page.locator('[role="dialog"]').last
                     if await modal.count() > 0:
-                        # Procurar por qualquer elemento que pareça um dropdown não selecionado
-                        dropdowns = modal.locator('div[data-baseweb="select"]')
-                        count = await dropdowns.count()
-                        logger.info(f"  Encontrados {count} dropdowns no modal")
+                        all_dropdowns = modal.locator('[data-baseweb="select"]')
+                        count = await all_dropdowns.count()
+                        logger.info(f"  Dropdowns no modal: {count}")
                         
-                        for i in range(count):
-                            dd = dropdowns.nth(i)
-                            # Verificar se é o de organização (geralmente é o último ou tem texto específico)
-                            text = await dd.text_content()
-                            if "organização" in text.lower() or "selecione" in text.lower():
-                                await dd.click()
-                                await asyncio.sleep(1)
-                                
-                                # Tentar selecionar primeira opção
-                                first_option = self.page.locator('[role="option"]').first
-                                if await first_option.count() > 0:
-                                    await first_option.click()
-                                    org_selected = True
-                                    logger.info("  ✅ Organização selecionada via abordagem alternativa")
-                                    break
-                except Exception as e:
-                    logger.warning(f"  Erro na abordagem alternativa: {e}")
+                        # O dropdown de organização é geralmente o último
+                        if count > 0:
+                            last_dropdown = all_dropdowns.last
+                            await last_dropdown.click()
+                            await asyncio.sleep(1)
+                            
+                            # Selecionar primeira opção
+                            option = self.page.locator('[role="option"]').first
+                            if await option.count() > 0:
+                                await option.click()
+                                org_selected = True
+                                logger.info("  ✅ Organização selecionada do último dropdown")
+                    
+            except Exception as e:
+                logger.warning(f"  Erro ao selecionar organização: {e}")
             
             # Screenshot após tentativa de seleção
             await self.page.screenshot(path='/tmp/uber_after_org_select.png')
