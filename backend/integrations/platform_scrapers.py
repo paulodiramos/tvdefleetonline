@@ -1075,31 +1075,50 @@ class PrioScraper(BaseScraper):
             
             await self.page.screenshot(path='/tmp/prio_04_dashboard.png')
             
-            # Navegar para secção de consumos/faturas
-            # Procurar menu de consumos
-            consumos_selectors = [
-                'a:has-text("Consumos")',
-                'a:has-text("Movimentos")',
-                '[href*="consumos"]',
-                '[href*="movements"]',
-                'text=Consultar Consumos'
+            # Navegar para secção de TRANSAÇÕES DE CARTÕES (onde estão os dados detalhados)
+            transacoes_selectors = [
+                'a:has-text("Transações De Cartões")',
+                'a:has-text("Transações")',
+                'text=Transações De Cartões',
+                '[href*="transacoes"]',
+                '[href*="transactions"]',
             ]
             
-            clicked_consumos = False
-            for selector in consumos_selectors:
+            clicked_transacoes = False
+            for selector in transacoes_selectors:
                 try:
                     locator = self.page.locator(selector)
                     if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
                         await locator.first.click()
                         await asyncio.sleep(3)
-                        clicked_consumos = True
-                        logger.info(f"✅ Navegou para consumos: {selector}")
+                        clicked_transacoes = True
+                        logger.info(f"✅ Navegou para transações: {selector}")
                         break
                 except Exception:
                     continue
             
-            if not clicked_consumos:
-                logger.warning("⚠️ Secção de consumos não encontrada")
+            if not clicked_transacoes:
+                # Fallback - tentar clicar no menu de consumos
+                consumos_selectors = [
+                    'a:has-text("Consumos")',
+                    'a:has-text("Movimentos")',
+                    '[href*="consumos"]',
+                ]
+                
+                for selector in consumos_selectors:
+                    try:
+                        locator = self.page.locator(selector)
+                        if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
+                            await locator.first.click()
+                            await asyncio.sleep(3)
+                            clicked_transacoes = True
+                            logger.info(f"✅ Navegou para consumos: {selector}")
+                            break
+                    except Exception:
+                        continue
+            
+            if not clicked_transacoes:
+                logger.warning("⚠️ Secção de transações não encontrada")
             
             await self.page.screenshot(path='/tmp/prio_05_consumos.png')
             
