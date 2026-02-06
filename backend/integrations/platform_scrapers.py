@@ -1078,56 +1078,61 @@ class PrioScraper(BaseScraper):
             # ============ ACEITAR COOKIES SE APARECER ============
             logger.info("🍪 Verificando cookie banner...")
             try:
-                cookie_btn = self.page.locator('button:has-text("Ok"), button:has-text("Aceitar")')
+                # O cookie banner tem botão "Ok"
+                cookie_btn = self.page.locator('button:has-text("Ok")')
                 if await cookie_btn.count() > 0 and await cookie_btn.first.is_visible(timeout=3000):
                     await cookie_btn.first.click()
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(2)
                     logger.info("✅ Cookies aceites")
             except Exception:
                 logger.debug("Cookie banner não encontrado ou já aceite")
             
-            # ============ PASSO 1: NAVEGAR DIRETAMENTE PARA A PÁGINA DE TRANSAÇÕES ============
-            # A URL base é https://www.myprio.com/MyPrioReactiveTheme
-            # Vou tentar diferentes URLs para a página de transações
-            logger.info("📍 Passo 1: Navegando para página de Transações...")
+            # ============ PASSO 1: CLICAR NO MENU "Transações De Cartões" ============
+            logger.info("📍 Passo 1: Clicando no menu 'Transações De Cartões'...")
             
-            # Primeiro tentar clicar no menu (já que estamos logados)
             try:
-                # Esperar a página carregar completamente
+                # Aguardar a página carregar
                 await asyncio.sleep(2)
                 
-                # Clicar em "Transações de Cartões"
-                transacoes_link = self.page.locator('text="Transações de Cartões"')
-                if await transacoes_link.count() > 0:
-                    await transacoes_link.first.click(timeout=10000)
+                # Procurar o menu "Transações De Cartões" no sidebar
+                # O texto exato é "Transações De Cartões"
+                menu_clicked = False
+                
+                # Método 1: Clicar diretamente no texto
+                transacoes_menu = self.page.locator('text="Transações De Cartões"')
+                if await transacoes_menu.count() > 0:
+                    await transacoes_menu.first.click()
                     await asyncio.sleep(3)
-                    logger.info("✅ Clicou em Transações de Cartões")
-                else:
-                    # Tentar via href
-                    link = self.page.locator('a[href*="Transaction"], a[href*="transac"]').first
-                    if await link.count() > 0:
-                        await link.click(timeout=10000)
+                    menu_clicked = True
+                    logger.info("✅ Clicou em 'Transações De Cartões'")
+                
+                # Método 2: Se não funcionou, tentar via JavaScript
+                if not menu_clicked:
+                    logger.info("  Tentando via JavaScript...")
+                    clicked = await self.page.evaluate('''() => {
+                        const links = document.querySelectorAll('a, span, div');
+                        for (let link of links) {
+                            if (link.textContent && link.textContent.includes('Transações De Cartões')) {
+                                link.click();
+                                return true;
+                            }
+                            if (link.textContent && link.textContent.includes('Transações de Cartões')) {
+                                link.click();
+                                return true;
+                            }
+                        }
+                        return false;
+                    }''')
+                    if clicked:
                         await asyncio.sleep(3)
-                        logger.info("✅ Clicou no link de transações")
+                        menu_clicked = True
+                        logger.info("✅ Clicou via JavaScript")
+                
+                if not menu_clicked:
+                    logger.warning("⚠️ Não conseguiu clicar no menu")
+                    
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao clicar no menu: {e}")
-                # Fallback: tentar navegar diretamente
-                try:
-                    transactions_urls = [
-                        "https://www.myprio.com/MyPrioReactiveTheme/Transactions",
-                        "https://www.myprio.com/MyPrio/Transactions",
-                        "https://www.myprio.com/Transactions"
-                    ]
-                    for url in transactions_urls:
-                        try:
-                            await self.page.goto(url, wait_until='networkidle', timeout=15000)
-                            if "Transaction" in self.page.url or "transac" in self.page.url.lower():
-                                logger.info(f"✅ Navegou para: {self.page.url}")
-                                break
-                        except Exception:
-                            continue
-                except Exception as nav_err:
-                    logger.warning(f"⚠️ Erro na navegação direta: {nav_err}")
             
             await self.page.screenshot(path='/tmp/prio_06_after_navigation.png')
             
