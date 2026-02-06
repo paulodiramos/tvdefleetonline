@@ -871,6 +871,16 @@ function App() {
             }
           />
           <Route
+            path="/upload-ficheiros"
+            element={
+              user ? (
+                <UploadFicheiros user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-plataformas-rpa"
             element={
               user && user.role === 'admin' ? (
