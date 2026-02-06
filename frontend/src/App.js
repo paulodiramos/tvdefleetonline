@@ -882,6 +882,16 @@ function App() {
             }
           />
           <Route
+            path="/importar-dados"
+            element={
+              user ? (
+                <ImportarDados user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-plataformas-rpa"
             element={
               user && user.role === 'admin' ? (
