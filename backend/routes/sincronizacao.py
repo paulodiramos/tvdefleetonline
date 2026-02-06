@@ -2152,10 +2152,21 @@ async def executar_sincronizacao_auto(
                                     motoristas_data = dados.get("data", [])
                                     total_ganhos = dados.get("total_ganhos", 0)
                                     
+                                    # Usar semana detectada do ficheiro se disponível
+                                    semana_usar = dados.get("semana_detectada") or semana
+                                    ano_usar = dados.get("ano_detectado") or ano
+                                    
+                                    if dados.get("semana_detectada"):
+                                        logger.info(f"📅 Usando semana detectada do ficheiro: {semana_usar}/{ano_usar}")
+                                    
                                     if motoristas_data:
                                         for motorista_info in motoristas_data:
                                             nome_motorista = motorista_info.get("motorista", "")
                                             uuid_motorista = motorista_info.get("uuid", "")
+                                            
+                                            # Usar semana do motorista se detectada individualmente
+                                            semana_motorista = motorista_info.get("semana_detectada") or semana_usar
+                                            ano_motorista = motorista_info.get("ano_detectado") or ano_usar
                                             
                                             # Tentar encontrar motorista existente pelo nome ou UUID
                                             motorista_db = None
