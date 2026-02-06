@@ -210,6 +210,34 @@ class ViaVerdeScraper(BaseScraper):
             await self.page.goto(target_url, wait_until='domcontentloaded')
             await asyncio.sleep(4)
             
+            # ============ ACEITAR COOKIES PRIMEIRO ============
+            logger.info("🍪 Verificando cookie banner...")
+            cookie_accepted = False
+            cookie_selectors = [
+                'button:has-text("Accept All Cookies")',
+                'button:has-text("Aceitar todos")',
+                'button:has-text("Aceitar Todos os Cookies")',
+                '[id*="onetrust-accept"]',
+                '#onetrust-accept-btn-handler',
+                'button.onetrust-close-btn-handler',
+                '[data-action="accept"]'
+            ]
+            
+            for selector in cookie_selectors:
+                try:
+                    btn = self.page.locator(selector)
+                    if await btn.count() > 0 and await btn.first.is_visible(timeout=2000):
+                        await btn.first.click()
+                        logger.info(f"✅ Cookies aceites: {selector}")
+                        cookie_accepted = True
+                        await asyncio.sleep(2)
+                        break
+                except Exception:
+                    continue
+            
+            if not cookie_accepted:
+                logger.info("ℹ️ Cookie banner não encontrado ou já aceite")
+            
             # Isto deve mostrar a página de login/redirect
             await self.page.screenshot(path='/tmp/viaverde_01_login_page.png')
             logger.info(f"📍 URL atual: {self.page.url}")
