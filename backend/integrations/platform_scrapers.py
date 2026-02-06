@@ -1090,35 +1090,46 @@ class PrioScraper(BaseScraper):
             logger.info("📍 Passo 1: Navegando para Transações de Cartões...")
             
             try:
-                # O menu "Transações De Cartões" pode precisar de expandir primeiro
-                # Tentar clicar com JavaScript para forçar
-                logger.info("  Tentando localizar menu Transações...")
+                # O menu "Transações De Cartões" pode estar bloqueado por algo
+                # Primeiro aceitar cookies se existirem
+                await asyncio.sleep(1)
                 
-                # Método 1: Clicar diretamente no texto
-                transacoes_locator = self.page.locator('text="Transações De Cartões"')
-                if await transacoes_locator.count() > 0:
-                    logger.info("  Encontrou 'Transações De Cartões', clicando...")
-                    await transacoes_locator.first.click(timeout=10000, force=True)
-                    await asyncio.sleep(2)
-                    logger.info("✅ Clicou em Transações de Cartões")
+                # Usar JavaScript para clicar diretamente no elemento
+                logger.info("  Tentando clicar via JavaScript...")
+                
+                # Executar JavaScript para encontrar e clicar no menu
+                clicked = await self.page.evaluate('''() => {
+                    // Procurar o elemento pelo texto
+                    const elements = document.querySelectorAll('*');
+                    for (let el of elements) {
+                        if (el.textContent && el.textContent.trim() === 'Transações De Cartões') {
+                            el.click();
+                            return true;
+                        }
+                    }
+                    // Tentar procurar por texto parcial
+                    for (let el of elements) {
+                        if (el.textContent && el.textContent.includes('Transações') && el.tagName === 'SPAN') {
+                            el.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                }''')
+                
+                if clicked:
+                    logger.info("✅ Clicou em Transações de Cartões via JS")
+                    await asyncio.sleep(3)
                 else:
-                    # Método 2: Procurar no menu lateral
-                    logger.info("  Procurando no menu lateral...")
-                    menu_items = self.page.locator('nav a, aside a, [class*="nav"] a, [class*="menu"] a')
-                    count = await menu_items.count()
-                    logger.info(f"  Encontrados {count} itens de menu")
+                    logger.warning("⚠️ Não conseguiu clicar via JS")
                     
-                    for i in range(count):
-                        item = menu_items.nth(i)
-                        try:
-                            text = await item.text_content()
-                            if text and 'transaç' in text.lower():
-                                logger.info(f"  Clicando em: {text}")
-                                await item.click(force=True, timeout=5000)
-                                await asyncio.sleep(2)
-                                break
-                        except:
-                            continue
+                    # Fallback: tentar locator com force
+                    transacoes_locator = self.page.locator('span:has-text("Transações De Cartões")')
+                    if await transacoes_locator.count() > 0:
+                        await transacoes_locator.first.click(force=True, timeout=5000)
+                        await asyncio.sleep(2)
+                        logger.info("✅ Clicou com force")
+                        
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao clicar em Transações: {e}")
             
