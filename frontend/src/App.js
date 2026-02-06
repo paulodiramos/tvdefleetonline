@@ -134,7 +134,6 @@ import AlertasCustos from "@/pages/AlertasCustos";
 import LoginPlataformas from "@/pages/LoginPlataformas";
 import ExecutarRPA from "@/pages/ExecutarRPA";
 import UploadFicheiros from "@/pages/UploadFicheiros";
-import ImportarDados from "@/pages/ImportarDados";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
