@@ -739,9 +739,13 @@ export default function RPADesigner({ user, onLogout }) {
               }
             }
             
-            function scroll(direcao) {
+            function fazerScroll(direcao) {
+              console.log('Scroll chamado:', direcao);
               if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ tipo: 'scroll', direcao: direcao }));
+                console.log('Scroll enviado');
+              } else {
+                console.log('WebSocket não conectado');
               }
             }
             
