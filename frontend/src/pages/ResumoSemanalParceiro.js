@@ -811,7 +811,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     { id: 'bolt', name: 'Bolt', icon: Car, color: 'bg-green-500 text-white' },
     { id: 'viaverde', name: 'Via Verde', icon: CreditCard, color: 'bg-emerald-500 text-white' },
     { id: 'gps', name: 'GPS', icon: MapPin, color: 'bg-blue-500 text-white' },
-    { id: 'abastecimentos', name: 'Combustível', icon: Fuel, color: 'bg-orange-500 text-white' },
+    { id: 'combustivel', name: 'Combustível', icon: Fuel, color: 'bg-orange-500 text-white' },
   ];
 
   if (loading) {
