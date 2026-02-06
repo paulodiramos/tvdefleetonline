@@ -1076,49 +1076,59 @@ class PrioScraper(BaseScraper):
             await self.page.screenshot(path='/tmp/prio_04_dashboard.png')
             
             # Navegar para secção de TRANSAÇÕES DE CARTÕES (onde estão os dados detalhados)
-            transacoes_selectors = [
-                'a:has-text("Transações De Cartões")',
-                'a:has-text("Transações")',
-                'text=Transações De Cartões',
-                '[href*="transacoes"]',
-                '[href*="transactions"]',
-            ]
+            # O menu está na barra lateral esquerda
+            logger.info("📍 Navegando para Transações De Cartões...")
             
             clicked_transacoes = False
-            for selector in transacoes_selectors:
-                try:
-                    locator = self.page.locator(selector)
-                    if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
-                        await locator.first.click()
-                        await asyncio.sleep(3)
-                        clicked_transacoes = True
-                        logger.info(f"✅ Navegou para transações: {selector}")
-                        break
-                except Exception:
-                    continue
             
+            # Tentar clicar no menu Transações De Cartões
+            try:
+                # Procurar no menu lateral
+                menu_items = self.page.locator('nav a, aside a, .sidebar a, [class*="menu"] a, .menu-item')
+                count = await menu_items.count()
+                logger.info(f"  Encontrados {count} itens de menu")
+                
+                for i in range(count):
+                    item = menu_items.nth(i)
+                    try:
+                        text = await item.text_content()
+                        if text and 'transaç' in text.lower():
+                            logger.info(f"  Clicando em: {text}")
+                            await item.click()
+                            await asyncio.sleep(3)
+                            clicked_transacoes = True
+                            break
+                    except:
+                        continue
+            except Exception as e:
+                logger.warning(f"  Erro ao procurar menu: {e}")
+            
+            # Fallback - tentar seletores específicos
             if not clicked_transacoes:
-                # Fallback - tentar clicar no menu de consumos
-                consumos_selectors = [
-                    'a:has-text("Consumos")',
-                    'a:has-text("Movimentos")',
-                    '[href*="consumos"]',
+                transacoes_selectors = [
+                    'text="Transações De Cartões"',
+                    'a:has-text("Transações")',
+                    '[href*="transac"]',
+                    'span:has-text("Transações")',
                 ]
                 
-                for selector in consumos_selectors:
+                for selector in transacoes_selectors:
                     try:
                         locator = self.page.locator(selector)
-                        if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
+                        if await locator.count() > 0:
+                            logger.info(f"  Tentando selector: {selector}")
                             await locator.first.click()
                             await asyncio.sleep(3)
                             clicked_transacoes = True
-                            logger.info(f"✅ Navegou para consumos: {selector}")
                             break
-                    except Exception:
+                    except Exception as e:
+                        logger.debug(f"  Erro com {selector}: {e}")
                         continue
             
             if not clicked_transacoes:
                 logger.warning("⚠️ Secção de transações não encontrada")
+            else:
+                logger.info("✅ Navegou para Transações De Cartões")
             
             await self.page.screenshot(path='/tmp/prio_05_consumos.png')
             
