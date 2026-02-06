@@ -2106,6 +2106,90 @@ async def executar_sincronizacao_auto(
                         }
                 continue  # Próxima fonte
             
+            # ============ UBER ============
+            if fonte == "uber":
+                # Buscar credenciais da Uber do parceiro
+                parceiro = await db.users.find_one({"id": pid}, {"_id": 0})
+                creds_plataformas = parceiro.get("credenciais_plataformas", {}) if parceiro else {}
+                
+                uber_email = creds_plataformas.get("uber_email")
+                uber_password = creds_plataformas.get("uber_password")
+                
+                # Verificar se existe sessão guardada
+                sessao_path = f"/tmp/uber_sessao_{pid}.json"
+                import os as os_module
+                has_session = os_module.path.exists(sessao_path)
+                
+                if not uber_email and not has_session:
+                    resultados[fonte] = {
+                        "sucesso": False,
+                        "metodo": "rpa",
+                        "erro": "Credenciais Uber não configuradas e sem sessão guardada. Use a página Login Plataformas para guardar a sessão."
+                    }
+                else:
+                    try:
+                        from services.uber_extractor import UberExtractor
+                        from routes.rpa_automacao import calcular_periodo_semana
+                        
+                        # Calcular período da semana
+                        data_inicio, data_fim = calcular_periodo_semana(semana, ano)
+                        
+                        logger.info(f"🔄 Sincronizando Uber para parceiro {pid}, Semana {semana}/{ano}")
+                        
+                        # Executar extractor
+                        extractor = UberExtractor()
+                        await extractor.initialize()
+                        
+                        try:
+                            # Tentar usar sessão guardada primeiro
+                            if has_session:
+                                logger.info("  Usando sessão guardada...")
+                                await extractor.load_session(pid)
+                            elif uber_email and uber_password:
+                                logger.info("  Fazendo login com credenciais...")
+                                login_ok = await extractor.login(uber_email, uber_password)
+                                if not login_ok:
+                                    resultados[fonte] = {
+                                        "sucesso": False,
+                                        "metodo": "rpa",
+                                        "erro": "Falha no login da Uber. Use a página Login Plataformas."
+                                    }
+                                    continue
+                            
+                            # Extrair dados
+                            resultado = await extractor.extract_earnings(
+                                start_date=data_inicio[:10].replace("-", "/"),
+                                end_date=data_fim[:10].replace("-", "/"),
+                                parceiro_id=pid
+                            )
+                            
+                            if resultado.get("success"):
+                                resultados[fonte] = {
+                                    "sucesso": True,
+                                    "metodo": "rpa",
+                                    "mensagem": resultado.get("message", "Dados sincronizados"),
+                                    "dados": resultado.get("data")
+                                }
+                            else:
+                                resultados[fonte] = {
+                                    "sucesso": False,
+                                    "metodo": "rpa",
+                                    "erro": resultado.get("error", "Erro ao extrair dados da Uber")
+                                }
+                        finally:
+                            await extractor.close()
+                                
+                    except Exception as uber_err:
+                        logger.error(f"Erro ao sincronizar Uber: {uber_err}")
+                        import traceback
+                        traceback.print_exc()
+                        resultados[fonte] = {
+                            "sucesso": False,
+                            "metodo": "rpa",
+                            "erro": str(uber_err)
+                        }
+                continue  # Próxima fonte
+            
             # ============ RPA GENÉRICO ============
             # Verificar se há credenciais/configuração para RPA
             if metodo == "rpa":
