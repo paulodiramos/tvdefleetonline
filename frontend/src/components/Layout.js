@@ -373,6 +373,11 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>🚗 Configuração Uber</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/executar-rpa" className="flex items-center space-x-2 cursor-pointer pl-4" data-testid="executar-rpa-link">
+                          <span>▶️ Executar RPA</span>
+                        </Link>
+                      </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />
                       
@@ -458,6 +463,11 @@ const Layout = ({ children, user, onLogout }) => {
                       <DropdownMenuItem asChild>
                         <Link to="/minha-configuracao-uber" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>🚗 Configuração Uber</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/login-plataformas" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-login-plataformas">
+                          <span>🔑 Login Plataformas</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
