@@ -1075,150 +1075,158 @@ class PrioScraper(BaseScraper):
             
             await self.page.screenshot(path='/tmp/prio_04_dashboard.png')
             
-            # ============ ACEITAR COOKIES PRIMEIRO ============
+            # ============ ACEITAR COOKIES SE APARECER ============
             logger.info("🍪 Verificando cookie banner...")
             try:
-                cookie_btn = self.page.locator('button:has-text("Ok"), button:has-text("Aceitar"), button:has-text("Accept")')
-                if await cookie_btn.count() > 0 and await cookie_btn.first.is_visible(timeout=2000):
+                cookie_btn = self.page.locator('button:has-text("Ok"), button:has-text("Aceitar")')
+                if await cookie_btn.count() > 0 and await cookie_btn.first.is_visible(timeout=3000):
                     await cookie_btn.first.click()
                     await asyncio.sleep(1)
                     logger.info("✅ Cookies aceites")
-            except Exception as e:
-                logger.debug(f"Cookie banner não encontrado ou já aceite: {e}")
+            except Exception:
+                logger.debug("Cookie banner não encontrado ou já aceite")
             
-            # ============ PASSO 1: Clicar em "Transações de Cartões" no menu lateral ============
-            logger.info("📍 Passo 1: Navegando para Transações de Cartões...")
+            # ============ PASSO 1: NAVEGAR DIRETAMENTE PARA A PÁGINA DE TRANSAÇÕES ============
+            # URL descoberta do vídeo: https://myprio.com/MyPrio/Transactions
+            logger.info("📍 Passo 1: Navegando diretamente para página de Transações...")
             
-            try:
-                # O menu "Transações De Cartões" pode estar bloqueado por algo
-                # Primeiro aceitar cookies se existirem
-                await asyncio.sleep(1)
+            transactions_url = "https://myprio.com/MyPrio/Transactions"
+            await self.page.goto(transactions_url, wait_until='networkidle', timeout=30000)
+            await asyncio.sleep(3)
+            
+            await self.page.screenshot(path='/tmp/prio_05_transactions_page.png')
+            logger.info(f"📍 URL atual: {self.page.url}")
+            
+            # Verificar se estamos na página correta
+            current_url = self.page.url
+            if "Transactions" not in current_url and "transac" not in current_url.lower():
+                logger.warning(f"⚠️ Não navegou para transações. URL: {current_url}")
                 
-                # Usar JavaScript para clicar diretamente no elemento
-                logger.info("  Tentando clicar via JavaScript...")
-                
-                # Executar JavaScript para encontrar e clicar no menu
-                clicked = await self.page.evaluate('''() => {
-                    // Procurar o elemento pelo texto
-                    const elements = document.querySelectorAll('*');
-                    for (let el of elements) {
-                        if (el.textContent && el.textContent.trim() === 'Transações De Cartões') {
-                            el.click();
-                            return true;
-                        }
-                    }
-                    // Tentar procurar por texto parcial
-                    for (let el of elements) {
-                        if (el.textContent && el.textContent.includes('Transações') && el.tagName === 'SPAN') {
-                            el.click();
-                            return true;
-                        }
-                    }
-                    return false;
-                }''')
-                
-                if clicked:
-                    logger.info("✅ Clicou em Transações de Cartões via JS")
+                # Fallback: tentar clicar no menu
+                try:
+                    await self.page.click('text="Transações de Cartões"', timeout=5000)
                     await asyncio.sleep(3)
-                else:
-                    logger.warning("⚠️ Não conseguiu clicar via JS")
-                    
-                    # Fallback: tentar locator com force
-                    transacoes_locator = self.page.locator('span:has-text("Transações De Cartões")')
-                    if await transacoes_locator.count() > 0:
-                        await transacoes_locator.first.click(force=True, timeout=5000)
-                        await asyncio.sleep(2)
-                        logger.info("✅ Clicou com force")
-                        
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao clicar em Transações: {e}")
+                    logger.info("✅ Clicou em Transações de Cartões via fallback")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro no fallback: {e}")
             
-            await self.page.screenshot(path='/tmp/prio_05_menu_transacoes.png')
+            await self.page.screenshot(path='/tmp/prio_06_after_navigation.png')
             
-            # ============ PASSO 2: Clicar em "Prio Frota" no submenu ============
-            logger.info("📍 Passo 2: Clicando em Prio Frota...")
-            
-            try:
-                # Aguardar submenu aparecer
-                await asyncio.sleep(2)
-                
-                # Usar JavaScript para clicar
-                clicked = await self.page.evaluate('''() => {
-                    // Procurar "Prio Frota"
-                    const elements = document.querySelectorAll('*');
-                    for (let el of elements) {
-                        if (el.textContent && el.textContent.trim() === 'Prio Frota') {
-                            el.click();
-                            return true;
-                        }
-                    }
-                    return false;
-                }''')
-                
-                if clicked:
-                    logger.info("✅ Clicou em Prio Frota via JS")
-                    await asyncio.sleep(3)
-                else:
-                    logger.warning("⚠️ 'Prio Frota' não encontrado, tentando locator...")
-                    prio_frota = self.page.locator('span:has-text("Prio Frota"), a:has-text("Prio Frota")')
-                    if await prio_frota.count() > 0:
-                        await prio_frota.first.click(force=True, timeout=5000)
-                        await asyncio.sleep(3)
-                        logger.info("✅ Clicou em Prio Frota")
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao clicar em Prio Frota: {e}")
-            
-            await self.page.screenshot(path='/tmp/prio_06_transacoes_frota.png')
-            
-            # ============ PASSO 3: Definir datas nos campos "Início" e "Fim" ============
+            # ============ PASSO 2: PREENCHER DATAS ============
             if start_date and end_date:
-                logger.info(f"📅 Passo 3: Aplicando filtro de datas: {start_date} a {end_date}")
+                logger.info(f"📅 Passo 2: Aplicando filtro de datas: {start_date} a {end_date}")
                 
                 # Converter formato de data (YYYY-MM-DD para DD/MM/YYYY)
                 start_formatted = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d/%m/%Y')
                 end_formatted = datetime.strptime(end_date, '%Y-%m-%d').strftime('%d/%m/%Y')
                 
-                # Preencher data início
+                # Preencher data início - procurar pelo campo "Início"
                 try:
-                    inicio_input = self.page.locator('input[id*="Inicio"], input[placeholder*="Início"], input[name*="start"]').first
-                    if await inicio_input.count() > 0:
-                        await inicio_input.clear()
-                        await inicio_input.fill(start_formatted)
-                        logger.info(f"✅ Data início: {start_formatted}")
+                    inicio_selectors = [
+                        'input[id*="Inicio"]',
+                        'input[placeholder*="Início"]',
+                        'input[name*="start"]',
+                        'input[id*="Start"]',
+                        '#DataInicio',
+                        'input.date-inicio'
+                    ]
+                    
+                    for selector in inicio_selectors:
+                        try:
+                            inicio_input = self.page.locator(selector).first
+                            if await inicio_input.count() > 0 and await inicio_input.is_visible(timeout=2000):
+                                await inicio_input.clear()
+                                await inicio_input.fill(start_formatted)
+                                logger.info(f"✅ Data início preenchida: {start_formatted}")
+                                break
+                        except Exception:
+                            continue
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao preencher data início: {e}")
                 
-                # Preencher data fim
+                await asyncio.sleep(1)
+                
+                # Preencher data fim - procurar pelo campo "Fim"
                 try:
-                    fim_input = self.page.locator('input[id*="Fim"], input[placeholder*="Fim"], input[name*="end"]').first
-                    if await fim_input.count() > 0:
-                        await fim_input.clear()
-                        await fim_input.fill(end_formatted)
-                        logger.info(f"✅ Data fim: {end_formatted}")
+                    fim_selectors = [
+                        'input[id*="Fim"]',
+                        'input[placeholder*="Fim"]',
+                        'input[name*="end"]',
+                        'input[id*="End"]',
+                        '#DataFim',
+                        'input.date-fim'
+                    ]
+                    
+                    for selector in fim_selectors:
+                        try:
+                            fim_input = self.page.locator(selector).first
+                            if await fim_input.count() > 0 and await fim_input.is_visible(timeout=2000):
+                                await fim_input.clear()
+                                await fim_input.fill(end_formatted)
+                                logger.info(f"✅ Data fim preenchida: {end_formatted}")
+                                break
+                        except Exception:
+                            continue
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao preencher data fim: {e}")
                 
                 await self.page.screenshot(path='/tmp/prio_07_datas_preenchidas.png')
                 
-                # ============ PASSO 4: Clicar em PESQUISAR ============
-                logger.info("📍 Passo 4: Clicando em Pesquisar...")
+                # ============ PASSO 3: CLICAR EM PESQUISAR ============
+                logger.info("📍 Passo 3: Clicando em PESQUISAR...")
                 try:
-                    pesquisar_btn = self.page.locator('button:has-text("PESQUISAR"), button:has-text("Pesquisar"), input[value="PESQUISAR"]').first
-                    if await pesquisar_btn.count() > 0:
-                        await pesquisar_btn.click()
+                    pesquisar_selectors = [
+                        'button:has-text("PESQUISAR")',
+                        'button:has-text("Pesquisar")',
+                        'input[value="PESQUISAR"]',
+                        'button.btn-search',
+                        '#btnPesquisar',
+                        'button[type="submit"]'
+                    ]
+                    
+                    clicked_pesquisar = False
+                    for selector in pesquisar_selectors:
+                        try:
+                            btn = self.page.locator(selector).first
+                            if await btn.count() > 0 and await btn.is_visible(timeout=2000):
+                                await btn.click()
+                                clicked_pesquisar = True
+                                logger.info(f"✅ Clicou em Pesquisar: {selector}")
+                                await asyncio.sleep(4)  # Aguardar resultados
+                                break
+                        except Exception:
+                            continue
+                    
+                    if not clicked_pesquisar:
+                        # Tentar via JavaScript
+                        await self.page.evaluate('''() => {
+                            const btns = document.querySelectorAll('button');
+                            for (let btn of btns) {
+                                if (btn.textContent.includes('PESQUISAR') || btn.textContent.includes('Pesquisar')) {
+                                    btn.click();
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }''')
                         await asyncio.sleep(4)
-                        logger.info("✅ Clicou em Pesquisar")
+                        
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao clicar em Pesquisar: {e}")
             
             await self.page.screenshot(path='/tmp/prio_08_resultados.png')
             
-            # ============ PASSO 5: Extrair dados da tabela ============
-            logger.info("📍 Passo 5: Extraindo dados da tabela...")
+            # ============ PASSO 4: EXTRAIR DADOS DA TABELA ============
+            logger.info("📍 Passo 4: Extraindo dados da tabela...")
             data = []
             
             try:
-                # A tabela tem colunas: POSTO, REDE, DATA, CARTÃO, ESTADO, LITROS, COMB., RECIBO, KM'S, ID. COND., FATURA, V. UNIT. (S/IVA), TOTAL
+                # Aguardar tabela carregar
+                await asyncio.sleep(2)
+                
+                # Colunas da tabela (do vídeo):
+                # POSTO, REDE, DATA, CARTÃO, ESTADO, LITROS, COMB., RECIBO, KM'S, ID. CONDUTOR, FATURA, VALOR UNIT. (S/IVA), TOTAL
+                
                 table = self.page.locator('table').first
                 if await table.count() > 0:
                     rows = await self.page.locator('table tbody tr').all()
@@ -1228,7 +1236,8 @@ class PrioScraper(BaseScraper):
                         try:
                             cells = await row.locator('td').all()
                             if len(cells) >= 6:
-                                # Extrair campos principais
+                                # Extrair campos principais (índices baseados nas colunas)
+                                # 0: POSTO, 2: DATA, 5: LITROS, 12: TOTAL (último)
                                 posto = await cells[0].text_content() if len(cells) > 0 else ""
                                 data_trans = await cells[2].text_content() if len(cells) > 2 else ""
                                 litros = await cells[5].text_content() if len(cells) > 5 else "0"
@@ -1237,19 +1246,34 @@ class PrioScraper(BaseScraper):
                                 # Limpar valores
                                 posto = posto.strip() if posto else ""
                                 data_trans = data_trans.strip() if data_trans else ""
-                                litros = litros.strip().replace(",", ".").replace("L", "").strip() if litros else "0"
-                                total = total.strip().replace(",", ".").replace("€", "").replace(" ", "").strip() if total else "0"
+                                litros_clean = litros.strip().replace(",", ".").replace("L", "").replace(" ", "") if litros else "0"
+                                total_clean = total.strip().replace(",", ".").replace("€", "").replace(" ", "") if total else "0"
                                 
-                                row_data = [data_trans, litros, total, posto]
-                                data.append(row_data)
-                                logger.debug(f"  Linha: {data_trans}, {litros}L, {total}€")
+                                # Validar que são números
+                                try:
+                                    litros_float = float(litros_clean) if litros_clean else 0
+                                    total_float = float(total_clean) if total_clean else 0
+                                except ValueError:
+                                    litros_float = 0
+                                    total_float = 0
+                                
+                                if total_float > 0:  # Só adicionar se tiver valor
+                                    row_data = [data_trans, str(litros_float), str(total_float), posto]
+                                    data.append(row_data)
+                                    logger.info(f"  ✅ Linha: {data_trans}, {litros_float}L, {total_float}€, {posto}")
                         except Exception as row_err:
                             logger.debug(f"  Erro ao processar linha: {row_err}")
                             continue
                     
-                    logger.info(f"✅ Extraídas {len(data)} transações")
+                    logger.info(f"✅ Extraídas {len(data)} transações válidas")
                 else:
                     logger.warning("⚠️ Tabela não encontrada")
+                    
+                    # Tentar encontrar mensagem de "sem resultados"
+                    no_results = self.page.locator('text="Sem resultados"')
+                    if await no_results.count() > 0:
+                        logger.info("ℹ️ Nenhum resultado encontrado para o período")
+                        
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao extrair tabela: {e}")
             
@@ -1264,6 +1288,8 @@ class PrioScraper(BaseScraper):
             
         except Exception as e:
             logger.error(f"❌ Erro ao extrair dados Prio: {e}")
+            import traceback
+            traceback.print_exc()
             await self.page.screenshot(path='/tmp/prio_99_extract_error.png')
             return {
                 "success": False,
