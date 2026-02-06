@@ -447,22 +447,25 @@ export default function RPADesigner({ user, onLogout }) {
             
             /* Painel lateral de credenciais */
             .sidebar {
-              width: 320px;
+              width: 280px;
+              min-width: 280px;
               background: #16213e;
               border-left: 1px solid #0f3460;
-              padding: 15px;
+              padding: 12px;
               overflow-y: auto;
+              display: flex;
+              flex-direction: column;
             }
             .sidebar h3 {
-              font-size: 14px;
+              font-size: 13px;
               color: #e94560;
-              margin-bottom: 15px;
+              margin-bottom: 12px;
               display: flex;
               align-items: center;
               gap: 8px;
             }
             .field-group {
-              margin-bottom: 12px;
+              margin-bottom: 10px;
             }
             .field-group label {
               display: block;
