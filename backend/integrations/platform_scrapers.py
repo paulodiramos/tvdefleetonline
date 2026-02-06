@@ -502,20 +502,46 @@ class ViaVerdeScraper(BaseScraper):
                 '#login-button',
                 'button.via-verde-button',
                 'button.btn-primary',
-                'button.green-button'
+                'button.green-button',
+                # Botão verde dentro do dialog/modal
+                '[role="dialog"] button',
+                'div[class*="modal"] button'
             ]
             
             logger.info("👆 Tentando clicar no botão Login...")
             button_clicked = False
-            for selector in login_button_selectors:
+            
+            # Primeiro, tentar o seletor mais específico usando locator
+            try:
+                login_btn = self.page.locator('[role="dialog"]').locator('button:has-text("Login")')
+                if await login_btn.count() > 0:
+                    await login_btn.first.click()
+                    logger.info("✅ Botão Login clicado via locator do dialog")
+                    button_clicked = True
+            except Exception as e:
+                logger.debug(f"Erro ao clicar via locator: {e}")
+            
+            # Fallback para seletores individuais
+            if not button_clicked:
+                for selector in login_button_selectors:
+                    try:
+                        if await self.page.is_visible(selector, timeout=2000):
+                            await self.page.click(selector)
+                            logger.info(f"✅ Botão clicado: {selector}")
+                            button_clicked = True
+                            break
+                    except:
+                        continue
+            
+            # Última tentativa: pressionar Enter
+            if not button_clicked:
                 try:
-                    if await self.page.is_visible(selector, timeout=2000):
-                        await self.page.click(selector)
-                        logger.info(f"✅ Botão clicado: {selector}")
-                        button_clicked = True
-                        break
-                except:
-                    continue
+                    logger.info("⌨️ Tentando pressionar Enter...")
+                    await self.page.keyboard.press("Enter")
+                    button_clicked = True
+                    logger.info("✅ Enter pressionado")
+                except Exception as e:
+                    logger.warning(f"Erro ao pressionar Enter: {e}")
             
             if not button_clicked:
                 logger.error("❌ Botão de login não encontrado")
