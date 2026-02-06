@@ -855,6 +855,269 @@ async def websocket_parceiro_login(websocket: WebSocket, session_id: str):
             del active_login_sessions[session_id]
 
 
+# ==================== MOTOR DE EXECUÇÃO RPA ====================
+
+class ExecutarDesignRequest(BaseModel):
+    design_id: str
+    parceiro_id: str
+    usar_sessao: bool = True
+
+@router.post("/executar-design")
+async def executar_design_rpa(
+    data: ExecutarDesignRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Inicia a execução de um design RPA.
+    Retorna um execution_id para acompanhar via WebSocket.
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode executar designs")
+    
+    # Verificar design
+    design = await db.rpa_designs.find_one({"id": data.design_id})
+    if not design:
+        raise HTTPException(status_code=404, detail="Design não encontrado")
+    
+    # Verificar plataforma
+    plataforma = await db.plataformas_rpa.find_one({"id": design["plataforma_id"]})
+    if not plataforma:
+        raise HTTPException(status_code=404, detail="Plataforma não encontrada")
+    
+    # Verificar sessão do parceiro
+    session_path = None
+    if data.usar_sessao:
+        plat_nome = plataforma.get("nome", "").lower()
+        if "uber" in plat_nome:
+            session_path = f"/tmp/uber_sessao_{data.parceiro_id}.json"
+        elif "bolt" in plat_nome:
+            session_path = f"/tmp/bolt_sessao_{data.parceiro_id}.json"
+        elif "viaverde" in plat_nome or "via verde" in plat_nome:
+            session_path = f"/tmp/viaverde_sessao_{data.parceiro_id}.json"
+        elif "prio" in plat_nome:
+            session_path = f"/tmp/prio_sessao_{data.parceiro_id}.json"
+        
+        if session_path and not os.path.exists(session_path):
+            return {
+                "erro": True,
+                "mensagem": f"Sessão do parceiro não encontrada. O parceiro precisa fazer login em /login-plataformas primeiro.",
+                "session_path": session_path
+            }
+    
+    execution_id = str(uuid.uuid4())
+    
+    return {
+        "execution_id": execution_id,
+        "design_id": data.design_id,
+        "design_nome": design.get("nome"),
+        "plataforma": plataforma.get("nome"),
+        "parceiro_id": data.parceiro_id,
+        "session_path": session_path,
+        "total_passos": len(design.get("passos", []))
+    }
+
+
+@router.websocket("/ws/executar/{execution_id}")
+async def websocket_executar_design(
+    websocket: WebSocket, 
+    execution_id: str
+):
+    """
+    WebSocket para executar um design RPA com visualização em tempo real.
+    O frontend envia os parâmetros de execução após conectar.
+    """
+    await websocket.accept()
+    
+    browser = None
+    playwright_instance = None
+    
+    try:
+        # Receber parâmetros de execução
+        params = await websocket.receive_json()
+        design_id = params.get("design_id")
+        parceiro_id = params.get("parceiro_id")
+        session_path = params.get("session_path")
+        
+        # Buscar design
+        design = await db.rpa_designs.find_one({"id": design_id})
+        if not design:
+            await websocket.send_json({"erro": "Design não encontrado"})
+            await websocket.close()
+            return
+        
+        # Buscar plataforma
+        plataforma = await db.plataformas_rpa.find_one({"id": design["plataforma_id"]})
+        
+        passos = design.get("passos", [])
+        
+        await websocket.send_json({
+            "tipo": "inicio",
+            "design": design.get("nome"),
+            "total_passos": len(passos),
+            "plataforma": plataforma.get("nome") if plataforma else "Desconhecida"
+        })
+        
+        from playwright.async_api import async_playwright
+        
+        playwright_instance = await async_playwright().start()
+        
+        # Carregar sessão se disponível
+        storage_state = None
+        if session_path and os.path.exists(session_path):
+            try:
+                with open(session_path, 'r') as f:
+                    session_data = json.load(f)
+                    storage_state = session_data.get("storage_state")
+                logger.info(f"Sessão carregada de {session_path}")
+                await websocket.send_json({
+                    "tipo": "info",
+                    "mensagem": "Sessão do parceiro carregada"
+                })
+            except Exception as e:
+                logger.error(f"Erro ao carregar sessão: {e}")
+        
+        # Iniciar browser
+        browser = await playwright_instance.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        )
+        
+        context = await browser.new_context(
+            viewport={"width": 1280, "height": 720},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            storage_state=storage_state
+        )
+        
+        page = await context.new_page()
+        
+        # Navegar para URL base da plataforma
+        url_base = plataforma.get("url_base", "https://www.google.com") if plataforma else "https://www.google.com"
+        
+        await websocket.send_json({
+            "tipo": "progresso",
+            "passo": 0,
+            "total": len(passos),
+            "descricao": f"A navegar para {url_base}..."
+        })
+        
+        await page.goto(url_base, wait_until="domcontentloaded", timeout=30000)
+        await asyncio.sleep(2)
+        
+        # Screenshot inicial
+        screenshot = await page.screenshot(type="jpeg", quality=50)
+        await websocket.send_json({
+            "tipo": "screenshot",
+            "data": base64.b64encode(screenshot).decode(),
+            "url": page.url,
+            "passo": 0
+        })
+        
+        # Executar cada passo
+        for i, passo in enumerate(passos):
+            tipo = passo.get("tipo")
+            
+            await websocket.send_json({
+                "tipo": "progresso",
+                "passo": i + 1,
+                "total": len(passos),
+                "descricao": passo.get("descricao", f"Passo {i+1}: {tipo}")
+            })
+            
+            try:
+                if tipo == "click":
+                    coords = passo.get("coordenadas", {})
+                    x, y = coords.get("x", 0), coords.get("y", 0)
+                    seletor = passo.get("seletor")
+                    
+                    # Tentar clicar por seletor primeiro
+                    if seletor and seletor not in ["html", "body", "div"]:
+                        try:
+                            await page.click(seletor, timeout=3000)
+                        except:
+                            await page.mouse.click(x, y)
+                    else:
+                        await page.mouse.click(x, y)
+                    
+                    await asyncio.sleep(0.5)
+                    
+                elif tipo == "type":
+                    texto = passo.get("valor", "")
+                    await page.keyboard.type(texto, delay=50)
+                    await asyncio.sleep(0.3)
+                    
+                elif tipo == "press":
+                    tecla = passo.get("valor", "Enter")
+                    await page.keyboard.press(tecla)
+                    await asyncio.sleep(0.3)
+                    
+                elif tipo == "scroll":
+                    delta = passo.get("valor", 300)
+                    await page.mouse.wheel(0, delta)
+                    await asyncio.sleep(0.3)
+                    
+                elif tipo == "wait":
+                    timeout = passo.get("timeout", 3000)
+                    await asyncio.sleep(timeout / 1000)
+                    
+                elif tipo == "goto":
+                    url = passo.get("valor", "")
+                    await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                    await asyncio.sleep(1)
+                    
+                elif tipo == "download":
+                    # Aguardar download
+                    await asyncio.sleep(5)
+                
+                # Screenshot após cada passo
+                await asyncio.sleep(0.5)
+                screenshot = await page.screenshot(type="jpeg", quality=50)
+                await websocket.send_json({
+                    "tipo": "screenshot",
+                    "data": base64.b64encode(screenshot).decode(),
+                    "url": page.url,
+                    "passo": i + 1
+                })
+                
+            except Exception as e:
+                logger.error(f"Erro no passo {i+1}: {e}")
+                await websocket.send_json({
+                    "tipo": "erro_passo",
+                    "passo": i + 1,
+                    "erro": str(e)
+                })
+        
+        # Finalizado
+        await websocket.send_json({
+            "tipo": "concluido",
+            "sucesso": True,
+            "mensagem": f"Design '{design.get('nome')}' executado com sucesso!",
+            "total_passos": len(passos)
+        })
+        
+        # Atualizar estatísticas do design
+        await db.rpa_designs.update_one(
+            {"id": design_id},
+            {
+                "$inc": {"total_execucoes": 1, "execucoes_sucesso": 1},
+                "$set": {"ultima_execucao": datetime.now(timezone.utc).isoformat()}
+            }
+        )
+        
+    except WebSocketDisconnect:
+        logger.info(f"WebSocket execução desconectado: {execution_id}")
+    except Exception as e:
+        logger.error(f"Erro na execução: {e}")
+        try:
+            await websocket.send_json({"tipo": "erro", "mensagem": str(e)})
+        except:
+            pass
+    finally:
+        if browser:
+            await browser.close()
+        if playwright_instance:
+            await playwright_instance.stop()
+
+
 # ==================== AGENDAMENTOS ====================
 
 @router.get("/agendamentos")
