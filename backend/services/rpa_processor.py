@@ -6,6 +6,7 @@ import os
 import re
 import json
 import logging
+import uuid
 import pdfplumber
 import pandas as pd
 from datetime import datetime, timezone, timedelta
