@@ -506,32 +506,40 @@ export default function RPADesigner({ user, onLogout }) {
             
             /* Secção de ações rápidas */
             .quick-actions {
-              margin-top: 20px;
-              padding-top: 15px;
+              margin-top: 15px;
+              padding-top: 12px;
               border-top: 1px solid #0f3460;
             }
             .quick-actions h4 {
-              font-size: 12px;
+              font-size: 11px;
               color: #64748b;
-              margin-bottom: 10px;
+              margin-bottom: 8px;
             }
             .action-buttons {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 6px;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 5px;
             }
             .action-buttons button {
-              padding: 8px 12px;
+              padding: 10px 8px;
               background: #0f3460;
               border: none;
               border-radius: 6px;
               color: #94a3b8;
               cursor: pointer;
               font-size: 12px;
+              font-weight: 500;
             }
             .action-buttons button:hover { 
               background: #1a4a7c; 
               color: white;
+            }
+            .action-buttons button.scroll-btn {
+              background: #7c3aed;
+              color: white;
+            }
+            .action-buttons button.scroll-btn:hover {
+              background: #6d28d9;
             }
             
             /* Texto livre na parte inferior */
