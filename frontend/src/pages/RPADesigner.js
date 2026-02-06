@@ -920,11 +920,6 @@ export default function RPADesigner({ user, onLogout }) {
 
   // Guardar design
   const guardarDesign = async () => {
-    if (passos.length === 0) {
-      toast.error('Adicione pelo menos um passo antes de guardar');
-      return;
-    }
-
     const nome = prompt(
       'Nome do design:',
       `${plataformaSelecionada?.nome} - Semana ${semanaSelecionada === 0 ? 'Atual' : `-${semanaSelecionada}`}`
