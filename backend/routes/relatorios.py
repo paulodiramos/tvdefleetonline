@@ -1111,11 +1111,33 @@ async def get_resumo_semanal_parceiro(
             ]
         }
         
-        elet_records = await db.despesas_combustivel.find(elet_query, {"_id": 0}).to_list(100)
+        # Buscar de combustivel_eletrico (carregamentos elétricos)
+        elet_records = await db.combustivel_eletrico.find(elet_query, {"_id": 0}).to_list(100)
         for r in elet_records:
-            eletrico_total += float(r.get("valor_total") or r.get("TotalValueWithTaxes") or r.get("valor") or 0)
+            eletrico_total += float(r.get("valor") or r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
         
-        logger.info(f"  {motorista.get('name')}: Elétrico query returned {len(elet_records)} records, total €{eletrico_total:.2f}")
+        # Buscar também de despesas_combustivel mas APENAS se tiver kWh > 0 (elétrico)
+        elet_despesas_query = {
+            "$and": [
+                {"$or": elet_query_conditions},
+                {"$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]},
+                {"kwh": {"$gt": 0}}  # APENAS registos elétricos (kWh > 0)
+            ]
+        }
+        elet_despesas_records = await db.despesas_combustivel.find(elet_despesas_query, {"_id": 0}).to_list(100)
+        for r in elet_despesas_records:
+            eletrico_total += float(r.get("valor_total") or r.get("valor") or 0)
+        
+        # Buscar de rpa_carregamento_eletrico
+        rpa_elet_records = await db.rpa_carregamento_eletrico.find(elet_query, {"_id": 0}).to_list(100)
+        for r in rpa_elet_records:
+            eletrico_total += float(r.get("valor_total") or r.get("valor") or 0)
+        
+        total_elet_records = len(elet_records) + len(elet_despesas_records) + len(rpa_elet_records)
+        logger.info(f"  {motorista.get('name')}: Elétrico query returned {total_elet_records} records (combustivel_eletrico: {len(elet_records)}, despesas_combustivel(kWh): {len(elet_despesas_records)}, rpa: {len(rpa_elet_records)}), total €{eletrico_total:.2f}")
         
         # ============ EXTRAS DO MOTORISTA ============
         # Buscar extras (dívidas, caução parcelada, danos, etc.)
