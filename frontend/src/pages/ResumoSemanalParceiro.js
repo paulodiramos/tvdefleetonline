@@ -1478,7 +1478,6 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                     <td className="p-2">TOTAIS</td>
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_uber)}</td>
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</td>
-                    <td className="p-2 text-right text-green-600 text-[10px]" title="Total Ganhos Campanha Bolt">{formatCurrency(totais.total_ganhos_campanha_bolt || 0)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_via_verde)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_combustivel)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_eletrico)}</td>
