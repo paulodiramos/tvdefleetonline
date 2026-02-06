@@ -2108,27 +2108,20 @@ async def executar_sincronizacao_auto(
             
             # ============ UBER ============
             if fonte == "uber":
-                # Buscar credenciais da Uber do parceiro
-                parceiro = await db.users.find_one({"id": pid}, {"_id": 0})
-                creds_plataformas = parceiro.get("credenciais_plataformas", {}) if parceiro else {}
-                
-                uber_email = creds_plataformas.get("uber_email")
-                uber_password = creds_plataformas.get("uber_password")
-                
                 # Verificar se existe sessão guardada
                 sessao_path = f"/tmp/uber_sessao_{pid}.json"
                 import os as os_module
                 has_session = os_module.path.exists(sessao_path)
                 
-                if not uber_email and not has_session:
+                if not has_session:
                     resultados[fonte] = {
                         "sucesso": False,
                         "metodo": "rpa",
-                        "erro": "Credenciais Uber não configuradas e sem sessão guardada. Use a página Login Plataformas para guardar a sessão."
+                        "erro": "Sessão Uber não encontrada. O parceiro deve fazer login em /login-plataformas primeiro."
                     }
                 else:
                     try:
-                        from services.uber_extractor import UberExtractor
+                        from integrations.platform_scrapers import UberScraper
                         from routes.rpa_automacao import calcular_periodo_semana
                         
                         # Calcular período da semana
@@ -2136,49 +2129,39 @@ async def executar_sincronizacao_auto(
                         
                         logger.info(f"🔄 Sincronizando Uber para parceiro {pid}, Semana {semana}/{ano}")
                         
-                        # Executar extractor
-                        extractor = UberExtractor()
-                        await extractor.initialize()
-                        
-                        try:
-                            # Tentar usar sessão guardada primeiro
-                            if has_session:
-                                logger.info("  Usando sessão guardada...")
-                                await extractor.load_session(pid)
-                            elif uber_email and uber_password:
-                                logger.info("  Fazendo login com credenciais...")
-                                login_ok = await extractor.login(uber_email, uber_password)
-                                if not login_ok:
-                                    resultados[fonte] = {
-                                        "sucesso": False,
-                                        "metodo": "rpa",
-                                        "erro": "Falha no login da Uber. Use a página Login Plataformas."
-                                    }
-                                    continue
+                        # Executar scraper com sessão do parceiro
+                        async with UberScraper(headless=True, parceiro_id=pid) as scraper:
+                            # Verificar se está logado
+                            is_logged = await scraper.verificar_login()
                             
-                            # Extrair dados
-                            resultado = await extractor.extract_earnings(
-                                start_date=data_inicio[:10].replace("-", "/"),
-                                end_date=data_fim[:10].replace("-", "/"),
-                                parceiro_id=pid
-                            )
-                            
-                            if resultado.get("success"):
-                                resultados[fonte] = {
-                                    "sucesso": True,
-                                    "metodo": "rpa",
-                                    "mensagem": resultado.get("message", "Dados sincronizados"),
-                                    "dados": resultado.get("data")
-                                }
-                            else:
+                            if not is_logged:
                                 resultados[fonte] = {
                                     "sucesso": False,
                                     "metodo": "rpa",
-                                    "erro": resultado.get("error", "Erro ao extrair dados da Uber")
+                                    "erro": "Sessão Uber expirada. O parceiro deve fazer login novamente em /login-plataformas."
                                 }
-                        finally:
-                            await extractor.close()
+                            else:
+                                # Extrair dados
+                                dados = await scraper.extract_data(
+                                    start_date=data_inicio[:10],
+                                    end_date=data_fim[:10]
+                                )
                                 
+                                if dados.get("success"):
+                                    resultados[fonte] = {
+                                        "sucesso": True,
+                                        "metodo": "rpa",
+                                        "mensagem": dados.get("message", "Extração concluída"),
+                                        "dados": dados.get("data"),
+                                        "screenshots": dados.get("screenshots", [])
+                                    }
+                                else:
+                                    resultados[fonte] = {
+                                        "sucesso": False,
+                                        "metodo": "rpa",
+                                        "erro": dados.get("error", "Erro ao extrair dados da Uber")
+                                    }
+                                    
                     except Exception as uber_err:
                         logger.error(f"Erro ao sincronizar Uber: {uber_err}")
                         import traceback
