@@ -668,6 +668,81 @@ class UberScraper(BaseScraper):
                 "error": str(e),
                 "screenshots": ["/tmp/uber_99_error.png"]
             }
+    
+    async def _processar_relatorio_csv(self, filepath: str, start_date: str, end_date: str) -> Dict:
+        """
+        Processar ficheiro CSV de relatório Uber.
+        Extrai dados de ganhos por motorista.
+        """
+        try:
+            logger.info(f"📄 Processando relatório CSV: {filepath}")
+            
+            dados_motoristas = []
+            total_ganhos = 0.0
+            
+            with open(filepath, 'r', encoding='utf-8') as f:
+                # Tentar diferentes delimitadores
+                content = f.read()
+                f.seek(0)
+                
+                # Detectar delimitador
+                if '\t' in content[:500]:
+                    delimiter = '\t'
+                elif ';' in content[:500]:
+                    delimiter = ';'
+                else:
+                    delimiter = ','
+                
+                reader = csv.DictReader(f, delimiter=delimiter)
+                
+                for row in reader:
+                    try:
+                        # Campos comuns em relatórios Uber
+                        motorista = row.get('Driver', row.get('Motorista', row.get('driver_name', '')))
+                        ganho = row.get('Total', row.get('Earnings', row.get('total', row.get('earnings', '0'))))
+                        
+                        # Limpar e converter valor
+                        if ganho:
+                            ganho_str = str(ganho).replace('€', '').replace(',', '.').replace(' ', '').strip()
+                            try:
+                                ganho_valor = float(ganho_str)
+                            except:
+                                ganho_valor = 0.0
+                        else:
+                            ganho_valor = 0.0
+                        
+                        if motorista and ganho_valor > 0:
+                            dados_motoristas.append({
+                                "motorista": motorista,
+                                "ganho": ganho_valor,
+                                "periodo_inicio": start_date,
+                                "periodo_fim": end_date
+                            })
+                            total_ganhos += ganho_valor
+                            
+                    except Exception as row_err:
+                        logger.warning(f"⚠️ Erro ao processar linha: {row_err}")
+                        continue
+            
+            logger.info(f"✅ Processados {len(dados_motoristas)} motoristas, Total: €{total_ganhos:.2f}")
+            
+            return {
+                "success": True,
+                "platform": "uber",
+                "data": dados_motoristas,
+                "total_ganhos": total_ganhos,
+                "num_motoristas": len(dados_motoristas),
+                "message": f"Extraídos dados de {len(dados_motoristas)} motoristas. Total: €{total_ganhos:.2f}",
+                "filepath": filepath
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao processar CSV: {e}")
+            return {
+                "success": False,
+                "platform": "uber",
+                "error": f"Erro ao processar CSV: {str(e)}"
+            }
 
 
 class ViaVerdeScraper(BaseScraper):
