@@ -171,23 +171,264 @@ class BoltScraper(BaseScraper):
 
 
 class UberScraper(BaseScraper):
-    """Scraper para Uber Partners"""
+    """Scraper para Uber Fleet/Supplier"""
     
-    def __init__(self, headless: bool = True):
+    def __init__(self, headless: bool = True, parceiro_id: str = None):
         super().__init__(headless)
-        self.platform_name = "Uber"
-        self.login_url = "https://partners.uber.com/login"
+        self.platform_name = "Uber Fleet"
+        self.login_url = "https://supplier.uber.com/"
+        self.parceiro_id = parceiro_id
+        self.session_path = f"/tmp/uber_sessao_{parceiro_id}.json" if parceiro_id else None
     
-    async def login(self, email: str, password: str, **kwargs) -> bool:
-        # Similar ao Bolt, ajustar seletores
-        logger.info(f"🔑 {self.platform_name}: Login (a implementar)")
-        return False
+    async def initialize(self):
+        """Inicializar browser, opcionalmente com sessão guardada"""
+        await super().initialize()
+        
+        # Se temos sessão guardada, carregar cookies
+        if self.session_path and os.path.exists(self.session_path):
+            try:
+                import json
+                with open(self.session_path, 'r') as f:
+                    storage_state = json.load(f)
+                
+                # Aplicar cookies
+                if 'cookies' in storage_state:
+                    await self.context.add_cookies(storage_state['cookies'])
+                    logger.info(f"✅ Sessão Uber carregada de {self.session_path}")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao carregar sessão Uber: {e}")
     
-    async def extract_data(self, **kwargs) -> Dict:
-        return {
-            "success": False,
-            "message": "Uber scraper a implementar com seletores específicos"
-        }
+    async def verificar_login(self) -> bool:
+        """Verificar se está logado na Uber"""
+        try:
+            await self.page.goto("https://supplier.uber.com/", wait_until="networkidle", timeout=30000)
+            await asyncio.sleep(3)
+            
+            url = self.page.url
+            logger.info(f"📍 Uber URL atual: {url}")
+            
+            # Se redirecionou para login, não está logado
+            if "login" in url.lower() or "auth" in url.lower():
+                return False
+            
+            # Verificar elementos que indicam login
+            dashboard_elements = [
+                'text="Relatórios"',
+                'text="Reports"',
+                'text="Dashboard"',
+                '[data-testid="dashboard"]'
+            ]
+            
+            for selector in dashboard_elements:
+                try:
+                    el = self.page.locator(selector)
+                    if await el.count() > 0:
+                        logger.info("✅ Login Uber verificado - elementos de dashboard encontrados")
+                        return True
+                except:
+                    continue
+            
+            return False
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao verificar login Uber: {e}")
+            return False
+    
+    async def login(self, email: str, password: str, **kwargs) -> Dict:
+        """
+        Login na Uber - requer sessão guardada pelo parceiro.
+        A Uber usa autenticação com SMS/OTP que não pode ser automatizada.
+        """
+        logger.info(f"🔑 {self.platform_name}: Verificando sessão...")
+        
+        # Verificar se já está logado (via sessão guardada)
+        is_logged = await self.verificar_login()
+        
+        if is_logged:
+            return {"success": True, "message": "Logado via sessão guardada"}
+        else:
+            return {
+                "success": False, 
+                "error": "Sessão Uber expirada ou não existe. O parceiro deve fazer login manual em /login-plataformas"
+            }
+    
+    async def extract_data(self, start_date: str = None, end_date: str = None, **kwargs) -> Dict:
+        """
+        Extrair dados de ganhos da Uber Fleet.
+        Fluxo:
+        1. Ir para Relatórios
+        2. Gerar relatório de Pagamentos de motorista
+        3. Selecionar datas
+        4. Fazer download do CSV
+        """
+        try:
+            logger.info("📊 Uber: Iniciando extração de dados...")
+            
+            # Verificar se está logado
+            is_logged = await self.verificar_login()
+            if not is_logged:
+                return {
+                    "success": False,
+                    "error": "Não está logado na Uber. Use /login-plataformas para guardar a sessão."
+                }
+            
+            await self.page.screenshot(path='/tmp/uber_01_dashboard.png')
+            
+            # ============ PASSO 1: NAVEGAR PARA RELATÓRIOS ============
+            logger.info("📍 Passo 1: Navegando para Relatórios...")
+            
+            try:
+                # Tentar clicar em "Relatórios" ou "Reports"
+                relatorios_selectors = [
+                    'text="Relatórios"',
+                    'text="Reports"',
+                    'a:has-text("Relatórios")',
+                    'a:has-text("Reports")',
+                    '[data-testid="reports"]'
+                ]
+                
+                clicked = False
+                for selector in relatorios_selectors:
+                    try:
+                        el = self.page.locator(selector)
+                        if await el.count() > 0 and await el.first.is_visible(timeout=3000):
+                            await el.first.click()
+                            await asyncio.sleep(3)
+                            clicked = True
+                            logger.info(f"✅ Clicou em Relatórios: {selector}")
+                            break
+                    except:
+                        continue
+                
+                if not clicked:
+                    # Tentar navegar diretamente
+                    await self.page.goto("https://supplier.uber.com/reports", wait_until="networkidle", timeout=30000)
+                    await asyncio.sleep(3)
+                    logger.info("✅ Navegou diretamente para /reports")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao navegar para Relatórios: {e}")
+            
+            await self.page.screenshot(path='/tmp/uber_02_relatorios.png')
+            logger.info(f"📍 URL atual: {self.page.url}")
+            
+            # ============ PASSO 2: GERAR RELATÓRIO ============
+            logger.info("📍 Passo 2: Gerando relatório...")
+            
+            try:
+                # Clicar em "Gerar relatório" ou "Generate report"
+                gerar_selectors = [
+                    'button:has-text("Gerar relatório")',
+                    'button:has-text("Generate report")',
+                    'text="Gerar relatório"',
+                    'text="Generate report"'
+                ]
+                
+                for selector in gerar_selectors:
+                    try:
+                        el = self.page.locator(selector)
+                        if await el.count() > 0 and await el.first.is_visible(timeout=3000):
+                            await el.first.click()
+                            await asyncio.sleep(3)
+                            logger.info(f"✅ Clicou em Gerar relatório: {selector}")
+                            break
+                    except:
+                        continue
+                        
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao clicar em Gerar relatório: {e}")
+            
+            await self.page.screenshot(path='/tmp/uber_03_gerar.png')
+            
+            # ============ PASSO 3: SELECIONAR TIPO DE RELATÓRIO ============
+            logger.info("📍 Passo 3: Selecionando tipo de relatório...")
+            
+            try:
+                # Clicar em "Pagamentos de motorista" ou "Driver payments"
+                pagamentos_selectors = [
+                    'text="Pagamentos de motorista"',
+                    'text="Driver payments"',
+                    '[data-testid="driver-payments"]'
+                ]
+                
+                for selector in pagamentos_selectors:
+                    try:
+                        el = self.page.locator(selector)
+                        if await el.count() > 0:
+                            await el.first.click()
+                            await asyncio.sleep(2)
+                            logger.info(f"✅ Selecionou tipo: {selector}")
+                            break
+                    except:
+                        continue
+                        
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao selecionar tipo: {e}")
+            
+            await self.page.screenshot(path='/tmp/uber_04_tipo.png')
+            
+            # ============ PASSO 4: CONFIGURAR DATAS ============
+            if start_date and end_date:
+                logger.info(f"📅 Passo 4: Configurando datas: {start_date} a {end_date}")
+                
+                # A interface da Uber usa dropdowns/calendários específicos
+                # Por agora, vamos tentar usar a semana mais recente (padrão)
+                # TODO: Implementar seleção de datas específicas
+            
+            await self.page.screenshot(path='/tmp/uber_05_datas.png')
+            
+            # ============ PASSO 5: GERAR E DOWNLOAD ============
+            logger.info("📍 Passo 5: Gerando e fazendo download...")
+            
+            try:
+                # Clicar em "Gerar" ou "Generate"
+                gerar_btn = self.page.locator('button:has-text("Gerar"), button:has-text("Generate")')
+                if await gerar_btn.count() > 0:
+                    # Verificar se está habilitado
+                    is_disabled = await gerar_btn.first.is_disabled()
+                    if is_disabled:
+                        logger.warning("⚠️ Botão Gerar está desabilitado")
+                        await self.page.screenshot(path='/tmp/uber_06_gerar_disabled.png')
+                        return {
+                            "success": False,
+                            "error": "Botão 'Gerar' está desabilitado. Verifique se todos os campos estão preenchidos."
+                        }
+                    
+                    await gerar_btn.first.click()
+                    await asyncio.sleep(5)
+                    logger.info("✅ Clicou em Gerar")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao clicar em Gerar: {e}")
+            
+            await self.page.screenshot(path='/tmp/uber_06_final.png')
+            
+            # Por agora, retornar sucesso parcial
+            return {
+                "success": True,
+                "platform": "uber",
+                "data": [],
+                "message": "Extração Uber parcialmente implementada. Screenshots de debug disponíveis em /tmp/uber_*.png",
+                "screenshots": [
+                    "/tmp/uber_01_dashboard.png",
+                    "/tmp/uber_02_relatorios.png",
+                    "/tmp/uber_03_gerar.png",
+                    "/tmp/uber_04_tipo.png",
+                    "/tmp/uber_05_datas.png",
+                    "/tmp/uber_06_final.png"
+                ]
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao extrair dados Uber: {e}")
+            import traceback
+            traceback.print_exc()
+            await self.page.screenshot(path='/tmp/uber_99_error.png')
+            return {
+                "success": False,
+                "platform": "uber",
+                "error": str(e)
+            }
 
 
 class ViaVerdeScraper(BaseScraper):
