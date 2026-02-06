@@ -154,11 +154,9 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     const startOfYear = new Date(now.getFullYear(), 0, 1);
     const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
     const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-    // Semana atual é sempre a semana anterior (semana - 1)
-    const semanaAnterior = currentWeek > 1 ? currentWeek - 1 : 52;
-    const anoSemana = currentWeek > 1 ? now.getFullYear() : now.getFullYear() - 1;
-    setSemana(semanaAnterior);
-    setAno(anoSemana);
+    // Usar a semana atual para mostrar os dados mais recentes
+    setSemana(currentWeek);
+    setAno(now.getFullYear());
   }, []);
 
   useEffect(() => {
