@@ -2530,8 +2530,9 @@ async def executar_sincronizacao_auto(
                                                 "periodo_semana": semana,
                                                 "periodo_ano": ano,
                                                 "ganhos_brutos_total": total_ride_price,
-                                                "ganhos_liquidos": total_net_earnings,  # Ganhos líquidos do motorista
-                                                "ganhos": total_net_earnings,  # Campo alternativo
+                                                "ganhos_liquidos": total_net_earnings + total_tips,  # Ganhos líquidos + gorjetas
+                                                "ganhos": total_net_earnings + total_tips,  # Campo alternativo (inclui gorjetas)
+                                                "ganhos_viagens": total_net_earnings,  # Apenas ganhos de viagens
                                                 "comissao_bolt": total_commission,
                                                 "gorjetas": total_tips,
                                                 "numero_viagens": total_viagens,
