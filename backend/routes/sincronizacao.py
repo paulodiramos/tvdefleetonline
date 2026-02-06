@@ -2492,11 +2492,17 @@ async def executar_sincronizacao_auto(
                                             # Filtrar orders deste motorista
                                             driver_orders = [o for o in bolt_orders if o.get("driver_uuid") == bolt_driver_uuid or o.get("driver_id") == bolt_driver_uuid]
                                             
-                                            # Extrair ganhos de order_price (estrutura: {net_earnings, ride_price, commission, tip})
+                                            # Extrair TODOS os campos de order_price da API Bolt
+                                            # Campos disponíveis: ride_price, booking_fee, toll_fee, cancellation_fee, tip, net_earnings, cash_discount, in_app_discount, commission
                                             total_net_earnings = 0
                                             total_ride_price = 0
                                             total_commission = 0
                                             total_tips = 0
+                                            total_toll_fee = 0       # Portagens
+                                            total_booking_fee = 0    # Taxa de reserva
+                                            total_cancellation_fee = 0  # Taxa de cancelamento
+                                            total_cash_discount = 0
+                                            total_in_app_discount = 0
                                             
                                             for order in driver_orders:
                                                 price_info = order.get("order_price", {})
@@ -2504,8 +2510,17 @@ async def executar_sincronizacao_auto(
                                                 total_ride_price += float(price_info.get("ride_price", 0) or 0)
                                                 total_commission += float(price_info.get("commission", 0) or 0)
                                                 total_tips += float(price_info.get("tip", 0) or 0)
+                                                total_toll_fee += float(price_info.get("toll_fee", 0) or 0)
+                                                total_booking_fee += float(price_info.get("booking_fee", 0) or 0)
+                                                total_cancellation_fee += float(price_info.get("cancellation_fee", 0) or 0)
+                                                total_cash_discount += float(price_info.get("cash_discount", 0) or 0)
+                                                total_in_app_discount += float(price_info.get("in_app_discount", 0) or 0)
                                             
                                             total_viagens = len(driver_orders)
+                                            
+                                            # Ganhos líquidos = net_earnings + tips + toll_fee (portagens são reembolsadas)
+                                            # NOTA: A API não retorna "ganhos de campanha" - esses só estão no CSV
+                                            ganhos_liquidos_calculados = total_net_earnings + total_tips + total_toll_fee
                                             
                                             # Criar ou atualizar registo de ganhos
                                             ganho_existente = await db.ganhos_bolt.find_one({
