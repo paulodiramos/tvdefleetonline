@@ -248,40 +248,95 @@ class UberExtractor:
             else:
                 logger.warning("⚠️ Dropdown de intervalo não encontrado")
             
-            # 5. Selecionar organização
+            # 5. Selecionar organização - CRÍTICO para o botão Gerar ficar ativo
             logger.info("Passo 5: Selecionar organização")
-            org_dropdown = self.page.get_by_role("button", name="organizações")
-            if await org_dropdown.count() == 0:
-                org_dropdown = self.page.locator('[data-testid*="org"]')
-            if await org_dropdown.count() == 0:
-                org_dropdown = self.page.locator('button:has-text("Selecionar organiza")')
-            
-            # Verificar se o dropdown está visível antes de clicar
             org_selected = False
-            if await org_dropdown.count() > 0:
-                try:
-                    # Aguardar que o elemento esteja visível (timeout curto)
-                    await org_dropdown.first.wait_for(state="visible", timeout=5000)
+            
+            # Tentar múltiplas abordagens para encontrar e selecionar organização
+            try:
+                # Abordagem 1: Clicar no dropdown de organizações pelo texto
+                org_dropdown = self.page.locator('text="Selecione as organizações a incluir no relatório"')
+                if await org_dropdown.count() == 0:
+                    org_dropdown = self.page.locator('[data-baseweb="select"]').filter(has_text="organização")
+                if await org_dropdown.count() == 0:
+                    org_dropdown = self.page.get_by_placeholder("Selecione as organizações")
+                if await org_dropdown.count() == 0:
+                    # Procurar por qualquer dropdown não preenchido no modal
+                    org_dropdown = self.page.locator('div[role="combobox"]').last
+                
+                if await org_dropdown.count() > 0:
+                    logger.info("  Dropdown de organização encontrado, a clicar...")
                     await org_dropdown.first.click()
                     await asyncio.sleep(1)
                     
-                    # Selecionar primeiro checkbox ou opção
+                    # Tirar screenshot para debug
+                    await self.page.screenshot(path='/tmp/uber_org_dropdown_open.png')
+                    
+                    # Selecionar a primeira opção disponível
+                    # Tentar checkbox primeiro
                     checkbox = self.page.locator('input[type="checkbox"]').first
-                    if await checkbox.count() > 0:
+                    if await checkbox.count() > 0 and await checkbox.is_visible():
                         is_checked = await checkbox.is_checked()
                         if not is_checked:
                             await checkbox.click()
+                            logger.info("  ✅ Checkbox de organização clicado")
                             await asyncio.sleep(1)
                         org_selected = True
                     else:
-                        # Tentar clicar na primeira opção do dropdown
+                        # Tentar opção de lista
                         option = self.page.locator('[role="option"]').first
                         if await option.count() > 0:
                             await option.click()
+                            logger.info("  ✅ Opção de organização selecionada")
                             await asyncio.sleep(1)
                             org_selected = True
+                        else:
+                            # Tentar clicar em qualquer item da lista
+                            list_item = self.page.locator('li').first
+                            if await list_item.count() > 0:
+                                await list_item.click()
+                                logger.info("  ✅ Item de lista selecionado")
+                                await asyncio.sleep(1)
+                                org_selected = True
+                else:
+                    logger.warning("  ⚠️ Dropdown de organização não encontrado")
+                    
+            except Exception as e:
+                logger.warning(f"  Erro ao selecionar organização: {e}")
+            
+            # Se ainda não selecionou, tentar abordagem alternativa
+            if not org_selected:
+                try:
+                    logger.info("  Tentando abordagem alternativa para organização...")
+                    # Procurar todos os elementos clicáveis no modal que possam ser organizações
+                    modal = self.page.locator('[role="dialog"]').last
+                    if await modal.count() > 0:
+                        # Procurar por qualquer elemento que pareça um dropdown não selecionado
+                        dropdowns = modal.locator('div[data-baseweb="select"]')
+                        count = await dropdowns.count()
+                        logger.info(f"  Encontrados {count} dropdowns no modal")
+                        
+                        for i in range(count):
+                            dd = dropdowns.nth(i)
+                            # Verificar se é o de organização (geralmente é o último ou tem texto específico)
+                            text = await dd.text_content()
+                            if "organização" in text.lower() or "selecione" in text.lower():
+                                await dd.click()
+                                await asyncio.sleep(1)
+                                
+                                # Tentar selecionar primeira opção
+                                first_option = self.page.locator('[role="option"]').first
+                                if await first_option.count() > 0:
+                                    await first_option.click()
+                                    org_selected = True
+                                    logger.info("  ✅ Organização selecionada via abordagem alternativa")
+                                    break
                 except Exception as e:
-                    logger.warning(f"Dropdown de organização não visível, continuando... {e}")
+                    logger.warning(f"  Erro na abordagem alternativa: {e}")
+            
+            # Screenshot após tentativa de seleção
+            await self.page.screenshot(path='/tmp/uber_after_org_select.png')
+            logger.info(f"  Organização selecionada: {org_selected}")
             
             # 6. Clicar em Gerar - com retry
             logger.info("Passo 6: Clicar em Gerar")
