@@ -59,8 +59,12 @@ class BaseScraper:
         try:
             if self.page:
                 await self.page.close()
+            if self.context:
+                await self.context.close()
             if self.browser:
                 await self.browser.close()
+            if self.playwright:
+                await self.playwright.stop()
             logger.info("🔒 Browser fechado")
         except Exception as e:
             logger.error(f"Erro ao fechar browser: {e}")
