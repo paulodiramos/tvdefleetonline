@@ -1370,10 +1370,10 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                   const isEditing = editingMotorista === m.motorista_id;
                   const isSelected = selectedMotoristas.includes(m.motorista_id);
                   // Se estiver em modo de edição, usar valores do formulário para cálculo em tempo real
-                  // Líquido = (Rendimentos Uber + Uber Portagens) + Bolt + Bolt Campanha - Via Verde - Combustível - Elétrico - Aluguer - Extras
+                  // Líquido = Uber + Bolt + Bolt Campanha - Via Verde - Combustível - Elétrico - Aluguer - Extras
                   const liquido = isEditing 
-                    ? (editForm.ganhos_uber || 0) + (editForm.uber_portagens || 0) + (editForm.ganhos_bolt || 0) + (editForm.ganhos_campanha_bolt || 0) - (editForm.via_verde || 0) - (editForm.combustivel || 0) - (editForm.eletrico || 0) - (editForm.aluguer || 0) - (editForm.extras || 0)
-                    : (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0) - (m.extras || 0);
+                    ? (editForm.ganhos_uber || 0) + (editForm.ganhos_bolt || 0) + (editForm.ganhos_campanha_bolt || 0) - (editForm.via_verde || 0) - (editForm.combustivel || 0) - (editForm.eletrico || 0) - (editForm.aluguer || 0) - (editForm.extras || 0)
+                    : (m.ganhos_uber || 0) + (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0) - (m.extras || 0);
                   
                   return (
                     <tr key={m.motorista_id} className={`border-b hover:bg-slate-50 ${isSelected ? 'bg-blue-50' : ''}`}>
