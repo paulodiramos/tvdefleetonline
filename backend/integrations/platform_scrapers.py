@@ -688,9 +688,25 @@ class UberScraper(BaseScraper):
                 
                 for row in reader:
                     try:
-                        # Campos comuns em relatórios Uber
-                        motorista = row.get('Driver', row.get('Motorista', row.get('driver_name', '')))
-                        ganho = row.get('Total', row.get('Earnings', row.get('total', row.get('earnings', '0'))))
+                        # Campos específicos do CSV Uber Portugal
+                        # Colunas: UUID do motorista, Nome próprio do motorista, Apelido do motorista, Pago a si, ...
+                        
+                        # Nome do motorista (Nome próprio + Apelido)
+                        nome_proprio = row.get('Nome próprio do motorista', row.get('Driver First Name', ''))
+                        apelido = row.get('Apelido do motorista', row.get('Driver Last Name', ''))
+                        motorista = f"{nome_proprio} {apelido}".strip()
+                        
+                        # Se não encontrou, tentar outros campos
+                        if not motorista:
+                            motorista = row.get('Driver', row.get('Motorista', row.get('driver_name', '')))
+                        
+                        # Ganhos - campo "Pago a si" ou "Os seus rendimentos"
+                        ganho = row.get('Pago a si', 
+                                row.get('Pago a si : Os seus rendimentos',
+                                row.get('Total', 
+                                row.get('Earnings', 
+                                row.get('total', 
+                                row.get('earnings', '0'))))))
                         
                         # Limpar e converter valor
                         if ganho:
@@ -702,14 +718,20 @@ class UberScraper(BaseScraper):
                         else:
                             ganho_valor = 0.0
                         
+                        # UUID do motorista para referência
+                        uuid_motorista = row.get('UUID do motorista', row.get('Driver UUID', ''))
+                        
+                        # Aceitar valores positivos (ganhos) - valores negativos são pagamentos à empresa
                         if motorista and ganho_valor > 0:
                             dados_motoristas.append({
                                 "motorista": motorista,
+                                "uuid": uuid_motorista,
                                 "ganho": ganho_valor,
                                 "periodo_inicio": start_date,
                                 "periodo_fim": end_date
                             })
                             total_ganhos += ganho_valor
+                            logger.info(f"  📊 {motorista}: €{ganho_valor:.2f}")
                             
                     except Exception as row_err:
                         logger.warning(f"⚠️ Erro ao processar linha: {row_err}")
