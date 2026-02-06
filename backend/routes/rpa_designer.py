@@ -1291,13 +1291,19 @@ async def websocket_design_browser(
                         }})()
                     """)
                     
+                    # Guardar passo na sessão
+                    novo_passo = {
+                        "ordem": len(session["passos"]) + 1,
+                        "tipo": "click",
+                        "seletor": seletor,
+                        "coordenadas": {"x": x, "y": y},
+                        "descricao": f"click: {seletor or f'({x},{y})'}"
+                    }
+                    session["passos"].append(novo_passo)
+                    
                     await websocket.send_json({
                         "tipo": "passo_detectado",
-                        "passo": {
-                            "tipo": "click",
-                            "seletor": seletor,
-                            "coordenadas": {"x": x, "y": y}
-                        }
+                        "passo": novo_passo
                     })
                     
                 elif data.get("tipo") == "type" or data.get("tipo") == "inserir_texto":
@@ -1305,6 +1311,20 @@ async def websocket_design_browser(
                     # Digitar letra a letra com delay para parecer humano
                     await page.keyboard.type(texto, delay=100)
                     await asyncio.sleep(0.3)
+                    
+                    # Guardar passo na sessão
+                    novo_passo = {
+                        "ordem": len(session["passos"]) + 1,
+                        "tipo": "type",
+                        "valor": texto,
+                        "descricao": f"type: {texto[:20]}..."
+                    }
+                    session["passos"].append(novo_passo)
+                    
+                    await websocket.send_json({
+                        "tipo": "passo_detectado",
+                        "passo": novo_passo
+                    })
                     
                 elif data.get("tipo") == "press" or data.get("tipo") == "tecla":
                     tecla = data.get("tecla", "Enter")
