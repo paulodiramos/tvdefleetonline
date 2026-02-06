@@ -2544,15 +2544,23 @@ async def executar_sincronizacao_auto(
                                                 "ano": ano,
                                                 "periodo_semana": semana,
                                                 "periodo_ano": ano,
+                                                # Campos da API Bolt
                                                 "ganhos_brutos_total": total_ride_price,
-                                                "ganhos_liquidos": total_net_earnings + total_tips,  # Ganhos líquidos + gorjetas
-                                                "ganhos": total_net_earnings + total_tips,  # Campo alternativo (inclui gorjetas)
-                                                "ganhos_viagens": total_net_earnings,  # Apenas ganhos de viagens
+                                                "ganhos_liquidos": ganhos_liquidos_calculados,  # net_earnings + tips + toll_fee
+                                                "ganhos": ganhos_liquidos_calculados,
+                                                "ganhos_viagens": total_net_earnings,
                                                 "comissao_bolt": total_commission,
                                                 "gorjetas": total_tips,
+                                                "portagens_bolt": total_toll_fee,      # Novo campo
+                                                "taxa_reserva": total_booking_fee,      # Novo campo
+                                                "taxa_cancelamento": total_cancellation_fee,  # Novo campo
+                                                "desconto_dinheiro": total_cash_discount,
+                                                "desconto_app": total_in_app_discount,
                                                 "numero_viagens": total_viagens,
                                                 "parceiro_id": pid,
                                                 "fonte": "bolt_api",
+                                                # NOTA: ganhos_campanha não disponível via API - só via CSV
+                                                "ganhos_campanha": 0,  # Precisa de import CSV para valor real
                                                 "synced_at": datetime.now(timezone.utc).isoformat(),
                                                 "updated_at": datetime.now(timezone.utc).isoformat()
                                             }
