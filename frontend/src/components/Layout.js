@@ -379,6 +379,11 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>▶️ Executar RPA</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/sincronizacao-hub" className="flex items-center space-x-2 cursor-pointer pl-4" data-testid="sincronizacao-hub-link">
+                          <span>📊 Hub Sincronização</span>
+                        </Link>
+                      </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />
                       
