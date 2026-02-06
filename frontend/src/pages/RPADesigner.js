@@ -637,8 +637,8 @@ export default function RPADesigner({ user, onLogout }) {
                   <button onclick="enviarTecla('Enter')">↵ Enter</button>
                   <button onclick="enviarTecla('Tab')">⇥ Tab</button>
                   <button onclick="enviarTecla('Escape')">✕ Esc</button>
-                  <button onclick="scroll('down')">↓ Scroll</button>
-                  <button onclick="scroll('up')">↑ Scroll</button>
+                  <button onclick="fazerScroll('down')">↓ Scroll</button>
+                  <button onclick="fazerScroll('up')">↑ Scroll</button>
                   <button onclick="adicionarEspera()">⏳ +Espera</button>
                   <button onclick="adicionarDownload()">📥 +Download</button>
                 </div>
