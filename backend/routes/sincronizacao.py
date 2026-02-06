@@ -2248,7 +2248,7 @@ async def executar_sincronizacao_auto(
                                                 "plataforma": "uber",
                                                 "fonte": "rpa_uber",
                                                 "periodo_inicio": motorista_info.get("periodo_inicio", data_inicio[:10]),
-                                                "periodo_fim": data_fim[:10],
+                                                "periodo_fim": motorista_info.get("periodo_fim", data_fim[:10]),
                                                 "synced_at": datetime.now(timezone.utc).isoformat()
                                             }
                                             
@@ -2257,20 +2257,23 @@ async def executar_sincronizacao_auto(
                                                 {
                                                     "parceiro_id": pid, 
                                                     "motorista_id": motorista_id,
-                                                    "semana": semana, 
-                                                    "ano": ano
+                                                    "semana": semana_motorista,  # Usar semana detectada
+                                                    "ano": ano_motorista
                                                 },
                                                 {"$set": registro},
                                                 upsert=True
                                             )
-                                            logger.info(f"✅ Guardado ganho Uber: {nome_motorista} (ID: {motorista_id[:8]}...) - €{motorista_info.get('ganho', 0):.2f}")
+                                            logger.info(f"✅ Guardado ganho Uber: {nome_motorista} (ID: {motorista_id[:8]}...) - €{motorista_info.get('ganho', 0):.2f} → Semana {semana_motorista}/{ano_motorista}")
                                         
                                         resultados[fonte] = {
                                             "sucesso": True,
                                             "metodo": "rpa",
-                                            "mensagem": f"Extraídos e guardados dados de {len(motoristas_data)} motoristas. Total: €{total_ganhos:.2f}",
+                                            "mensagem": f"Extraídos e guardados dados de {len(motoristas_data)} motoristas. Total: €{total_ganhos:.2f}" + 
+                                                       (f" (Semana {semana_usar}/{ano_usar})" if dados.get("semana_detectada") else ""),
                                             "total_ganhos": total_ganhos,
                                             "num_motoristas": len(motoristas_data),
+                                            "semana_detectada": dados.get("semana_detectada"),
+                                            "ano_detectado": dados.get("ano_detectado"),
                                             "dados": motoristas_data,
                                             "screenshots": dados.get("screenshots", [])
                                         }
