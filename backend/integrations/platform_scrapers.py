@@ -471,6 +471,28 @@ class ViaVerdeScraper(BaseScraper):
             await self.page.screenshot(path='/tmp/viaverde_07_before_submit.png')
             logger.info("📸 Screenshot 5: Antes de submeter")
             
+            # ============ VERIFICAR COOKIE BANNER NOVAMENTE ============
+            # Pode ter aparecido após o modal de login
+            logger.info("🍪 Verificando cookie banner antes de submeter...")
+            cookie_selectors = [
+                'button:has-text("Accept All Cookies")',
+                'button:has-text("Aceitar todos")',
+                'button:has-text("Aceitar Todos os Cookies")',
+                '[id*="onetrust-accept"]',
+                '#onetrust-accept-btn-handler'
+            ]
+            
+            for selector in cookie_selectors:
+                try:
+                    btn = self.page.locator(selector)
+                    if await btn.count() > 0 and await btn.first.is_visible(timeout=1000):
+                        await btn.first.click()
+                        logger.info(f"✅ Cookies aceites antes do submit: {selector}")
+                        await asyncio.sleep(1)
+                        break
+                except Exception:
+                    continue
+            
             # Clicar no botão Login dentro do modal
             login_button_selectors = [
                 'button:has-text("Login")',
