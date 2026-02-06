@@ -1093,14 +1093,16 @@ class PrioScraper(BaseScraper):
                 # Procurar e clicar em "Transações de Cartões"
                 transacoes_menu = self.page.locator('text="Transações de Cartões"').first
                 if await transacoes_menu.count() > 0:
-                    await transacoes_menu.click()
+                    await transacoes_menu.click(timeout=10000)
                     await asyncio.sleep(2)
                     logger.info("✅ Clicou em Transações de Cartões")
                 else:
                     # Alternativa: procurar por texto parcial
                     transacoes_menu = self.page.locator('a:has-text("Transações")').first
-                    await transacoes_menu.click()
-                    await asyncio.sleep(2)
+                    if await transacoes_menu.count() > 0:
+                        await transacoes_menu.click(timeout=10000)
+                        await asyncio.sleep(2)
+                        logger.info("✅ Clicou em Transações (alternativo)")
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao clicar em Transações: {e}")
             
