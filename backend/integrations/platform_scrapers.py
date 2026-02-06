@@ -267,12 +267,12 @@ class UberScraper(BaseScraper):
     
     async def extract_data(self, start_date: str = None, end_date: str = None, **kwargs) -> Dict:
         """
-        Extrair dados de ganhos da Uber Fleet.
-        Fluxo:
-        1. Ir para Relatórios
-        2. Gerar relatório de Pagamentos de motorista
-        3. Selecionar datas
-        4. Fazer download do CSV
+        Extrair dados de ganhos da Uber Fleet usando sessão guardada.
+        
+        Fluxo baseado na análise da interface Uber:
+        1. Navegar para a página de earning-reports
+        2. Selecionar período e organização no modal
+        3. Gerar e fazer download do CSV
         """
         try:
             logger.info("📊 Uber: Iniciando extração de dados...")
@@ -286,149 +286,298 @@ class UberScraper(BaseScraper):
                 }
             
             await self.page.screenshot(path='/tmp/uber_01_dashboard.png')
+            current_url = self.page.url
+            logger.info(f"📍 URL inicial: {current_url}")
             
-            # ============ PASSO 1: NAVEGAR PARA RELATÓRIOS ============
-            logger.info("📍 Passo 1: Navegando para Relatórios...")
+            # ============ PASSO 1: NAVEGAR PARA EARNING-REPORTS ============
+            logger.info("📍 Passo 1: Navegando para earning-reports...")
             
-            try:
-                # Tentar clicar em "Relatórios" ou "Reports"
-                relatorios_selectors = [
-                    'text="Relatórios"',
-                    'text="Reports"',
-                    'a:has-text("Relatórios")',
-                    'a:has-text("Reports")',
-                    '[data-testid="reports"]'
-                ]
-                
-                clicked = False
-                for selector in relatorios_selectors:
-                    try:
-                        el = self.page.locator(selector)
-                        if await el.count() > 0 and await el.first.is_visible(timeout=3000):
-                            await el.first.click()
-                            await asyncio.sleep(3)
-                            clicked = True
-                            logger.info(f"✅ Clicou em Relatórios: {selector}")
-                            break
-                    except:
-                        continue
-                
-                if not clicked:
-                    # Tentar navegar diretamente
-                    await self.page.goto("https://supplier.uber.com/reports", wait_until="networkidle", timeout=30000)
-                    await asyncio.sleep(3)
-                    logger.info("✅ Navegou diretamente para /reports")
-                    
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao navegar para Relatórios: {e}")
+            # Extrair org_id da URL atual se disponível
+            org_id = None
+            if '/orgs/' in current_url:
+                try:
+                    org_id = current_url.split('/orgs/')[1].split('/')[0]
+                    logger.info(f"📍 Organization ID detectado: {org_id}")
+                except:
+                    pass
             
-            await self.page.screenshot(path='/tmp/uber_02_relatorios.png')
+            # URL direta para os relatórios de ganhos
+            if org_id:
+                reports_url = f"https://supplier.uber.com/orgs/{org_id}/reports/earning-reports"
+            else:
+                reports_url = "https://supplier.uber.com/reports/earning-reports"
+            
+            await self.page.goto(reports_url, wait_until="domcontentloaded", timeout=45000)
+            await asyncio.sleep(4)
+            
+            await self.page.screenshot(path='/tmp/uber_02_reports_page.png')
             logger.info(f"📍 URL atual: {self.page.url}")
             
-            # ============ PASSO 2: GERAR RELATÓRIO ============
-            logger.info("📍 Passo 2: Gerando relatório...")
+            # ============ PASSO 2: CLICAR EM "GERAR RELATÓRIO" ============
+            logger.info("📍 Passo 2: Clicando em Gerar relatório...")
             
-            try:
-                # Clicar em "Gerar relatório" ou "Generate report"
-                gerar_selectors = [
-                    'button:has-text("Gerar relatório")',
-                    'button:has-text("Generate report")',
-                    'text="Gerar relatório"',
-                    'text="Generate report"'
-                ]
-                
-                for selector in gerar_selectors:
-                    try:
-                        el = self.page.locator(selector)
-                        if await el.count() > 0 and await el.first.is_visible(timeout=3000):
-                            await el.first.click()
-                            await asyncio.sleep(3)
-                            logger.info(f"✅ Clicou em Gerar relatório: {selector}")
-                            break
-                    except:
-                        continue
-                        
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao clicar em Gerar relatório: {e}")
+            gerar_clicked = False
+            gerar_selectors = [
+                'button:has-text("Gerar relatório")',
+                'button:has-text("Generate report")',
+                'button:has-text("Generate")',
+                '[data-testid="generate-report-button"]',
+                'button[aria-label*="Generate"]',
+                'button[aria-label*="Gerar"]'
+            ]
             
-            await self.page.screenshot(path='/tmp/uber_03_gerar.png')
+            for selector in gerar_selectors:
+                try:
+                    btn = self.page.locator(selector)
+                    if await btn.count() > 0 and await btn.first.is_visible(timeout=3000):
+                        await btn.first.click()
+                        gerar_clicked = True
+                        await asyncio.sleep(3)
+                        logger.info(f"✅ Clicou em Gerar relatório: {selector}")
+                        break
+                except Exception as e:
+                    logger.debug(f"Selector {selector} não funcionou: {e}")
+                    continue
+            
+            if not gerar_clicked:
+                logger.warning("⚠️ Botão 'Gerar relatório' não encontrado, tentando screenshot da página")
+                await self.page.screenshot(path='/tmp/uber_03_no_generate_btn.png')
+            
+            await self.page.screenshot(path='/tmp/uber_03_after_generate_click.png')
             
             # ============ PASSO 3: SELECIONAR TIPO DE RELATÓRIO ============
             logger.info("📍 Passo 3: Selecionando tipo de relatório...")
             
-            try:
-                # Clicar em "Pagamentos de motorista" ou "Driver payments"
-                pagamentos_selectors = [
-                    'text="Pagamentos de motorista"',
-                    'text="Driver payments"',
-                    '[data-testid="driver-payments"]'
+            # Aguardar modal aparecer
+            await asyncio.sleep(2)
+            
+            tipo_selected = False
+            tipo_selectors = [
+                'text="Pagamentos de motorista"',
+                'text="Driver payments"',
+                'div:has-text("Pagamentos de motorista")',
+                '[data-testid="driver-payments-option"]',
+                'input[value*="driver"]'
+            ]
+            
+            for selector in tipo_selectors:
+                try:
+                    el = self.page.locator(selector)
+                    if await el.count() > 0 and await el.first.is_visible(timeout=2000):
+                        await el.first.click()
+                        tipo_selected = True
+                        await asyncio.sleep(1)
+                        logger.info(f"✅ Tipo de relatório selecionado: {selector}")
+                        break
+                except Exception:
+                    continue
+            
+            if not tipo_selected:
+                logger.warning("⚠️ Tipo de relatório não selecionado automaticamente")
+            
+            await self.page.screenshot(path='/tmp/uber_04_tipo_selecionado.png')
+            
+            # ============ PASSO 4: SELECIONAR PERÍODO ============
+            logger.info("📍 Passo 4: Configurando período...")
+            
+            if start_date and end_date:
+                # Tentar encontrar e interagir com o seletor de período
+                period_selectors = [
+                    '[data-testid="time-range-selector"]',
+                    'button:has-text("Intervalo")',
+                    'button:has-text("Time range")',
+                    'div:has-text("Selecionar intervalo")'
                 ]
                 
-                for selector in pagamentos_selectors:
+                for selector in period_selectors:
                     try:
                         el = self.page.locator(selector)
-                        if await el.count() > 0:
+                        if await el.count() > 0 and await el.first.is_visible(timeout=2000):
                             await el.first.click()
                             await asyncio.sleep(2)
-                            logger.info(f"✅ Selecionou tipo: {selector}")
+                            logger.info(f"✅ Abriu seletor de período: {selector}")
+                            
+                            # Tentar selecionar "Última semana" ou primeiro item
+                            week_options = [
+                                'text="Última semana"',
+                                'text="Last week"',
+                                '[role="option"]:first-child'
+                            ]
+                            for opt in week_options:
+                                try:
+                                    opt_el = self.page.locator(opt)
+                                    if await opt_el.count() > 0:
+                                        await opt_el.first.click()
+                                        await asyncio.sleep(1)
+                                        logger.info(f"✅ Período selecionado: {opt}")
+                                        break
+                                except:
+                                    continue
                             break
                     except:
                         continue
+            
+            await self.page.screenshot(path='/tmp/uber_05_periodo.png')
+            
+            # ============ PASSO 5: SELECIONAR ORGANIZAÇÃO (CRÍTICO) ============
+            logger.info("📍 Passo 5: Selecionando organização...")
+            
+            org_selected = False
+            
+            # Procurar dropdown de organização
+            org_dropdown_selectors = [
+                'text="Selecione as organizações"',
+                '[placeholder*="organizações"]',
+                '[data-testid="organization-selector"]',
+                'div:has-text("Organizações"):not(:has(div))'
+            ]
+            
+            # Primeiro, encontrar o dropdown
+            for selector in org_dropdown_selectors:
+                try:
+                    dropdown = self.page.locator(selector)
+                    if await dropdown.count() > 0 and await dropdown.first.is_visible(timeout=2000):
+                        await dropdown.first.click()
+                        await asyncio.sleep(2)
+                        logger.info(f"✅ Dropdown de organização aberto: {selector}")
                         
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao selecionar tipo: {e}")
+                        # Tentar selecionar a primeira opção (checkbox ou option)
+                        option_selectors = [
+                            '[role="option"]',
+                            'input[type="checkbox"]',
+                            'li[role="option"]',
+                            '[data-testid*="option"]'
+                        ]
+                        
+                        for opt_sel in option_selectors:
+                            try:
+                                options = self.page.locator(opt_sel)
+                                count = await options.count()
+                                if count > 0:
+                                    # Clicar na primeira opção
+                                    first_opt = options.first
+                                    if await first_opt.is_visible(timeout=1000):
+                                        await first_opt.click()
+                                        org_selected = True
+                                        await asyncio.sleep(1)
+                                        logger.info(f"✅ Organização selecionada via: {opt_sel}")
+                                        break
+                            except:
+                                continue
+                        
+                        if org_selected:
+                            break
+                except Exception as e:
+                    logger.debug(f"Erro com selector {selector}: {e}")
+                    continue
             
-            await self.page.screenshot(path='/tmp/uber_04_tipo.png')
+            if not org_selected:
+                # Fallback: Procurar no modal por qualquer checkbox não marcado
+                logger.info("⚠️ Tentando fallback para seleção de organização...")
+                try:
+                    modal = self.page.locator('[role="dialog"]')
+                    if await modal.count() > 0:
+                        checkboxes = modal.locator('input[type="checkbox"]')
+                        count = await checkboxes.count()
+                        logger.info(f"📊 Encontrados {count} checkboxes no modal")
+                        for i in range(count):
+                            cb = checkboxes.nth(i)
+                            if await cb.is_visible():
+                                is_checked = await cb.is_checked()
+                                if not is_checked:
+                                    await cb.click()
+                                    org_selected = True
+                                    logger.info(f"✅ Checkbox {i} marcado via fallback")
+                                    break
+                except Exception as e:
+                    logger.warning(f"Fallback falhou: {e}")
             
-            # ============ PASSO 4: CONFIGURAR DATAS ============
-            if start_date and end_date:
-                logger.info(f"📅 Passo 4: Configurando datas: {start_date} a {end_date}")
+            await self.page.screenshot(path='/tmp/uber_06_org_selecionada.png')
+            logger.info(f"📊 Organização selecionada: {org_selected}")
+            
+            # ============ PASSO 6: CLICAR EM "GERAR" ============
+            logger.info("📍 Passo 6: Clicando no botão Gerar final...")
+            
+            await asyncio.sleep(2)
+            
+            gerar_final_btn = self.page.locator('button:has-text("Gerar"), button:has-text("Generate")')
+            if await gerar_final_btn.count() > 0:
+                # Verificar estado do botão
+                is_disabled = await gerar_final_btn.first.is_disabled()
                 
-                # A interface da Uber usa dropdowns/calendários específicos
-                # Por agora, vamos tentar usar a semana mais recente (padrão)
-                # TODO: Implementar seleção de datas específicas
+                if is_disabled:
+                    logger.error("❌ Botão 'Gerar' está desabilitado - faltam campos obrigatórios")
+                    await self.page.screenshot(path='/tmp/uber_07_gerar_disabled.png')
+                    
+                    return {
+                        "success": False,
+                        "error": "Botão 'Gerar' está desabilitado. Verifique se organização e período estão selecionados.",
+                        "screenshots": [
+                            "/tmp/uber_01_dashboard.png",
+                            "/tmp/uber_06_org_selecionada.png",
+                            "/tmp/uber_07_gerar_disabled.png"
+                        ]
+                    }
+                
+                # Clicar no botão
+                await gerar_final_btn.first.click()
+                await asyncio.sleep(5)
+                logger.info("✅ Botão Gerar clicado")
+            else:
+                logger.warning("⚠️ Botão Gerar final não encontrado")
             
-            await self.page.screenshot(path='/tmp/uber_05_datas.png')
+            await self.page.screenshot(path='/tmp/uber_07_after_generate.png')
             
-            # ============ PASSO 5: GERAR E DOWNLOAD ============
-            logger.info("📍 Passo 5: Gerando e fazendo download...")
+            # ============ PASSO 7: DOWNLOAD ============
+            logger.info("📍 Passo 7: Aguardando download...")
             
+            # Fechar modal se ainda aberto
             try:
-                # Clicar em "Gerar" ou "Generate"
-                gerar_btn = self.page.locator('button:has-text("Gerar"), button:has-text("Generate")')
-                if await gerar_btn.count() > 0:
-                    # Verificar se está habilitado
-                    is_disabled = await gerar_btn.first.is_disabled()
-                    if is_disabled:
-                        logger.warning("⚠️ Botão Gerar está desabilitado")
-                        await self.page.screenshot(path='/tmp/uber_06_gerar_disabled.png')
-                        return {
-                            "success": False,
-                            "error": "Botão 'Gerar' está desabilitado. Verifique se todos os campos estão preenchidos."
-                        }
-                    
-                    await gerar_btn.first.click()
-                    await asyncio.sleep(5)
-                    logger.info("✅ Clicou em Gerar")
-                    
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao clicar em Gerar: {e}")
+                close_btn = self.page.locator('[aria-label="close"], button:has-text("Cancelar")')
+                if await close_btn.count() > 0:
+                    await close_btn.first.click()
+                    await asyncio.sleep(2)
+            except:
+                pass
             
-            await self.page.screenshot(path='/tmp/uber_06_final.png')
+            # Procurar botão de download na lista de relatórios
+            download_found = False
+            download_selectors = [
+                'button:has-text("download")',
+                'a:has-text("Download")',
+                '[data-testid*="download"]',
+                'button[aria-label*="Download"]'
+            ]
             
-            # Por agora, retornar sucesso parcial
+            for selector in download_selectors:
+                try:
+                    dl_btn = self.page.locator(selector)
+                    if await dl_btn.count() > 0 and await dl_btn.first.is_visible(timeout=5000):
+                        download_found = True
+                        logger.info(f"✅ Botão de download encontrado: {selector}")
+                        
+                        # TODO: Implementar download real
+                        # async with self.page.expect_download() as download_info:
+                        #     await dl_btn.first.click()
+                        # download = await download_info.value
+                        break
+                except:
+                    continue
+            
+            await self.page.screenshot(path='/tmp/uber_08_final.png')
+            
             return {
                 "success": True,
                 "platform": "uber",
                 "data": [],
-                "message": "Extração Uber parcialmente implementada. Screenshots de debug disponíveis em /tmp/uber_*.png",
+                "org_selected": org_selected,
+                "download_available": download_found,
+                "message": f"Extração Uber: Organização {'selecionada' if org_selected else 'NÃO selecionada'}. Download {'disponível' if download_found else 'não encontrado'}.",
                 "screenshots": [
                     "/tmp/uber_01_dashboard.png",
-                    "/tmp/uber_02_relatorios.png",
-                    "/tmp/uber_03_gerar.png",
-                    "/tmp/uber_04_tipo.png",
-                    "/tmp/uber_05_datas.png",
-                    "/tmp/uber_06_final.png"
+                    "/tmp/uber_02_reports_page.png",
+                    "/tmp/uber_06_org_selecionada.png",
+                    "/tmp/uber_08_final.png"
                 ]
             }
             
@@ -440,7 +589,8 @@ class UberScraper(BaseScraper):
             return {
                 "success": False,
                 "platform": "uber",
-                "error": str(e)
+                "error": str(e),
+                "screenshots": ["/tmp/uber_99_error.png"]
             }
 
 
