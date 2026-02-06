@@ -269,13 +269,16 @@ class UberScraper(BaseScraper):
         """
         Extrair dados de ganhos da Uber Fleet usando sessão guardada.
         
-        Fluxo baseado na análise da interface Uber:
+        Novo fluxo otimizado:
         1. Navegar para a página de earning-reports
-        2. Selecionar período e organização no modal
-        3. Gerar e fazer download do CSV
+        2. Procurar relatório existente para o período solicitado
+        3. Se existir → Descarregar
+        4. Se não existir → Gerar novo e descarregar
+        5. Processar ficheiro CSV/PDF
         """
         try:
             logger.info("📊 Uber: Iniciando extração de dados...")
+            logger.info(f"📅 Período solicitado: {start_date} a {end_date}")
             
             # Verificar se está logado
             is_logged = await self.verificar_login()
@@ -312,6 +315,79 @@ class UberScraper(BaseScraper):
             
             await self.page.screenshot(path='/tmp/uber_02_reports_page.png')
             logger.info(f"📍 URL atual: {self.page.url}")
+            
+            # ============ PASSO 2: PROCURAR RELATÓRIO EXISTENTE ============
+            logger.info("📍 Passo 2: Procurando relatórios existentes...")
+            
+            # Formatar datas para procurar no nome do relatório (formato: YYYYMMDD)
+            start_formatted = start_date.replace("-", "") if start_date else ""
+            end_formatted = end_date.replace("-", "") if end_date else ""
+            
+            # Procurar botões de download na tabela
+            download_buttons = self.page.locator('button:has-text("download"), a:has-text("download"), button:has-text("Faça o download")')
+            download_count = await download_buttons.count()
+            logger.info(f"📊 Encontrados {download_count} botões de download")
+            
+            # Procurar na tabela de relatórios pelo período
+            report_found = False
+            report_row = None
+            
+            # Obter todas as linhas da tabela
+            rows = self.page.locator('table tbody tr, [role="row"]')
+            row_count = await rows.count()
+            logger.info(f"📊 Encontradas {row_count} linhas na tabela de relatórios")
+            
+            for i in range(row_count):
+                row = rows.nth(i)
+                row_text = await row.inner_text()
+                
+                # Verificar se o relatório é de "Pagamentos de motorista" ou "Driver payments"
+                if "pagamentos" in row_text.lower() or "payments" in row_text.lower() or "driver" in row_text.lower():
+                    # Verificar se o período corresponde (aproximadamente)
+                    if start_formatted in row_text or end_formatted in row_text:
+                        logger.info(f"✅ Relatório encontrado para o período: {row_text[:100]}...")
+                        report_found = True
+                        report_row = row
+                        break
+                    
+                    # Se não encontrou período específico, usar o mais recente como fallback
+                    if not report_found:
+                        report_row = row
+            
+            await self.page.screenshot(path='/tmp/uber_03_reports_list.png')
+            
+            # ============ PASSO 3: DESCARREGAR RELATÓRIO ============
+            if report_row:
+                logger.info("📍 Passo 3: Descarregando relatório...")
+                
+                # Procurar botão de download na linha
+                download_btn = report_row.locator('button:has-text("download"), a:has-text("download"), button:has-text("Faça o download")')
+                
+                if await download_btn.count() > 0:
+                    # Configurar para capturar o download
+                    try:
+                        async with self.page.expect_download(timeout=30000) as download_info:
+                            await download_btn.first.click()
+                        
+                        download = await download_info.value
+                        download_path = f"/tmp/uber_report_{self.parceiro_id}.csv"
+                        await download.save_as(download_path)
+                        logger.info(f"✅ Relatório descarregado: {download_path}")
+                        
+                        await self.page.screenshot(path='/tmp/uber_04_downloaded.png')
+                        
+                        # ============ PASSO 4: PROCESSAR FICHEIRO ============
+                        return await self._processar_relatorio_csv(download_path, start_date, end_date)
+                        
+                    except Exception as dl_err:
+                        logger.warning(f"⚠️ Erro no download: {dl_err}")
+                        # Tentar clique direto sem esperar download
+                        await download_btn.first.click()
+                        await asyncio.sleep(5)
+                        await self.page.screenshot(path='/tmp/uber_04_after_click.png')
+            
+            # Se não encontrou relatório, tentar gerar um novo
+            logger.info("⚠️ Relatório não encontrado para o período, tentando gerar novo...")
             
             # ============ PASSO 2: CLICAR EM "GERAR RELATÓRIO" ============
             logger.info("📍 Passo 2: Clicando em Gerar relatório...")
