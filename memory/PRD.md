@@ -1213,3 +1213,67 @@ App móvel agora suporta 4 perfis diferentes com funcionalidades específicas pa
 
 ### Credenciais de Teste
 - **Inspetor**: inspetor1@teste.com / inspetor123
+
+---
+
+## ✅ Correções e Melhorias (06/02/2026)
+
+### Bug Fix P0: Dados Prio em Categoria Errada
+- **Problema:** Os valores de combustível da Prio eram guardados na categoria "Elétrico" em vez de "Combustível"
+- **Causa raiz:** O código em `/app/backend/routes/relatorios.py` usava a coleção `despesas_combustivel` para calcular **elétrico** quando deveria usar para **combustível fóssil**
+- **Solução:**
+  - Adicionada busca de `despesas_combustivel` na secção de **Combustível Fóssil** (linha ~1050)
+  - Corrigida secção de **Carregamento Elétrico** para buscar de:
+    - `combustivel_eletrico` (carregamentos elétricos)
+    - `despesas_combustivel` apenas onde `kwh > 0` (elétrico)
+    - `rpa_carregamento_eletrico` (dados de RPA)
+- **Resultado:** Combustível €111,06 agora aparece corretamente na coluna "Comb." em vez de "Elétr."
+
+### Bug Fix P1: Página Resumo Semanal não lia parâmetros URL
+- **Problema:** A página `/resumo-semanal` ignorava parâmetros `?semana=X&ano=Y` da URL
+- **Solução:** 
+  - Adicionado `useSearchParams` do React Router
+  - useEffect agora verifica parâmetros URL antes de usar valores default
+- **Ficheiro:** `/app/frontend/src/pages/ResumoSemanalParceiro.js`
+- **Resultado:** Agora é possível navegar diretamente para uma semana específica via URL
+
+### Melhoria: Links de Navegação Adicionados
+1. **Menu do Parceiro:** Adicionado "🔑 Login Plataformas"
+2. **Menu do Admin:** Adicionado "▶️ Executar RPA" na secção Sincronização
+3. **Menu Financeiro:** Adicionado "📥 Importar Dados"
+- **Ficheiro:** `/app/frontend/src/components/Layout.js`
+
+### Correção de Password do Parceiro Tomas
+- Password actualizada para `D@niel18` na base de dados
+
+---
+
+## Issues Pendentes
+
+### Issue P1: RPA da Uber falha no botão "Gerar"
+- **Descrição:** O campo "Organização" não é preenchido antes do clique no botão Gerar
+- **Status:** Pendente - requer análise adicional do scraper
+
+### Issue P2: Falha no RPA da Via Verde
+- **Descrição:** Problema no login devido a popup de cookies ou alteração no site
+- **Status:** Pendente
+
+### Issue P3: Não é possível guardar RPA com zero passos
+- **Descrição:** Mensagem de erro ao tentar guardar design vazio
+- **Status:** Pendente
+
+---
+
+## Próximas Tarefas
+
+1. (P1) Corrigir RPA da Uber
+2. (P1) Corrigir RPA da Via Verde
+3. (P2) Implementar agendador de tarefas RPA automático
+4. (P2) Geração de PDF da Vistoria
+
+## Backlog Futuro
+
+- Integração com API oficial da Uber
+- Integrações: Ifthenpay, Moloni, Verizon GPS
+- Refatorar ficheiros monolíticos (`server.py`, `platform_scrapers.py`)
+- Envio de relatórios via WhatsApp
