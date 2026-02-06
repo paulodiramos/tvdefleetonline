@@ -1,80 +1,62 @@
 <analysis>**original_problem_statement:**
 O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas, que evoluiu para um sistema de automação (RPA) complexo. O foco tem sido a criação de um RPA Designer visual, a resolução de problemas de extração de dados de plataformas como Uber, Via Verde e Prio, e a automação da importação desses dados para um Resumo Semanal do Parceiro.
 
-O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações dinâmicas nos websites das plataformas (especialmente a Uber). Para contornar isso, o desenvolvimento focou-se em criar um sistema de sessão persistente, onde o parceiro faz login manualmente uma vez para que o sistema possa reutilizar essa sessão para automações subsequentes.
+O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações dinâmicas nos websites das plataformas (especialmente a Uber). Para contornar isso, o desenvolvimento focou-se em criar um sistema de sessão persistente, onde o parceiro faz login manualmente uma vez para que o sistema possa reutilizar essa sessão para automações subsequentes. O utilizador confirmou este fluxo de trabalho: o parceiro faz login em  para guardar a sessão, e o admin usa essa sessão para executar a extração de dados.
 
 **PRODUCT REQUIREMENTS:**
-1.  **RPA Designer Visual:** Permitir que um admin grave, edite e guarde scripts de automação. A interface foi recentemente movida para uma janela popup para melhor usabilidade.
+1.  **RPA Designer Visual:** Permitir que um admin grave, edite e guarde scripts de automação.
 2.  **Motor de Execução RPA:** Um sistema para executar os designs RPA gravados de forma automática e agendada, utilizando as sessões guardadas dos parceiros para contornar o login.
-3.  **Sistema de Sessão Persistente:** Uma página () para os parceiros fazerem login manualmente nas plataformas (Uber, Bolt, etc.) e guardarem a sua sessão (cookies), permitindo que os RPAs executem sem serem bloqueados por CAPTCHA.
-4.  **Processamento Automático de Ficheiros:** Após a execução de um RPA e o download de um relatório (PDF/CSV), o sistema deve processar o ficheiro, extrair os dados relevantes e atualizar automaticamente o Resumo Semanal do motorista correspondente.
-5.  **Página de Importação Manual:** Como fallback, uma página () que permite o upload manual de ficheiros de relatório, associando-os a um motorista e sincronizando os dados com o Resumo Semanal.
-6.  **Correção de Bugs RPA:** Resolver problemas de timeout na Uber, falhas de login na Via Verde e garantir a extração correta de dados da Prio.
+3.  **Sistema de Sessão Persistente:** Uma página () para os parceiros fazerem login manualmente nas plataformas e guardarem a sua sessão (cookies).
+4.  **Processamento Automático de Ficheiros:** Após a execução de um RPA e o download de um relatório (PDF/CSV), o sistema deve processar o ficheiro, extrair os dados e atualizar o Resumo Semanal.
+5.  **Página de Importação Manual:** Uma página () que permite o upload manual de ficheiros de relatório.
+6.  **Correção de Bugs RPA:** Resolver problemas de extração e login na Uber, Via Verde e Prio.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
 - Uma aplicação full-stack (React + FastAPI + MongoDB).
-- Um **RPA Designer** () que funciona numa janela popup, com controlos para gravar ações (cliques, texto, scroll), parar e guardar o design.
-- Um **Motor de Execução RPA** () que permite a um admin selecionar um design e um parceiro para executar a automação com visualização em tempo real.
-- Um sistema de **Sessão de Parceiro** () para guardar cookies de sessão e contornar CAPTCHAs.
-- Um sistema de **processamento automático de downloads** () que lê ficheiros PDF/CSV, extrai os dados e tenta guardá-los nas coleções da base de dados (, , etc.) para atualizar o resumo semanal.
-- Uma página de **Importação Manual** () para upload de ficheiros.
-- O scraper da Prio foi implementado e consegue fazer login e extrair dados, mas com bugs.
+- Um **RPA Designer** () que funciona numa janela popup.
+- Um **Motor de Execução RPA** que pode ser acionado a partir de várias páginas (, ).
+- Um sistema de **Sessão de Parceiro** () para guardar cookies de sessão e contornar CAPTCHAs, que é o fluxo preferido do utilizador.
+- **Scrapers de RPA robustos para Prio e Via Verde** que foram corrigidos nesta sessão.
+- Um endpoint de sincronização () que agora suporta a execução dos scrapers de Prio e está a ser estendido para Uber.
+- Uma página de **Importação Manual** ().
+- A página de **Resumo Semanal** () agora suporta navegação para semanas passadas através de parâmetros na URL.
 
 **Last working item**:
-- **Last item agent was working:** O agente estava a depurar a sincronização da plataforma Prio para a conta do parceiro Tomas. O utilizador reportou dois problemas: os valores de combustível estavam a ser erradamente guardados na categoria Elétrico do resumo semanal e faltava um abastecimento de €12.80 que não foi extraído.
+- **Last item agent was working:** O agente estava a refatorar o RPA da Uber para seguir o padrão robusto que funcionou com a Prio. A estratégia é usar uma sessão de parceiro previamente guardada para evitar o complexo fluxo de login da Uber. O agente criou uma nova classe  em  e estava prestes a ligá-la ao endpoint de sincronização principal (), substituindo a lógica do antigo .
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Backend testing. O agente deve corrigir a lógica de extração de dados no scraper da Prio para garantir que todas as transações são capturadas e, em seguida, corrigir o  para garantir que os dados da Prio Combustível são guardados na coleção correta () e não na de elétricos. O teste final envolve executar a sincronização da Prio para o Tomas e verificar se todos os dados aparecem corretamente no Resumo Semanal.
+- **Which testing method agent to use?** Backend testing. O agente deve:
+    1. Finalizar a implementação do  em .
+    2. Modificar a rota  em  para usar o novo  quando a fonte for uber.
+    3. Testar o fluxo completo:
+        a. Como parceiro (Tomas), navegar para , iniciar login na Uber, fazer login manualmente e guardar a sessão.
+        b. Como admin, acionar a sincronização da Uber para o parceiro Tomas e verificar se os dados são extraídos corretamente sem necessidade de login interativo.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0) Sincronização da Prio está incorreta.**
-- **Issue 2: (P1) RPA da Uber falha ao tentar clicar no botão Gerar.**
-- **Issue 3: (P2) Falha no RPA da Via Verde.**
-- **Issue 4: (P3) Não é possível guardar um design RPA com zero passos.**
-- **Issue 5: (P4) Página de Resumo Semanal ignora parâmetros da URL.**
+- **Issue 1: (P0) RPA da Uber falha ao tentar clicar no botão Gerar.**
+- **Issue 2: (P1) Não é possível guardar um design RPA com zero passos.**
 
 **Issues Detail:**
 - **Issue 1:**
-    - **Description:** Ao sincronizar os dados da Prio para o parceiro Tomas, os valores de combustível são guardados na categoria errada (Elétrico) no resumo semanal e está a faltar uma transação de €12.80.
-    - **Attempted fixes:** O agente começou a investigar a base de dados para ver onde os dados foram guardados, mas encontrou erros nos seus próprios scripts de depuração.
+    - **Description:** A sincronização automática da Uber falha porque o botão Gerar Relatório permanece desativado. A análise de screenshots de debug revelou que o campo Organização não está a ser preenchido.
+    - **Attempted fixes:** O agente anterior tentou várias abordagens no . O agente atual criou um novo  em  para usar sessões guardadas e simplificar o fluxo, mas o trabalho não foi concluído.
     - **Next debug checklist:**
-        1.  Verificar o scraper da Prio para garantir que está a percorrer todas as páginas de transações para capturar o abastecimento em falta.
-        2.  Verificar  para corrigir a lógica que determina a coleção de destino. Provavelmente, está a mapear a plataforma Prio Combustível incorretamente.
-        3.  Executar a sincronização da Prio para o Tomas novamente.
-        4.  Verificar a coleção  na base de dados para confirmar que os dados foram guardados corretamente.
-        5.  Verificar a UI do Resumo Semanal.
-    - **Why fix this issue and what will be achieved with the fix?** Corrige a extração e contabilização de uma das fontes de dados, garantindo relatórios financeiros precisos.
-    - **Status:** IN PROGRESS
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Both
-    - **Blocked on other issue:** None
-
-- **Issue 2:**
-    - **Description:** A sincronização automática da Uber falha porque o botão Gerar Relatório permanece desativado. A análise de um screenshot revelou que o campo Organização não está a ser preenchido antes da tentativa de clique.
-    - **Attempted fixes:** O agente modificou o  para tentar múltiplas abordagens para encontrar e clicar no dropdown de organização. O utilizador optou pela solução de Sessão Persistente como workaround.
-    - **Next debug checklist:** Testar a sincronização da Uber após o parceiro ter guardado a sua sessão em . Se ainda falhar, analisar os novos screenshots de debug () para ver por que a seleção da organização continua a falhar.
+        1.  Concluir a implementação do  em , focando na navegação para a página de relatórios () e na interação com os filtros de data e organização.
+        2.  Integrar este novo scraper com o endpoint de sincronização ().
+        3.  Executar uma sincronização de teste para o parceiro Tomas (que já tem uma sessão Uber guardada) para gerar novos screenshots de debug.
+        4.  Analisar os screenshots para depurar a seleção do dropdown de organização e o clique no botão Gerar.
     - **Why fix this issue and what will be achieved with the fix?** Desbloqueia a extração de dados da Uber, uma das principais plataformas.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Backend
     - **Blocked on other issue:** None
 
-- **Issue 3:**
-    - **Description:** A automação da Via Verde falha durante o login, provavelmente devido a um popup de cookies ou outra alteração no site que impede a autenticação.
-    - **Attempted fixes:** Nenhum nesta sessão.
-    - **Next debug checklist:** Analisar os screenshots de debug () e o HTML da página após a tentativa de login. Ajustar o script em  para lidar com o elemento que está a bloquear o login.
-    - **Why fix this issue and what will be achieved with the fix?** Permite a sincronização automática de despesas de portagens.
-    - **Status:** IN PROGRESS
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Backend
-    - **Blocked on other issue:** None
-
-- **Issue 4:**
-    - **Description:** O utilizador reportou que ainda recebe a mensagem Adicione pelo menos um passo antes de guardar ao tentar guardar um design RPA vazio, mesmo depois de o agente ter removido a validação no backend e frontend.
-    - **Attempted fixes:** O agente removeu a verificação  de  e a verificação  de .
+- **Issue 2:**
+    - **Description:** O utilizador reportou que ainda recebe a mensagem Adicione pelo menos um passo antes de guardar ao tentar guardar um design RPA vazio, apesar das tentativas de correção anteriores.
+    - **Attempted fixes:** Remoção de validações no frontend e backend.
     - **Next debug checklist:** Iniciar uma gravação, não fazer nada, e clicar em Guardar. Verificar a consola do browser e os logs do backend para ver de onde vem a mensagem de erro. Pode haver uma validação duplicada ou uma lógica que não foi removida.
     - **Why fix this issue and what will be achieved with the fix?** Cumpre um requisito do utilizador para permitir a criação de designs vazios.
     - **Status:** IN PROGRESS
@@ -82,131 +64,127 @@ O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações d
     - **Should Test frontend/backend/both after fix?** Both
     - **Blocked on other issue:** None
 
-- **Issue 5:**
-    - **Description:** A página  não lê os parâmetros  e  da URL, mostrando sempre os dados da semana atual.
-    - **Attempted fixes:** Nenhum.
-    - **Next debug checklist:** Investigar  e ver como os dados são carregados. Implementar  para ler os parâmetros da URL e passá-los para a chamada à API.
-    - **Why fix this issue and what will be achieved with the fix?** Permite que os utilizadores naveguem e vejam os resumos de semanas anteriores.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Frontend
-    - **Blocked on other issue:** None
-
 **In progress Task List**:
 - **Task 1: (P1) Finalizar o Motor de Execução RPA e o fluxo de dados.**
-    - **Where to resume:** A infraestrutura básica está criada (, ), mas o fluxo de dados está com bugs (ver Issue 1 - Prio). O sistema precisa de ser estabilizado para todas as plataformas (Uber, Prio, Via Verde).
-    - **What will be achieved with this?** Um sistema de automação fiável que extrai dados das plataformas e os integra perfeitamente no Resumo Semanal.
+    - **Where to resume:** A infraestrutura básica está criada, e os scrapers da Prio e Via Verde foram estabilizados. O foco agora é concluir o scraper da Uber (Issue 1).
+    - **What will be achieved with this?** Um sistema de automação fiável que extrai dados das três principais plataformas (Prio, Via Verde, Uber) e os integra no Resumo Semanal.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Both
-    - **Blocked on something:** Issues 1, 2 e 3.
+    - **Blocked on something:** Issue 1.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - (P1) **Adicionar links de navegação:** Adicionar links no menu de administrador/parceiro para as novas páginas: , , , e .
-  - (P1) **Implementar agendador de tarefas RPA:** Criar um serviço de background (ex: com Celery ou ) que executa os designs RPA automaticamente em horários definidos (ex: diariamente às 6h).
+  - (P1) **Adicionar link para :** Adicionar o link em falta no menu de navegação do admin.
+  - (P1) **Implementar agendador de tarefas RPA:** Criar um serviço de background (ex: ) que executa os designs RPA automaticamente em horários definidos.
   - (P2) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria.
 - **Future Tasks:**
-  - Implementar a integração com a **API oficial da Uber** como solução definitiva para o problema do CAPTCHA.
+  - Implementar a integração com a **API oficial da Uber**.
   - Implementar integrações com **Ifthenpay**, **Moloni** e **Verizon GPS**.
-  - Refatorar os ficheiros monolíticos  e .
+  - Refatorar o ficheiro monolítico .
   - Implementar o envio de relatórios via WhatsApp.
 
 **Completed work in this session**
-- **RPA Designer em Popup:** A interface de gravação do RPA foi completamente redesenhada para operar dentro de uma grande janela popup, melhorando a experiência do utilizador ao permitir acesso a todo o website.
-- **Sistema de Sessão de Parceiro:** Criada a página  e a lógica de backend para que os parceiros possam guardar as suas sessões e contornar os CAPTCHAs da Uber e Bolt.
-- **Motor de Execução RPA (V1):** Implementada a página  e os endpoints de backend para executar manualmente os designs RPA gravados, com visualização em tempo real.
-- **Processamento Automático de Downloads:** Criado um serviço () que é acionado quando um RPA faz um download, processa o ficheiro (PDF/CSV) e insere os dados nas coleções corretas da base de dados (, , etc.).
-- **Página de Importação Manual:** Criada a página  como uma solução de fallback para importar ficheiros de relatório manualmente.
-- **Correção de Comandos RPA:** Alinhados os comandos enviados pelo frontend (, , etc.) com o que o backend esperava, resolvendo falhas de interação durante a gravação.
-- **Estabilização da Gravação RPA:** A lógica de guardar os passos foi movida para o backend em tempo real, tornando a gravação e o salvamento do design mais robustos.
+- **RPA da Prio (RESOLVIDO):** O scraper foi completamente reescrito com base num vídeo do utilizador. Agora navega diretamente para a URL correta, lida com pop-ups de cookies, define o intervalo de datas, pesquisa e extrai com sucesso os dados da tabela de transações. A sincronização para a Prio a partir do Resumo Semanal está totalmente funcional.
+- **RPA da Via Verde (RESOLVIDO):** Corrigido o problema de login que falhava devido a um banner de consentimento de cookies e a seletores de botões frágeis.
+- **Bug de Mapeamento de Dados (RESOLVIDO):** Corrigida a lógica no endpoint  () que exibia os custos de combustível da Prio na categoria Elétrico.
+- **Bug de Navegação do Resumo Semanal (RESOLVIDO):** Implementado o uso de  na página  para permitir a visualização de resumos de semanas e anos anteriores através de parâmetros na URL.
+- **Links de Navegação (ADICIONADOS):** Adicionados links para Executar RPA, Login Plataformas e Importar Dados aos menus do admin e do parceiro no .
+- **Endpoint de Sincronização (MELHORADO):** O endpoint  em  foi atualizado para suportar a fonte combustivel, acionando o novo scraper da Prio.
 
 **Earlier issues found/mentioned but not fixed**
-- O bug de UI no Resumo Semanal (não lê parâmetros da URL) foi identificado numa sessão anterior e continua por resolver.
+- **Issue 1:**
+    - **Description:** Durante a sessão, o agente notou que os dados de combustível do parceiro 'Tomas' desapareceram da coleção . A causa não foi investigada. Isto pode indicar um bug no processo de sincronização que apaga dados antigos antes de inserir novos, mesmo que a nova extração falhe.
+    - **Debug checklist:**
+        1.  Verificar a lógica no scraper da Prio () e no endpoint de sincronização ().
+        2.  Verificar se existe algum passo que remove documentos ( ou similar) antes de tentar inserir os novos dados extraídos.
+        3.  Implementar uma lógica transacional ou de staging para garantir que os dados antigos só são removidos após a confirmação de que novos dados foram extraídos com sucesso.
+    - **Why to solve this issue and what will be achieved with this?** Evitar a perda de dados históricos, que é um problema crítico para a integridade financeira da aplicação.
+    - **Should Test frontend/backend/both after fix:** Backend
+    - **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Falha no RPA da Via Verde e falha no RPA da Uber.
 - **Recurrence count:** HIGH
-- **Status:** IN PROGRESS (ambos os problemas persistem, com a causa raiz mais bem identificada).
+- **Status:**
+    - Via Verde: RESOLVED
+    - Uber: IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **RPA Popup Designer:** Utilização de  e  com uma string de template gigante para criar uma janela de gravação interativa, que comunica com a janela principal através de  e chamadas de API.
-- **Stateful RPA Recording:** Os passos de automação (cliques, texto) são enviados via WebSocket para o backend em tempo real e armazenados numa sessão de design ativa, em vez de depender apenas do estado do React no frontend.
-- **Cookie-based Session Persistence:** A solução de workaround para CAPTCHA, onde o estado de autenticação de um utilizador (cookies) é guardado no servidor após um login manual e reutilizado para futuras automações não interativas.
-- **Automated Data Ingestion Pipeline:** Um fluxo onde um evento (download de ficheiro) aciona um serviço de processamento () que extrai dados e os insere na coleção correta da base de dados, atualizando indiretamente outras partes da aplicação (Resumo Semanal).
+- **Robust RPA Scraping (Playwright):** A sessão demonstrou a importância de uma abordagem robusta para scraping, incluindo: navegação direta por URL quando possível, lidar explicitamente com banners de cookies, usar seletores de texto precisos, e usar injeção de JavaScript como fallback para cliques. Este é o padrão a ser seguido.
+- **Cookie-based Session Persistence:** Este continua a ser o pilar da estratégia de automação. O parceiro faz login, a sessão (cookies) é guardada no backend e reutilizada para execuções de RPA não interativas pelo admin.
+- **Automated Data Ingestion Pipeline:** O fluxo onde a sincronização aciona um scraper, que extrai dados e os insere na base de dados, está mais maduro e funcional para Prio e Via Verde.
 
 **key DB schema**
 - : Armazena os passos dos RPAs gravados.
-- : (Nova, implícita) Armazena os cookies de sessão guardados dos parceiros para cada plataforma.
-- , : Coleções para armazenar dados de ganhos.
-- , , : Coleções para armazenar despesas.
+- : Armazena os cookies de sessão guardados dos parceiros.
+- : Armazena dados de abastecimentos (ex: Prio).
+- : Armazena dados de portagens.
+- : Armazena dados de ganhos da Uber.
 
 **All files of reference**
--  (Lógica principal do RPA Designer, muito complexo)
--  (UI para executar designs)
--  (UI para guardar sessões de parceiro)
--  (UI para upload manual)
--  (Endpoints para design, execução, WebSocket e sessões)
--  (Lógica de processamento de ficheiros)
+-  (Ficheiro central para os scrapers robustos)
+-  (Controla a execução das sincronizações automáticas)
+-  (Calcula os dados para o resumo semanal)
+-  (UI do resumo semanal)
+-  (Define a navegação da aplicação)
+-  (Contém a lógica antiga e problemática da Uber a ser substituída)
 
 **Areas that need refactoring**:
-- ** é CRÍTICO:** Este ficheiro tem mais de 1200 linhas e contém a UI e a lógica do popup de gravação como uma enorme template string. É extremamente difícil de manter e depurar. Deve ser refatorado para usar um portal React para a nova janela, com componentes reutilizáveis.
-- : Continua a ser um ficheiro monolítico.
-- : Deve ser dividido num módulo por plataforma.
+- **:** Continua a ser um ficheiro monolítico com mais de 8000 linhas. As rotas devem ser progressivamente migradas para ficheiros dedicados em .
+- **:** Este ficheiro deve ser totalmente descontinuado. A sua lógica deve ser substituída pelo novo  em  para manter a consistência.
+- **:** Continua a ser um ficheiro monolítico e de alto risco para manutenção.
 
 **key api endpoints**
+- : (Melhorado) Endpoint principal para iniciar a extração de dados para uma determinada fonte (bolt, combustivel, uber), parceiro e semana.
+- : (Corrigido) Retorna os dados agregados para o dashboard do resumo semanal.
 - : Inicia uma sessão para o parceiro fazer login manualmente e guardar os cookies.
-- : Inicia a execução de um design RPA para um parceiro.
-- : WebSocket para comunicação em tempo real durante a execução do RPA (logs, preview).
-- : Endpoint da página de importação manual para processar um ficheiro.
-- : Confirma e guarda os dados extraídos do ficheiro importado manualmente.
+- : Guarda os cookies da sessão do parceiro.
 
 **Critical Info for New Agent**
-- **A fragilidade do RPA é o problema central.** A abordagem atual é o sistema de Sessão de Parceiro (). Priorize a estabilização deste fluxo. A migração para a API oficial da Uber continua a ser a melhor solução a longo prazo.
-- **O ficheiro  é um monólito perigoso.** A UI do popup é uma string gigante. Qualquer alteração é de alto risco e propensa a erros. Proceda com extrema cautela.
-- **O fluxo de dados automático é complexo.** O caminho é: Execução RPA -> Download capturado no backend ->  -> Inserção na DB -> Cálculo no Resumo Semanal. A depuração do bug da Prio deve seguir este caminho.
-- O utilizador muda de ideias frequentemente sobre a UI e o fluxo. Esteja preparado para iterar rapidamente e confirmar os requisitos antes de implementações grandes.
+- **O padrão de scraping da Prio é o caminho a seguir.** A solução que funcionou envolveu: análise de um vídeo do utilizador, descoberta da URL direta, navegação explícita para essa URL, e extração de dados de uma tabela estática. Aplique este mesmo método para corrigir o RPA da Uber.
+- **O fluxo de Sessão de Parceiro é a estratégia principal.** O utilizador validou este fluxo (sistema infalivel sem api). Todo o desenvolvimento de RPA deve assumir que uma sessão válida do parceiro está disponível.
+- **Cuidado com a perda de dados.** Foi observado que os dados de combustível do parceiro Tomas desapareceram. Ao implementar o scraper da Uber, garanta que a lógica de sincronização não apaga dados antigos antes de confirmar que a nova extração foi bem-sucedida.
 
 **documents and test reports created in this job**
-- Vários screenshots de debug foram criados em , especialmente para a sincronização da Uber.
+- **Video:**  (Este vídeo foi crucial para resolver o RPA da Prio).
+- **Debug Screenshots:** Inúmeros screenshots de debug para Prio, Via Verde e Uber foram gerados em .
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Pede para tentar sincronizar a Prio na conta do Tomas.
-2.  **User:** Afirma que a sincronização da Prio guardou os dados na categoria errada (elétrico em vez de combustível) e que falta um abastecimento.
-3.  **User:** Depois de o agente criar a página , o utilizador pede um sistema mais completo para importar e associar dados para Via Verde, Prio e Uber. (Isto levou à criação da página ).
-4.  **User:** Pergunta se é possível ter os dados sem importar manualmente e sem API. (Isto levou à discussão e implementação do sistema de Sessão de Parceiro).
-5.  **User:** Reporta o erro Botão Gerar desabilitado após sincronizar a Uber.
-6.  **User:** Confirma que a mensagem de erro do botão Gerar é a que está a causar o problema.
-7.  **User:** Pergunta onde está o botão Gerar, levando o agente a explicar o fluxo no site da Uber.
-8.  **User:** Pergunta como o RPA funciona depois de gravado, o que levou à implementação do motor de execução.
-9.  **User:** Pede para testar a execução do RPA da Uber para o parceiro Tomas.
-10. **User:** Pergunta para onde vão os ficheiros descarregados pelo RPA e pede que sejam importados automaticamente para o resumo semanal.
+1.  **User:** prio nao sicronizou, uber nao sicronizou o que se passa - O utilizador reportou que ambas as sincronizações falharam.
+2.  **Agent:** Explicou que a Prio não encontrou dados para a semana 5 e que a Uber falhou por causa do botão Gerar.
+3.  **User:** Forneceu um vídeo mostrando o processo de extração da Prio: .
+4.  **Agent:** Analisou o vídeo e reescreveu o scraper da Prio com base nele.
+5.  **Agent:** Após várias tentativas e depuração, conseguiu fazer o scraper da Prio funcionar perfeitamente.
+6.  **Agent:** Confirmou que os dados da Prio foram extraídos e guardados corretamente na base de dados para a semana 6.
+7.  **Agent:** Resumiu o sucesso da Prio e perguntou se deveria avançar para corrigir o RPA da Uber.
+8.  **User:** sim tudo de login feitos no parceiro scrapping so no admin usando 1 parceiro para fazer design - O utilizador confirmou o fluxo de trabalho desejado: o parceiro faz login para guardar a sessão, e o admin usa essa sessão para o scraping.
+9.  **Agent:** Começou a implementar o novo scraper da Uber seguindo o padrão da Prio.
+10. **Agent:** Criou a classe  e estava a trabalhar na sua implementação quando a sessão terminou.
 
 **Project Health Check:**
 - **Broken:**
-    - Sincronização da Prio (dados na categoria errada, transação em falta).
     - Sincronização da Uber (botão 'Gerar' desativado).
-    - Sincronização da Via Verde (falha no login).
-    - Navegação para resumos semanais passados (bug de URL).
 - **In Progress:**
-    - Motor de Execução RPA (funcionalidade básica existe, mas precisa de estabilização e correção de bugs).
-    - Sistema de Sessão de Parceiro.
-- **Mocked:**
-    - O agendamento automático de RPAs ainda não existe.
+    - Implementação do novo  para corrigir a sincronização da Uber.
+- **Fixed/Completed:**
+    - Sincronização da Prio.
+    - Sincronização da Via Verde.
+    - Bug de mapeamento de dados no Resumo Semanal (Combustível vs Elétrico).
+    - Bug de navegação no Resumo Semanal (parâmetros de URL).
 
 **3rd Party Integrations**
 - **Playwright:** Essencial para o RPA.
-- **PyPDF2:** Instalado para processar os relatórios em PDF descarregados.
-- **Bolt Fleet API:** Usada para sincronização de dados.
-- **Uber Driver API:** Em análise como futura substituição do RPA.
+- **PyPDF2:** Instalado para processar relatórios em PDF.
+- **Bolt Fleet API:** Usada para sincronização de dados da Bolt.
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** Nenhuns.
-- **Known regressions:** Nenhuma identificada.
+- **Test files created:** Nenhuns, mas foram criados scripts de teste temporários (, ) para depuração.
+- **Known regressions:** Nenhuma.
 
 **Credentials to test flow:**
 - **Admin:**  / 
@@ -214,5 +192,4 @@ O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações d
 - **Credenciais Prio (para o parceiro Tomas):** Utilizador  / Senha 
 
 **What agent forgot to execute**
-- Adicionar links de navegação para as novas páginas (, , , ).
-- Corrigir o bug de UI na página de Resumo Semanal que impede a visualização de semanas passadas através da URL.</analysis>
+- Adicionar um link de navegação para a página  no menu do admin, conforme planeado no handoff anterior.</analysis>
