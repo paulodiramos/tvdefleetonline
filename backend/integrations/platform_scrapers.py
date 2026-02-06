@@ -762,7 +762,11 @@ class UberScraper(BaseScraper):
                 "data": dados_motoristas,
                 "total_ganhos": total_ganhos,
                 "num_motoristas": len(dados_motoristas),
-                "message": f"Extraídos dados de {len(dados_motoristas)} motoristas. Total: €{total_ganhos:.2f}",
+                "semana_detectada": semana_detectada,
+                "ano_detectado": ano_detectado,
+                "periodo_detectado": periodo_detectado,
+                "message": f"Extraídos dados de {len(dados_motoristas)} motoristas. Total: €{total_ganhos:.2f}" + 
+                          (f" (Semana {semana_detectada}/{ano_detectado})" if semana_detectada else ""),
                 "filepath": filepath
             }
             
@@ -773,6 +777,52 @@ class UberScraper(BaseScraper):
                 "platform": "uber",
                 "error": f"Erro ao processar CSV: {str(e)}"
             }
+    
+    def _extrair_periodo_nome_ficheiro(self, filepath: str) -> tuple:
+        """
+        Extrair período do nome do ficheiro Uber.
+        Formato esperado: YYYYMMDD-YYYYMMDD-payments_driver...
+        Retorna: (data_inicio, data_fim) ou None
+        """
+        try:
+            import os
+            filename = os.path.basename(filepath)
+            
+            # Procurar padrão YYYYMMDD-YYYYMMDD
+            match = re.search(r'(\d{8})-(\d{8})', filename)
+            if match:
+                data_inicio_str = match.group(1)
+                data_fim_str = match.group(2)
+                
+                # Converter para formato YYYY-MM-DD
+                data_inicio = f"{data_inicio_str[:4]}-{data_inicio_str[4:6]}-{data_inicio_str[6:8]}"
+                data_fim = f"{data_fim_str[:4]}-{data_fim_str[4:6]}-{data_fim_str[6:8]}"
+                
+                return (data_inicio, data_fim)
+            
+            return None
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao extrair período do nome do ficheiro: {e}")
+            return None
+    
+    def _calcular_semana_iso(self, data_str: str) -> tuple:
+        """
+        Calcular semana ISO a partir de uma data.
+        Retorna: (semana, ano)
+        """
+        try:
+            # Parse da data (formato: YYYY-MM-DD)
+            data = datetime.strptime(data_str, "%Y-%m-%d")
+            
+            # Obter semana ISO
+            iso_calendar = data.isocalendar()
+            semana = iso_calendar[1]
+            ano = iso_calendar[0]
+            
+            return (semana, ano)
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao calcular semana ISO: {e}")
+            return (None, None)
 
 
 class ViaVerdeScraper(BaseScraper):
