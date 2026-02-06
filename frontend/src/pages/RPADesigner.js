@@ -122,11 +122,6 @@ export default function RPADesigner({ user, onLogout }) {
   };
 
   const guardarDesignInternal = async (nome) => {
-    if (passos.length === 0) {
-      toast.error('Adicione pelo menos um passo antes de guardar');
-      return;
-    }
-
     if (!nome) return;
 
     setLoading(true);
