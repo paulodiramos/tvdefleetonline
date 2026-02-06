@@ -129,10 +129,28 @@ export default function ExecutarRPA({ user, onLogout }) {
         addLog('step', data.descricao);
       } else if (data.tipo === 'screenshot') {
         setScreenshot(`data:image/jpeg;base64,${data.data}`);
+      } else if (data.tipo === 'download_capturado') {
+        addLog('success', `📥 Download: ${data.ficheiro}`);
+      } else if (data.tipo === 'dados_extraidos') {
+        addLog('success', `📊 Dados extraídos de ${data.plataforma}`);
+        // Mostrar dados extraídos
+        const dados = data.dados;
+        if (dados.ganhos_liquidos) addLog('info', `  💰 Ganhos: €${dados.ganhos_liquidos.toFixed(2)}`);
+        if (dados.viagens) addLog('info', `  🚗 Viagens: ${dados.viagens}`);
+        if (dados.total_valor) addLog('info', `  💳 Total: €${dados.total_valor.toFixed(2)}`);
+      } else if (data.tipo === 'resumo_atualizado') {
+        addLog('success', `✅ Resumo Semanal atualizado (Semana ${data.semana}/${data.ano})`);
+        toast.success(`Dados guardados no Resumo Semanal!`);
+      } else if (data.tipo === 'erro_processamento') {
+        addLog('error', `Erro ao processar: ${data.erro}`);
       } else if (data.tipo === 'erro_passo') {
         addLog('error', `Erro no passo ${data.passo}: ${data.erro}`);
       } else if (data.tipo === 'concluido') {
-        addLog('success', data.mensagem);
+        let msg = data.mensagem;
+        if (data.downloads > 0) {
+          msg += ` | ${data.downloads} download(s) | Semana ${data.semana}/${data.ano}`;
+        }
+        addLog('success', msg);
         toast.success(data.mensagem);
         setExecutando(false);
       } else if (data.tipo === 'erro') {
