@@ -1087,37 +1087,56 @@ class PrioScraper(BaseScraper):
             except Exception:
                 logger.debug("Cookie banner não encontrado ou já aceite")
             
-            # ============ PASSO 1: CLICAR NO MENU "Transações De Cartões" ============
-            logger.info("📍 Passo 1: Clicando no menu 'Transações De Cartões'...")
+            # ============ PASSO 1: EXPANDIR O MENU "Transações De Cartões" ============
+            logger.info("📍 Passo 1: Expandindo menu 'Transações De Cartões'...")
             
             try:
-                # Aguardar a página carregar
                 await asyncio.sleep(2)
                 
-                # Procurar o menu "Transações De Cartões" no sidebar
-                # O texto exato é "Transações De Cartões"
-                menu_clicked = False
-                
-                # Método 1: Clicar diretamente no texto
+                # Clicar no menu para expandir (pode ser um acordeão)
                 transacoes_menu = self.page.locator('text="Transações De Cartões"')
                 if await transacoes_menu.count() > 0:
                     await transacoes_menu.first.click()
-                    await asyncio.sleep(3)
-                    menu_clicked = True
-                    logger.info("✅ Clicou em 'Transações De Cartões'")
-                
-                # Método 2: Se não funcionou, tentar via JavaScript
-                if not menu_clicked:
-                    logger.info("  Tentando via JavaScript...")
-                    clicked = await self.page.evaluate('''() => {
-                        const links = document.querySelectorAll('a, span, div');
-                        for (let link of links) {
-                            if (link.textContent && link.textContent.includes('Transações De Cartões')) {
-                                link.click();
-                                return true;
+                    await asyncio.sleep(2)
+                    logger.info("✅ Clicou em 'Transações De Cartões' para expandir")
+                else:
+                    # Tentar via JavaScript
+                    await self.page.evaluate('''() => {
+                        const elements = document.querySelectorAll('*');
+                        for (let el of elements) {
+                            if (el.textContent && el.textContent.trim() === 'Transações De Cartões') {
+                                el.click();
+                                return;
                             }
-                            if (link.textContent && link.textContent.includes('Transações de Cartões')) {
-                                link.click();
+                        }
+                    }''')
+                    await asyncio.sleep(2)
+                    logger.info("✅ Clicou via JS para expandir")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao expandir menu: {e}")
+            
+            await self.page.screenshot(path='/tmp/prio_05_menu_expandido.png')
+            
+            # ============ PASSO 2: CLICAR EM "Prio Frota" NO SUBMENU ============
+            logger.info("📍 Passo 2: Clicando em 'Prio Frota'...")
+            
+            try:
+                await asyncio.sleep(1)
+                
+                # Procurar "Prio Frota" no submenu
+                prio_frota = self.page.locator('text="Prio Frota"')
+                if await prio_frota.count() > 0:
+                    await prio_frota.first.click()
+                    await asyncio.sleep(3)
+                    logger.info("✅ Clicou em 'Prio Frota'")
+                else:
+                    # Tentar via JavaScript
+                    clicked = await self.page.evaluate('''() => {
+                        const elements = document.querySelectorAll('*');
+                        for (let el of elements) {
+                            if (el.textContent && el.textContent.trim() === 'Prio Frota') {
+                                el.click();
                                 return true;
                             }
                         }
@@ -1125,14 +1144,12 @@ class PrioScraper(BaseScraper):
                     }''')
                     if clicked:
                         await asyncio.sleep(3)
-                        menu_clicked = True
-                        logger.info("✅ Clicou via JavaScript")
-                
-                if not menu_clicked:
-                    logger.warning("⚠️ Não conseguiu clicar no menu")
+                        logger.info("✅ Clicou em 'Prio Frota' via JS")
+                    else:
+                        logger.warning("⚠️ Não encontrou 'Prio Frota'")
                     
             except Exception as e:
-                logger.warning(f"⚠️ Erro ao clicar no menu: {e}")
+                logger.warning(f"⚠️ Erro ao clicar em Prio Frota: {e}")
             
             await self.page.screenshot(path='/tmp/prio_06_after_navigation.png')
             
