@@ -422,102 +422,142 @@ class UberScraper(BaseScraper):
             await self.page.screenshot(path='/tmp/uber_03_after_generate_click.png')
             
             # ============ PASSO 3: SELECIONAR TIPO DE RELATÓRIO ============
-            logger.info("📍 Passo 3: Selecionando tipo de relatório...")
+            logger.info("📍 Passo 3: Selecionando tipo de relatório (Pagamentos de motorista)...")
             
             # Aguardar modal aparecer
             await asyncio.sleep(2)
             
-            tipo_selected = False
-            tipo_selectors = [
-                'text="Pagamentos de motorista"',
-                'text="Driver payments"',
-                'div:has-text("Pagamentos de motorista")',
-                '[data-testid="driver-payments-option"]',
-                'input[value*="driver"]'
-            ]
+            # Primeiro, abrir o dropdown de tipo de relatório
+            tipo_dropdown = self.page.locator('text="Tipo de relatório"').locator('..').locator('select, [role="combobox"], [role="listbox"]')
+            if await tipo_dropdown.count() == 0:
+                # Tentar clicar no elemento que contém o tipo atual
+                tipo_dropdown = self.page.locator('text="Atividade do motorista"')
             
-            for selector in tipo_selectors:
-                try:
-                    el = self.page.locator(selector)
-                    if await el.count() > 0 and await el.first.is_visible(timeout=2000):
-                        await el.first.click()
-                        tipo_selected = True
-                        await asyncio.sleep(1)
-                        logger.info(f"✅ Tipo de relatório selecionado: {selector}")
-                        break
-                except Exception:
-                    continue
-            
-            if not tipo_selected:
-                logger.warning("⚠️ Tipo de relatório não selecionado automaticamente")
+            if await tipo_dropdown.count() > 0:
+                await tipo_dropdown.first.click()
+                await asyncio.sleep(1)
+                logger.info("✅ Dropdown de tipo aberto")
+                
+                # Selecionar "Pagamentos de motorista"
+                pagamentos_option = self.page.locator('text="Pagamentos de motorista"')
+                if await pagamentos_option.count() > 0:
+                    await pagamentos_option.first.click()
+                    await asyncio.sleep(1)
+                    logger.info("✅ Tipo 'Pagamentos de motorista' selecionado")
+            else:
+                logger.warning("⚠️ Dropdown de tipo não encontrado")
             
             await self.page.screenshot(path='/tmp/uber_04_tipo_selecionado.png')
             
-            # ============ PASSO 4: SELECIONAR PERÍODO ============
-            logger.info("📍 Passo 4: Configurando período...")
-            
-            if start_date and end_date:
-                # Tentar encontrar e interagir com o seletor de período
-                period_selectors = [
-                    '[data-testid="time-range-selector"]',
-                    'button:has-text("Intervalo")',
-                    'button:has-text("Time range")',
-                    'div:has-text("Selecionar intervalo")'
-                ]
-                
-                for selector in period_selectors:
-                    try:
-                        el = self.page.locator(selector)
-                        if await el.count() > 0 and await el.first.is_visible(timeout=2000):
-                            await el.first.click()
-                            await asyncio.sleep(2)
-                            logger.info(f"✅ Abriu seletor de período: {selector}")
-                            
-                            # Tentar selecionar "Última semana" ou primeiro item
-                            week_options = [
-                                'text="Última semana"',
-                                'text="Last week"',
-                                '[role="option"]:first-child'
-                            ]
-                            for opt in week_options:
-                                try:
-                                    opt_el = self.page.locator(opt)
-                                    if await opt_el.count() > 0:
-                                        await opt_el.first.click()
-                                        await asyncio.sleep(1)
-                                        logger.info(f"✅ Período selecionado: {opt}")
-                                        break
-                                except:
-                                    continue
-                            break
-                    except:
-                        continue
+            # ============ PASSO 4: AS DATAS JÁ ESTÃO CORRETAS ============
+            logger.info("📍 Passo 4: Verificando período (já deve estar definido)...")
+            # O modal já mostra as datas corretas baseado na semana selecionada
             
             await self.page.screenshot(path='/tmp/uber_05_periodo.png')
             
             # ============ PASSO 5: SELECIONAR ORGANIZAÇÃO (CRÍTICO) ============
-            logger.info("📍 Passo 5: Selecionando organização...")
+            logger.info("📍 Passo 5: Selecionando organização (CRÍTICO)...")
             
             org_selected = False
             
-            # Procurar dropdown de organização
-            org_dropdown_selectors = [
+            # O campo de organização tem o texto "Selecione as organizações a incluir no relatório"
+            # É um dropdown/multi-select que precisa ser clicado para abrir
+            
+            # Estratégia 1: Procurar pelo placeholder text
+            org_field_selectors = [
+                'text="Selecione as organizações a incluir no relatório"',
                 'text="Selecione as organizações"',
-                '[placeholder*="organizações"]',
-                '[data-testid="organization-selector"]',
-                'div:has-text("Organizações"):not(:has(div))'
+                '[placeholder*="organiza"]',
+                'input[placeholder*="organiza"]',
+                '[aria-label*="organiza"]',
             ]
             
-            # Primeiro, encontrar o dropdown
-            for selector in org_dropdown_selectors:
+            for selector in org_field_selectors:
                 try:
-                    dropdown = self.page.locator(selector)
-                    if await dropdown.count() > 0 and await dropdown.first.is_visible(timeout=2000):
-                        await dropdown.first.click()
+                    org_field = self.page.locator(selector)
+                    if await org_field.count() > 0 and await org_field.first.is_visible(timeout=2000):
+                        # Clicar para abrir o dropdown
+                        await org_field.first.click()
                         await asyncio.sleep(2)
-                        logger.info(f"✅ Dropdown de organização aberto: {selector}")
+                        logger.info(f"✅ Campo de organização clicado: {selector}")
                         
-                        # Tentar selecionar a primeira opção (checkbox ou option)
+                        await self.page.screenshot(path='/tmp/uber_05b_org_dropdown_open.png')
+                        
+                        # Agora procurar opções no dropdown aberto
+                        # Pode ser checkboxes, options, ou list items
+                        option_selectors = [
+                            '[role="option"]',
+                            '[role="menuitem"]',
+                            'li[role="option"]',
+                            'input[type="checkbox"]',
+                            '[data-testid*="option"]',
+                            '.option',
+                            'label:has(input[type="checkbox"])'
+                        ]
+                        
+                        for opt_sel in option_selectors:
+                            try:
+                                options = self.page.locator(opt_sel)
+                                count = await options.count()
+                                if count > 0:
+                                    logger.info(f"📊 Encontradas {count} opções com selector: {opt_sel}")
+                                    # Clicar na primeira opção
+                                    first_opt = options.first
+                                    if await first_opt.is_visible(timeout=1000):
+                                        await first_opt.click()
+                                        org_selected = True
+                                        await asyncio.sleep(1)
+                                        logger.info(f"✅ Organização selecionada via: {opt_sel}")
+                                        
+                                        # Fechar dropdown (clicar fora ou pressionar Escape)
+                                        await self.page.keyboard.press('Escape')
+                                        await asyncio.sleep(1)
+                                        break
+                            except Exception as opt_err:
+                                logger.debug(f"Erro com option selector {opt_sel}: {opt_err}")
+                                continue
+                        
+                        if org_selected:
+                            break
+                except Exception as e:
+                    logger.debug(f"Erro com selector {selector}: {e}")
+                    continue
+            
+            # Estratégia 2: Se não funcionou, tentar via JavaScript
+            if not org_selected:
+                logger.info("⚠️ Tentando seleção de organização via JavaScript...")
+                try:
+                    # Procurar todos os elementos que parecem ser dropdowns no modal
+                    js_result = await self.page.evaluate('''() => {
+                        // Procurar campo de organização
+                        const modal = document.querySelector('[role="dialog"]') || document.body;
+                        const selects = modal.querySelectorAll('select, [role="combobox"], [role="listbox"]');
+                        const results = [];
+                        selects.forEach((el, idx) => {
+                            results.push({idx: idx, text: el.innerText || el.placeholder || 'unknown'});
+                        });
+                        return results;
+                    }''')
+                    logger.info(f"📊 Elementos encontrados via JS: {js_result}")
+                    
+                    # Tentar clicar em qualquer checkbox no modal
+                    checkboxes = self.page.locator('[role="dialog"] input[type="checkbox"], [role="dialog"] [role="checkbox"]')
+                    cb_count = await checkboxes.count()
+                    logger.info(f"📊 Encontrados {cb_count} checkboxes no modal")
+                    
+                    if cb_count > 0:
+                        for i in range(cb_count):
+                            cb = checkboxes.nth(i)
+                            if await cb.is_visible():
+                                is_checked = await cb.is_checked() if await cb.get_attribute('type') == 'checkbox' else False
+                                if not is_checked:
+                                    await cb.click()
+                                    org_selected = True
+                                    logger.info(f"✅ Checkbox {i} marcado via fallback JS")
+                                    await asyncio.sleep(1)
+                                    break
+                except Exception as js_err:
+                    logger.warning(f"⚠️ Fallback JS falhou: {js_err}")
                         option_selectors = [
                             '[role="option"]',
                             'input[type="checkbox"]',
