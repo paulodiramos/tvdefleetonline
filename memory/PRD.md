@@ -1260,14 +1260,14 @@ App móvel agora suporta 4 perfis diferentes com funcionalidades específicas pa
 
 ### Issue P3: Não é possível guardar RPA com zero passos
 - **Descrição:** Mensagem de erro ao tentar guardar design vazio
-- **Status:** Pendente
+- **Status:** VERIFICADO - Backend já permite designs vazios (validação não encontrada)
 
 ---
 
 ## Próximas Tarefas
 
-1. (P1) Corrigir RPA da Uber
-2. (P1) Corrigir RPA da Via Verde
+1. (P1) ~~Corrigir RPA da Uber~~ - Melhorado, aguarda teste com sessão real
+2. (P1) ~~Corrigir RPA da Via Verde~~ - CORRIGIDO ✅
 3. (P2) Implementar agendador de tarefas RPA automático
 4. (P2) Geração de PDF da Vistoria
 
@@ -1277,6 +1277,37 @@ App móvel agora suporta 4 perfis diferentes com funcionalidades específicas pa
 - Integrações: Ifthenpay, Moloni, Verizon GPS
 - Refatorar ficheiros monolíticos (`server.py`, `platform_scrapers.py`)
 - Envio de relatórios via WhatsApp
+
+---
+
+## ✅ Correções UberScraper (06/02/2026 - Sessão 2)
+
+### UberScraper - Refatorado
+**Problema:** O `UberScraper` em `platform_scrapers.py` estava incompleto e tinha erros:
+- Faltava import `os` e `json`
+- Não tinha `context` no `BaseScraper`
+- Não carregava sessões de parceiro corretamente
+
+**Correções implementadas:**
+1. Adicionados imports necessários (`os`, `json`, `BrowserContext`)
+2. Adicionado `self.context` ao `BaseScraper` para suportar cookies de sessão
+3. Método `initialize()` agora cria contexto com viewport e user-agent anti-deteção
+4. `UberScraper.extract_data()` reescrito com 7 passos robustos:
+   - Navega diretamente para `/orgs/{org_id}/reports/earning-reports`
+   - Deteta org_id da URL atual
+   - Seleciona tipo de relatório "Pagamentos de motorista"
+   - Seleciona período (última semana)
+   - Seleciona organização (dropdown com fallback para checkboxes)
+   - Verifica se botão "Gerar" está ativo antes de clicar
+   - Screenshots de debug em cada passo
+
+**Ficheiro:** `/app/backend/integrations/platform_scrapers.py`
+
+**Status:** Implementado, requer teste com sessão real do parceiro.
+
+### Link Hub Sincronização - Adicionado
+- Adicionado link "📊 Hub Sincronização" → `/admin/sincronizacao-hub` no menu admin
+- **Ficheiro:** `/app/frontend/src/components/Layout.js`
 
 ---
 
