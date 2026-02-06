@@ -2154,15 +2154,54 @@ async def executar_sincronizacao_auto(
                                     
                                     if motoristas_data:
                                         for motorista_info in motoristas_data:
+                                            nome_motorista = motorista_info.get("motorista", "")
+                                            uuid_motorista = motorista_info.get("uuid", "")
+                                            
+                                            # Tentar encontrar motorista existente pelo nome ou UUID
+                                            motorista_db = None
+                                            if uuid_motorista:
+                                                motorista_db = await db.motoristas.find_one({
+                                                    "parceiro_id": pid,
+                                                    "$or": [
+                                                        {"uuid_uber": uuid_motorista},
+                                                        {"uuid_motorista_uber": uuid_motorista}
+                                                    ]
+                                                })
+                                            
+                                            if not motorista_db and nome_motorista:
+                                                # Tentar match por nome (case-insensitive)
+                                                motorista_db = await db.motoristas.find_one({
+                                                    "parceiro_id": pid,
+                                                    "name": {"$regex": f"^{nome_motorista}$", "$options": "i"}
+                                                })
+                                            
+                                            # Se não encontrou, criar motorista automaticamente
+                                            if not motorista_db:
+                                                novo_motorista_id = str(uuid.uuid4())
+                                                motorista_db = {
+                                                    "id": novo_motorista_id,
+                                                    "parceiro_id": pid,
+                                                    "name": nome_motorista,
+                                                    "uuid_uber": uuid_motorista,
+                                                    "criado_automaticamente": True,
+                                                    "criado_em": datetime.now(timezone.utc).isoformat()
+                                                }
+                                                await db.motoristas.insert_one(motorista_db)
+                                                logger.info(f"📝 Motorista criado automaticamente: {nome_motorista}")
+                                            
+                                            motorista_id = motorista_db.get("id", str(uuid.uuid4()))
+                                            
                                             registro = {
                                                 "id": str(uuid.uuid4()),
                                                 "parceiro_id": pid,
-                                                "motorista": motorista_info.get("motorista"),
-                                                "motorista_uuid": motorista_info.get("uuid"),
+                                                "motorista_id": motorista_id,  # ID para match no relatorios.py
+                                                "motorista": nome_motorista,
+                                                "motorista_uuid": uuid_motorista,
+                                                "uuid_motorista": uuid_motorista,  # Fallback
                                                 "semana": semana,
                                                 "ano": ano,
-                                                "rendimentos": motorista_info.get("ganho", 0),  # Campo usado pelo relatorios.py
-                                                "pago_total": motorista_info.get("ganho", 0),   # Fallback
+                                                "rendimentos": motorista_info.get("ganho", 0),
+                                                "pago_total": motorista_info.get("ganho", 0),
                                                 "portagens": 0,
                                                 "plataforma": "uber",
                                                 "fonte": "rpa_uber",
@@ -2175,14 +2214,14 @@ async def executar_sincronizacao_auto(
                                             await db.ganhos_uber.update_one(
                                                 {
                                                     "parceiro_id": pid, 
-                                                    "motorista": motorista_info.get("motorista"),
+                                                    "motorista_id": motorista_id,
                                                     "semana": semana, 
                                                     "ano": ano
                                                 },
                                                 {"$set": registro},
                                                 upsert=True
                                             )
-                                            logger.info(f"✅ Guardado ganho Uber: {motorista_info.get('motorista')} - €{motorista_info.get('ganho', 0):.2f}")
+                                            logger.info(f"✅ Guardado ganho Uber: {nome_motorista} (ID: {motorista_id[:8]}...) - €{motorista_info.get('ganho', 0):.2f}")
                                         
                                         resultados[fonte] = {
                                             "sucesso": True,
