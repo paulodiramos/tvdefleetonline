@@ -988,13 +988,34 @@ async def websocket_executar_design(
             args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
         )
         
+        # Configurar diretório de downloads
+        download_dir = garantir_diretorio(parceiro_id)
+        
         context = await browser.new_context(
             viewport={"width": 1280, "height": 720},
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            storage_state=storage_state
+            storage_state=storage_state,
+            accept_downloads=True
         )
         
         page = await context.new_page()
+        
+        # Lista para guardar downloads
+        downloads_capturados = []
+        
+        # Handler para downloads
+        async def handle_download(download):
+            filepath = os.path.join(download_dir, download.suggested_filename)
+            await download.save_as(filepath)
+            downloads_capturados.append(filepath)
+            logger.info(f"Download guardado: {filepath}")
+            await websocket.send_json({
+                "tipo": "download_capturado",
+                "ficheiro": download.suggested_filename,
+                "path": filepath
+            })
+        
+        page.on("download", handle_download)
         
         # Navegar para URL base da plataforma
         url_base = plataforma.get("url_base", "https://www.google.com") if plataforma else "https://www.google.com"
