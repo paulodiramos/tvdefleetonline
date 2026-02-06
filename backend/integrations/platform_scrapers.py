@@ -1075,6 +1075,17 @@ class PrioScraper(BaseScraper):
             
             await self.page.screenshot(path='/tmp/prio_04_dashboard.png')
             
+            # ============ ACEITAR COOKIES PRIMEIRO ============
+            logger.info("🍪 Verificando cookie banner...")
+            try:
+                cookie_btn = self.page.locator('button:has-text("Ok"), button:has-text("Aceitar"), button:has-text("Accept")')
+                if await cookie_btn.count() > 0 and await cookie_btn.first.is_visible(timeout=2000):
+                    await cookie_btn.first.click()
+                    await asyncio.sleep(1)
+                    logger.info("✅ Cookies aceites")
+            except Exception as e:
+                logger.debug(f"Cookie banner não encontrado ou já aceite: {e}")
+            
             # ============ PASSO 1: Clicar em "Transações de Cartões" no menu lateral ============
             logger.info("📍 Passo 1: Navegando para Transações de Cartões...")
             
