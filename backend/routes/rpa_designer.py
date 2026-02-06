@@ -1330,9 +1330,27 @@ async def websocket_design_browser(
                     tecla = data.get("tecla", "Enter")
                     await page.keyboard.press(tecla)
                     
+                    # Guardar passo na sessão
+                    novo_passo = {
+                        "ordem": len(session["passos"]) + 1,
+                        "tipo": "press",
+                        "valor": tecla,
+                        "descricao": f"press: {tecla}"
+                    }
+                    session["passos"].append(novo_passo)
+                    
                 elif data.get("tipo") == "goto":
                     url = data.get("url", "")
                     await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                    
+                    # Guardar passo na sessão
+                    novo_passo = {
+                        "ordem": len(session["passos"]) + 1,
+                        "tipo": "goto",
+                        "valor": url,
+                        "descricao": f"goto: {url}"
+                    }
+                    session["passos"].append(novo_passo)
                     
                 elif data.get("tipo") == "scroll":
                     delta = data.get("delta", 0)
@@ -1346,14 +1364,41 @@ async def websocket_design_browser(
                     logger.info(f"Executando scroll com delta={delta}")
                     await page.mouse.wheel(0, delta)
                     await asyncio.sleep(0.3)
+                    
+                    # Guardar passo na sessão
+                    novo_passo = {
+                        "ordem": len(session["passos"]) + 1,
+                        "tipo": "scroll",
+                        "valor": delta,
+                        "descricao": f"scroll: {direcao or delta}"
+                    }
+                    session["passos"].append(novo_passo)
                 
                 elif data.get("tipo") == "espera":
                     segundos = data.get("segundos", 3)
                     await asyncio.sleep(segundos)
+                    
+                    # Guardar passo na sessão
+                    novo_passo = {
+                        "ordem": len(session["passos"]) + 1,
+                        "tipo": "wait",
+                        "timeout": segundos * 1000,
+                        "descricao": f"wait: {segundos}s"
+                    }
+                    session["passos"].append(novo_passo)
                 
                 elif data.get("tipo") == "aguardar_download":
                     # Aguardar download - apenas um placeholder por agora
                     await asyncio.sleep(2)
+                    
+                    # Guardar passo na sessão
+                    novo_passo = {
+                        "ordem": len(session["passos"]) + 1,
+                        "tipo": "download",
+                        "timeout": 60000,
+                        "descricao": "download: aguardar"
+                    }
+                    session["passos"].append(novo_passo)
                     
                 # Enviar screenshot atualizado
                 await asyncio.sleep(0.3)
