@@ -238,6 +238,54 @@ class BoltAPIClient:
             "offset": offset
         }
         return await self._make_request('POST', '/fleetIntegration/v1/getFleetStateLogs', json_data=json_data)
+    
+    async def get_driver_earnings(self, company_id: int, start_ts: int, end_ts: int) -> Dict:
+        """
+        Try to get driver earnings - POST /fleetIntegration/v1/getDriverEarnings
+        Note: This endpoint may not exist in all Bolt API versions
+        """
+        json_data = {
+            "company_id": company_id,
+            "start_ts": start_ts,
+            "end_ts": end_ts
+        }
+        try:
+            return await self._make_request('POST', '/fleetIntegration/v1/getDriverEarnings', json_data=json_data)
+        except Exception as e:
+            logger.warning(f"getDriverEarnings endpoint not available: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def get_weekly_reports(self, company_id: int, start_ts: int, end_ts: int) -> Dict:
+        """
+        Try to get weekly reports - POST /fleetIntegration/v1/getWeeklyReports
+        Note: This endpoint may not exist in all Bolt API versions
+        """
+        json_data = {
+            "company_id": company_id,
+            "start_ts": start_ts,
+            "end_ts": end_ts
+        }
+        try:
+            return await self._make_request('POST', '/fleetIntegration/v1/getWeeklyReports', json_data=json_data)
+        except Exception as e:
+            logger.warning(f"getWeeklyReports endpoint not available: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def get_driver_compensations(self, company_id: int, start_ts: int, end_ts: int) -> Dict:
+        """
+        Try to get driver compensations/bonuses - POST /fleetIntegration/v1/getDriverCompensations
+        Note: This endpoint may not exist in all Bolt API versions
+        """
+        json_data = {
+            "company_id": company_id,
+            "start_ts": start_ts,
+            "end_ts": end_ts
+        }
+        try:
+            return await self._make_request('POST', '/fleetIntegration/v1/getDriverCompensations', json_data=json_data)
+        except Exception as e:
+            logger.warning(f"getDriverCompensations endpoint not available: {e}")
+            return {"success": False, "error": str(e)}
 
 
 # ==================== Helper Functions ====================
