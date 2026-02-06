@@ -386,82 +386,199 @@ async def guardar_no_resumo_semanal(
     plataforma: str
 ) -> Dict[str, Any]:
     """
-    Guarda os dados extraídos no resumo semanal do parceiro
+    Guarda os dados extraídos nas coleções de importação (ganhos_uber, ganhos_bolt, etc.)
+    que são usadas pelo resumo semanal
     """
     try:
         plataforma_lower = plataforma.lower()
+        now = datetime.now(timezone.utc).isoformat()
         
-        # Determinar campos a atualizar baseado na plataforma
-        update_fields = {}
+        # Calcular datas da semana
+        from datetime import date
+        first_day_of_year = date(ano, 1, 1)
+        if first_day_of_year.weekday() <= 3:
+            first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+        else:
+            first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+        
+        week_start = first_monday + timedelta(weeks=semana - 1)
+        week_end = week_start + timedelta(days=6)
+        
+        data_inicio = week_start.strftime("%Y-%m-%d")
+        data_fim = week_end.strftime("%Y-%m-%d")
+        
+        resultado = {"sucesso": False, "colecao": None, "campos_atualizados": []}
         
         if "uber" in plataforma_lower:
-            update_fields = {
-                "uber_ganhos": dados.get("ganhos_liquidos", 0),
-                "uber_viagens": dados.get("viagens", 0),
-                "uber_gorjetas": dados.get("gorjetas", 0),
-                "uber_bonus": dados.get("bonus", 0),
-            }
-        elif "bolt" in plataforma_lower:
-            update_fields = {
-                "bolt_ganhos": dados.get("ganhos_liquidos", 0),
-                "bolt_viagens": dados.get("viagens", 0),
-                "bolt_gorjetas": dados.get("gorjetas", 0),
-                "bolt_bonus": dados.get("bonus", 0),
-            }
-        elif "prio" in plataforma_lower:
-            if dados.get("total_kwh", 0) > 0:
-                update_fields = {
-                    "despesas_eletrico": dados.get("total_valor", 0),
-                    "kwh_carregados": dados.get("total_kwh", 0),
-                }
-            else:
-                update_fields = {
-                    "despesas_combustivel": dados.get("total_valor", 0),
-                    "litros_abastecidos": dados.get("total_litros", 0),
-                }
-        elif "viaverde" in plataforma_lower:
-            update_fields = {
-                "despesas_portagens": dados.get("total_portagens", 0),
-            }
-        
-        if not update_fields:
-            return {"sucesso": False, "erro": "Nenhum campo para atualizar"}
-        
-        update_fields["atualizado_em"] = datetime.now(timezone.utc).isoformat()
-        update_fields["atualizado_por_rpa"] = True
-        
-        # Atualizar ou criar resumo semanal
-        resultado = await db.resumos_semanais.update_one(
-            {
-                "parceiro_id": parceiro_id,
+            # Guardar na coleção ganhos_uber
+            registro = {
+                "id": str(uuid.uuid4()) if 'uuid' in dir() else f"rpa_{parceiro_id}_{semana}_{ano}",
                 "motorista_id": motorista_id,
+                "parceiro_id": parceiro_id,
                 "semana": semana,
-                "ano": ano
-            },
-            {
-                "$set": update_fields,
-                "$setOnInsert": {
-                    "parceiro_id": parceiro_id,
+                "ano": ano,
+                "periodo_inicio": data_inicio,
+                "periodo_fim": data_fim,
+                "rendimentos": dados.get("ganhos_liquidos", 0),
+                "rendimentos_total": dados.get("ganhos_brutos", 0),
+                "gorjetas": dados.get("gorjetas", 0),
+                "bonus": dados.get("bonus", 0),
+                "promocoes": dados.get("promocoes", 0),
+                "taxa_servico": dados.get("taxa_servico", 0),
+                "viagens": dados.get("viagens", 0),
+                "fonte": "rpa",
+                "importado_em": now,
+                "atualizado_em": now
+            }
+            
+            # Upsert por motorista/semana/ano
+            await db.ganhos_uber.update_one(
+                {
                     "motorista_id": motorista_id,
                     "semana": semana,
                     "ano": ano,
-                    "criado_em": datetime.now(timezone.utc).isoformat()
+                    "fonte": "rpa"
+                },
+                {"$set": registro},
+                upsert=True
+            )
+            resultado["colecao"] = "ganhos_uber"
+            resultado["campos_atualizados"] = ["rendimentos", "viagens", "gorjetas", "bonus"]
+            
+        elif "bolt" in plataforma_lower:
+            # Guardar na coleção ganhos_bolt
+            registro = {
+                "id": str(uuid.uuid4()) if 'uuid' in dir() else f"rpa_{parceiro_id}_{semana}_{ano}",
+                "motorista_id": motorista_id,
+                "parceiro_id": parceiro_id,
+                "semana": semana,
+                "ano": ano,
+                "periodo_inicio": data_inicio,
+                "periodo_fim": data_fim,
+                "ganhos_liquidos": dados.get("ganhos_liquidos", 0),
+                "ganhos_brutos": dados.get("ganhos_brutos", 0),
+                "gorjetas": dados.get("gorjetas", 0),
+                "bonus": dados.get("bonus", 0),
+                "comissao_bolt": dados.get("comissao_bolt", 0),
+                "viagens": dados.get("viagens", 0),
+                "fonte": "rpa",
+                "importado_em": now,
+                "atualizado_em": now
+            }
+            
+            await db.ganhos_bolt.update_one(
+                {
+                    "motorista_id": motorista_id,
+                    "semana": semana,
+                    "ano": ano,
+                    "fonte": "rpa"
+                },
+                {"$set": registro},
+                upsert=True
+            )
+            resultado["colecao"] = "ganhos_bolt"
+            resultado["campos_atualizados"] = ["ganhos_liquidos", "viagens", "gorjetas", "bonus"]
+            
+        elif "prio" in plataforma_lower:
+            # Determinar se é combustível ou elétrico
+            if dados.get("total_kwh", 0) > 0:
+                # Elétrico - guardar em despesas_eletrico
+                registro = {
+                    "id": str(uuid.uuid4()) if 'uuid' in dir() else f"rpa_{parceiro_id}_{semana}_{ano}",
+                    "motorista_id": motorista_id,
+                    "parceiro_id": parceiro_id,
+                    "semana": semana,
+                    "ano": ano,
+                    "periodo_inicio": data_inicio,
+                    "periodo_fim": data_fim,
+                    "valor_total": dados.get("total_valor", 0),
+                    "kwh": dados.get("total_kwh", 0),
+                    "transacoes": dados.get("transacoes", []),
+                    "fonte": "rpa",
+                    "importado_em": now
                 }
-            },
-            upsert=True
-        )
+                
+                await db.despesas_eletrico.update_one(
+                    {
+                        "motorista_id": motorista_id,
+                        "semana": semana,
+                        "ano": ano,
+                        "fonte": "rpa"
+                    },
+                    {"$set": registro},
+                    upsert=True
+                )
+                resultado["colecao"] = "despesas_eletrico"
+                resultado["campos_atualizados"] = ["valor_total", "kwh"]
+            else:
+                # Combustível - guardar em despesas_combustivel
+                registro = {
+                    "id": str(uuid.uuid4()) if 'uuid' in dir() else f"rpa_{parceiro_id}_{semana}_{ano}",
+                    "motorista_id": motorista_id,
+                    "parceiro_id": parceiro_id,
+                    "semana": semana,
+                    "ano": ano,
+                    "periodo_inicio": data_inicio,
+                    "periodo_fim": data_fim,
+                    "valor_total": dados.get("total_valor", 0),
+                    "litros": dados.get("total_litros", 0),
+                    "transacoes": dados.get("transacoes", []),
+                    "fonte": "rpa",
+                    "importado_em": now
+                }
+                
+                await db.despesas_combustivel.update_one(
+                    {
+                        "motorista_id": motorista_id,
+                        "semana": semana,
+                        "ano": ano,
+                        "fonte": "rpa"
+                    },
+                    {"$set": registro},
+                    upsert=True
+                )
+                resultado["colecao"] = "despesas_combustivel"
+                resultado["campos_atualizados"] = ["valor_total", "litros"]
+                
+        elif "viaverde" in plataforma_lower or "via verde" in plataforma_lower:
+            # Guardar em despesas_viaverde
+            registro = {
+                "id": str(uuid.uuid4()) if 'uuid' in dir() else f"rpa_{parceiro_id}_{semana}_{ano}",
+                "motorista_id": motorista_id,
+                "parceiro_id": parceiro_id,
+                "semana": semana,
+                "ano": ano,
+                "periodo_inicio": data_inicio,
+                "periodo_fim": data_fim,
+                "valor_total": dados.get("total_portagens", 0),
+                "transacoes": dados.get("transacoes", []),
+                "fonte": "rpa",
+                "importado_em": now
+            }
+            
+            await db.despesas_viaverde.update_one(
+                {
+                    "motorista_id": motorista_id,
+                    "semana": semana,
+                    "ano": ano,
+                    "fonte": "rpa"
+                },
+                {"$set": registro},
+                upsert=True
+            )
+            resultado["colecao"] = "despesas_viaverde"
+            resultado["campos_atualizados"] = ["valor_total"]
         
-        logger.info(f"Resumo semanal atualizado: parceiro={parceiro_id}, semana={semana}, ano={ano}")
+        if resultado["colecao"]:
+            resultado["sucesso"] = True
+            logger.info(f"Dados RPA guardados em {resultado['colecao']}: parceiro={parceiro_id}, semana={semana}/{ano}")
+        else:
+            resultado["erro"] = f"Plataforma '{plataforma}' não suportada"
         
-        return {
-            "sucesso": True,
-            "campos_atualizados": list(update_fields.keys()),
-            "modificados": resultado.modified_count,
-            "criado": resultado.upserted_id is not None
-        }
+        return resultado
         
     except Exception as e:
-        logger.error(f"Erro ao guardar no resumo semanal: {e}")
+        logger.error(f"Erro ao guardar dados RPA: {e}")
         return {"sucesso": False, "erro": str(e)}
 
 
