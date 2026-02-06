@@ -2169,11 +2169,42 @@ async def executar_sincronizacao_auto(
                                                 })
                                             
                                             if not motorista_db and nome_motorista:
-                                                # Tentar match por nome (case-insensitive)
+                                                # Tentar match por nome (case-insensitive, exact)
                                                 motorista_db = await db.motoristas.find_one({
                                                     "parceiro_id": pid,
                                                     "name": {"$regex": f"^{nome_motorista}$", "$options": "i"}
                                                 })
+                                            
+                                            if not motorista_db and nome_motorista:
+                                                # Tentar match por primeiro nome + parte do apelido
+                                                # Ex: "ELSON MONTEIRO" deve encontrar "Elson Patrick Varela Monteiro"
+                                                partes_nome = nome_motorista.split()
+                                                if len(partes_nome) >= 2:
+                                                    primeiro_nome = partes_nome[0]
+                                                    apelido = partes_nome[-1]
+                                                    motorista_db = await db.motoristas.find_one({
+                                                        "parceiro_id": pid,
+                                                        "name": {
+                                                            "$regex": f"^{primeiro_nome}.*{apelido}$",
+                                                            "$options": "i"
+                                                        }
+                                                    })
+                                                    if motorista_db:
+                                                        logger.info(f"✅ Motorista encontrado por match parcial: {motorista_db.get('name')}")
+                                            
+                                            # Se ainda não encontrou, tentar só pelo primeiro nome
+                                            if not motorista_db and nome_motorista:
+                                                partes_nome = nome_motorista.split()
+                                                if partes_nome:
+                                                    primeiro_nome = partes_nome[0]
+                                                    # Buscar todos os motoristas do parceiro e filtrar
+                                                    cursor = db.motoristas.find({"parceiro_id": pid})
+                                                    async for m in cursor:
+                                                        m_name = m.get("name", "").upper()
+                                                        if m_name.startswith(primeiro_nome.upper()):
+                                                            motorista_db = m
+                                                            logger.info(f"✅ Motorista encontrado por primeiro nome: {m.get('name')}")
+                                                            break
                                             
                                             # Se não encontrou, criar motorista automaticamente
                                             if not motorista_db:
