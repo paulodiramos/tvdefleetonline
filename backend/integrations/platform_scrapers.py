@@ -558,55 +558,6 @@ class UberScraper(BaseScraper):
                                     break
                 except Exception as js_err:
                     logger.warning(f"⚠️ Fallback JS falhou: {js_err}")
-                        option_selectors = [
-                            '[role="option"]',
-                            'input[type="checkbox"]',
-                            'li[role="option"]',
-                            '[data-testid*="option"]'
-                        ]
-                        
-                        for opt_sel in option_selectors:
-                            try:
-                                options = self.page.locator(opt_sel)
-                                count = await options.count()
-                                if count > 0:
-                                    # Clicar na primeira opção
-                                    first_opt = options.first
-                                    if await first_opt.is_visible(timeout=1000):
-                                        await first_opt.click()
-                                        org_selected = True
-                                        await asyncio.sleep(1)
-                                        logger.info(f"✅ Organização selecionada via: {opt_sel}")
-                                        break
-                            except:
-                                continue
-                        
-                        if org_selected:
-                            break
-                except Exception as e:
-                    logger.debug(f"Erro com selector {selector}: {e}")
-                    continue
-            
-            if not org_selected:
-                # Fallback: Procurar no modal por qualquer checkbox não marcado
-                logger.info("⚠️ Tentando fallback para seleção de organização...")
-                try:
-                    modal = self.page.locator('[role="dialog"]')
-                    if await modal.count() > 0:
-                        checkboxes = modal.locator('input[type="checkbox"]')
-                        count = await checkboxes.count()
-                        logger.info(f"📊 Encontrados {count} checkboxes no modal")
-                        for i in range(count):
-                            cb = checkboxes.nth(i)
-                            if await cb.is_visible():
-                                is_checked = await cb.is_checked()
-                                if not is_checked:
-                                    await cb.click()
-                                    org_selected = True
-                                    logger.info(f"✅ Checkbox {i} marcado via fallback")
-                                    break
-                except Exception as e:
-                    logger.warning(f"Fallback falhou: {e}")
             
             await self.page.screenshot(path='/tmp/uber_06_org_selecionada.png')
             logger.info(f"📊 Organização selecionada: {org_selected}")
