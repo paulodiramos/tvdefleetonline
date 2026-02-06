@@ -501,9 +501,7 @@ async def guardar_sessao_como_design(
         
     session = active_design_sessions[session_id]
     
-    if len(session["passos"]) == 0:
-        raise HTTPException(status_code=400, detail="Sessão não tem passos gravados")
-        
+    # Permitir guardar mesmo sem passos (design vazio)
     now = datetime.now(timezone.utc).isoformat()
     
     # Verificar se já existe design para esta semana
