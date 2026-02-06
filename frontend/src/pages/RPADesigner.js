@@ -645,13 +645,12 @@ export default function RPADesigner({ user, onLogout }) {
               <div class="quick-actions">
                 <h4>⚡ Ações Rápidas</h4>
                 <div class="action-buttons">
+                  <button class="scroll-btn" onclick="fazerScroll('down')">↓ Scroll Down</button>
+                  <button class="scroll-btn" onclick="fazerScroll('up')">↑ Scroll Up</button>
                   <button onclick="enviarTecla('Enter')">↵ Enter</button>
                   <button onclick="enviarTecla('Tab')">⇥ Tab</button>
                   <button onclick="enviarTecla('Escape')">✕ Esc</button>
-                  <button onclick="fazerScroll('down')">↓ Scroll</button>
-                  <button onclick="fazerScroll('up')">↑ Scroll</button>
-                  <button onclick="adicionarEspera()">⏳ +Espera</button>
-                  <button onclick="adicionarDownload()">📥 +Download</button>
+                  <button onclick="adicionarEspera()">⏳ Espera</button>
                 </div>
               </div>
             </div>
