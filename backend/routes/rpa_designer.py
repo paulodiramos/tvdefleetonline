@@ -23,6 +23,12 @@ from models.rpa_designer import (
 )
 from utils.database import get_database
 from utils.auth import get_current_user
+from services.rpa_processor import (
+    processar_download, 
+    guardar_no_resumo_semanal, 
+    garantir_diretorio,
+    calcular_semana_ano
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/rpa-designer", tags=["RPA Designer"])
