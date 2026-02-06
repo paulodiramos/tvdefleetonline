@@ -19,7 +19,9 @@ class BaseScraper:
     
     def __init__(self, headless: bool = True):
         self.headless = headless
+        self.playwright = None
         self.browser: Optional[Browser] = None
+        self.context: Optional[BrowserContext] = None
         self.page: Optional[Page] = None
         self.platform_name = "Base"
         self.login_url = ""
@@ -35,12 +37,17 @@ class BaseScraper:
         """Inicializar browser"""
         try:
             logger.info(f"🚀 Inicializando {self.platform_name} scraper...")
-            playwright = await async_playwright().start()
-            self.browser = await playwright.chromium.launch(
+            self.playwright = await async_playwright().start()
+            self.browser = await self.playwright.chromium.launch(
                 headless=self.headless,
-                args=['--no-sandbox', '--disable-setuid-sandbox']
+                args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
             )
-            self.page = await self.browser.new_page()
+            self.context = await self.browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+                locale='pt-PT'
+            )
+            self.page = await self.context.new_page()
             self.page.set_default_timeout(60000)
             logger.info("✅ Browser inicializado")
         except Exception as e:
