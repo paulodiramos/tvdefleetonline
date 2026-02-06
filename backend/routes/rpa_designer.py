@@ -574,6 +574,287 @@ async def cancelar_sessao(
     return {"sucesso": True, "mensagem": "Sessão cancelada"}
 
 
+# ==================== SESSÃO LOGIN PARCEIRO (para evitar CAPTCHA) ====================
+
+# Armazenar sessões de login ativas
+active_login_sessions: Dict[str, Any] = {}
+
+class IniciarLoginRequest(BaseModel):
+    plataforma: str  # uber, bolt, viaverde, prio
+
+@router.post("/parceiro/iniciar-login")
+async def iniciar_sessao_login_parceiro(
+    data: IniciarLoginRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Inicia uma sessão de browser para o parceiro fazer login manual.
+    O parceiro faz login, resolve o CAPTCHA, e depois guardamos os cookies.
+    """
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    # URLs de login por plataforma
+    login_urls = {
+        "uber": "https://auth.uber.com/v2/",
+        "bolt": "https://fleets.bolt.eu/login",
+        "viaverde": "https://www.viaverde.pt/particulares/area-cliente",
+        "prio": "https://www.myprio.com/MyPrioReactiveTheme/Login"
+    }
+    
+    if data.plataforma not in login_urls:
+        raise HTTPException(status_code=400, detail=f"Plataforma '{data.plataforma}' não suportada")
+    
+    session_id = str(uuid.uuid4())
+    
+    active_login_sessions[session_id] = {
+        "id": session_id,
+        "parceiro_id": parceiro_id,
+        "plataforma": data.plataforma,
+        "url_login": login_urls[data.plataforma],
+        "criado_em": datetime.now(timezone.utc).isoformat(),
+        "status": "aguardando_login"
+    }
+    
+    return {
+        "session_id": session_id,
+        "url_login": login_urls[data.plataforma],
+        "plataforma": data.plataforma,
+        "instrucoes": "Faça login normalmente. Quando terminar, clique em 'Guardar Sessão'."
+    }
+
+
+@router.post("/parceiro/guardar-sessao/{session_id}")
+async def guardar_sessao_login(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Guarda os cookies da sessão de login do parceiro.
+    Chamado via WebSocket quando o login é concluído.
+    """
+    if session_id not in active_login_sessions:
+        raise HTTPException(status_code=404, detail="Sessão não encontrada")
+    
+    session = active_login_sessions[session_id]
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    if session["parceiro_id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Sessão não pertence a este parceiro")
+    
+    # Os cookies são guardados pelo WebSocket
+    if session.get("cookies_guardados"):
+        return {
+            "sucesso": True,
+            "mensagem": f"Sessão {session['plataforma']} guardada com sucesso!",
+            "validade_dias": 7
+        }
+    else:
+        raise HTTPException(status_code=400, detail="Sessão ainda não tem cookies guardados")
+
+
+@router.get("/parceiro/sessoes")
+async def listar_sessoes_parceiro(
+    current_user: dict = Depends(get_current_user)
+):
+    """Lista as sessões de login guardadas do parceiro"""
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    sessoes = []
+    plataformas = ["uber", "bolt", "viaverde", "prio"]
+    
+    for plat in plataformas:
+        session_path = f"/tmp/{plat}_sessao_{parceiro_id}.json"
+        if os.path.exists(session_path):
+            try:
+                stat = os.stat(session_path)
+                idade_dias = (datetime.now().timestamp() - stat.st_mtime) / 86400
+                sessoes.append({
+                    "plataforma": plat,
+                    "guardada_em": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                    "idade_dias": round(idade_dias, 1),
+                    "valida": idade_dias < 7,
+                    "path": session_path
+                })
+            except Exception as e:
+                logger.error(f"Erro ao verificar sessão {plat}: {e}")
+    
+    return {"sessoes": sessoes}
+
+
+@router.websocket("/ws/parceiro-login/{session_id}")
+async def websocket_parceiro_login(websocket: WebSocket, session_id: str):
+    """
+    WebSocket para sessão de login do parceiro.
+    Abre um browser para o parceiro fazer login manual.
+    """
+    await websocket.accept()
+    
+    if session_id not in active_login_sessions:
+        await websocket.send_json({"erro": "Sessão não encontrada"})
+        await websocket.close()
+        return
+    
+    session = active_login_sessions[session_id]
+    parceiro_id = session["parceiro_id"]
+    plataforma = session["plataforma"]
+    url_login = session["url_login"]
+    
+    browser = None
+    playwright_instance = None
+    
+    try:
+        from playwright.async_api import async_playwright
+        
+        playwright_instance = await async_playwright().start()
+        
+        # Usar browser com UI visível (não headless) para o utilizador interagir
+        browser = await playwright_instance.chromium.launch(
+            headless=True,  # Headless porque vamos mostrar screenshots
+            args=['--no-sandbox', '--disable-setuid-sandbox']
+        )
+        
+        context = await browser.new_context(
+            viewport={"width": 1280, "height": 720},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        
+        page = await context.new_page()
+        
+        logger.info(f"Parceiro {parceiro_id} a iniciar login em {plataforma}")
+        
+        # Navegar para a página de login
+        await page.goto(url_login, wait_until="domcontentloaded", timeout=30000)
+        
+        # Enviar screenshot inicial
+        screenshot = await page.screenshot(type="jpeg", quality=50)
+        await websocket.send_json({
+            "tipo": "screenshot",
+            "data": base64.b64encode(screenshot).decode(),
+            "url": page.url,
+            "status": "aguardando_login"
+        })
+        
+        # Loop de interação
+        while True:
+            try:
+                data = await asyncio.wait_for(websocket.receive_json(), timeout=2.0)
+                logger.info(f"Login parceiro - comando: {data}")
+                
+                if data.get("tipo") == "click":
+                    x, y = data.get("x", 0), data.get("y", 0)
+                    await page.mouse.click(x, y)
+                    await asyncio.sleep(0.5)
+                    
+                elif data.get("tipo") == "type" or data.get("tipo") == "inserir_texto":
+                    texto = data.get("texto", "")
+                    await page.keyboard.type(texto, delay=50)
+                    
+                elif data.get("tipo") == "press" or data.get("tipo") == "tecla":
+                    tecla = data.get("tecla", "Enter")
+                    await page.keyboard.press(tecla)
+                    
+                elif data.get("tipo") == "scroll":
+                    direcao = data.get("direcao", "down")
+                    delta = 300 if direcao == "down" else -300
+                    await page.mouse.wheel(0, delta)
+                    
+                elif data.get("tipo") == "guardar_sessao":
+                    # Guardar cookies e estado da sessão
+                    cookies = await context.cookies()
+                    storage = await context.storage_state()
+                    
+                    session_data = {
+                        "cookies": cookies,
+                        "storage_state": storage,
+                        "url_atual": page.url,
+                        "guardado_em": datetime.now(timezone.utc).isoformat(),
+                        "parceiro_id": parceiro_id,
+                        "plataforma": plataforma
+                    }
+                    
+                    # Guardar em ficheiro
+                    session_path = f"/tmp/{plataforma}_sessao_{parceiro_id}.json"
+                    with open(session_path, 'w') as f:
+                        json.dump(session_data, f)
+                    
+                    session["cookies_guardados"] = True
+                    session["session_path"] = session_path
+                    
+                    logger.info(f"Sessão {plataforma} guardada para parceiro {parceiro_id}")
+                    
+                    await websocket.send_json({
+                        "tipo": "sessao_guardada",
+                        "sucesso": True,
+                        "mensagem": f"Sessão {plataforma} guardada! Válida por ~7 dias.",
+                        "path": session_path
+                    })
+                    break
+                
+                # Enviar screenshot atualizado
+                await asyncio.sleep(0.3)
+                screenshot = await page.screenshot(type="jpeg", quality=50)
+                
+                # Verificar se login foi bem sucedido (URL mudou da página de login)
+                login_concluido = False
+                if plataforma == "uber" and "auth.uber.com" not in page.url:
+                    login_concluido = True
+                elif plataforma == "bolt" and "/login" not in page.url:
+                    login_concluido = True
+                elif plataforma == "viaverde" and "area-cliente" in page.url and "login" not in page.url.lower():
+                    login_concluido = True
+                elif plataforma == "prio" and "/Login" not in page.url:
+                    login_concluido = True
+                
+                await websocket.send_json({
+                    "tipo": "screenshot",
+                    "data": base64.b64encode(screenshot).decode(),
+                    "url": page.url,
+                    "status": "login_concluido" if login_concluido else "aguardando_login",
+                    "pode_guardar": login_concluido
+                })
+                
+            except asyncio.TimeoutError:
+                # Enviar screenshot periódico
+                try:
+                    screenshot = await page.screenshot(type="jpeg", quality=50)
+                    
+                    login_concluido = False
+                    if plataforma == "uber" and "auth.uber.com" not in page.url:
+                        login_concluido = True
+                    elif plataforma == "bolt" and "/login" not in page.url:
+                        login_concluido = True
+                    elif plataforma == "viaverde" and "area-cliente" in page.url:
+                        login_concluido = True
+                    elif plataforma == "prio" and "/Login" not in page.url:
+                        login_concluido = True
+                    
+                    await websocket.send_json({
+                        "tipo": "screenshot",
+                        "data": base64.b64encode(screenshot).decode(),
+                        "url": page.url,
+                        "status": "login_concluido" if login_concluido else "aguardando_login",
+                        "pode_guardar": login_concluido
+                    })
+                except Exception:
+                    pass
+                    
+    except WebSocketDisconnect:
+        logger.info(f"WebSocket login desconectado: {session_id}")
+    except Exception as e:
+        logger.error(f"Erro no WebSocket login: {e}")
+        try:
+            await websocket.send_json({"erro": str(e)})
+        except:
+            pass
+    finally:
+        if browser:
+            await browser.close()
+        if playwright_instance:
+            await playwright_instance.stop()
+        if session_id in active_login_sessions:
+            del active_login_sessions[session_id]
+
+
 # ==================== AGENDAMENTOS ====================
 
 @router.get("/agendamentos")
