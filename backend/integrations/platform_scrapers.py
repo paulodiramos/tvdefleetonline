@@ -1139,17 +1139,32 @@ class PrioScraper(BaseScraper):
             logger.info("📍 Passo 2: Clicando em Prio Frota...")
             
             try:
-                # Procurar e clicar em "Prio Frota"
-                prio_frota = self.page.locator('text="Prio Frota"').first
-                if await prio_frota.count() > 0:
-                    await prio_frota.click()
+                # Aguardar submenu aparecer
+                await asyncio.sleep(2)
+                
+                # Usar JavaScript para clicar
+                clicked = await self.page.evaluate('''() => {
+                    // Procurar "Prio Frota"
+                    const elements = document.querySelectorAll('*');
+                    for (let el of elements) {
+                        if (el.textContent && el.textContent.trim() === 'Prio Frota') {
+                            el.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                }''')
+                
+                if clicked:
+                    logger.info("✅ Clicou em Prio Frota via JS")
                     await asyncio.sleep(3)
-                    logger.info("✅ Clicou em Prio Frota")
                 else:
-                    # Alternativa
-                    prio_frota = self.page.locator('a:has-text("Frota")').first
-                    await prio_frota.click()
-                    await asyncio.sleep(3)
+                    logger.warning("⚠️ 'Prio Frota' não encontrado, tentando locator...")
+                    prio_frota = self.page.locator('span:has-text("Prio Frota"), a:has-text("Prio Frota")')
+                    if await prio_frota.count() > 0:
+                        await prio_frota.first.click(force=True, timeout=5000)
+                        await asyncio.sleep(3)
+                        logger.info("✅ Clicou em Prio Frota")
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao clicar em Prio Frota: {e}")
             
