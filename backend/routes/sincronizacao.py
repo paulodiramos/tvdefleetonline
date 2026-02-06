@@ -2148,13 +2148,58 @@ async def executar_sincronizacao_auto(
                                 )
                                 
                                 if dados.get("success"):
-                                    resultados[fonte] = {
-                                        "sucesso": True,
-                                        "metodo": "rpa",
-                                        "mensagem": dados.get("message", "Extração concluída"),
-                                        "dados": dados.get("data"),
-                                        "screenshots": dados.get("screenshots", [])
-                                    }
+                                    # GUARDAR DADOS NA BASE DE DADOS
+                                    motoristas_data = dados.get("data", [])
+                                    total_ganhos = dados.get("total_ganhos", 0)
+                                    
+                                    if motoristas_data:
+                                        for motorista_info in motoristas_data:
+                                            registro = {
+                                                "id": str(uuid.uuid4()),
+                                                "parceiro_id": pid,
+                                                "motorista": motorista_info.get("motorista"),
+                                                "motorista_uuid": motorista_info.get("uuid"),
+                                                "semana": semana,
+                                                "ano": ano,
+                                                "valor_total": motorista_info.get("ganho", 0),
+                                                "portagens": 0,
+                                                "plataforma": "uber",
+                                                "fonte": "rpa_uber",
+                                                "periodo_inicio": data_inicio[:10],
+                                                "periodo_fim": data_fim[:10],
+                                                "synced_at": datetime.now(timezone.utc).isoformat()
+                                            }
+                                            
+                                            # Upsert por parceiro, motorista, semana e ano
+                                            await db.ganhos_uber.update_one(
+                                                {
+                                                    "parceiro_id": pid, 
+                                                    "motorista": motorista_info.get("motorista"),
+                                                    "semana": semana, 
+                                                    "ano": ano
+                                                },
+                                                {"$set": registro},
+                                                upsert=True
+                                            )
+                                            logger.info(f"✅ Guardado ganho Uber: {motorista_info.get('motorista')} - €{motorista_info.get('ganho', 0):.2f}")
+                                        
+                                        resultados[fonte] = {
+                                            "sucesso": True,
+                                            "metodo": "rpa",
+                                            "mensagem": f"Extraídos e guardados dados de {len(motoristas_data)} motoristas. Total: €{total_ganhos:.2f}",
+                                            "total_ganhos": total_ganhos,
+                                            "num_motoristas": len(motoristas_data),
+                                            "dados": motoristas_data,
+                                            "screenshots": dados.get("screenshots", [])
+                                        }
+                                    else:
+                                        resultados[fonte] = {
+                                            "sucesso": True,
+                                            "metodo": "rpa",
+                                            "mensagem": "Extração concluída mas sem dados de motoristas",
+                                            "dados": [],
+                                            "screenshots": dados.get("screenshots", [])
+                                        }
                                 else:
                                     resultados[fonte] = {
                                         "sucesso": False,
