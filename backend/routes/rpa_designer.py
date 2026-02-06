@@ -1092,8 +1092,12 @@ async def websocket_executar_design(
                     await asyncio.sleep(1)
                     
                 elif tipo == "download":
-                    # Aguardar download
-                    await asyncio.sleep(5)
+                    # Aguardar download com timeout
+                    await websocket.send_json({
+                        "tipo": "info",
+                        "mensagem": "A aguardar download..."
+                    })
+                    await asyncio.sleep(10)  # Esperar mais tempo para download
                 
                 # Screenshot após cada passo
                 await asyncio.sleep(0.5)
@@ -1113,12 +1117,66 @@ async def websocket_executar_design(
                     "erro": str(e)
                 })
         
+        # Aguardar um pouco mais para downloads pendentes
+        await asyncio.sleep(3)
+        
+        # Processar downloads capturados
+        dados_extraidos = []
+        plataforma_nome = plataforma.get("nome", "") if plataforma else ""
+        semana_offset = design.get("semana_offset", 0)
+        semana, ano = calcular_semana_ano(semana_offset)
+        
+        for filepath in downloads_capturados:
+            await websocket.send_json({
+                "tipo": "info",
+                "mensagem": f"A processar: {os.path.basename(filepath)}..."
+            })
+            
+            resultado = processar_download(filepath, plataforma_nome)
+            dados_extraidos.append(resultado)
+            
+            if resultado["sucesso"]:
+                await websocket.send_json({
+                    "tipo": "dados_extraidos",
+                    "plataforma": resultado["plataforma"],
+                    "dados": resultado["dados"]
+                })
+                
+                # Guardar no resumo semanal
+                # Nota: precisamos do motorista_id - por agora usar o parceiro_id
+                resultado_guardar = await guardar_no_resumo_semanal(
+                    db,
+                    parceiro_id=parceiro_id,
+                    motorista_id=parceiro_id,  # TODO: obter motorista correto
+                    semana=semana,
+                    ano=ano,
+                    dados=resultado["dados"],
+                    plataforma=plataforma_nome
+                )
+                
+                if resultado_guardar["sucesso"]:
+                    await websocket.send_json({
+                        "tipo": "resumo_atualizado",
+                        "semana": semana,
+                        "ano": ano,
+                        "campos": resultado_guardar["campos_atualizados"]
+                    })
+            else:
+                await websocket.send_json({
+                    "tipo": "erro_processamento",
+                    "erro": resultado["erro"]
+                })
+        
         # Finalizado
         await websocket.send_json({
             "tipo": "concluido",
             "sucesso": True,
             "mensagem": f"Design '{design.get('nome')}' executado com sucesso!",
-            "total_passos": len(passos)
+            "total_passos": len(passos),
+            "downloads": len(downloads_capturados),
+            "dados_extraidos": len([d for d in dados_extraidos if d["sucesso"]]),
+            "semana": semana,
+            "ano": ano
         })
         
         # Atualizar estatísticas do design
