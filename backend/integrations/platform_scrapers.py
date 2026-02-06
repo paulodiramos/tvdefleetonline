@@ -1075,17 +1075,65 @@ class PrioScraper(BaseScraper):
             
             await self.page.screenshot(path='/tmp/prio_04_dashboard.png')
             
-            # ============ ACEITAR COOKIES SE APARECER ============
-            logger.info("🍪 Verificando cookie banner...")
+            # ============ ACEITAR COOKIES - CRÍTICO ============
+            logger.info("🍪 Aceitando cookie banner...")
             try:
-                # O cookie banner tem botão "Ok"
-                cookie_btn = self.page.locator('button:has-text("Ok")')
-                if await cookie_btn.count() > 0 and await cookie_btn.first.is_visible(timeout=3000):
-                    await cookie_btn.first.click()
-                    await asyncio.sleep(2)
-                    logger.info("✅ Cookies aceites")
-            except Exception:
-                logger.debug("Cookie banner não encontrado ou já aceite")
+                # Aguardar um pouco para o banner aparecer
+                await asyncio.sleep(2)
+                
+                # Método 1: Procurar botão "Ok" com diferentes seletores
+                cookie_accepted = False
+                cookie_selectors = [
+                    'button:has-text("Ok")',
+                    'button:has-text("OK")',
+                    'button:has-text("Aceitar")',
+                    'button:has-text("Accept")',
+                    'button:has-text("Concordo")',
+                    '.cookie-consent button',
+                    '#cookie-consent-ok',
+                    '[data-cookie-consent]'
+                ]
+                
+                for selector in cookie_selectors:
+                    try:
+                        btn = self.page.locator(selector)
+                        if await btn.count() > 0:
+                            first_btn = btn.first
+                            if await first_btn.is_visible(timeout=2000):
+                                await first_btn.click(force=True)
+                                cookie_accepted = True
+                                logger.info(f"✅ Cookies aceites via: {selector}")
+                                await asyncio.sleep(2)
+                                break
+                    except Exception:
+                        continue
+                
+                # Método 2: Via JavaScript se não funcionou
+                if not cookie_accepted:
+                    logger.info("  Tentando aceitar cookies via JavaScript...")
+                    accepted = await self.page.evaluate('''() => {
+                        // Procurar por botões com texto Ok/Aceitar
+                        const buttons = document.querySelectorAll('button');
+                        for (let btn of buttons) {
+                            const text = btn.textContent.trim().toLowerCase();
+                            if (text === 'ok' || text.includes('aceitar') || text.includes('concordo')) {
+                                btn.click();
+                                return true;
+                            }
+                        }
+                        // Tentar remover overlay/modal de cookies
+                        const overlays = document.querySelectorAll('[class*="cookie"], [class*="consent"], [class*="modal"], .overlay');
+                        for (let overlay of overlays) {
+                            overlay.remove();
+                        }
+                        return false;
+                    }''')
+                    if accepted:
+                        logger.info("✅ Cookies aceites via JavaScript")
+                        await asyncio.sleep(2)
+                        
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao aceitar cookies: {e}")
             
             # ============ PASSO 1: EXPANDIR O MENU "Transações De Cartões" ============
             logger.info("📍 Passo 1: Expandindo menu 'Transações De Cartões'...")
