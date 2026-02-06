@@ -2546,21 +2546,25 @@ async def executar_sincronizacao_auto(
                                                 "periodo_ano": ano,
                                                 # Campos da API Bolt
                                                 "ganhos_brutos_total": total_ride_price,
-                                                "ganhos_liquidos": ganhos_liquidos_calculados,  # net_earnings + tips + toll_fee
-                                                "ganhos": ganhos_liquidos_calculados,
+                                                "ganhos_api": ganhos_liquidos_calculados,  # Valor direto da API
                                                 "ganhos_viagens": total_net_earnings,
                                                 "comissao_bolt": total_commission,
                                                 "gorjetas": total_tips,
-                                                "portagens_bolt": total_toll_fee,      # Novo campo
-                                                "taxa_reserva": total_booking_fee,      # Novo campo
-                                                "taxa_cancelamento": total_cancellation_fee,  # Novo campo
+                                                "portagens_bolt": total_toll_fee,
+                                                "taxa_reserva": total_booking_fee,
+                                                "taxa_cancelamento": total_cancellation_fee,
                                                 "desconto_dinheiro": total_cash_discount,
                                                 "desconto_app": total_in_app_discount,
                                                 "numero_viagens": total_viagens,
                                                 "parceiro_id": pid,
                                                 "fonte": "bolt_api",
-                                                # NOTA: ganhos_campanha não disponível via API - só via CSV
-                                                "ganhos_campanha": 0,  # Precisa de import CSV para valor real
+                                                # Campo de ajuste para bónus/campanhas (não disponível na API)
+                                                # Mantém valor existente se houver, senão 0
+                                                "ajuste_bonus": ganho_existente.get("ajuste_bonus", 0) if ganho_existente else 0,
+                                                "ganhos_campanha": ganho_existente.get("ganhos_campanha", 0) if ganho_existente else 0,
+                                                # Ganhos líquidos = API + ajuste_bonus + ganhos_campanha
+                                                "ganhos_liquidos": ganhos_liquidos_calculados + (ganho_existente.get("ajuste_bonus", 0) if ganho_existente else 0) + (ganho_existente.get("ganhos_campanha", 0) if ganho_existente else 0),
+                                                "ganhos": ganhos_liquidos_calculados + (ganho_existente.get("ajuste_bonus", 0) if ganho_existente else 0) + (ganho_existente.get("ganhos_campanha", 0) if ganho_existente else 0),
                                                 "synced_at": datetime.now(timezone.utc).isoformat(),
                                                 "updated_at": datetime.now(timezone.utc).isoformat()
                                             }
