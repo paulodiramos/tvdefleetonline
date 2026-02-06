@@ -1226,13 +1226,18 @@ class PrioScraper(BaseScraper):
                     for row in rows[:100]:  # Limitar a 100 registos
                         try:
                             cells = await row.locator('td').all()
+                            logger.info(f"    Linha com {len(cells)} células")
+                            
                             if len(cells) >= 6:
                                 # Extrair campos principais (índices baseados nas colunas)
-                                # 0: POSTO, 2: DATA, 5: LITROS, 12: TOTAL (último)
+                                # 0: POSTO, 2: DATA, 5: LITROS, último: TOTAL
                                 posto = await cells[0].text_content() if len(cells) > 0 else ""
                                 data_trans = await cells[2].text_content() if len(cells) > 2 else ""
                                 litros = await cells[5].text_content() if len(cells) > 5 else "0"
                                 total = await cells[-1].text_content() if cells else "0"
+                                
+                                # Log valores brutos
+                                logger.info(f"    Bruto - posto:'{posto[:20] if posto else ''}' data:'{data_trans}' litros:'{litros}' total:'{total}'")
                                 
                                 # Limpar valores
                                 posto = posto.strip() if posto else ""
@@ -1244,16 +1249,21 @@ class PrioScraper(BaseScraper):
                                 try:
                                     litros_float = float(litros_clean) if litros_clean else 0
                                     total_float = float(total_clean) if total_clean else 0
-                                except ValueError:
+                                except ValueError as ve:
+                                    logger.warning(f"    ValueError ao converter: litros='{litros_clean}' total='{total_clean}' - {ve}")
                                     litros_float = 0
                                     total_float = 0
+                                
+                                logger.info(f"    Limpo - litros:{litros_float} total:{total_float}")
                                 
                                 if total_float > 0:  # Só adicionar se tiver valor
                                     row_data = [data_trans, str(litros_float), str(total_float), posto]
                                     data.append(row_data)
-                                    logger.info(f"  ✅ Linha: {data_trans}, {litros_float}L, {total_float}€, {posto}")
+                                    logger.info(f"  ✅ Linha válida: {data_trans}, {litros_float}L, {total_float}€")
+                                else:
+                                    logger.info(f"    ⚠️ Linha ignorada (total=0)")
                         except Exception as row_err:
-                            logger.debug(f"  Erro ao processar linha: {row_err}")
+                            logger.warning(f"  Erro ao processar linha: {row_err}")
                             continue
                     
                     logger.info(f"✅ Extraídas {len(data)} transações válidas")
