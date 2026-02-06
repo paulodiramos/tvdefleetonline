@@ -1977,8 +1977,135 @@ async def executar_sincronizacao_auto(
     for fonte in fontes:
         try:
             fonte_config = config.get("fontes", {}).get(fonte, {}) if config else {}
-            metodo = fonte_config.get("metodo", "csv")
+            metodo = fonte_config.get("metodo", "rpa")  # Default para RPA
             
+            # ============ PRIO / COMBUSTÍVEL ============
+            if fonte in ["combustivel", "prio"]:
+                # Buscar credenciais da Prio do parceiro
+                parceiro = await db.users.find_one({"id": pid}, {"_id": 0})
+                creds_plataformas = parceiro.get("credenciais_plataformas", {}) if parceiro else {}
+                
+                prio_usuario = creds_plataformas.get("prio_usuario")
+                prio_password = creds_plataformas.get("prio_password")
+                
+                if not prio_usuario or not prio_password:
+                    resultados[fonte] = {
+                        "sucesso": False,
+                        "metodo": "rpa",
+                        "erro": "Credenciais Prio não configuradas. Configure em Configurações do Parceiro."
+                    }
+                else:
+                    try:
+                        from integrations.platform_scrapers import PrioScraper
+                        from routes.rpa_automacao import calcular_periodo_semana
+                        
+                        # Calcular período da semana
+                        data_inicio, data_fim = calcular_periodo_semana(semana, ano)
+                        
+                        logger.info(f"🔄 Sincronizando Prio para parceiro {pid}, Semana {semana}/{ano}")
+                        
+                        # Executar scraper
+                        async with PrioScraper(headless=True) as scraper:
+                            login_ok = await scraper.login(prio_usuario, prio_password)
+                            
+                            if not login_ok:
+                                resultados[fonte] = {
+                                    "sucesso": False,
+                                    "metodo": "rpa",
+                                    "erro": "Falha no login da Prio. Verifique as credenciais."
+                                }
+                            else:
+                                # Extrair dados
+                                dados = await scraper.extract_data(
+                                    start_date=data_inicio[:10],
+                                    end_date=data_fim[:10]
+                                )
+                                
+                                if dados.get("success"):
+                                    # Processar e guardar dados
+                                    transacoes = dados.get("data", [])
+                                    total_valor = 0
+                                    total_litros = 0
+                                    transacoes_processadas = []
+                                    
+                                    for row in transacoes:
+                                        if len(row) >= 4:
+                                            try:
+                                                # Formato típico: [data, litros, valor, posto]
+                                                data_trans = row[0] if len(row) > 0 else ""
+                                                litros_str = row[1] if len(row) > 1 else "0"
+                                                valor_str = row[2] if len(row) > 2 else "0"
+                                                posto = row[3] if len(row) > 3 else ""
+                                                
+                                                litros = float(str(litros_str).replace(",", ".").replace("L", "").strip() or 0)
+                                                valor = float(str(valor_str).replace(",", ".").replace("€", "").strip() or 0)
+                                                
+                                                total_litros += litros
+                                                total_valor += valor
+                                                
+                                                transacoes_processadas.append({
+                                                    "data": data_trans,
+                                                    "litros": litros,
+                                                    "valor": valor,
+                                                    "posto": posto
+                                                })
+                                            except:
+                                                continue
+                                    
+                                    # Guardar em despesas_combustivel
+                                    if total_valor > 0:
+                                        registro = {
+                                            "id": str(uuid.uuid4()),
+                                            "parceiro_id": pid,
+                                            "semana": semana,
+                                            "ano": ano,
+                                            "valor_total": round(total_valor, 2),
+                                            "litros": round(total_litros, 2),
+                                            "kwh": 0,  # Combustível fóssil
+                                            "transacoes": transacoes_processadas,
+                                            "fonte": "rpa_prio",
+                                            "plataforma": "Prio Combustível",
+                                            "synced_at": datetime.now(timezone.utc).isoformat()
+                                        }
+                                        
+                                        # Upsert
+                                        await db.despesas_combustivel.update_one(
+                                            {"parceiro_id": pid, "semana": semana, "ano": ano, "fonte": "rpa_prio"},
+                                            {"$set": registro},
+                                            upsert=True
+                                        )
+                                        
+                                        resultados[fonte] = {
+                                            "sucesso": True,
+                                            "metodo": "rpa",
+                                            "mensagem": f"Sincronizado: {len(transacoes_processadas)} transações, {total_litros:.1f}L, {total_valor:.2f}€",
+                                            "total_valor": total_valor,
+                                            "total_litros": total_litros,
+                                            "transacoes": len(transacoes_processadas)
+                                        }
+                                    else:
+                                        resultados[fonte] = {
+                                            "sucesso": True,
+                                            "metodo": "rpa",
+                                            "mensagem": f"Nenhuma transação encontrada para Semana {semana}/{ano}"
+                                        }
+                                else:
+                                    resultados[fonte] = {
+                                        "sucesso": False,
+                                        "metodo": "rpa",
+                                        "erro": dados.get("error", "Erro ao extrair dados da Prio")
+                                    }
+                                    
+                    except Exception as prio_err:
+                        logger.error(f"Erro ao sincronizar Prio: {prio_err}")
+                        resultados[fonte] = {
+                            "sucesso": False,
+                            "metodo": "rpa",
+                            "erro": str(prio_err)
+                        }
+                continue  # Próxima fonte
+            
+            # ============ RPA GENÉRICO ============
             # Verificar se há credenciais/configuração para RPA
             if metodo == "rpa":
                 # Primeiro tentar credenciais centrais (geridas pelo Admin)
