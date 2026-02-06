@@ -151,14 +151,24 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const datasSemana = semana && ano ? calcularDatasSemana(semana, ano) : null;
 
   useEffect(() => {
-    const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
-    const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-    // Usar a semana atual para mostrar os dados mais recentes
-    setSemana(currentWeek);
-    setAno(now.getFullYear());
-  }, []);
+    // Verificar parâmetros da URL primeiro
+    const semanaParam = searchParams.get('semana');
+    const anoParam = searchParams.get('ano');
+    
+    if (semanaParam && anoParam) {
+      // Usar parâmetros da URL
+      setSemana(parseInt(semanaParam));
+      setAno(parseInt(anoParam));
+    } else {
+      // Usar semana atual como default
+      const now = new Date();
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
+      const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+      setSemana(currentWeek);
+      setAno(now.getFullYear());
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (semana && ano) {
