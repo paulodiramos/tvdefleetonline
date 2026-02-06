@@ -664,9 +664,20 @@ class UberScraper(BaseScraper):
         """
         Processar ficheiro CSV de relatório Uber.
         Extrai dados de ganhos por motorista.
+        Detecta automaticamente a semana com base no nome do ficheiro.
         """
         try:
             logger.info(f"📄 Processando relatório CSV: {filepath}")
+            
+            # Extrair período do nome do ficheiro (formato: YYYYMMDD-YYYYMMDD-payments_driver...)
+            periodo_detectado = self._extrair_periodo_nome_ficheiro(filepath)
+            semana_detectada = None
+            ano_detectado = None
+            
+            if periodo_detectado:
+                data_inicio_detectada, data_fim_detectada = periodo_detectado
+                semana_detectada, ano_detectado = self._calcular_semana_iso(data_inicio_detectada)
+                logger.info(f"📅 Período detectado do ficheiro: {data_inicio_detectada} a {data_fim_detectada} → Semana {semana_detectada}/{ano_detectado}")
             
             dados_motoristas = []
             total_ganhos = 0.0
@@ -721,14 +732,20 @@ class UberScraper(BaseScraper):
                         # UUID do motorista para referência
                         uuid_motorista = row.get('UUID do motorista', row.get('Driver UUID', ''))
                         
+                        # Usar período detectado do ficheiro se disponível
+                        periodo_inicio = data_inicio_detectada if periodo_detectado else start_date
+                        periodo_fim = data_fim_detectada if periodo_detectado else end_date
+                        
                         # Aceitar valores positivos (ganhos) - valores negativos são pagamentos à empresa
                         if motorista and ganho_valor > 0:
                             dados_motoristas.append({
                                 "motorista": motorista,
                                 "uuid": uuid_motorista,
                                 "ganho": ganho_valor,
-                                "periodo_inicio": start_date,
-                                "periodo_fim": end_date
+                                "periodo_inicio": periodo_inicio,
+                                "periodo_fim": periodo_fim,
+                                "semana_detectada": semana_detectada,
+                                "ano_detectado": ano_detectado
                             })
                             total_ganhos += ganho_valor
                             logger.info(f"  📊 {motorista}: €{ganho_valor:.2f}")
