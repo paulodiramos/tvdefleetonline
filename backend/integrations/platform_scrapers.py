@@ -1075,156 +1075,130 @@ class PrioScraper(BaseScraper):
             
             await self.page.screenshot(path='/tmp/prio_04_dashboard.png')
             
-            # Navegar para secção de TRANSAÇÕES DE CARTÕES (onde estão os dados detalhados)
-            # O menu está na barra lateral esquerda
-            logger.info("📍 Navegando para Transações De Cartões...")
+            # ============ PASSO 1: Clicar em "Transações de Cartões" no menu lateral ============
+            logger.info("📍 Passo 1: Navegando para Transações de Cartões...")
             
-            clicked_transacoes = False
-            
-            # Tentar clicar no menu Transações De Cartões
             try:
-                # Procurar no menu lateral
-                menu_items = self.page.locator('nav a, aside a, .sidebar a, [class*="menu"] a, .menu-item')
-                count = await menu_items.count()
-                logger.info(f"  Encontrados {count} itens de menu")
-                
-                for i in range(count):
-                    item = menu_items.nth(i)
-                    try:
-                        text = await item.text_content()
-                        if text and 'transaç' in text.lower():
-                            logger.info(f"  Clicando em: {text}")
-                            await item.click()
-                            await asyncio.sleep(3)
-                            clicked_transacoes = True
-                            break
-                    except:
-                        continue
+                # Procurar e clicar em "Transações de Cartões"
+                transacoes_menu = self.page.locator('text="Transações de Cartões"').first
+                if await transacoes_menu.count() > 0:
+                    await transacoes_menu.click()
+                    await asyncio.sleep(2)
+                    logger.info("✅ Clicou em Transações de Cartões")
+                else:
+                    # Alternativa: procurar por texto parcial
+                    transacoes_menu = self.page.locator('a:has-text("Transações")').first
+                    await transacoes_menu.click()
+                    await asyncio.sleep(2)
             except Exception as e:
-                logger.warning(f"  Erro ao procurar menu: {e}")
+                logger.warning(f"⚠️ Erro ao clicar em Transações: {e}")
             
-            # Fallback - tentar seletores específicos
-            if not clicked_transacoes:
-                transacoes_selectors = [
-                    'text="Transações De Cartões"',
-                    'a:has-text("Transações")',
-                    '[href*="transac"]',
-                    'span:has-text("Transações")',
-                ]
-                
-                for selector in transacoes_selectors:
-                    try:
-                        locator = self.page.locator(selector)
-                        if await locator.count() > 0:
-                            logger.info(f"  Tentando selector: {selector}")
-                            await locator.first.click()
-                            await asyncio.sleep(3)
-                            clicked_transacoes = True
-                            break
-                    except Exception as e:
-                        logger.debug(f"  Erro com {selector}: {e}")
-                        continue
+            await self.page.screenshot(path='/tmp/prio_05_menu_transacoes.png')
             
-            if not clicked_transacoes:
-                logger.warning("⚠️ Secção de transações não encontrada")
-            else:
-                logger.info("✅ Navegou para Transações De Cartões")
+            # ============ PASSO 2: Clicar em "Prio Frota" no submenu ============
+            logger.info("📍 Passo 2: Clicando em Prio Frota...")
             
-            await self.page.screenshot(path='/tmp/prio_05_consumos.png')
+            try:
+                # Procurar e clicar em "Prio Frota"
+                prio_frota = self.page.locator('text="Prio Frota"').first
+                if await prio_frota.count() > 0:
+                    await prio_frota.click()
+                    await asyncio.sleep(3)
+                    logger.info("✅ Clicou em Prio Frota")
+                else:
+                    # Alternativa
+                    prio_frota = self.page.locator('a:has-text("Frota")').first
+                    await prio_frota.click()
+                    await asyncio.sleep(3)
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao clicar em Prio Frota: {e}")
             
-            # Preencher filtros de data se disponíveis
+            await self.page.screenshot(path='/tmp/prio_06_transacoes_frota.png')
+            
+            # ============ PASSO 3: Definir datas nos campos "Início" e "Fim" ============
             if start_date and end_date:
-                logger.info(f"📅 Aplicando filtro de datas: {start_date} a {end_date}")
+                logger.info(f"📅 Passo 3: Aplicando filtro de datas: {start_date} a {end_date}")
                 
-                # Formato de data para o portal (DD/MM/YYYY)
+                # Converter formato de data (YYYY-MM-DD para DD/MM/YYYY)
                 start_formatted = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d/%m/%Y')
                 end_formatted = datetime.strptime(end_date, '%Y-%m-%d').strftime('%d/%m/%Y')
                 
-                date_from_selectors = [
-                    'input[id*="DataInicio"]',
-                    'input[id*="StartDate"]',
-                    'input[name*="startDate"]',
-                    'input[placeholder*="início"]',
-                    'input[placeholder*="De"]'
-                ]
-                
-                date_to_selectors = [
-                    'input[id*="DataFim"]',
-                    'input[id*="EndDate"]',
-                    'input[name*="endDate"]',
-                    'input[placeholder*="fim"]',
-                    'input[placeholder*="Até"]'
-                ]
-                
-                # Preencher data inicial
-                for selector in date_from_selectors:
-                    try:
-                        locator = self.page.locator(selector).first
-                        if await locator.is_visible(timeout=1000):
-                            await locator.fill(start_formatted)
-                            logger.info(f"✅ Data inicial: {start_formatted}")
-                            break
-                    except Exception:
-                        continue
-                
-                # Preencher data final
-                for selector in date_to_selectors:
-                    try:
-                        locator = self.page.locator(selector).first
-                        if await locator.is_visible(timeout=1000):
-                            await locator.fill(end_formatted)
-                            logger.info(f"✅ Data final: {end_formatted}")
-                            break
-                    except Exception:
-                        continue
-                
-                # Clicar em pesquisar/filtrar
-                search_btn = self.page.locator('button:has-text("Pesquisar"), button:has-text("Filtrar"), input[type="submit"]').first
-                if await search_btn.count() > 0:
-                    await search_btn.click()
-                    await asyncio.sleep(3)
-            
-            await self.page.screenshot(path='/tmp/prio_06_results.png')
-            
-            # Tentar extrair dados da tabela
-            data = []
-            table = self.page.locator('table').first
-            if await table.count() > 0:
-                rows = await self.page.locator('table tbody tr').all()
-                logger.info(f"📊 Encontradas {len(rows)} linhas na tabela")
-                
-                for row in rows[:50]:  # Limitar a 50 registos
-                    try:
-                        cells = await row.locator('td').all()
-                        row_data = []
-                        for cell in cells:
-                            text = await cell.text_content()
-                            row_data.append(text.strip() if text else '')
-                        if row_data:
-                            data.append(row_data)
-                    except Exception:
-                        continue
-            
-            # Tentar exportar CSV se disponível
-            export_selectors = [
-                'button:has-text("Exportar")',
-                'a:has-text("Exportar")',
-                'button:has-text("Excel")',
-                'button:has-text("CSV")',
-                '[title*="Exportar"]'
-            ]
-            
-            for selector in export_selectors:
+                # Preencher data início
                 try:
-                    locator = self.page.locator(selector)
-                    if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
-                        logger.info(f"✅ Botão de exportar encontrado: {selector}")
-                        # Não clicar automaticamente, apenas informar
-                        break
-                except Exception:
-                    continue
+                    inicio_input = self.page.locator('input[id*="Inicio"], input[placeholder*="Início"], input[name*="start"]').first
+                    if await inicio_input.count() > 0:
+                        await inicio_input.clear()
+                        await inicio_input.fill(start_formatted)
+                        logger.info(f"✅ Data início: {start_formatted}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher data início: {e}")
+                
+                # Preencher data fim
+                try:
+                    fim_input = self.page.locator('input[id*="Fim"], input[placeholder*="Fim"], input[name*="end"]').first
+                    if await fim_input.count() > 0:
+                        await fim_input.clear()
+                        await fim_input.fill(end_formatted)
+                        logger.info(f"✅ Data fim: {end_formatted}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher data fim: {e}")
+                
+                await self.page.screenshot(path='/tmp/prio_07_datas_preenchidas.png')
+                
+                # ============ PASSO 4: Clicar em PESQUISAR ============
+                logger.info("📍 Passo 4: Clicando em Pesquisar...")
+                try:
+                    pesquisar_btn = self.page.locator('button:has-text("PESQUISAR"), button:has-text("Pesquisar"), input[value="PESQUISAR"]').first
+                    if await pesquisar_btn.count() > 0:
+                        await pesquisar_btn.click()
+                        await asyncio.sleep(4)
+                        logger.info("✅ Clicou em Pesquisar")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao clicar em Pesquisar: {e}")
             
-            await self.page.screenshot(path='/tmp/prio_07_final.png')
+            await self.page.screenshot(path='/tmp/prio_08_resultados.png')
+            
+            # ============ PASSO 5: Extrair dados da tabela ============
+            logger.info("📍 Passo 5: Extraindo dados da tabela...")
+            data = []
+            
+            try:
+                # A tabela tem colunas: POSTO, REDE, DATA, CARTÃO, ESTADO, LITROS, COMB., RECIBO, KM'S, ID. COND., FATURA, V. UNIT. (S/IVA), TOTAL
+                table = self.page.locator('table').first
+                if await table.count() > 0:
+                    rows = await self.page.locator('table tbody tr').all()
+                    logger.info(f"📊 Encontradas {len(rows)} linhas na tabela")
+                    
+                    for row in rows[:100]:  # Limitar a 100 registos
+                        try:
+                            cells = await row.locator('td').all()
+                            if len(cells) >= 6:
+                                # Extrair campos principais
+                                posto = await cells[0].text_content() if len(cells) > 0 else ""
+                                data_trans = await cells[2].text_content() if len(cells) > 2 else ""
+                                litros = await cells[5].text_content() if len(cells) > 5 else "0"
+                                total = await cells[-1].text_content() if cells else "0"
+                                
+                                # Limpar valores
+                                posto = posto.strip() if posto else ""
+                                data_trans = data_trans.strip() if data_trans else ""
+                                litros = litros.strip().replace(",", ".").replace("L", "").strip() if litros else "0"
+                                total = total.strip().replace(",", ".").replace("€", "").replace(" ", "").strip() if total else "0"
+                                
+                                row_data = [data_trans, litros, total, posto]
+                                data.append(row_data)
+                                logger.debug(f"  Linha: {data_trans}, {litros}L, {total}€")
+                        except Exception as row_err:
+                            logger.debug(f"  Erro ao processar linha: {row_err}")
+                            continue
+                    
+                    logger.info(f"✅ Extraídas {len(data)} transações")
+                else:
+                    logger.warning("⚠️ Tabela não encontrada")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao extrair tabela: {e}")
+            
+            await self.page.screenshot(path='/tmp/prio_09_final.png')
             
             return {
                 "success": True,
