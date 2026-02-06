@@ -860,6 +860,16 @@ function App() {
             }
           />
           <Route
+            path="/executar-rpa"
+            element={
+              user && user.role === 'admin' ? (
+                <ExecutarRPA user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-plataformas-rpa"
             element={
               user && user.role === 'admin' ? (
