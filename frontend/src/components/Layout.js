@@ -201,7 +201,8 @@ const Layout = ({ children, user, onLogout }) => {
           { path: '/verificar-recibos', label: '✅ Verificar Recibos' },
           { path: '/pagamentos', label: '💳 Pagamentos a Motoristas' },
           { path: '/arquivo-recibos', label: '📁 Arquivo de Recibos' },
-          { path: '/alertas-custos', label: '🔔 Alertas de Custos' }
+          { path: '/alertas-custos', label: '🔔 Alertas de Custos' },
+          { path: '/importar-dados', label: '📥 Importar Dados' }
         ]
       },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
