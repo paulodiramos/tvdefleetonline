@@ -849,6 +849,16 @@ function App() {
             }
           />
           <Route
+            path="/login-plataformas"
+            element={
+              user ? (
+                <LoginPlataformas user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-plataformas-rpa"
             element={
               user && user.role === 'admin' ? (
