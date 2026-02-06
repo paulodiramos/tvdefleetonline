@@ -1277,3 +1277,44 @@ App móvel agora suporta 4 perfis diferentes com funcionalidades específicas pa
 - Integrações: Ifthenpay, Moloni, Verizon GPS
 - Refatorar ficheiros monolíticos (`server.py`, `platform_scrapers.py`)
 - Envio de relatórios via WhatsApp
+
+---
+
+## ✅ Correções P1 - RPAs (06/02/2026)
+
+### RPA Via Verde - CORRIGIDO ✅
+**Problema:** O login falhava porque um cookie consent banner bloqueava a interação.
+
+**Correções implementadas:**
+1. Adicionada lógica para aceitar cookies automaticamente antes do login
+2. Verificação adicional de cookies antes de clicar no botão de submit
+3. Melhoria no seletor do botão Login - usar locator do dialog
+4. Fallback com pressionar Enter se o clique falhar
+
+**Ficheiro:** `/app/backend/integrations/platform_scrapers.py`
+
+**Resultado:** Login bem-sucedido confirmado via teste!
+
+### RPA Uber - Melhorado (pendente teste real)
+**Problema:** O campo "Organização" não era selecionado, deixando o botão "Gerar" desativado.
+
+**Correções implementadas:**
+1. Adicionados mais seletores para encontrar o dropdown de organização
+2. Screenshots de debug em cada passo (uber_05_before_org.png, uber_06_org_dropdown_open.png)
+3. Múltiplas abordagens para selecionar a opção (role="option", checkbox, menu-item)
+4. Fallback: procurar no modal pelo último dropdown
+
+**Ficheiro:** `/app/backend/services/uber_extractor.py`
+
+**Status:** Melhorado, requer teste com sessão real do parceiro.
+
+---
+
+## Resumo das Correções Hoje (06/02/2026)
+
+1. ✅ **Bug Prio → Combustível** - Valores agora aparecem em "Combustível" em vez de "Elétrico"
+2. ✅ **Parâmetros URL Resumo Semanal** - `/resumo-semanal?semana=5&ano=2026` funciona
+3. ✅ **Links de Navegação** - Adicionados "Login Plataformas", "Executar RPA", "Importar Dados"
+4. ✅ **RPA Via Verde** - Login funciona com aceitação automática de cookies
+5. 🔄 **RPA Uber** - Melhorado, pendente teste real
+
