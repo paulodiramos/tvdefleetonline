@@ -257,36 +257,53 @@ class UberExtractor:
             
             # Tentar múltiplas abordagens para encontrar e selecionar organização
             try:
-                # Abordagem 1: Procurar dropdown pelo placeholder em português e inglês
+                # O texto exato do placeholder é "Selecione as organizações a incluir no relatório"
                 org_selectors = [
-                    'text="Selecione as organizações"',
-                    'text="Select organizations"',
-                    '[data-baseweb="select"]:has-text("organização")',
-                    '[data-baseweb="select"]:has-text("organization")',
-                    'div[role="combobox"]',
-                    # Dropdown baseado em aria-label
-                    '[aria-label*="organization" i]',
-                    '[aria-label*="organização" i]',
-                    # Por classe de input
-                    'input[id*="org"]',
+                    'text="Selecione as organizações a incluir no relatório"',
+                    '[placeholder*="organizações"]',
+                    'div:has-text("Selecione as organizações"):not(:has(div:has-text("Selecione as organizações")))',
+                    '[data-baseweb="select"]:last-child',  # Último dropdown no modal
+                    'div[role="combobox"]:last-child',
                 ]
                 
                 org_dropdown = None
-                for selector in org_selectors:
-                    try:
-                        loc = self.page.locator(selector)
-                        if await loc.count() > 0:
-                            first = loc.first
-                            if await first.is_visible(timeout=1000):
-                                org_dropdown = first
-                                logger.info(f"  Dropdown encontrado: {selector}")
-                                break
-                    except:
-                        continue
+                
+                # Primeiro tentar encontrar o dropdown pelo texto placeholder
+                try:
+                    # Procurar dentro do modal/dialog
+                    modal = self.page.locator('[role="dialog"]')
+                    if await modal.count() > 0:
+                        logger.info("  Modal encontrado, procurando dropdown de organização...")
+                        
+                        # Procurar pelo último select dentro do modal (geralmente é a organização)
+                        selects = modal.locator('[data-baseweb="select"]')
+                        count = await selects.count()
+                        logger.info(f"  Encontrados {count} selects no modal")
+                        
+                        if count > 0:
+                            # O dropdown de organização é geralmente o último
+                            org_dropdown = selects.last
+                            logger.info("  Usando último select como dropdown de organização")
+                except Exception as e:
+                    logger.debug(f"  Erro ao procurar no modal: {e}")
+                
+                # Fallback para seletores individuais
+                if org_dropdown is None:
+                    for selector in org_selectors:
+                        try:
+                            loc = self.page.locator(selector)
+                            if await loc.count() > 0:
+                                first = loc.first
+                                if await first.is_visible(timeout=1000):
+                                    org_dropdown = first
+                                    logger.info(f"  Dropdown encontrado via: {selector}")
+                                    break
+                        except:
+                            continue
                 
                 if org_dropdown:
                     await org_dropdown.click()
-                    await asyncio.sleep(1.5)
+                    await asyncio.sleep(2)
                     
                     # Tirar screenshot do dropdown aberto
                     await self.page.screenshot(path='/tmp/uber_06_org_dropdown_open.png')
