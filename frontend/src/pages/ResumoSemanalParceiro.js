@@ -1354,7 +1354,6 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                   <th className="text-left p-2">Motorista</th>
                   <th className="text-right p-2">Uber</th>
                   <th className="text-right p-2">Bolt</th>
-                  <th className="text-right p-2 text-[10px]" title="Ganhos Campanha Bolt">Bolt Camp.</th>
                   <th className="text-right p-2">Via Verde</th>
                   <th className="text-right p-2">Comb.</th>
                   <th className="text-right p-2">Elétr.</th>
