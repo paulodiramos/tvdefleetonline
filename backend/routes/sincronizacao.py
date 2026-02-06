@@ -2006,7 +2006,8 @@ async def executar_sincronizacao_auto(
                         
                         # Executar scraper
                         async with PrioScraper(headless=True) as scraper:
-                            login_ok = await scraper.login(prio_usuario, prio_password)
+                            login_result = await scraper.login(prio_usuario, prio_password)
+                            login_ok = login_result.get("success", False) if isinstance(login_result, dict) else login_result
                             
                             if not login_ok:
                                 resultados[fonte] = {
