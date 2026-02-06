@@ -131,6 +131,7 @@ import AdminFornecedores from "@/pages/AdminFornecedores";
 import WhatsAppEnvio from "@/pages/WhatsAppEnvio";
 import RelatorioFornecedores from "@/pages/RelatorioFornecedores";
 import AlertasCustos from "@/pages/AlertasCustos";
+import LoginPlataformas from "@/pages/LoginPlataformas";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
