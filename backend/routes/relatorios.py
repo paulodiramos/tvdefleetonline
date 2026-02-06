@@ -1057,7 +1057,38 @@ async def get_resumo_semanal_parceiro(
             combustivel_total += valor_sem_iva + iva_valor
         
         if comb_records:
-            logger.info(f"  {motorista.get('name')}: Combustível query returned {len(comb_records)} records, total €{combustivel_total:.2f}")
+            logger.info(f"  {motorista.get('name')}: Combustível (abastecimentos) query returned {len(comb_records)} records, total €{combustivel_total:.2f}")
+        
+        # ============ BUSCAR TAMBÉM DE DESPESAS_COMBUSTIVEL (Prio RPA) ============
+        # Query para despesas_combustivel (dados importados via RPA da Prio)
+        parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
+        despesas_comb_query_conditions = [{"motorista_id": motorista_id}]
+        if parceiro_id:
+            despesas_comb_query_conditions.append({"parceiro_id": parceiro_id})
+        if veiculo_id:
+            despesas_comb_query_conditions.append({"vehicle_id": veiculo_id})
+        
+        despesas_comb_query = {
+            "$and": [
+                {"$or": despesas_comb_query_conditions},
+                {"$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]},
+                # Garantir que é combustível fóssil (litros > 0 ou kwh = 0)
+                {"$or": [
+                    {"litros": {"$gt": 0}},
+                    {"kwh": {"$in": [0, None]}}
+                ]}
+            ]
+        }
+        
+        despesas_comb_records = await db.despesas_combustivel.find(despesas_comb_query, {"_id": 0}).to_list(100)
+        for r in despesas_comb_records:
+            combustivel_total += float(r.get("valor_total") or r.get("valor") or 0)
+        
+        if despesas_comb_records:
+            logger.info(f"  {motorista.get('name')}: Combustível (despesas_combustivel/Prio) query returned {len(despesas_comb_records)} records, adicionado €{sum(float(r.get('valor_total') or r.get('valor') or 0) for r in despesas_comb_records):.2f}, total €{combustivel_total:.2f}")
         
         # ============ CARREGAMENTO ELÉTRICO ============
         eletrico_total = 0.0
