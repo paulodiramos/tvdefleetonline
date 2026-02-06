@@ -1273,6 +1273,7 @@ async def websocket_design_browser(
         while True:
             try:
                 data = await asyncio.wait_for(websocket.receive_json(), timeout=2.0)
+                logger.info(f"Comando recebido: {data}")
                 
                 if data.get("tipo") == "click":
                     x, y = data.get("x", 0), data.get("y", 0)
