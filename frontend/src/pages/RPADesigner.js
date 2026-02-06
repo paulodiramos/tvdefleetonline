@@ -774,8 +774,13 @@ export default function RPADesigner({ user, onLogout }) {
             
             function pararSessao() {
               if (confirm('Tem a certeza que quer parar a gravação?')) {
-                if (window.opener && window.opener.pararSessaoFromPopup) {
-                  window.opener.pararSessaoFromPopup();
+                // Tentar comunicar com janela principal
+                try {
+                  if (window.opener && !window.opener.closed && window.opener.pararSessaoFromPopup) {
+                    window.opener.pararSessaoFromPopup();
+                  }
+                } catch(e) {
+                  console.log('Erro ao comunicar com janela principal:', e);
                 }
                 window.close();
               }
@@ -783,8 +788,40 @@ export default function RPADesigner({ user, onLogout }) {
             
             function guardarDesign() {
               const nome = prompt('Nome do design:', '${plataformaSelecionada?.nome || 'Design'} - Semana ${semanaSelecionada === 0 ? 'Atual' : '-' + semanaSelecionada}');
-              if (nome && window.opener && window.opener.guardarDesignFromPopup) {
-                window.opener.guardarDesignFromPopup(nome);
+              if (nome) {
+                // Tentar comunicar com janela principal
+                try {
+                  if (window.opener && !window.opener.closed && window.opener.guardarDesignFromPopup) {
+                    window.opener.guardarDesignFromPopup(nome);
+                    alert('Design guardado com sucesso!');
+                  } else {
+                    // Fallback: guardar diretamente via API
+                    guardarDesignDireto(nome);
+                  }
+                } catch(e) {
+                  console.log('Erro ao comunicar com janela principal:', e);
+                  guardarDesignDireto(nome);
+                }
+              }
+            }
+            
+            async function guardarDesignDireto(nome) {
+              try {
+                const response = await fetch('${API_URL}/api/rpa-designer/sessao/' + sessionId + '/guardar?nome=' + encodeURIComponent(nome), {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': 'Bearer ${token}'
+                  }
+                });
+                const data = await response.json();
+                if (data.sucesso) {
+                  alert('Design guardado com sucesso!');
+                  window.close();
+                } else {
+                  alert('Erro ao guardar: ' + (data.detail || 'Erro desconhecido'));
+                }
+              } catch(e) {
+                alert('Erro ao guardar design: ' + e.message);
               }
             }
             
