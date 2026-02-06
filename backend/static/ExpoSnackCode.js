@@ -8,7 +8,7 @@ import {
   Modal, Platform, KeyboardAvoidingView
 } from 'react-native';
 
-const API_URL = 'https://fleet-sync-10.preview.emergentagent.com/api';
+const API_URL = 'https://fleetautomation.preview.emergentagent.com/api';
 
 // ===== CONTEXT =====
 const AuthContext = React.createContext(null);
