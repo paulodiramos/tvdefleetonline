@@ -1087,28 +1087,47 @@ class PrioScraper(BaseScraper):
                 logger.debug("Cookie banner não encontrado ou já aceite")
             
             # ============ PASSO 1: NAVEGAR DIRETAMENTE PARA A PÁGINA DE TRANSAÇÕES ============
-            # URL descoberta do vídeo: https://myprio.com/MyPrio/Transactions
-            logger.info("📍 Passo 1: Navegando diretamente para página de Transações...")
+            # A URL base é https://www.myprio.com/MyPrioReactiveTheme
+            # Vou tentar diferentes URLs para a página de transações
+            logger.info("📍 Passo 1: Navegando para página de Transações...")
             
-            transactions_url = "https://myprio.com/MyPrio/Transactions"
-            await self.page.goto(transactions_url, wait_until='networkidle', timeout=30000)
-            await asyncio.sleep(3)
-            
-            await self.page.screenshot(path='/tmp/prio_05_transactions_page.png')
-            logger.info(f"📍 URL atual: {self.page.url}")
-            
-            # Verificar se estamos na página correta
-            current_url = self.page.url
-            if "Transactions" not in current_url and "transac" not in current_url.lower():
-                logger.warning(f"⚠️ Não navegou para transações. URL: {current_url}")
+            # Primeiro tentar clicar no menu (já que estamos logados)
+            try:
+                # Esperar a página carregar completamente
+                await asyncio.sleep(2)
                 
-                # Fallback: tentar clicar no menu
-                try:
-                    await self.page.click('text="Transações de Cartões"', timeout=5000)
+                # Clicar em "Transações de Cartões"
+                transacoes_link = self.page.locator('text="Transações de Cartões"')
+                if await transacoes_link.count() > 0:
+                    await transacoes_link.first.click(timeout=10000)
                     await asyncio.sleep(3)
-                    logger.info("✅ Clicou em Transações de Cartões via fallback")
-                except Exception as e:
-                    logger.warning(f"⚠️ Erro no fallback: {e}")
+                    logger.info("✅ Clicou em Transações de Cartões")
+                else:
+                    # Tentar via href
+                    link = self.page.locator('a[href*="Transaction"], a[href*="transac"]').first
+                    if await link.count() > 0:
+                        await link.click(timeout=10000)
+                        await asyncio.sleep(3)
+                        logger.info("✅ Clicou no link de transações")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao clicar no menu: {e}")
+                # Fallback: tentar navegar diretamente
+                try:
+                    transactions_urls = [
+                        "https://www.myprio.com/MyPrioReactiveTheme/Transactions",
+                        "https://www.myprio.com/MyPrio/Transactions",
+                        "https://www.myprio.com/Transactions"
+                    ]
+                    for url in transactions_urls:
+                        try:
+                            await self.page.goto(url, wait_until='networkidle', timeout=15000)
+                            if "Transaction" in self.page.url or "transac" in self.page.url.lower():
+                                logger.info(f"✅ Navegou para: {self.page.url}")
+                                break
+                        except Exception:
+                            continue
+                except Exception as nav_err:
+                    logger.warning(f"⚠️ Erro na navegação direta: {nav_err}")
             
             await self.page.screenshot(path='/tmp/prio_06_after_navigation.png')
             
