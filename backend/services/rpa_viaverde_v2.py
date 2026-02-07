@@ -158,17 +158,19 @@ class ViaVerdeRPA:
     
     async def expandir_filtro_e_selecionar_datas(self, data_inicio: str, data_fim: str) -> bool:
         """
-        Tentar selecionar datas usando os calendários popup do site Via Verde.
+        Selecionar datas usando os campos de data da Via Verde.
         
-        NOTA: Se a seleção de datas falhar, o sistema continuará e filtrará
-        os dados após o download do Excel.
+        Baseado nos screenshots:
+        - Campo "De:" com ícone de calendário
+        - Campo "Até:" com ícone de calendário
+        - Botão "Filtrar" (verde)
         
         Formato entrada: DD/MM/YYYY
         """
         try:
-            logger.info(f"📅 A tentar selecionar período: {data_inicio} a {data_fim}")
+            logger.info(f"📅 A selecionar período: {data_inicio} a {data_fim}")
             
-            await self.screenshot("antes_filtro")
+            await self.screenshot("antes_filtro_datas")
             await self.page.wait_for_timeout(2000)
             
             # Parse das datas
@@ -178,57 +180,107 @@ class ViaVerdeRPA:
             logger.info(f"📅 De: {dia_inicio}/{mes_inicio}/{ano_inicio}")
             logger.info(f"📅 Até: {dia_fim}/{mes_fim}/{ano_fim}")
             
-            # Tentar encontrar e clicar nos campos de data
-            # Os campos podem ser inputs com formato MM/YYYY ou DD/MM/YYYY
+            # Método 1: Preencher directamente os inputs de data
+            # Baseado no screenshot, os campos são inputs com formato DD/MM/YYYY
             
-            # Método 1: Procurar inputs de data e clicar diretamente
-            date_inputs = self.page.locator('input[value*="/"]')
-            input_count = await date_inputs.count()
-            logger.info(f"📋 Encontrados {input_count} inputs de data")
+            # Procurar inputs dentro da área "Filtrar por"
+            date_input_selectors = [
+                'input[type="text"][value*="/"]',  # Inputs com data
+                'input.form-control',
+                'input[placeholder*="data"]',
+                'input[placeholder*="DD"]',
+            ]
             
-            if input_count >= 2:
-                # Tentar preencher o primeiro input (De)
+            # Tentar encontrar o container do filtro
+            filtrar_container = self.page.locator('text=Filtrar por:').first
+            if await filtrar_container.count() > 0:
+                logger.info("✅ Container 'Filtrar por:' encontrado")
+            
+            # Procurar o campo "De:"
+            de_label = self.page.locator('text=De:').first
+            if await de_label.count() > 0:
+                logger.info("✅ Label 'De:' encontrado")
+                # Procurar o input próximo
+                de_input = self.page.locator('input').filter(has=self.page.locator('[class*="calendar"], [class*="date"]')).first
+                
+            # Método alternativo: Procurar todos os inputs de data na página
+            all_inputs = await self.page.locator('input').all()
+            date_inputs = []
+            for inp in all_inputs:
                 try:
-                    de_input = date_inputs.nth(0)
-                    await de_input.click()
-                    await self.page.wait_for_timeout(500)
-                    
-                    # Verificar se abriu um calendário
-                    calendar = self.page.locator('table, .datepicker, [class*="calendar"]')
-                    if await calendar.count() > 0:
-                        logger.info("✅ Calendário aberto")
-                        await self.screenshot("calendario_de_aberto")
-                        
-                        # Tentar clicar no dia desejado
-                        # (A filtragem será feita depois, então não é crítico)
-                        await self.page.keyboard.press('Escape')
-                except Exception as e:
-                    logger.warning(f"⚠️ Não foi possível interagir com campo De: {e}")
-            
-            # Tentar clicar no botão Filtrar de qualquer forma
-            await self.page.wait_for_timeout(500)
-            
-            filtrar_btn = self.page.locator('button:has-text("Filtrar"), a:has-text("Filtrar")').first
-            if await filtrar_btn.count() > 0:
-                try:
-                    await filtrar_btn.click()
-                    await self.page.wait_for_timeout(2000)
-                    logger.info("✅ Botão Filtrar clicado")
+                    value = await inp.get_attribute('value')
+                    if value and '/' in value:
+                        date_inputs.append(inp)
                 except:
                     pass
             
-            await self.screenshot("apos_tentativa_filtro")
+            logger.info(f"📋 Encontrados {len(date_inputs)} inputs de data")
             
-            # Retornar True mesmo que a filtragem no site não funcione
-            # porque vamos filtrar os dados após o download
-            logger.info("📋 A filtragem será aplicada após download do Excel")
+            # Se encontramos pelo menos 2 inputs de data
+            if len(date_inputs) >= 2:
+                try:
+                    # Limpar e preencher o campo "De:" (primeiro input)
+                    de_input = date_inputs[0]
+                    await de_input.click()
+                    await self.page.wait_for_timeout(300)
+                    await de_input.fill('')  # Limpar
+                    await de_input.fill(data_inicio)
+                    logger.info(f"✅ Campo 'De:' preenchido com {data_inicio}")
+                    
+                    # Fechar calendário se abriu
+                    await self.page.keyboard.press('Escape')
+                    await self.page.wait_for_timeout(300)
+                    
+                    # Limpar e preencher o campo "Até:" (segundo input)
+                    ate_input = date_inputs[1]
+                    await ate_input.click()
+                    await self.page.wait_for_timeout(300)
+                    await ate_input.fill('')  # Limpar
+                    await ate_input.fill(data_fim)
+                    logger.info(f"✅ Campo 'Até:' preenchido com {data_fim}")
+                    
+                    # Fechar calendário se abriu
+                    await self.page.keyboard.press('Escape')
+                    await self.page.wait_for_timeout(300)
+                    
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher datas: {e}")
+            
+            # Clicar no botão "Filtrar"
+            await self.page.wait_for_timeout(500)
+            
+            filtrar_btn_selectors = [
+                'button:has-text("Filtrar")',
+                'a:has-text("Filtrar")',
+                'input[value="Filtrar"]',
+                '.btn-success:has-text("Filtrar")',
+                '.btn-primary:has-text("Filtrar")',
+            ]
+            
+            for selector in filtrar_btn_selectors:
+                try:
+                    filtrar_btn = self.page.locator(selector).first
+                    if await filtrar_btn.count() > 0 and await filtrar_btn.is_visible():
+                        await filtrar_btn.click()
+                        await self.page.wait_for_timeout(3000)
+                        logger.info("✅ Botão Filtrar clicado")
+                        break
+                except:
+                    continue
+            
+            await self.screenshot("apos_filtrar")
+            
+            # Verificar se há movimentos filtrados
+            movimentos_text = await self.page.locator('text=/\\d+ movimentos? filtrados?/i').first.text_content()
+            if movimentos_text:
+                logger.info(f"📊 {movimentos_text}")
+            
             return True
             
         except Exception as e:
-            logger.warning(f"⚠️ Erro ao tentar selecionar datas (continuando): {e}")
+            logger.warning(f"⚠️ Erro ao selecionar datas (continuando): {e}")
             await self.screenshot("erro_datas")
-            # Retornar True para continuar com o download
-            return True
+            return True  # Continuar mesmo com erro
     
     async def exportar_excel_direto(self) -> Optional[str]:
         """
