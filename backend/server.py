@@ -15823,6 +15823,47 @@ async def listar_credenciais_parceiro(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/parceiro/credenciais-plataformas/{plataforma}/password")
+async def obter_password_credencial(
+    plataforma: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter password de uma credencial específica (requer autenticação)"""
+    try:
+        parceiro_id = current_user['id']
+        
+        credencial = await db.credenciais_plataforma.find_one({
+            'parceiro_id': parceiro_id,
+            'plataforma': plataforma
+        }, {'_id': 0, 'password': 1, 'password_encrypted': 1})
+        
+        if not credencial:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+        
+        # Tentar desencriptar se estiver encriptada
+        password = credencial.get('password', '')
+        if credencial.get('password_encrypted'):
+            try:
+                password = decrypt_password(credencial['password_encrypted'])
+            except Exception as e:
+                logger.warning(f"Erro ao desencriptar password: {e}")
+                password = credencial.get('password', '')
+        
+        # Mascarar parcialmente a password por segurança (mostrar primeiros 3 e últimos 2 chars)
+        if password and len(password) > 5:
+            masked = password[:3] + '*' * (len(password) - 5) + password[-2:]
+        else:
+            masked = password
+        
+        return {"password": password, "masked": masked}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao obter password: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/parceiro/credenciais-plataformas")
 async def salvar_credencial_parceiro(
     request: dict = Body(...),
