@@ -2795,8 +2795,11 @@ async def atualizar_ajuste_bonus_bolt(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Atualizar o ajuste de bónus/campanha da Bolt para um motorista.
-    Este valor complementa os dados da API (que não inclui ganhos de campanha).
+    Atualizar manualmente os ganhos da Bolt para um motorista.
+    Use este endpoint quando os dados da API estiverem incorretos.
+    
+    Nova fórmula: ganhos = total_earnings - comissao_bolt
+    (já inclui gorjetas, bónus, campanhas e portagens)
     """
     # Determinar parceiro_id
     if current_user["role"] == "admin":
@@ -2807,11 +2810,13 @@ async def atualizar_ajuste_bonus_bolt(
     motorista_id = dados.get("motorista_id")
     semana = dados.get("semana")
     ano = dados.get("ano")
-    ajuste_bonus = dados.get("ajuste_bonus", 0)
-    ganhos_campanha = dados.get("ganhos_campanha", 0)
+    ganhos_liquidos = dados.get("ganhos_liquidos")  # Valor total correto
     
     if not motorista_id or not semana or not ano:
         raise HTTPException(status_code=400, detail="motorista_id, semana e ano são obrigatórios")
+    
+    if ganhos_liquidos is None:
+        raise HTTPException(status_code=400, detail="ganhos_liquidos é obrigatório")
     
     # Buscar registo existente
     ganho = await db.ganhos_bolt.find_one({
@@ -2824,27 +2829,19 @@ async def atualizar_ajuste_bonus_bolt(
     if not ganho:
         raise HTTPException(status_code=404, detail="Registo de ganhos não encontrado")
     
-    # Calcular novo valor de ganhos_liquidos
-    ganhos_api = float(ganho.get("ganhos_api", 0) or ganho.get("ganhos_viagens", 0) or 0)
-    gorjetas = float(ganho.get("gorjetas", 0) or 0)
-    portagens = float(ganho.get("portagens_bolt", 0) or 0)
-    
-    novo_ganhos_liquidos = ganhos_api + gorjetas + portagens + float(ajuste_bonus) + float(ganhos_campanha)
-    
-    # Atualizar
+    # Atualizar com o valor correto
     await db.ganhos_bolt.update_one(
         {"id": ganho["id"]},
         {"$set": {
-            "ajuste_bonus": float(ajuste_bonus),
-            "ganhos_campanha": float(ganhos_campanha),
-            "ganhos_liquidos": novo_ganhos_liquidos,
-            "ganhos": novo_ganhos_liquidos,
+            "ganhos_liquidos": float(ganhos_liquidos),
+            "ganhos": float(ganhos_liquidos),
+            "ajuste_manual": True,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
     
     return {
         "sucesso": True,
-        "mensagem": f"Ajuste atualizado: bónus €{ajuste_bonus}, campanha €{ganhos_campanha}",
-        "ganhos_liquidos_novo": novo_ganhos_liquidos
+        "mensagem": f"Ganhos atualizados para €{ganhos_liquidos}",
+        "ganhos_liquidos": float(ganhos_liquidos)
     }
