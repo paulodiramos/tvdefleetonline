@@ -573,8 +573,55 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     }
   };
 
-  const togglePasswordVisibility = (field) => {
-    setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+  // Função para revelar/esconder senha das plataformas
+  const togglePasswordVisibility = async (field) => {
+    // Para campos que não precisam de buscar do backend (smtp, whatsapp, terabox, bolt_api)
+    const camposSemBackend = ['smtp', 'whatsapp', 'terabox', 'bolt_api'];
+    if (camposSemBackend.includes(field)) {
+      setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+      return;
+    }
+    
+    // Para plataformas (uber, bolt, viaverde, prio) - buscar senha real do backend
+    const plataforma = field; // uber, bolt, viaverde, prio
+    
+    // Se já está visível, apenas esconder
+    if (showPasswords[field]) {
+      setShowPasswords(prev => ({ ...prev, [field]: false }));
+      return;
+    }
+    
+    // Se já carregamos a senha real, mostrar
+    if (senhasReveladas[plataforma]) {
+      setShowPasswords(prev => ({ ...prev, [field]: true }));
+      return;
+    }
+    
+    // Carregar senha do backend
+    setLoadingPassword(prev => ({ ...prev, [field]: true }));
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/parceiros/configuracoes/revelar-senha`,
+        { plataforma },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data && response.data.password) {
+        // Guardar a senha real
+        setSenhasReveladas(prev => ({ ...prev, [plataforma]: response.data.password }));
+        // Atualizar credenciais com a senha real para exibição
+        const campoPassword = `${plataforma}_password`;
+        setCredenciais(prev => ({ ...prev, [campoPassword]: response.data.password }));
+        // Mostrar senha
+        setShowPasswords(prev => ({ ...prev, [field]: true }));
+      }
+    } catch (error) {
+      console.error('Erro ao revelar senha:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao revelar senha');
+    } finally {
+      setLoadingPassword(prev => ({ ...prev, [field]: false }));
+    }
   };
 
   if (loading) {
