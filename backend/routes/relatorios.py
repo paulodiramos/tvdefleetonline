@@ -2715,15 +2715,6 @@ async def aplicar_totais_empresa(
         "message": f"Totais aplicados a {len(resultados)} motorista(s)",
         "resultados": resultados
     }
-    })
-    deleted_counts["ajustes"] = result.deleted_count
-    
-    logger.info(f"🗑️ Dados eliminados para {motorista.get('name')} - S{semana}/{ano}: {deleted_counts}")
-    
-    return {
-        "message": f"Dados da semana {semana}/{ano} eliminados com sucesso",
-        "deleted_counts": deleted_counts
-    }
 
 
 @router.delete("/parceiro/resumo-semanal/all")
