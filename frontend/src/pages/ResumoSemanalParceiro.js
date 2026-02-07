@@ -235,6 +235,27 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   };
 
+  // Aplicar totais recebidos da empresa aos motoristas
+  const aplicarTotaisEmpresa = async () => {
+    try {
+      setSavingTotaisEmpresa(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/relatorios/parceiro/aplicar-totais-empresa`,
+        { semana, ano, ...totaisEmpresa },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message || 'Totais aplicados aos motoristas');
+      // Recarregar dados para mostrar os novos valores
+      fetchResumo();
+    } catch (error) {
+      console.error('Erro ao aplicar totais:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao aplicar totais');
+    } finally {
+      setSavingTotaisEmpresa(false);
+    }
+  };
+
   const fetchStatusAprovacao = async () => {
     try {
       const token = localStorage.getItem('token');
