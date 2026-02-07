@@ -338,7 +338,7 @@ const CredenciaisPlataformas = ({ user, onLogout }) => {
                     variant="ghost"
                     size="sm"
                     className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                    onClick={() => togglePasswordVisibility(`${plataforma}-${field.id}`)}
+                    onClick={() => togglePasswordVisibility(`${plataforma}-${field.id}`, plataforma)}
                   >
                     {showPasswords[`${plataforma}-${field.id}`] ? (
                       <EyeOff className="w-4 h-4 text-slate-400" />
