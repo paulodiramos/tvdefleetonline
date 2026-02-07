@@ -1364,8 +1364,9 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
                         size="icon"
                         className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
                         onClick={() => togglePasswordVisibility('prio')}
+                        disabled={loadingPassword.prio}
                       >
-                        {showPasswords.prio ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {loadingPassword.prio ? <Loader2 className="w-4 h-4 animate-spin" /> : showPasswords.prio ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>
