@@ -293,6 +293,15 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
   // Estado para teste de API Bolt
   const [testingBoltApi, setTestingBoltApi] = useState(false);
   const [boltApiStatus, setBoltApiStatus] = useState(null);
+  
+  // Estado para senhas reveladas (senhas reais carregadas do backend)
+  const [senhasReveladas, setSenhasReveladas] = useState({
+    uber: null,
+    bolt: null,
+    viaverde: null,
+    prio: null
+  });
+  const [loadingPassword, setLoadingPassword] = useState({});
 
   useEffect(() => {
     fetchConfiguracoes();
