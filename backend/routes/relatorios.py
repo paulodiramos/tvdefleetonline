@@ -2949,13 +2949,17 @@ async def generate_resumo_semanal_pdf(
     
     # Calcular dados por motorista (simplificado)
     motoristas_data = []
+    todos_abastecimentos = []  # Lista de todos os abastecimentos da semana
     totais = {
         "ganhos_uber": 0, "ganhos_bolt": 0, "via_verde": 0,
         "combustivel": 0, "eletrico": 0, "aluguer": 0, "extras": 0
     }
     
+    parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
+    
     for m in motoristas:
         motorista_id = m["id"]
+        motorista_nome = m.get("name", "")
         
         # Ganhos Uber
         uber_records = await db.ganhos_uber.find({
@@ -2987,12 +2991,53 @@ async def generate_resumo_semanal_pdf(
         }, {"_id": 0, "value": 1}).to_list(1000)
         via_verde = sum(float(r.get("value") or 0) for r in vv_records)
         
-        # Combustível
+        # Combustível - buscar também detalhes para a lista
         comb_records = await db.abastecimentos_combustivel.find({
             "motorista_id": motorista_id,
             "data": {"$gte": data_inicio, "$lte": data_fim}
-        }, {"_id": 0, "valor_total": 1, "valor": 1, "valor_liquido": 1}).to_list(100)
+        }, {"_id": 0, "valor_total": 1, "valor": 1, "valor_liquido": 1, "data": 1, "hora": 1, "posto": 1}).to_list(100)
         combustivel = sum(float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0) for r in comb_records)
+        
+        # Adicionar abastecimentos à lista global
+        for r in comb_records:
+            todos_abastecimentos.append({
+                "motorista": motorista_nome,
+                "data": r.get("data", ""),
+                "hora": r.get("hora", ""),
+                "posto": r.get("posto", "N/A"),
+                "valor": float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0)
+            })
+        
+        # Buscar também de despesas_combustivel (Prio RPA)
+        despesas_comb_query_conditions = [{"motorista_id": motorista_id}]
+        if parceiro_id:
+            despesas_comb_query_conditions.append({"parceiro_id": parceiro_id})
+        
+        despesas_comb_query = {
+            "$and": [
+                {"$or": despesas_comb_query_conditions},
+                {"$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]},
+                {"$or": [
+                    {"litros": {"$gt": 0}},
+                    {"kwh": {"$in": [0, None]}}
+                ]}
+            ]
+        }
+        
+        despesas_comb_records = await db.despesas_combustivel.find(despesas_comb_query, {"_id": 0}).to_list(100)
+        for r in despesas_comb_records:
+            valor = float(r.get("valor_total") or r.get("valor") or 0)
+            combustivel += valor
+            todos_abastecimentos.append({
+                "motorista": motorista_nome,
+                "data": r.get("data", ""),
+                "hora": r.get("hora", ""),
+                "posto": r.get("posto", "Prio"),
+                "valor": valor
+            })
         
         # Elétrico
         elet_records = await db.despesas_combustivel.find({
