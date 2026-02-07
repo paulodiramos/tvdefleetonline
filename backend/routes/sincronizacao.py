@@ -1147,6 +1147,285 @@ class ViaVerdeRPARequest(PydanticModel):
     ano: Optional[int] = None  # Ano
 
 
+class PrioRPARequest(PydanticModel):
+    """Request para sincronização RPA Prio"""
+    tipo_periodo: str = "ultima_semana"  # ultima_semana, semana_especifica, datas_personalizadas
+    data_inicio: Optional[str] = None  # YYYY-MM-DD
+    data_fim: Optional[str] = None  # YYYY-MM-DD
+    semana: Optional[int] = None  # Número da semana (1-53)
+    ano: Optional[int] = None  # Ano
+
+
+@router.post("/prio/executar-rpa")
+async def executar_rpa_prio(
+    request: PrioRPARequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Executar RPA da Prio Energy para extrair dados de combustível.
+    Fluxo: Login MyPRIO → Transações → Extrair dados → Processar → Guardar
+    """
+    from datetime import timedelta
+    
+    pid = current_user['id']
+    logger.info(f"🔍 Prio RPA - Parceiro ID: {pid}")
+    
+    # Verificar credenciais Prio
+    credenciais = await db.credenciais_plataforma.find_one({
+        "parceiro_id": pid,
+        "plataforma": {"$in": ["prio", "prio_energy"]}
+    })
+    
+    if not credenciais or not credenciais.get("username") and not credenciais.get("email") or not credenciais.get("password"):
+        raise HTTPException(
+            status_code=400, 
+            detail="Credenciais Prio não configuradas. Vá a Configurações → Plataformas para configurar."
+        )
+    
+    prio_usuario = credenciais.get("username") or credenciais.get("email")
+    prio_password = credenciais.get("password")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Determinar período
+    if request.tipo_periodo == "semana_especifica" and request.semana and request.ano:
+        semana = request.semana
+        ano = request.ano
+        # Calcular datas da semana ISO
+        jan4 = datetime(ano, 1, 4)
+        start_of_week = jan4 - timedelta(days=jan4.weekday()) + timedelta(weeks=semana-1)
+        end_of_week = start_of_week + timedelta(days=6)
+        data_inicio = start_of_week.strftime('%Y-%m-%d')
+        data_fim = end_of_week.strftime('%Y-%m-%d')
+    elif request.tipo_periodo == "datas_personalizadas" and request.data_inicio and request.data_fim:
+        data_inicio = request.data_inicio
+        data_fim = request.data_fim
+        # Determinar semana
+        dt_inicio = datetime.strptime(data_inicio, '%Y-%m-%d')
+        semana = dt_inicio.isocalendar()[1]
+        ano = dt_inicio.isocalendar()[0]
+    else:
+        # Última semana
+        hoje = datetime.now()
+        semana = hoje.isocalendar()[1] - 1 if hoje.isocalendar()[1] > 1 else 52
+        ano = hoje.isocalendar()[0] if hoje.isocalendar()[1] > 1 else hoje.isocalendar()[0] - 1
+        jan4 = datetime(ano, 1, 4)
+        start_of_week = jan4 - timedelta(days=jan4.weekday()) + timedelta(weeks=semana-1)
+        end_of_week = start_of_week + timedelta(days=6)
+        data_inicio = start_of_week.strftime('%Y-%m-%d')
+        data_fim = end_of_week.strftime('%Y-%m-%d')
+    
+    # Criar registo de execução
+    execucao_id = str(uuid.uuid4())
+    execucao = {
+        "id": execucao_id,
+        "parceiro_id": pid,
+        "plataforma": "prio",
+        "tipo_periodo": request.tipo_periodo,
+        "semana": semana,
+        "ano": ano,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "status": "iniciado",
+        "started_at": now.isoformat(),
+        "logs": []
+    }
+    
+    await db.execucoes_rpa.insert_one(execucao)
+    
+    # Executar RPA em background
+    async def executar_prio_rpa():
+        try:
+            from integrations.platform_scrapers import PrioScraper
+            
+            await db.execucoes_rpa.update_one(
+                {"id": execucao_id},
+                {"$set": {"status": "em_execucao"}, "$push": {"logs": f"Iniciando RPA Prio..."}}
+            )
+            
+            async with PrioScraper(headless=True) as scraper:
+                # Login
+                await db.execucoes_rpa.update_one(
+                    {"id": execucao_id},
+                    {"$push": {"logs": f"Fazendo login com utilizador {prio_usuario}..."}}
+                )
+                
+                login_result = await scraper.login(prio_usuario, prio_password)
+                login_ok = login_result.get("success", False) if isinstance(login_result, dict) else login_result
+                
+                if not login_ok:
+                    await db.execucoes_rpa.update_one(
+                        {"id": execucao_id},
+                        {"$set": {
+                            "status": "erro",
+                            "erro": login_result.get("error", "Falha no login"),
+                            "finished_at": datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
+                    return
+                
+                await db.execucoes_rpa.update_one(
+                    {"id": execucao_id},
+                    {"$push": {"logs": "Login bem sucedido! Extraindo dados..."}}
+                )
+                
+                # Extrair dados
+                dados = await scraper.extract_data(start_date=data_inicio, end_date=data_fim)
+                
+                if not dados or not dados.get("success"):
+                    await db.execucoes_rpa.update_one(
+                        {"id": execucao_id},
+                        {"$set": {
+                            "status": "erro",
+                            "erro": dados.get("error", "Falha na extração") if dados else "Sem dados",
+                            "finished_at": datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
+                    return
+                
+                # Processar transações
+                transacoes = dados.get("transactions", [])
+                total_importados = 0
+                total_valor = 0.0
+                
+                for trans in transacoes:
+                    try:
+                        # Extrair dados da transação
+                        data_trans = trans.get("date") or trans.get("data")
+                        valor = float(trans.get("amount") or trans.get("valor") or 0)
+                        litros = float(trans.get("liters") or trans.get("litros") or 0)
+                        local = trans.get("location") or trans.get("local") or trans.get("station")
+                        matricula = trans.get("plate") or trans.get("matricula")
+                        cartao = trans.get("card") or trans.get("cartao")
+                        produto = trans.get("product") or trans.get("produto") or "Combustível"
+                        
+                        # Determinar semana do movimento
+                        if data_trans:
+                            try:
+                                dt = datetime.strptime(data_trans[:10], '%Y-%m-%d')
+                                mov_semana = dt.isocalendar()[1]
+                                mov_ano = dt.isocalendar()[0]
+                            except:
+                                mov_semana = semana
+                                mov_ano = ano
+                        else:
+                            mov_semana = semana
+                            mov_ano = ano
+                        
+                        # Verificar duplicado
+                        existe = await db.despesas_combustivel.find_one({
+                            "parceiro_id": pid,
+                            "data": data_trans,
+                            "valor": valor,
+                            "litros": litros
+                        })
+                        
+                        if not existe:
+                            # Associar ao motorista via cartão ou matrícula
+                            motorista_id = None
+                            veiculo_id = None
+                            
+                            if matricula:
+                                veiculo = await db.vehicles.find_one(
+                                    {"matricula": {"$regex": matricula.replace("-", ".*"), "$options": "i"}, "parceiro_id": pid},
+                                    {"_id": 0, "id": 1, "motorista_id": 1}
+                                )
+                                if veiculo:
+                                    veiculo_id = veiculo.get("id")
+                                    motorista_id = veiculo.get("motorista_id")
+                            
+                            if not motorista_id and cartao:
+                                veiculo = await db.vehicles.find_one(
+                                    {"cartao_combustivel": cartao, "parceiro_id": pid},
+                                    {"_id": 0, "id": 1, "motorista_id": 1}
+                                )
+                                if veiculo:
+                                    veiculo_id = veiculo.get("id")
+                                    motorista_id = veiculo.get("motorista_id")
+                            
+                            # Guardar despesa
+                            despesa = {
+                                "id": str(uuid.uuid4()),
+                                "parceiro_id": pid,
+                                "motorista_id": motorista_id,
+                                "veiculo_id": veiculo_id,
+                                "matricula": matricula,
+                                "cartao": cartao,
+                                "data": data_trans,
+                                "valor": valor,
+                                "litros": litros,
+                                "preco_litro": round(valor / litros, 3) if litros > 0 else 0,
+                                "local": local,
+                                "produto": produto,
+                                "semana": mov_semana,
+                                "ano": mov_ano,
+                                "fonte": "rpa_prio",
+                                "execucao_id": execucao_id,
+                                "created_at": datetime.now(timezone.utc).isoformat()
+                            }
+                            
+                            await db.despesas_combustivel.insert_one(despesa)
+                            total_importados += 1
+                            total_valor += valor
+                    
+                    except Exception as e:
+                        logger.warning(f"⚠️ Erro ao processar transação Prio: {e}")
+                
+                # Actualizar execução como concluída
+                await db.execucoes_rpa.update_one(
+                    {"id": execucao_id},
+                    {"$set": {
+                        "status": "concluido",
+                        "total_transacoes": len(transacoes),
+                        "total_importados": total_importados,
+                        "total_valor": round(total_valor, 2),
+                        "finished_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {"logs": f"Concluído: {total_importados} transações importadas, €{total_valor:.2f}"}}
+                )
+                
+                logger.info(f"✅ Prio RPA {execucao_id} concluído: {total_importados} transações, €{total_valor:.2f}")
+        
+        except Exception as e:
+            logger.error(f"❌ Erro RPA Prio: {e}")
+            await db.execucoes_rpa.update_one(
+                {"id": execucao_id},
+                {"$set": {
+                    "status": "erro",
+                    "erro": str(e),
+                    "finished_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+    
+    # Executar em background
+    import asyncio
+    asyncio.create_task(executar_prio_rpa())
+    
+    return {
+        "success": True,
+        "execucao_id": execucao_id,
+        "status": "iniciado",
+        "periodo": f"Semana {semana}/{ano} ({data_inicio} a {data_fim})",
+        "message": f"Sincronização Prio iniciada para Semana {semana}/{ano} ({data_inicio} a {data_fim})"
+    }
+
+
+@router.get("/prio/execucoes")
+async def listar_execucoes_prio(
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar execuções RPA Prio do parceiro"""
+    pid = current_user['id']
+    
+    execucoes = await db.execucoes_rpa.find(
+        {"parceiro_id": pid, "plataforma": "prio"},
+        {"_id": 0}
+    ).sort("started_at", -1).limit(limit).to_list(limit)
+    
+    return execucoes
+
+
 @router.post("/viaverde/executar-rpa")
 async def executar_rpa_viaverde(
     request: ViaVerdeRPARequest,
