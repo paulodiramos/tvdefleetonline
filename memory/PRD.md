@@ -322,7 +322,7 @@ Aplicação móvel para motoristas TVDE com funcionalidades de relógio de ponto
 - `/app/frontend/public/ExpoSnackCode.txt` - Versão para copiar
 
 ### Como Testar
-1. Aceder a: https://fleet-rpa.preview.emergentagent.com/ExpoSnackCode.txt
+1. Aceder a: https://fleet-automation-hub.preview.emergentagent.com/ExpoSnackCode.txt
 2. Copiar todo o conteúdo
 3. Colar em: https://snack.expo.dev
 4. Testar na preview ou no dispositivo

@@ -1,12 +1,12 @@
 <analysis>**original_problem_statement:**
 O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas, que evoluiu para um sistema de automação (RPA) complexo. O foco tem sido a criação de um RPA Designer visual, a resolução de problemas de extração de dados de plataformas como Uber, Via Verde e Prio, e a automação da importação desses dados para um Resumo Semanal do Parceiro.
 
-O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações dinâmicas nos websites das plataformas (especialmente a Uber). Para contornar isso, o desenvolvimento focou-se em criar um sistema de sessão persistente, onde o parceiro faz login manualmente uma vez para que o sistema possa reutilizar essa sessão para automações subsequentes. O utilizador confirmou este fluxo de trabalho: o parceiro faz login em  para guardar a sessão, e o admin usa essa sessão para executar a extração de dados.
+O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações dinâmicas nos websites das plataformas (especialmente a Uber). Para contornar isso, o desenvolvimento focou-se em criar um sistema de sessão persistente, onde o parceiro faz login manualmente uma vez para que o sistema possa reutilizar essa sessão para automações subsequentes.
 
 **PRODUCT REQUIREMENTS:**
 1.  **RPA Designer Visual:** Permitir que um admin grave, edite e guarde scripts de automação.
-2.  **Motor de Execução RPA:** Um sistema para executar os designs RPA gravados de forma automática e agendada, utilizando as sessões guardadas dos parceiros para contornar o login.
-3.  **Sistema de Sessão Persistente:** Uma página () para os parceiros fazerem login manualmente nas plataformas e guardarem a sua sessão (cookies).
+2.  **Motor de Execução RPA:** Um sistema para executar os designs RPA gravados de forma automática e agendada.
+3.  **Sistema de Sessão Persistente:** Uma página () para os parceiros fazerem login manualmente e guardarem a sua sessão.
 4.  **Processamento Automático de Ficheiros:** Após a execução de um RPA e o download de um relatório (PDF/CSV), o sistema deve processar o ficheiro, extrair os dados e atualizar o Resumo Semanal.
 5.  **Página de Importação Manual:** Uma página () que permite o upload manual de ficheiros de relatório.
 6.  **Correção de Bugs RPA:** Resolver problemas de extração e login na Uber, Via Verde e Prio.
@@ -15,67 +15,57 @@ O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações d
 
 **what currently exists?**
 - Uma aplicação full-stack (React + FastAPI + MongoDB).
-- Um **RPA Designer** () que funciona numa janela popup.
-- Um **Motor de Execução RPA** que pode ser acionado a partir de várias páginas (, ).
-- Um sistema de **Sessão de Parceiro** () para guardar cookies de sessão e contornar CAPTCHAs, que é o fluxo preferido do utilizador.
-- **Scrapers de RPA robustos para Prio e Via Verde** que foram corrigidos nesta sessão.
-- Um endpoint de sincronização () que agora suporta a execução dos scrapers de Prio e está a ser estendido para Uber.
-- Uma página de **Importação Manual** ().
-- A página de **Resumo Semanal** () agora suporta navegação para semanas passadas através de parâmetros na URL.
+- Um **RPA Designer** e um motor de execução RPA funcional para Uber, Prio e Via Verde.
+- Um sistema de **Sessão Persistente** () que guarda cookies para contornar logins e CAPTCHAs, sendo este o fluxo principal da automação.
+- O **RPA da Uber** foi totalmente refatorado: agora consegue navegar para a página de relatórios, interagir com o modal de geração, descarregar o ficheiro CSV, processá-lo e guardar os ganhos na base de dados.
+- A **sincronização da Bolt** foi profundamente analisada. Como a API oficial da Bolt é incompleta (não fornece bónus de campanha), foi implementado um campo de ajuste manual () na base de dados e um endpoint () para o atualizar. A lógica de sincronização foi corrigida para preservar este ajuste manual.
+- A página **Resumo Semanal** () foi limpa, com a remoção das colunas Uber Port. e Bolt Camp. a pedido do utilizador.
+- A navegação do admin agora inclui um link para o **Hub de Sincronização** ().
 
 **Last working item**:
-- **Last item agent was working:** O agente estava a refatorar o RPA da Uber para seguir o padrão robusto que funcionou com a Prio. A estratégia é usar uma sessão de parceiro previamente guardada para evitar o complexo fluxo de login da Uber. O agente criou uma nova classe  em  e estava prestes a ligá-la ao endpoint de sincronização principal (), substituindo a lógica do antigo .
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N
-- **Which testing method agent to use?** Backend testing. O agente deve:
-    1. Finalizar a implementação do  em .
-    2. Modificar a rota  em  para usar o novo  quando a fonte for uber.
-    3. Testar o fluxo completo:
-        a. Como parceiro (Tomas), navegar para , iniciar login na Uber, fazer login manualmente e guardar a sessão.
-        b. Como admin, acionar a sincronização da Uber para o parceiro Tomas e verificar se os dados são extraídos corretamente sem necessidade de login interativo.
+- **Last item agent was working:** O agente estava a finalizar a correção da sincronização de dados da Bolt. O utilizador reportou que o valor exibido estava incorreto. Após análise, o agente concluiu que a API oficial da Bolt não retorna dados essenciais como ganhos de campanha. Para resolver isto, implementou um sistema de ajuste manual e corrigiu a lógica de sincronização para que os ajustes manuais não se perdessem ao re-sincronizar.
+- **Status:** USER VERIFICATION PENDING
+- **Agent Testing Done:** Y
+- **Which testing method agent to use?** Manual testing by user. O utilizador deve:
+    1. Aceder à página de Resumo Semanal e verificar se o valor da Bolt para a semana 5 é de €300.54.
+    2. Clicar no botão para sincronizar a Bolt novamente.
+    3. Após a sincronização, verificar se o valor de €300.54 foi preservado.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0) RPA da Uber falha ao tentar clicar no botão Gerar.**
-- **Issue 2: (P1) Não é possível guardar um design RPA com zero passos.**
+- **Issue 1: (P1) Não é possível guardar um design RPA com zero passos.**
+- **Issue 2: (P2) O nome do motorista aparece como  no Resumo Semanal.**
 
 **Issues Detail:**
 - **Issue 1:**
-    - **Description:** A sincronização automática da Uber falha porque o botão Gerar Relatório permanece desativado. A análise de screenshots de debug revelou que o campo Organização não está a ser preenchido.
-    - **Attempted fixes:** O agente anterior tentou várias abordagens no . O agente atual criou um novo  em  para usar sessões guardadas e simplificar o fluxo, mas o trabalho não foi concluído.
-    - **Next debug checklist:**
-        1.  Concluir a implementação do  em , focando na navegação para a página de relatórios () e na interação com os filtros de data e organização.
-        2.  Integrar este novo scraper com o endpoint de sincronização ().
-        3.  Executar uma sincronização de teste para o parceiro Tomas (que já tem uma sessão Uber guardada) para gerar novos screenshots de debug.
-        4.  Analisar os screenshots para depurar a seleção do dropdown de organização e o clique no botão Gerar.
-    - **Why fix this issue and what will be achieved with the fix?** Desbloqueia a extração de dados da Uber, uma das principais plataformas.
-    - **Status:** IN PROGRESS
+    - **Description:** O utilizador reportou que recebe a mensagem Adicione pelo menos um passo antes de guardar ao tentar guardar um design RPA vazio.
+    - **Attempted fixes:** O agente procurou por validações no frontend () e no backend (), mas não encontrou nenhuma lógica que impedisse o ato de guardar um design vazio. Suspeita-se que o problema já possa ter sido corrigido.
+    - **Next debug checklist:** O utilizador deve tentar reproduzir o erro: iniciar uma gravação de RPA, não adicionar passos e clicar em Guardar. Se o erro persistir, verificar a consola do navegador e os logs do backend em busca da origem da mensagem.
+    - **Status:** USER VERIFICATION PENDING
     - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Backend
+    - **Should Test frontend/backend/both after fix?** Frontend
     - **Blocked on other issue:** None
 
 - **Issue 2:**
-    - **Description:** O utilizador reportou que ainda recebe a mensagem Adicione pelo menos um passo antes de guardar ao tentar guardar um design RPA vazio, apesar das tentativas de correção anteriores.
-    - **Attempted fixes:** Remoção de validações no frontend e backend.
-    - **Next debug checklist:** Iniciar uma gravação, não fazer nada, e clicar em Guardar. Verificar a consola do browser e os logs do backend para ver de onde vem a mensagem de erro. Pode haver uma validação duplicada ou uma lógica que não foi removida.
-    - **Why fix this issue and what will be achieved with the fix?** Cumpre um requisito do utilizador para permitir a criação de designs vazios.
-    - **Status:** IN PROGRESS
+    - **Description:** Durante a depuração dos valores do resumo semanal, a resposta da API () mostrava o nome do motorista como , embora os valores de ganhos estivessem corretos e o motorista existisse na base de dados com o nome correto.
+    - **Attempted fixes:** Nenhuma tentativa foi feita para corrigir este problema específico.
+    - **Next debug checklist:**
+        1. Analisar a query no ficheiro  que agrega os dados dos motoristas para o resumo semanal.
+        2. Verificar como a informação do motorista (especialmente o campo ) é juntada (joined/looked up) com os dados de ganhos.
+        3. O problema pode estar na forma como os dados são mapeados ou na estrutura do  de agregação do MongoDB.
+    - **Why fix this issue and what will be achieved with the fix?** Garante que o nome do motorista é exibido corretamente na tabela do resumo semanal, melhorando a clareza dos dados.
+    - **Status:** NOT STARTED
     - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Both
+    - **Should Test frontend/backend/both after fix?** Backend
     - **Blocked on other issue:** None
 
 **In progress Task List**:
-- **Task 1: (P1) Finalizar o Motor de Execução RPA e o fluxo de dados.**
-    - **Where to resume:** A infraestrutura básica está criada, e os scrapers da Prio e Via Verde foram estabilizados. O foco agora é concluir o scraper da Uber (Issue 1).
-    - **What will be achieved with this?** Um sistema de automação fiável que extrai dados das três principais plataformas (Prio, Via Verde, Uber) e os integra no Resumo Semanal.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** Both
-    - **Blocked on something:** Issue 1.
+Nenhuma.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - (P1) **Adicionar link para :** Adicionar o link em falta no menu de navegação do admin.
-  - (P1) **Implementar agendador de tarefas RPA:** Criar um serviço de background (ex: ) que executa os designs RPA automaticamente em horários definidos.
+  - (P1) **Implementar importação de CSV para a Bolt:** Substituir a dependência da API incompleta da Bolt por uma função que processe o upload do ficheiro CSV completo (como o que o utilizador forneceu), que contém todos os dados corretos (incluindo ganhos de campanha).
+  - (P1) **Implementar agendador de tarefas RPA:** Criar um serviço de background (ex: ) que executa os designs RPA automaticamente em horários definidos, para automatizar completamente as sincronizações.
   - (P2) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria.
 - **Future Tasks:**
   - Implementar a integração com a **API oficial da Uber**.
@@ -84,107 +74,146 @@ O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações d
   - Implementar o envio de relatórios via WhatsApp.
 
 **Completed work in this session**
-- **RPA da Prio (RESOLVIDO):** O scraper foi completamente reescrito com base num vídeo do utilizador. Agora navega diretamente para a URL correta, lida com pop-ups de cookies, define o intervalo de datas, pesquisa e extrai com sucesso os dados da tabela de transações. A sincronização para a Prio a partir do Resumo Semanal está totalmente funcional.
-- **RPA da Via Verde (RESOLVIDO):** Corrigido o problema de login que falhava devido a um banner de consentimento de cookies e a seletores de botões frágeis.
-- **Bug de Mapeamento de Dados (RESOLVIDO):** Corrigida a lógica no endpoint  () que exibia os custos de combustível da Prio na categoria Elétrico.
-- **Bug de Navegação do Resumo Semanal (RESOLVIDO):** Implementado o uso de  na página  para permitir a visualização de resumos de semanas e anos anteriores através de parâmetros na URL.
-- **Links de Navegação (ADICIONADOS):** Adicionados links para Executar RPA, Login Plataformas e Importar Dados aos menus do admin e do parceiro no .
-- **Endpoint de Sincronização (MELHORADO):** O endpoint  em  foi atualizado para suportar a fonte combustivel, acionando o novo scraper da Prio.
+- **RPA da Uber (RESOLVED):** O  em  foi totalmente refatorado. Agora consegue usar uma sessão guardada, navegar para a página de relatórios, interagir com o modal de geração (selecionando tipo de relatório e organização), descarregar o CSV, processá-lo e guardar os ganhos na base de dados, associando-os ao motorista correto. A sincronização da Uber está funcional.
+- **Sincronização da Bolt (RESOLVED com Workaround):** Resolvida a discrepância de valores. A API oficial foi considerada incompleta. Foi adicionado um campo  e um endpoint () para ajustes manuais. A lógica de sincronização foi corrigida para preservar este ajuste, garantindo que o valor final no resumo semanal esteja correto.
+- **UI do Resumo Semanal (IMPROVED):** As colunas Uber Port. e Bolt Camp. foram removidas da tabela em .
+- **Lógica de Sincronização (IMPROVED):** A lógica para encontrar ou criar motoristas durante a sincronização () foi melhorada para usar correspondência parcial de nomes, evitando a criação de motoristas duplicados.
+- **Navegação (FIXED):** Foi adicionado o link para  no menu de navegação do admin ().
+- **Problema do Playwright (FIXED):** O erro  foi resolvido executando Downloading Chromium 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-linux-arm64.zip
+|                                                                                |   0% of 175.9 MiB
+|■■■■■■■■                                                                        |  10% of 175.9 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 175.9 MiB
+Chromium 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium-1194
+Downloading Chromium Headless Shell 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-headless-shell-linux-arm64.zip
+|                                                                                |   0% of 106.1 MiB
+|■■■■■■■■                                                                        |  10% of 106.1 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 106.1 MiB
+Chromium Headless Shell 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium_headless_shell-1194
+Downloading Firefox 142.0.1 (playwright build v1495) from https://cdn.playwright.dev/dbazure/download/playwright/builds/firefox/1495/firefox-debian-12-arm64.zip
+|                                                                                |   0% of 88 MiB
+|■■■■■■■■                                                                        |  10% of 88 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
+Firefox 142.0.1 (playwright build v1495) downloaded to /pw-browsers/firefox-1495
+Downloading Webkit 26.0 (playwright build v2215) from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2215/webkit-debian-12-arm64.zip
+|                                                                                |   0% of 88 MiB
+|■■■■■■■■                                                                        |  10% of 88 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
+Webkit 26.0 (playwright build v2215) downloaded to /pw-browsers/webkit-2215.
 
 **Earlier issues found/mentioned but not fixed**
 - **Issue 1:**
-    - **Description:** Durante a sessão, o agente notou que os dados de combustível do parceiro 'Tomas' desapareceram da coleção . A causa não foi investigada. Isto pode indicar um bug no processo de sincronização que apaga dados antigos antes de inserir novos, mesmo que a nova extração falhe.
-    - **Debug checklist:**
-        1.  Verificar a lógica no scraper da Prio () e no endpoint de sincronização ().
-        2.  Verificar se existe algum passo que remove documentos ( ou similar) antes de tentar inserir os novos dados extraídos.
-        3.  Implementar uma lógica transacional ou de staging para garantir que os dados antigos só são removidos após a confirmação de que novos dados foram extraídos com sucesso.
-    - **Why to solve this issue and what will be achieved with this?** Evitar a perda de dados históricos, que é um problema crítico para a integridade financeira da aplicação.
+    - **Description:** Foi notado numa sessão anterior que dados de combustível do parceiro 'Tomas' desapareceram da coleção . A causa não foi investigada, podendo indicar um bug que apaga dados antigos antes de confirmar a extração de novos dados.
+    - **Debug checklist:** Verificar a lógica de  nos scrapers e endpoints de sincronização para garantir que a eliminação de dados antigos só ocorre após uma nova extração bem-sucedida.
+    - **Why to solve this issue and what will be achieved with this?** Evitar a perda de dados históricos, que é crítico para a integridade da aplicação.
     - **Should Test frontend/backend/both after fix:** Backend
     - **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork:** Falha no RPA da Via Verde e falha no RPA da Uber.
+- **Issue recurrence in previous fork:** Falha no RPA da Uber.
 - **Recurrence count:** HIGH
-- **Status:**
-    - Via Verde: RESOLVED
-    - Uber: IN PROGRESS
+- **Status:** RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Robust RPA Scraping (Playwright):** A sessão demonstrou a importância de uma abordagem robusta para scraping, incluindo: navegação direta por URL quando possível, lidar explicitamente com banners de cookies, usar seletores de texto precisos, e usar injeção de JavaScript como fallback para cliques. Este é o padrão a ser seguido.
-- **Cookie-based Session Persistence:** Este continua a ser o pilar da estratégia de automação. O parceiro faz login, a sessão (cookies) é guardada no backend e reutilizada para execuções de RPA não interativas pelo admin.
-- **Automated Data Ingestion Pipeline:** O fluxo onde a sincronização aciona um scraper, que extrai dados e os insere na base de dados, está mais maduro e funcional para Prio e Via Verde.
+- **API vs. Scraper/CSV:** Ficou claro que as APIs oficiais (como a da Bolt) podem ser incompletas. A fonte de dados mais fiável são os relatórios em CSV ou a extração via RPA diretamente do portal web, o que levou à implementação do workaround .
+- **RPA Robusto:** A correção do RPA da Uber exigiu uma lógica complexa para interagir com modais, dropdowns e seletores dinâmicos, reforçando a necessidade de código Playwright detalhado e com múltiplos fallbacks.
+- **Preservação de Dados Manuais:** A implementação da sincronização da Bolt demonstrou a importância de desenhar fluxos de atualização que não sobrescrevam ajustes manuais críticos (como o ), encontrando o registo existente e preservando certos campos.
+- **Reconciliação de Dados:** Foi crucial implementar lógicas para associar dados de fontes externas (relatórios CSV) a entidades internas (motoristas na BD), utilizando técnicas como correspondência parcial de nomes para evitar duplicados.
 
 **key DB schema**
-- : Armazena os passos dos RPAs gravados.
-- : Armazena os cookies de sessão guardados dos parceiros.
-- : Armazena dados de abastecimentos (ex: Prio).
-- : Armazena dados de portagens.
-- : Armazena dados de ganhos da Uber.
+- : Armazena os ganhos extraídos da Uber.
+- : Contém os ganhos da Bolt. Foi modificado para incluir  para compensar os dados em falta na API.
+- : Armazena cookies de sessão para automações.
+- : Armazena os motoristas associados a um parceiro.
+
+**changes in tech stack**
+Nenhuma.
 
 **All files of reference**
--  (Ficheiro central para os scrapers robustos)
--  (Controla a execução das sincronizações automáticas)
--  (Calcula os dados para o resumo semanal)
--  (UI do resumo semanal)
--  (Define a navegação da aplicação)
--  (Contém a lógica antiga e problemática da Uber a ser substituída)
+- : Contém a nova lógica robusta do .
+- : Contém a lógica central de sincronização para Uber e Bolt.
+- : Calcula os dados para o resumo semanal.
+- : UI do resumo semanal.
+- : Contém a implementação do cliente para a API da Bolt.
+- : Define a navegação principal da aplicação.
 
 **Areas that need refactoring**:
-- **:** Continua a ser um ficheiro monolítico com mais de 8000 linhas. As rotas devem ser progressivamente migradas para ficheiros dedicados em .
-- **:** Este ficheiro deve ser totalmente descontinuado. A sua lógica deve ser substituída pelo novo  em  para manter a consistência.
-- **:** Continua a ser um ficheiro monolítico e de alto risco para manutenção.
+- **:** Continua monolítico, com mais de 12.000 linhas. A adição de novos routers diretamente neste ficheiro em vez de usar  aumenta a complexidade.
+- **:** O ficheiro está a tornar-se muito grande e complexo, especialmente a função . A lógica para cada fonte (Uber, Bolt, etc.) poderia ser abstraída para os seus próprios módulos de serviço.
 
 **key api endpoints**
-- : (Melhorado) Endpoint principal para iniciar a extração de dados para uma determinada fonte (bolt, combustivel, uber), parceiro e semana.
-- : (Corrigido) Retorna os dados agregados para o dashboard do resumo semanal.
-- : Inicia uma sessão para o parceiro fazer login manualmente e guardar os cookies.
-- : Guarda os cookies da sessão do parceiro.
+- : Endpoint principal para iniciar a extração de dados.
+- : Retorna os dados agregados para o resumo semanal.
+- : (NOVO) Endpoint para definir um valor de ajuste manual para os ganhos da Bolt.
 
 **Critical Info for New Agent**
-- **O padrão de scraping da Prio é o caminho a seguir.** A solução que funcionou envolveu: análise de um vídeo do utilizador, descoberta da URL direta, navegação explícita para essa URL, e extração de dados de uma tabela estática. Aplique este mesmo método para corrigir o RPA da Uber.
-- **O fluxo de Sessão de Parceiro é a estratégia principal.** O utilizador validou este fluxo (sistema infalivel sem api). Todo o desenvolvimento de RPA deve assumir que uma sessão válida do parceiro está disponível.
-- **Cuidado com a perda de dados.** Foi observado que os dados de combustível do parceiro Tomas desapareceram. Ao implementar o scraper da Uber, garanta que a lógica de sincronização não apaga dados antigos antes de confirmar que a nova extração foi bem-sucedida.
+- **A API da Bolt é INCOMPLETA.** Não confie nela para obter os ganhos totais. Faltam os bónus de campanha. A solução atual é um workaround com um campo de ajuste manual (). A solução definitiva é usar o upload de CSV ou construir um RPA scraper para a Bolt.
+- **O fluxo de sincronização deve preservar os ajustes manuais.** A lógica implementada em  para a Bolt agora procura por um registo existente e mantém o valor de . Este padrão deve ser seguido se forem necessários outros ajustes manuais.
+- **A correspondência de nomes de motoristas é um desafio.** Os nomes nos relatórios (ELSON MONTEIRO) podem ser diferentes dos nomes registados no sistema (Elson Patrick Varela Monteiro). A lógica atual usa regex para correspondência parcial, mas pode precisar de ajustes.
 
 **documents and test reports created in this job**
-- **Video:**  (Este vídeo foi crucial para resolver o RPA da Prio).
-- **Debug Screenshots:** Inúmeros screenshots de debug para Prio, Via Verde e Uber foram gerados em .
+- : Ficheiro CSV da Bolt fornecido pelo utilizador, que foi crucial para perceber a discrepância de valores.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** prio nao sicronizou, uber nao sicronizou o que se passa - O utilizador reportou que ambas as sincronizações falharam.
-2.  **Agent:** Explicou que a Prio não encontrou dados para a semana 5 e que a Uber falhou por causa do botão Gerar.
-3.  **User:** Forneceu um vídeo mostrando o processo de extração da Prio: .
-4.  **Agent:** Analisou o vídeo e reescreveu o scraper da Prio com base nele.
-5.  **Agent:** Após várias tentativas e depuração, conseguiu fazer o scraper da Prio funcionar perfeitamente.
-6.  **Agent:** Confirmou que os dados da Prio foram extraídos e guardados corretamente na base de dados para a semana 6.
-7.  **Agent:** Resumiu o sucesso da Prio e perguntou se deveria avançar para corrigir o RPA da Uber.
-8.  **User:** sim tudo de login feitos no parceiro scrapping so no admin usando 1 parceiro para fazer design - O utilizador confirmou o fluxo de trabalho desejado: o parceiro faz login para guardar a sessão, e o admin usa essa sessão para o scraping.
-9.  **Agent:** Começou a implementar o novo scraper da Uber seguindo o padrão da Prio.
-10. **Agent:** Criou a classe  e estava a trabalhar na sua implementação quando a sessão terminou.
+1.  **User:** valor da bolt falta valor possivel os null nao sao null - Reporta que o valor da Bolt no resumo está incorreto.
+2.  **User:** bolt pagou 300.54 ao motorista este e valor correcto analisa e corrige - Confirma o valor correto.
+3.  **Agent:** Tenta re-sincronizar, mas a API da Bolt retorna o mesmo valor incorreto.
+4.  **User:** somar tudo grojetas e tudo tem que dar o valor 300,54 - Pede para que todos os componentes dos ganhos sejam somados.
+5.  **User:** (Fornece um ficheiro CSV da Bolt) coluna ganhos liquidos inclui tudo de ganhos, coluna v podes analisar - Fornece a fonte de dados correta.
+6.  **Agent:** Analisa o CSV, confirma que a API é incompleta e sugere usar o CSV como fonte principal.
+7.  **User:** analisa a fundo a api bolt para conseguir gerar o valor correcto tu consegues - Insiste que a API seja investigada a fundo.
+8.  **Agent:** Investiga a documentação da API da Bolt, confirma que não existem endpoints para bónus de campanha e propõe a solução de um campo de ajuste manual.
+9.  **User:** 2 adicione - Concorda em adicionar o campo de ajuste.
+10. **User:** valor da bolt nao esta completo com ajuste de bonus - Reporta que, após a implementação, o valor continua errado (devido a um bug que não preservava o ajuste).
 
 **Project Health Check:**
-- **Broken:**
-    - Sincronização da Uber (botão 'Gerar' desativado).
-- **In Progress:**
-    - Implementação do novo  para corrigir a sincronização da Uber.
-- **Fixed/Completed:**
-    - Sincronização da Prio.
-    - Sincronização da Via Verde.
-    - Bug de mapeamento de dados no Resumo Semanal (Combustível vs Elétrico).
-    - Bug de navegação no Resumo Semanal (parâmetros de URL).
+- **Broken:** Nada crítico.
+- **Workaround in place:** A sincronização de dados da Bolt depende de um ajuste manual para ser 100% precisa, devido a limitações da API oficial.
+- **Mocked:** Nenhuma funcionalidade está mockada.
 
 **3rd Party Integrations**
-- **Playwright:** Essencial para o RPA.
-- **PyPDF2:** Instalado para processar relatórios em PDF.
-- **Bolt Fleet API:** Usada para sincronização de dados da Bolt.
+- **Bolt Fleet API:** Utilizada para sincronizar dados de viagens da Bolt. Verificou-se ser incompleta (não fornece bónus de campanha).
+- **Playwright:** Utilizado para os RPAs da Uber, Prio e Via Verde.
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** Nenhuns, mas foram criados scripts de teste temporários (, ) para depuração.
-- **Known regressions:** Nenhuma.
+- **Test files created:** Nenhum ficheiro de teste permanente.
+- **Known regressions:** O bug que reiniciava o  da Bolt a cada sincronização foi introduzido e corrigido durante esta sessão.
 
 **Credentials to test flow:**
 - **Admin:**  / 
@@ -192,4 +221,4 @@ O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações d
 - **Credenciais Prio (para o parceiro Tomas):** Utilizador  / Senha 
 
 **What agent forgot to execute**
-- Adicionar um link de navegação para a página  no menu do admin, conforme planeado no handoff anterior.</analysis>
+Nada. O agente abordou os pontos principais levantados pelo utilizador e os itens pendentes do handoff anterior.</analysis>
