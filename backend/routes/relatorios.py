@@ -3195,6 +3195,74 @@ async def generate_resumo_semanal_pdf(
     
     elements.append(summary_table)
     
+    # ============ LISTA DE ABASTECIMENTOS ============
+    if todos_abastecimentos:
+        elements.append(Spacer(1, 10*mm))
+        
+        section_style = ParagraphStyle('Section', parent=styles['Heading2'], fontSize=12, textColor=colors.HexColor('#1e3a5f'))
+        elements.append(Paragraph("Detalhes dos Abastecimentos", section_style))
+        elements.append(Spacer(1, 3*mm))
+        
+        # Ordenar por data
+        todos_abastecimentos_sorted = sorted(todos_abastecimentos, key=lambda x: (x.get("data", ""), x.get("hora", "")))
+        
+        # Criar tabela de abastecimentos
+        abast_table_data = [
+            ["Motorista", "Data", "Hora", "Posto", "Valor"]
+        ]
+        
+        for ab in todos_abastecimentos_sorted:
+            # Formatar data
+            data_str = ab.get("data", "")
+            if data_str:
+                try:
+                    if "T" in data_str:
+                        data_str = data_str.split("T")[0]
+                    data_obj = datetime.strptime(data_str, "%Y-%m-%d")
+                    data_str = data_obj.strftime("%d/%m/%Y")
+                except:
+                    pass
+            
+            abast_table_data.append([
+                ab.get("motorista", "")[:18],
+                data_str,
+                ab.get("hora", "")[:5] if ab.get("hora") else "",
+                ab.get("posto", "")[:15],
+                f"€{ab.get('valor', 0):.2f}"
+            ])
+        
+        # Linha de total
+        total_abastecimentos = sum(ab.get("valor", 0) for ab in todos_abastecimentos)
+        abast_table_data.append([
+            "TOTAL",
+            "",
+            "",
+            f"{len(todos_abastecimentos)} abastecimentos",
+            f"€{total_abastecimentos:.2f}"
+        ])
+        
+        abast_col_widths = [40*mm, 22*mm, 15*mm, 35*mm, 20*mm]
+        abast_table = Table(abast_table_data, colWidths=abast_col_widths)
+        
+        abast_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f97316')),  # Laranja para combustível
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#fed7aa')),  # Laranja claro para total
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('ALIGN', (1, 1), (2, -1), 'CENTER'),
+            ('ALIGN', (4, 1), (4, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#fff7ed')]),
+        ]))
+        
+        elements.append(abast_table)
+    
     # Rodapé
     elements.append(Spacer(1, 15*mm))
     footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=colors.grey)
