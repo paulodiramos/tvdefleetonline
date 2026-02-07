@@ -1283,8 +1283,24 @@ async def executar_rpa_prio(
                     )
                     return
                 
-                # Processar transações
-                transacoes = dados.get("transactions", [])
+                # Processar transações (pode vir como "transactions" ou "data")
+                transacoes_raw = dados.get("transactions") or dados.get("data", [])
+                logger.info(f"📊 Dados brutos recebidos: {len(transacoes_raw)} linhas")
+                
+                # Converter formato Prio (array [data, litros, valor, local]) para dict
+                transacoes = []
+                for t in transacoes_raw:
+                    if isinstance(t, list) and len(t) >= 4:
+                        transacoes.append({
+                            "date": t[0],
+                            "liters": t[1],
+                            "amount": t[2],
+                            "location": t[3]
+                        })
+                    elif isinstance(t, dict):
+                        transacoes.append(t)
+                
+                logger.info(f"📊 Transações convertidas: {len(transacoes)}")
                 total_importados = 0
                 total_valor = 0.0
                 
