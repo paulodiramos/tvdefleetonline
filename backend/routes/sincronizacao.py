@@ -2559,13 +2559,9 @@ async def executar_sincronizacao_auto(
                                                 "numero_viagens": total_viagens,
                                                 "parceiro_id": pid,
                                                 "fonte": "bolt_api",
-                                                # Campo de ajuste para bónus/campanhas (não disponível na API)
-                                                # Mantém valor existente se houver, senão 0
-                                                "ajuste_bonus": ganho_existente.get("ajuste_bonus", 0) if ganho_existente else 0,
-                                                "ganhos_campanha": ganho_existente.get("ganhos_campanha", 0) if ganho_existente else 0,
-                                                # Ganhos líquidos = API + ajuste_bonus + ganhos_campanha
-                                                "ganhos_liquidos": ganhos_liquidos_calculados + (ganho_existente.get("ajuste_bonus", 0) if ganho_existente else 0) + (ganho_existente.get("ganhos_campanha", 0) if ganho_existente else 0),
-                                                "ganhos": ganhos_liquidos_calculados + (ganho_existente.get("ajuste_bonus", 0) if ganho_existente else 0) + (ganho_existente.get("ganhos_campanha", 0) if ganho_existente else 0),
+                                                # Ganhos líquidos = total_earnings - comissao (já inclui gorjetas, bónus, campanhas, portagens)
+                                                "ganhos_liquidos": ganhos_liquidos_calculados,
+                                                "ganhos": ganhos_liquidos_calculados,
                                                 "synced_at": datetime.now(timezone.utc).isoformat(),
                                                 "updated_at": datetime.now(timezone.utc).isoformat()
                                             }
