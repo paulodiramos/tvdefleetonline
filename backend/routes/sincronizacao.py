@@ -1986,18 +1986,20 @@ async def executar_sincronizacao_auto(
             
             # ============ PRIO / COMBUSTÍVEL ============
             if fonte in ["combustivel", "prio"]:
-                # Buscar credenciais da Prio do parceiro
-                parceiro = await db.users.find_one({"id": pid}, {"_id": 0})
-                creds_plataformas = parceiro.get("credenciais_plataformas", {}) if parceiro else {}
+                # Buscar credenciais da Prio do parceiro (na coleção credenciais_plataforma)
+                cred_prio = await db.credenciais_plataforma.find_one({
+                    "parceiro_id": pid,
+                    "plataforma": {"$in": ["prio", "prio_energy"]}
+                })
                 
-                prio_usuario = creds_plataformas.get("prio_usuario")
-                prio_password = creds_plataformas.get("prio_password")
+                prio_usuario = cred_prio.get("username") or cred_prio.get("email") if cred_prio else None
+                prio_password = cred_prio.get("password") if cred_prio else None
                 
                 if not prio_usuario or not prio_password:
                     resultados[fonte] = {
                         "sucesso": False,
                         "metodo": "rpa",
-                        "erro": "Credenciais Prio não configuradas. Configure em Configurações do Parceiro."
+                        "erro": "Credenciais Prio não configuradas. Configure em Configurações → Plataformas."
                     }
                 else:
                     try:
@@ -2008,6 +2010,7 @@ async def executar_sincronizacao_auto(
                         data_inicio, data_fim = calcular_periodo_semana(semana, ano)
                         
                         logger.info(f"🔄 Sincronizando Prio para parceiro {pid}, Semana {semana}/{ano}")
+                        logger.info(f"   Utilizador: {prio_usuario}")
                         
                         # Executar scraper
                         async with PrioScraper(headless=True) as scraper:
