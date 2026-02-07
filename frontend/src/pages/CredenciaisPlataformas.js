@@ -218,8 +218,36 @@ const CredenciaisPlataformas = ({ user, onLogout }) => {
     }
   };
 
-  const togglePasswordVisibility = (key) => {
-    setShowPasswords(prev => ({ ...prev, [key]: !prev[key] }));
+  const togglePasswordVisibility = async (key, plataforma = null) => {
+    // Se está a esconder, apenas toggle
+    if (showPasswords[key]) {
+      setShowPasswords(prev => ({ ...prev, [key]: false }));
+      return;
+    }
+    
+    // Se está a mostrar e é uma plataforma, buscar password do servidor
+    if (plataforma && credenciais[plataforma]?.configurado) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${API_URL}/api/parceiro/credenciais-plataformas/${plataforma}/password`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        if (response.data?.password) {
+          // Actualizar o campo com a password real
+          setCredenciais(prev => ({
+            ...prev,
+            [plataforma]: { ...prev[plataforma], password: response.data.password }
+          }));
+        }
+      } catch (error) {
+        console.error('Erro ao obter password:', error);
+        toast.error('Erro ao obter password');
+      }
+    }
+    
+    setShowPasswords(prev => ({ ...prev, [key]: true }));
   };
 
   const addFornecedor = (tipo) => {
