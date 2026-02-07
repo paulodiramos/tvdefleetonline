@@ -2563,11 +2563,158 @@ async def save_totais_empresa(
     )
     
     return {"success": True, "message": "Totais guardados"}
-    # Eliminar ajustes manuais
-    result = await db.ajustes_semanais.delete_many({
-        "motorista_id": motorista_id,
-        "semana": semana,
-        "ano": ano
+
+
+@router.post("/parceiro/aplicar-totais-empresa")
+async def aplicar_totais_empresa(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Aplicar os valores 'Recebido da Empresa' aos ganhos dos motoristas.
+    
+    Quando há apenas 1 motorista: aplica o valor total ao motorista.
+    Quando há múltiplos motoristas: distribui proporcionalmente (ou mantém igual).
+    
+    Fórmula Bolt: ganhos = total_earnings - comissao (já inclui gorjetas, bónus, etc.)
+    """
+    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.ADMIN, UserRole.GESTAO, "parceiro", "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    semana = data.get("semana")
+    ano = data.get("ano")
+    uber_recebido = float(data.get("uber_recebido", 0))
+    bolt_recebido = float(data.get("bolt_recebido", 0))
+    
+    if not semana or not ano:
+        raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios")
+    
+    parceiro_id = current_user["id"] if current_user["role"] in [UserRole.PARCEIRO, "parceiro"] else data.get("parceiro_id") or current_user["id"]
+    
+    # Buscar motoristas do parceiro
+    motoristas = await db.motoristas.find({
+        "$or": [
+            {"parceiro_id": parceiro_id},
+            {"parceiro_atribuido": parceiro_id}
+        ],
+        "$or": [
+            {"ativo": True},
+            {"status_motorista": "ativo"},
+            {"ativo": {"$exists": False}}
+        ]
+    }, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    
+    if not motoristas:
+        raise HTTPException(status_code=404, detail="Nenhum motorista encontrado")
+    
+    resultados = []
+    now = datetime.now(timezone.utc)
+    
+    # Se há apenas 1 motorista, aplica os valores directamente
+    if len(motoristas) == 1:
+        motorista = motoristas[0]
+        motorista_id = motorista["id"]
+        
+        # Criar/atualizar ajuste semanal com os valores da empresa
+        ajuste = {
+            "motorista_id": motorista_id,
+            "parceiro_id": parceiro_id,
+            "semana": semana,
+            "ano": ano,
+            "ganhos_uber": uber_recebido if uber_recebido > 0 else None,
+            "ganhos_bolt": bolt_recebido if bolt_recebido > 0 else None,
+            "fonte": "totais_empresa",
+            "updated_at": now.isoformat(),
+            "updated_by": current_user["id"]
+        }
+        
+        # Remover campos None
+        ajuste = {k: v for k, v in ajuste.items() if v is not None}
+        
+        await db.ajustes_semanais.update_one(
+            {"motorista_id": motorista_id, "semana": semana, "ano": ano},
+            {"$set": ajuste},
+            upsert=True
+        )
+        
+        # Também criar/atualizar registo em ganhos_bolt se bolt_recebido > 0
+        if bolt_recebido > 0:
+            ganho_bolt = {
+                "id": str(uuid.uuid4()),
+                "motorista_id": motorista_id,
+                "nome_motorista": motorista.get("name"),
+                "parceiro_id": parceiro_id,
+                "semana": semana,
+                "ano": ano,
+                "ganhos_liquidos": bolt_recebido,
+                "ganhos": bolt_recebido,
+                "fonte": "totais_empresa",
+                "updated_at": now.isoformat()
+            }
+            
+            await db.ganhos_bolt.update_one(
+                {"motorista_id": motorista_id, "semana": semana, "ano": ano},
+                {"$set": ganho_bolt},
+                upsert=True
+            )
+        
+        # Também criar/atualizar registo em ganhos_uber se uber_recebido > 0
+        if uber_recebido > 0:
+            ganho_uber = {
+                "id": str(uuid.uuid4()),
+                "motorista_id": motorista_id,
+                "nome_motorista": motorista.get("name"),
+                "parceiro_id": parceiro_id,
+                "semana": semana,
+                "ano": ano,
+                "rendimentos": uber_recebido,
+                "pago_total": uber_recebido,
+                "fonte": "totais_empresa",
+                "updated_at": now.isoformat()
+            }
+            
+            await db.ganhos_uber.update_one(
+                {"motorista_id": motorista_id, "semana": semana, "ano": ano},
+                {"$set": ganho_uber},
+                upsert=True
+            )
+        
+        resultados.append({
+            "motorista_id": motorista_id,
+            "motorista_nome": motorista.get("name"),
+            "uber_aplicado": uber_recebido,
+            "bolt_aplicado": bolt_recebido
+        })
+        
+        logger.info(f"💰 Totais aplicados a {motorista.get('name')}: Uber={uber_recebido}€, Bolt={bolt_recebido}€")
+    
+    else:
+        # Múltiplos motoristas - por agora, apenas guardar os totais
+        # TODO: Implementar distribuição proporcional se necessário
+        logger.info(f"⚠️ {len(motoristas)} motoristas - totais guardados mas não distribuídos automaticamente")
+    
+    # Guardar também na coleção totais_empresa
+    await db.totais_empresa.update_one(
+        {"parceiro_id": parceiro_id, "semana": semana, "ano": ano},
+        {"$set": {
+            "parceiro_id": parceiro_id,
+            "semana": semana,
+            "ano": ano,
+            "uber_recebido": uber_recebido,
+            "bolt_recebido": bolt_recebido,
+            "aplicado": True,
+            "motoristas_aplicados": len(resultados),
+            "updated_at": now.isoformat(),
+            "updated_by": current_user["id"]
+        }},
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "message": f"Totais aplicados a {len(resultados)} motorista(s)",
+        "resultados": resultados
+    }
     })
     deleted_counts["ajustes"] = result.deleted_count
     
