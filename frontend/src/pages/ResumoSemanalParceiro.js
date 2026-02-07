@@ -1136,11 +1136,16 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Extras</span>
-              <span className="font-medium text-orange-600">{formatCurrency(totalExtras)}</span>
+              <span className="font-medium text-orange-600">{formatCurrency(motoristas.reduce((sum, m) => sum + (m.extras || 0), 0))}</span>
             </div>
             <div className="border-t pt-1 flex justify-between text-xs font-bold">
               <span>Total Pagamentos</span>
-              <span className="text-blue-800">{formatCurrency(motoristas.reduce((sum, m) => sum + (m.liquido || 0), 0))}</span>
+              <span className="text-blue-800">{formatCurrency(
+                (totais.total_ganhos_uber || 0) + 
+                (totais.total_ganhos_bolt || 0) + 
+                motoristas.reduce((sum, m) => sum + (m.divida || 0), 0) + 
+                motoristas.reduce((sum, m) => sum + (m.extras || 0), 0)
+              )}</span>
             </div>
           </CardContent>
         </Card>
@@ -1159,7 +1164,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Vendas</span>
-              <span className="font-medium text-purple-700">{formatCurrency(0)}</span>
+              <span className="font-medium text-purple-700">{formatCurrency(totalVendas)}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Extras</span>
@@ -1167,7 +1172,9 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
             </div>
             <div className="border-t pt-1 flex justify-between text-xs font-bold">
               <span>Total</span>
-              <span className={liquidoParceiro >= 0 ? "text-green-800" : "text-red-800"}>{formatCurrency(liquidoParceiro)}</span>
+              <span className={totalAluguer + totalVendas + totalExtras >= 0 ? "text-green-800" : "text-red-800"}>
+                {formatCurrency(totalAluguer + totalVendas + totalExtras)}
+              </span>
             </div>
           </CardContent>
         </Card>
