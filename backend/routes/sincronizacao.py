@@ -1315,18 +1315,38 @@ async def executar_rpa_prio(
                         cartao = trans.get("card") or trans.get("cartao")
                         produto = trans.get("product") or trans.get("produto") or "Combustível"
                         
-                        # Determinar semana do movimento
+                        logger.info(f"📝 Processando: data={data_trans}, valor={valor}, litros={litros}, local={local}")
+                        
+                        # Converter data de DD/MM/YYYY HH:MM para YYYY-MM-DD
+                        data_formatada = None
                         if data_trans:
                             try:
-                                dt = datetime.strptime(data_trans[:10], '%Y-%m-%d')
+                                # Formato Prio: "04/02/2026 12:21"
+                                if "/" in data_trans:
+                                    parts = data_trans.split(" ")[0].split("/")
+                                    if len(parts) == 3:
+                                        data_formatada = f"{parts[2]}-{parts[1]}-{parts[0]}"
+                                else:
+                                    data_formatada = data_trans[:10]
+                            except:
+                                data_formatada = data_trans
+                        
+                        # Determinar semana do movimento
+                        mov_semana = semana
+                        mov_ano = ano
+                        if data_formatada:
+                            try:
+                                dt = datetime.strptime(data_formatada, '%Y-%m-%d')
                                 mov_semana = dt.isocalendar()[1]
                                 mov_ano = dt.isocalendar()[0]
-                            except:
-                                mov_semana = semana
-                                mov_ano = ano
-                        else:
-                            mov_semana = semana
-                            mov_ano = ano
+                                logger.info(f"   Data formatada: {data_formatada}, Semana: {mov_semana}/{mov_ano}")
+                            except Exception as e:
+                                logger.warning(f"   Erro ao parsear data {data_formatada}: {e}")
+                        
+                        # Verificar se está no período solicitado
+                        if mov_semana != semana or mov_ano != ano:
+                            logger.info(f"   ⏭️ Transação fora do período (semana {mov_semana}/{mov_ano} != {semana}/{ano})")
+                            continue
                         
                         # Verificar duplicado
                         existe = await db.despesas_combustivel.find_one({
