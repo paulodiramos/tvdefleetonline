@@ -25,7 +25,8 @@ const CredenciaisPlataformas = ({ user, onLogout }) => {
   const [credenciais, setCredenciais] = useState({
     uber: { email: '', phone: '', otp_code: '', configurado: false },
     bolt: { email: '', password: '', configurado: false },
-    viaverde: { username: '', password: '', configurado: false }
+    viaverde: { username: '', password: '', configurado: false },
+    prio: { username: '', password: '', configurado: false }
   });
   
   // Fornecedores de combustível (variáveis)
