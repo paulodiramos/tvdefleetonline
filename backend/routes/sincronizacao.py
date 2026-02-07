@@ -2518,9 +2518,9 @@ async def executar_sincronizacao_auto(
                                             
                                             total_viagens = len(driver_orders)
                                             
-                                            # Ganhos líquidos = net_earnings + tips + toll_fee (portagens são reembolsadas)
-                                            # NOTA: A API não retorna "ganhos de campanha" - esses só estão no CSV
-                                            ganhos_liquidos_calculados = total_net_earnings + total_tips + total_toll_fee
+                                            # Ganhos líquidos = total_earnings (bruto) - comissão Bolt
+                                            # Esta fórmula inclui automaticamente: gorjetas, bónus, campanhas e portagens
+                                            ganhos_liquidos_calculados = total_ride_price - total_commission
                                             
                                             # Criar ou atualizar registo de ganhos
                                             ganho_existente = await db.ganhos_bolt.find_one({
