@@ -1163,6 +1163,7 @@ async def executar_rpa_viaverde(
     from datetime import timedelta
     
     pid = current_user['id']
+    logger.info(f"🔍 Via Verde RPA - Parceiro ID: {pid}")
     
     # Verificar se parceiro tem credenciais Via Verde (aceitar ambos os formatos)
     credenciais = await db.credenciais_plataforma.find_one({
@@ -1170,10 +1171,14 @@ async def executar_rpa_viaverde(
         "plataforma": {"$in": ["viaverde", "via_verde"]}
     })
     
+    logger.info(f"🔍 Credenciais encontradas: {credenciais is not None}")
+    if credenciais:
+        logger.info(f"🔍 Email: {credenciais.get('email')}, Password: {bool(credenciais.get('password'))}")
+    
     if not credenciais or not credenciais.get("email") or not credenciais.get("password"):
         raise HTTPException(
             status_code=400, 
-            detail="Credenciais Via Verde não configuradas. Vá a Configurações → Plataformas para configurar."
+            detail=f"Credenciais Via Verde não configuradas. Parceiro ID: {pid}"
         )
     
     now = datetime.now(timezone.utc)
