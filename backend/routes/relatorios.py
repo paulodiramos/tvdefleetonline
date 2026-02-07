@@ -957,7 +957,16 @@ async def get_resumo_semanal_parceiro(
         # Buscar de ganhos_bolt
         bolt_records = await db.ganhos_bolt.find(bolt_query, {"_id": 0}).to_list(100)
         for r in bolt_records:
-            ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or r.get("earnings") or 0)
+            # Nova fórmula: ganhos = ganhos_brutos - comissao (inclui gorjetas, bónus, campanhas, portagens)
+            ganhos_brutos = float(r.get("ganhos_brutos_total") or r.get("total_earnings") or 0)
+            comissao = float(r.get("comissao_bolt") or r.get("commission") or 0)
+            
+            if ganhos_brutos > 0 and comissao > 0:
+                # Usar fórmula: brutos - comissão
+                ganhos_bolt += ganhos_brutos - comissao
+            else:
+                # Fallback para campo ganhos_liquidos se não houver brutos/comissão
+                ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or r.get("earnings") or 0)
         
         # Buscar também de viagens_bolt (coleção alternativa)
         viagens_bolt_query = {
@@ -971,7 +980,14 @@ async def get_resumo_semanal_parceiro(
         
         viagens_bolt_records = await db.viagens_bolt.find(viagens_bolt_query, {"_id": 0}).to_list(100)
         for r in viagens_bolt_records:
-            ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("total_ganhos") or r.get("valor_liquido") or 0)
+            # Nova fórmula: ganhos = ganhos_brutos - comissao
+            ganhos_brutos = float(r.get("ganhos_brutos_total") or r.get("total_earnings") or 0)
+            comissao = float(r.get("comissao_bolt") or r.get("commission") or 0)
+            
+            if ganhos_brutos > 0 and comissao > 0:
+                ganhos_bolt += ganhos_brutos - comissao
+            else:
+                ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("total_ganhos") or r.get("valor_liquido") or 0)
         
         logger.info(f"  {motorista.get('name')}: Bolt query returned {len(bolt_records)} ganhos + {len(viagens_bolt_records)} viagens, total €{ganhos_bolt:.2f}")
         
