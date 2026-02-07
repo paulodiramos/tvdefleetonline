@@ -284,143 +284,120 @@ class ViaVerdeRPA:
     
     async def exportar_excel_direto(self) -> Optional[str]:
         """
-        Exportar Excel usando o botão "Exportar" na página de Extratos/Movimentos
-        Baseado nos screenshots da Via Verde:
-        - Botão "Exportar" está ABAIXO da tabela de movimentos
-        - Tem ícone de download verde e seta dropdown
-        - Opções: Excel, PDF
+        Exportar Excel usando o botão "Exportar" na página de Extratos e Movimentos.
+        
+        Baseado no screenshot:
+        - O botão está à DIREITA do texto "X movimentos filtrados"
+        - Tem ícone verde de download + texto "Exportar" + seta dropdown
+        - Dropdown mostra: Excel, PDF
         """
         try:
-            logger.info("📥 A exportar Excel diretamente...")
+            logger.info("📥 A exportar Excel...")
             
             await self.screenshot("antes_export")
             await self.page.wait_for_timeout(2000)
             
-            # Scroll para baixo para mostrar a tabela de movimentos e o botão Exportar
-            await self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            # Scroll para mostrar a área dos resultados
+            await self.page.evaluate("window.scrollTo(0, 500)")
             await self.page.wait_for_timeout(1000)
             
-            await self.screenshot("scroll_baixo")
+            # Verificar se há movimentos filtrados
+            try:
+                mov_label = self.page.locator('text=/\\d+ movimentos? filtrados?/i').first
+                if await mov_label.count() > 0:
+                    movimentos_text = await mov_label.text_content()
+                    logger.info(f"📊 {movimentos_text}")
+            except:
+                pass
             
-            # Procurar especificamente o botão Exportar que está perto de "movimentos filtrados"
-            # NÃO queremos "Exportar extratos" (que é outro link no topo)
+            await self.screenshot("area_exportar")
             
-            # Primeiro, verificar se há movimentos
-            movimentos_label = self.page.locator('text=/\\d+ movimentos? filtrados?/i').first
-            if await movimentos_label.count() > 0:
-                mov_text = await movimentos_label.text_content()
-                logger.info(f"📊 {mov_text}")
-            
-            # O botão "Exportar" está numa área específica perto da tabela
-            # Vamos usar selectores mais específicos
-            
-            exportar_selectors = [
-                # Dropdown link perto da tabela (não o link "Exportar extratos")
-                'a.dropdown-toggle:not(:has-text("extratos"))',
-                'a[class*="dropdown"]:has-text("Exportar"):not(:has-text("extratos"))',
-                # Link com ícone de download
-                'a:has(.icon-download)',
-                'a:has(.fa-download)',
-                'a:has(svg)',
-                # Genérico mas excluindo "extratos"
-                'a:text-is("Exportar")',
-            ]
+            # Procurar TODOS os elementos que contêm "Exportar"
+            all_exportar = await self.page.locator('text=Exportar').all()
+            logger.info(f"🔍 Encontrados {len(all_exportar)} elementos com 'Exportar'")
             
             exportar_btn = None
             
-            # Tentar encontrar o botão correto
-            for selector in exportar_selectors:
+            for i, elem in enumerate(all_exportar):
                 try:
-                    btn = self.page.locator(selector).first
-                    if await btn.count() > 0 and await btn.is_visible():
-                        text = await btn.text_content()
-                        if text and 'extratos' not in text.lower():
-                            exportar_btn = btn
-                            logger.info(f"✅ Botão Exportar encontrado: {selector} -> '{text}'")
+                    text = await elem.text_content()
+                    text_clean = text.strip().lower() if text else ""
+                    is_visible = await elem.is_visible()
+                    
+                    logger.info(f"  [{i}] '{text_clean}' - visível: {is_visible}")
+                    
+                    # O botão correcto tem APENAS "Exportar" (pode ter espaços/ícones)
+                    # e NÃO contém "extratos", "detalhes", etc.
+                    if is_visible and text_clean:
+                        # Verificar se é só "exportar"
+                        if text_clean == "exportar" or text_clean.strip() == "exportar":
+                            exportar_btn = elem
+                            logger.info(f"✅ Botão correcto encontrado: índice {i}")
                             break
-                except:
+                        # Aceitar se não tem outras palavras problemáticas
+                        elif "exportar" in text_clean and "extrato" not in text_clean and "detalhe" not in text_clean and len(text_clean) < 20:
+                            exportar_btn = elem
+                            logger.info(f"✅ Botão provável encontrado: índice {i}")
+                            break
+                except Exception as e:
+                    logger.warning(f"  [{i}] Erro: {e}")
                     continue
-            
-            # Se não encontrou com selectores específicos, tentar com locator genérico
-            if not exportar_btn:
-                # Procurar todos os links com "Exportar" e filtrar
-                all_exportar = await self.page.locator('text=Exportar').all()
-                logger.info(f"🔍 Encontrados {len(all_exportar)} elementos com 'Exportar'")
-                
-                for i, elem in enumerate(all_exportar):
-                    try:
-                        text = await elem.text_content()
-                        is_visible = await elem.is_visible()
-                        logger.info(f"  [{i}] '{text}' - visível: {is_visible}")
-                        
-                        # Queremos o que é só "Exportar" (com dropdown), não "Exportar extratos"
-                        if text and text.strip() == "Exportar" and is_visible:
-                            exportar_btn = elem
-                            logger.info(f"✅ Botão correto encontrado: índice {i}")
-                            break
-                        # Também aceitar se tem só ícone e "Exportar"
-                        elif text and 'extratos' not in text.lower() and 'Exportar' in text and is_visible:
-                            exportar_btn = elem
-                            logger.info(f"✅ Botão encontrado: índice {i}")
-                            break
-                    except:
-                        continue
             
             if not exportar_btn:
                 logger.warning("⚠️ Botão Exportar não encontrado")
                 await self.screenshot("export_nao_encontrado")
                 return None
             
-            # Clicar no botão para abrir dropdown
+            # Clicar no botão para abrir o dropdown
+            logger.info("🖱️ A clicar no botão Exportar...")
             await exportar_btn.click()
-            logger.info("🖱️ Clicou no botão Exportar")
             
-            await self.page.wait_for_timeout(2000)
+            # Esperar dropdown abrir
+            await self.page.wait_for_timeout(1500)
             await self.screenshot("dropdown_aberto")
             
-            # Esperar que o dropdown abra e a opção Excel fique visível
+            # Esperar que a opção "Excel" apareça
             try:
-                await self.page.wait_for_selector('text=Excel', state='visible', timeout=5000)
-                logger.info("✅ Opção Excel visível no dropdown")
+                excel_locator = self.page.locator('text=Excel').first
+                await excel_locator.wait_for(state='visible', timeout=5000)
+                logger.info("✅ Opção Excel visível")
             except:
-                logger.warning("⚠️ Opção Excel não ficou visível, tentando clicar mesmo assim")
+                logger.warning("⚠️ Opção Excel não apareceu, tentando mesmo assim...")
             
-            # Clicar em Excel
+            # Clicar em "Excel" e capturar o download
             excel_option = self.page.locator('text=Excel').first
             
             try:
-                async with self.page.expect_download(timeout=20000) as download_info:
+                async with self.page.expect_download(timeout=30000) as download_info:
                     await excel_option.click()
-                    logger.info("🖱️ Clicou na opção Excel")
+                    logger.info("🖱️ Clicou em Excel")
                 
                 download = await download_info.value
                 
+                # Guardar ficheiro
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 original_name = download.suggested_filename or f"viaverde_{timestamp}.xlsx"
                 filepath = self.downloads_path / original_name
                 
                 await download.save_as(str(filepath))
                 
-                logger.info(f"🎉 Excel exportado com sucesso: {filepath}")
+                logger.info(f"🎉 Excel exportado: {filepath}")
+                await self.screenshot("export_sucesso")
                 return str(filepath)
                 
             except Exception as download_error:
-                logger.warning(f"⚠️ Download falhou: {download_error}")
+                logger.error(f"❌ Erro no download: {download_error}")
+                await self.screenshot("download_erro")
                 
-                # Tentar PDF como alternativa
-                try:
-                    pdf_option = self.page.locator('text=PDF').first
-                    if await pdf_option.count() > 0 and await pdf_option.is_visible():
-                        async with self.page.expect_download(timeout=20000) as download_info:
-                            await pdf_option.click()
-                        download = await download_info.value
-                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                        filepath = self.downloads_path / f"viaverde_{timestamp}.pdf"
-                        await download.save_as(str(filepath))
-                        logger.info(f"🎉 PDF exportado como alternativa: {filepath}")
-                        return str(filepath)
-                except:
-                    pass
+                # Verificar se ficheiro foi descarregado para pasta de downloads
+                import glob
+                import os
+                excel_files = glob.glob(str(self.downloads_path / "*.xls*"))
+                if excel_files:
+                    excel_files.sort(key=os.path.getmtime, reverse=True)
+                    latest = excel_files[0]
+                    logger.info(f"🎉 Excel encontrado na pasta: {latest}")
+                    return latest
                 
                 return None
             
