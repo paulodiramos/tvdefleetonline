@@ -632,6 +632,18 @@ const CredenciaisPlataformas = ({ user, onLogout }) => {
                 ],
                 'Credenciais de acesso ao portal Via Verde'
               )}
+
+              {/* Prio Energy */}
+              {renderPlataformaCard(
+                'prio',
+                'Prio Energy',
+                <Fuel className="w-10 h-10 text-orange-600" />,
+                [
+                  { id: 'username', label: 'Nº Cliente', type: 'text', placeholder: 'Número de cliente Prio' },
+                  { id: 'password', label: 'Password', type: 'password', placeholder: '••••••••', hint: 'Deixe vazio para manter a password atual' }
+                ],
+                'Credenciais de acesso ao portal MyPRIO'
+              )}
             </div>
           </TabsContent>
 
