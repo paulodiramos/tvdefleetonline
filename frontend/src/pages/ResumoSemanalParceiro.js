@@ -1319,7 +1319,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               disabled={savingTotaisEmpresa || (!totaisEmpresa.uber_recebido && !totaisEmpresa.bolt_recebido)}
               className="h-7 text-xs bg-green-600 hover:bg-green-700"
             >
-              {savingTotaisEmpresa ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Check className="w-3 h-3 mr-1" />}
+              {savingTotaisEmpresa ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
               Aplicar aos Motoristas
             </Button>
           </div>
