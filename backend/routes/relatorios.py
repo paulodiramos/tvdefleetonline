@@ -957,9 +957,9 @@ async def get_resumo_semanal_parceiro(
         # Buscar de ganhos_bolt
         bolt_records = await db.ganhos_bolt.find(bolt_query, {"_id": 0}).to_list(100)
         for r in bolt_records:
-            # Nova fórmula: ganhos = ganhos_brutos - comissao (inclui gorjetas, bónus, campanhas, portagens)
+            # Nova fórmula: ganhos = ganhos_brutos - comissões (inclui gorjetas, bónus, campanhas, portagens)
             ganhos_brutos = float(r.get("ganhos_brutos_total") or r.get("total_earnings") or 0)
-            comissao = float(r.get("comissao_bolt") or r.get("commission") or 0)
+            comissao = float(r.get("comissoes") or r.get("comissao_bolt") or r.get("commission") or 0)
             
             if ganhos_brutos > 0 and comissao > 0:
                 # Usar fórmula: brutos - comissão
@@ -980,9 +980,9 @@ async def get_resumo_semanal_parceiro(
         
         viagens_bolt_records = await db.viagens_bolt.find(viagens_bolt_query, {"_id": 0}).to_list(100)
         for r in viagens_bolt_records:
-            # Nova fórmula: ganhos = ganhos_brutos - comissao
+            # Nova fórmula: ganhos = ganhos_brutos - comissão
             ganhos_brutos = float(r.get("ganhos_brutos_total") or r.get("total_earnings") or 0)
-            comissao = float(r.get("comissao_bolt") or r.get("commission") or 0)
+            comissao = float(r.get("comissoes") or r.get("comissao_bolt") or r.get("commission") or 0)
             
             if ganhos_brutos > 0 and comissao > 0:
                 ganhos_bolt += ganhos_brutos - comissao
