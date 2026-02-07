@@ -350,56 +350,70 @@ class ViaVerdeRPA:
             
             # Clicar no botão para abrir o dropdown
             logger.info("🖱️ A clicar no botão Exportar...")
-            await exportar_btn.click()
             
-            # Esperar dropdown abrir
-            await self.page.wait_for_timeout(1500)
+            # Tentar vários métodos de clique (AngularJS pode precisar de eventos específicos)
+            try:
+                await exportar_btn.click()
+            except:
+                # Fallback: clicar via JavaScript
+                await exportar_btn.dispatch_event('click')
+            
+            # Esperar dropdown abrir com mais tempo
+            await self.page.wait_for_timeout(2000)
             await self.screenshot("dropdown_aberto")
             
-            # Esperar que a opção "Excel" apareça
+            # Tentar clicar em "Excel" directamente via JavaScript (AngularJS)
+            # O elemento tem ng-click="vm.exportTransactionsExcel()"
             try:
-                excel_locator = self.page.locator('text=Excel').first
-                await excel_locator.wait_for(state='visible', timeout=5000)
-                logger.info("✅ Opção Excel visível")
-            except:
-                logger.warning("⚠️ Opção Excel não apareceu, tentando mesmo assim...")
-            
-            # Clicar em "Excel" e capturar o download
-            excel_option = self.page.locator('text=Excel').first
-            
-            try:
-                async with self.page.expect_download(timeout=30000) as download_info:
-                    await excel_option.click()
-                    logger.info("🖱️ Clicou em Excel")
+                # Primeiro, tentar encontrar e clicar normalmente
+                excel_option = self.page.locator('a:has-text("Excel"):not(:has-text("Exportar"))').first
+                if await excel_option.count() > 0:
+                    is_visible = await excel_option.is_visible()
+                    logger.info(f"📥 Opção Excel encontrada, visível: {is_visible}")
+                    
+                    if is_visible:
+                        async with self.page.expect_download(timeout=30000) as download_info:
+                            await excel_option.click()
+                            logger.info("🖱️ Clicou em Excel")
+                        
+                        download = await download_info.value
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        original_name = download.suggested_filename or f"viaverde_{timestamp}.xlsx"
+                        filepath = self.downloads_path / original_name
+                        await download.save_as(str(filepath))
+                        logger.info(f"🎉 Excel exportado: {filepath}")
+                        return str(filepath)
+                    else:
+                        # Se não está visível, tentar forçar clique ou executar JS
+                        logger.info("📥 A tentar clique forçado em Excel...")
+                        
+                        # Método 1: Clique forçado
+                        try:
+                            async with self.page.expect_download(timeout=20000) as download_info:
+                                await excel_option.click(force=True)
+                            download = await download_info.value
+                            filepath = self.downloads_path / (download.suggested_filename or f"viaverde_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
+                            await download.save_as(str(filepath))
+                            logger.info(f"🎉 Excel exportado via clique forçado: {filepath}")
+                            return str(filepath)
+                        except Exception as e:
+                            logger.warning(f"⚠️ Clique forçado falhou: {e}")
+                        
+                        # Método 2: Executar função Angular directamente
+                        logger.info("📥 A tentar via JavaScript...")
+                        try:
+                            async with self.page.expect_download(timeout=20000) as download_info:
+                                await self.page.evaluate("document.querySelector('a[ng-click*=\"exportTransactionsExcel\"]').click()")
+                            download = await download_info.value
+                            filepath = self.downloads_path / (download.suggested_filename or f"viaverde_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
+                            await download.save_as(str(filepath))
+                            logger.info(f"🎉 Excel exportado via JS: {filepath}")
+                            return str(filepath)
+                        except Exception as e:
+                            logger.warning(f"⚠️ JS falhou: {e}")
                 
-                download = await download_info.value
-                
-                # Guardar ficheiro
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                original_name = download.suggested_filename or f"viaverde_{timestamp}.xlsx"
-                filepath = self.downloads_path / original_name
-                
-                await download.save_as(str(filepath))
-                
-                logger.info(f"🎉 Excel exportado: {filepath}")
-                await self.screenshot("export_sucesso")
-                return str(filepath)
-                
-            except Exception as download_error:
-                logger.error(f"❌ Erro no download: {download_error}")
-                await self.screenshot("download_erro")
-                
-                # Verificar se ficheiro foi descarregado para pasta de downloads
-                import glob
-                import os
-                excel_files = glob.glob(str(self.downloads_path / "*.xls*"))
-                if excel_files:
-                    excel_files.sort(key=os.path.getmtime, reverse=True)
-                    latest = excel_files[0]
-                    logger.info(f"🎉 Excel encontrado na pasta: {latest}")
-                    return latest
-                
-                return None
+            except Exception as e:
+                logger.error(f"❌ Erro ao clicar em Excel: {e}")
             
         except Exception as e:
             logger.error(f"❌ Erro ao exportar: {e}")
