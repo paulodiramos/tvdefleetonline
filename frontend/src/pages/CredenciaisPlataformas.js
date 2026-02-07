@@ -70,8 +70,21 @@ const CredenciaisPlataformas = ({ user, onLogout }) => {
         const combList = [...combustiveis];
         const gpsList = [...gps];
         
+        // Plataformas fixas
+        const plataformasFixas = ['uber', 'bolt', 'viaverde', 'prio'];
+        
         response.data.forEach(cred => {
-          if (cred.tipo === 'plataforma' && merged[cred.plataforma]) {
+          const plataforma = cred.plataforma;
+          
+          // Se é uma plataforma fixa
+          if (plataformasFixas.includes(plataforma) && merged[plataforma]) {
+            merged[plataforma] = {
+              ...merged[plataforma],
+              ...cred,
+              password: '', // Password é carregada via olho
+              configurado: true
+            };
+          } else if (cred.tipo === 'plataforma' && merged[cred.plataforma]) {
             merged[cred.plataforma] = {
               ...merged[cred.plataforma],
               ...cred,
