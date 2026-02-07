@@ -1017,6 +1017,59 @@ async def update_credenciais_plataformas(
 
 
 
+# ==================== REVELAR SENHA DE PLATAFORMA ====================
+
+@router.post("/configuracoes/revelar-senha")
+async def revelar_senha_plataforma(
+    data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Revelar a senha de uma plataforma específica.
+    Apenas o próprio parceiro pode revelar suas senhas.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    plataforma = data.get("plataforma")
+    if not plataforma:
+        raise HTTPException(status_code=400, detail="Plataforma não especificada")
+    
+    # Mapear o nome da plataforma para o campo da senha
+    campo_senha = {
+        "uber": "uber_password",
+        "bolt": "bolt_password",
+        "viaverde": "viaverde_password",
+        "prio": "prio_password"
+    }.get(plataforma.lower())
+    
+    if not campo_senha:
+        raise HTTPException(status_code=400, detail=f"Plataforma '{plataforma}' não reconhecida")
+    
+    parceiro_id = current_user["id"]
+    
+    # Buscar parceiro
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    # Obter credenciais
+    credenciais = parceiro.get("credenciais_plataformas", {})
+    senha = credenciais.get(campo_senha)
+    
+    if not senha:
+        raise HTTPException(status_code=404, detail=f"Senha de {plataforma} não configurada")
+    
+    logger.info(f"🔑 Senha de {plataforma} revelada para parceiro {parceiro_id}")
+    
+    return {"password": senha}
+
+
+
+
 # ==================== CONFIGURAÇÃO DE WHATSAPP ====================
 
 class ConfiguracaoWhatsApp(BaseModel):
