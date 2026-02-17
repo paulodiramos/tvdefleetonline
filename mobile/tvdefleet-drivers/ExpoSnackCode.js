@@ -13,7 +13,7 @@ import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path as SvgPath, Circle, G, Rect, Text as SvgText } from 'react-native-svg';
 
-const API_URL = 'https://provider-link-3.preview.emergentagent.com/api';
+const API_URL = 'https://tvdefleet.com/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ===== API SERVICE =====
