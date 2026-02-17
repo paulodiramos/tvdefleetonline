@@ -409,3 +409,123 @@ async def get_historico_alertas_custos(
     
     return alertas
 
+
+
+@router.get("/documentos-expirar")
+async def get_documentos_expirar(
+    dias: int = 30,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter lista de documentos a expirar nos próximos X dias"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    from datetime import timedelta
+    now = datetime.now(timezone.utc)
+    limite_data = now + timedelta(days=dias)
+    
+    expirados = []
+    a_expirar = []
+    
+    # Filtro de parceiro
+    parceiro_filter = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        parceiro_filter = {"$or": [
+            {"parceiro_id": current_user["id"]},
+            {"parceiro_atribuido": current_user["id"]}
+        ]}
+    
+    # Documentos de motoristas
+    motorista_docs = [
+        ("carta_conducao", "carta_conducao_validade", "Carta de Condução"),
+        ("cartao_cidadao", "cartao_cidadao_validade", "Cartão de Cidadão"),
+        ("certificado_tvde", "certificado_tvde_validade", "Certificado TVDE"),
+        ("registo_criminal", "registo_criminal_validade", "Registo Criminal"),
+    ]
+    
+    motoristas = await db.motoristas.find(
+        {**parceiro_filter, "ativo": True},
+        {"_id": 0, "id": 1, "nome": 1, "email": 1, 
+         "carta_conducao": 1, "carta_conducao_validade": 1,
+         "cartao_cidadao": 1, "cartao_cidadao_validade": 1,
+         "certificado_tvde": 1, "certificado_tvde_validade": 1,
+         "registo_criminal": 1, "registo_criminal_validade": 1}
+    ).to_list(500)
+    
+    for m in motoristas:
+        for doc_field, validade_field, doc_nome in motorista_docs:
+            if m.get(doc_field) and m.get(validade_field):
+                try:
+                    validade = datetime.fromisoformat(m[validade_field].replace('Z', '+00:00')) if isinstance(m[validade_field], str) else m[validade_field]
+                    if validade.tzinfo is None:
+                        validade = validade.replace(tzinfo=timezone.utc)
+                    
+                    doc_info = {
+                        "id": m["id"],
+                        "tipo": "motorista",
+                        "nome": m.get("nome", ""),
+                        "email": m.get("email", ""),
+                        "documento": doc_nome,
+                        "validade": validade.isoformat()
+                    }
+                    
+                    if validade < now:
+                        expirados.append(doc_info)
+                    elif validade < limite_data:
+                        a_expirar.append(doc_info)
+                except Exception:
+                    pass
+    
+    # Documentos de veículos
+    veiculo_docs = [
+        ("inspecao", "inspecao_validade", "Inspeção"),
+        ("seguro", "seguro_validade", "Seguro"),
+        ("licenca_tvde", "licenca_tvde_validade", "Licença TVDE"),
+    ]
+    
+    veiculo_filter = {"parceiro_id": current_user["id"]} if current_user["role"] == UserRole.PARCEIRO else {}
+    
+    veiculos = await db.vehicles.find(
+        {**veiculo_filter, "ativo": {"$ne": False}},
+        {"_id": 0, "id": 1, "matricula": 1, "marca": 1, "modelo": 1,
+         "inspecao": 1, "inspecao_validade": 1,
+         "seguro": 1, "seguro_validade": 1,
+         "licenca_tvde": 1, "licenca_tvde_validade": 1}
+    ).to_list(500)
+    
+    for v in veiculos:
+        for doc_field, validade_field, doc_nome in veiculo_docs:
+            if v.get(doc_field) and v.get(validade_field):
+                try:
+                    validade = datetime.fromisoformat(v[validade_field].replace('Z', '+00:00')) if isinstance(v[validade_field], str) else v[validade_field]
+                    if validade.tzinfo is None:
+                        validade = validade.replace(tzinfo=timezone.utc)
+                    
+                    doc_info = {
+                        "id": v["id"],
+                        "tipo": "veiculo",
+                        "matricula": v.get("matricula", ""),
+                        "marca": v.get("marca", ""),
+                        "modelo": v.get("modelo", ""),
+                        "documento": doc_nome,
+                        "validade": validade.isoformat()
+                    }
+                    
+                    if validade < now:
+                        expirados.append(doc_info)
+                    elif validade < limite_data:
+                        a_expirar.append(doc_info)
+                except Exception:
+                    pass
+    
+    # Ordenar por data de validade
+    expirados.sort(key=lambda x: x["validade"])
+    a_expirar.sort(key=lambda x: x["validade"])
+    
+    return {
+        "expirados": expirados,
+        "a_expirar": a_expirar,
+        "total_expirados": len(expirados),
+        "total_a_expirar": len(a_expirar)
+    }
+

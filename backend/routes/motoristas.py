@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body
 from fastapi.responses import FileResponse
 from typing import List, Dict, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import uuid
 import logging
@@ -13,6 +13,7 @@ from models.motorista import Motorista, MotoristaCreate, MotoristaCreateSimple
 from models.user import UserRole
 from utils.auth import hash_password, get_current_user
 from utils.database import get_database
+from services.subscricao_service import atualizar_contagem_subscricao
 
 router = APIRouter()
 db = get_database()
@@ -87,6 +88,9 @@ async def create_motorista_for_parceiro(
     motorista_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.motoristas.insert_one(motorista_dict)
+    
+    # Atualizar subscrição automaticamente
+    await atualizar_contagem_subscricao(parceiro_id)
     
     logger.info(f"Motorista {motorista_data.name} criado pelo parceiro {parceiro_id}")
     
@@ -707,6 +711,53 @@ async def reativar_motorista(
     return {"message": "Motorista reativado com sucesso"}
 
 
+@router.get("/meu-plano")
+async def get_meu_plano_motorista(current_user: Dict = Depends(get_current_user)):
+    """Get current motorista's plan details"""
+    if current_user["role"] != UserRole.MOTORISTA:
+        raise HTTPException(status_code=403, detail="Apenas motoristas podem aceder")
+    
+    motorista_id = current_user["id"]
+    
+    # Buscar dados do motorista
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        return {"plano": None, "message": "Perfil de motorista não encontrado"}
+    
+    # Buscar plano do motorista
+    plano_id = motorista.get("plano_id")
+    plano = None
+    
+    if plano_id:
+        plano = await db.planos_sistema.find_one(
+            {"id": plano_id, "tipo_usuario": "motorista"}, 
+            {"_id": 0}
+        )
+    
+    # Se não tem plano, buscar plano gratuito padrão
+    if not plano:
+        plano = await db.planos_sistema.find_one(
+            {"tipo_usuario": "motorista", "categoria": "gratuito"}, 
+            {"_id": 0}
+        )
+    
+    # Buscar módulos incluídos
+    modulos = []
+    if plano and plano.get("modulos_incluidos"):
+        for codigo in plano["modulos_incluidos"]:
+            modulo = await db.modulos_sistema.find_one({"codigo": codigo}, {"_id": 0})
+            if modulo:
+                modulos.append(modulo)
+    
+    return {
+        "plano": plano,
+        "modulos": modulos,
+        "plano_nome": motorista.get("plano_nome"),
+        "plano_valida_ate": motorista.get("plano_valida_ate"),
+        "status": "ativo" if plano else "sem_plano"
+    }
+
+
 @router.delete("/motoristas/{motorista_id}")
 async def delete_motorista(
     motorista_id: str,
@@ -720,15 +771,21 @@ async def delete_motorista(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
+    parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
+    
     # Soft delete
     await db.motoristas.update_one(
         {"id": motorista_id},
-        {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"deleted": True, "ativo": False, "deleted_at": datetime.now(timezone.utc).isoformat()}}
     )
     await db.users.update_one(
         {"id": motorista_id},
         {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat()}}
     )
+    
+    # Atualizar subscrição do parceiro
+    if parceiro_id:
+        await atualizar_contagem_subscricao(parceiro_id)
     
     return {"message": "Motorista deleted successfully"}
 

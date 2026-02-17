@@ -67,10 +67,26 @@ async def importar_ganhos_uber(
         erros = []
         total_ganhos = 0.0
         
-        # Extrair período do nome do ficheiro
+        # Extrair período do nome do ficheiro (formato: YYYYMMDD-YYYYMMDD)
         periodo_match = re.search(r'(\d{8})-(\d{8})', file.filename)
         periodo_inicio = periodo_match.group(1) if periodo_match else None
         periodo_fim = periodo_match.group(2) if periodo_match else None
+        
+        # Calcular semana e ano baseado no período
+        semana_calc = None
+        ano_calc = None
+        if periodo_inicio:
+            try:
+                # Formato YYYYMMDD
+                data_inicio = datetime.strptime(periodo_inicio, '%Y%m%d')
+                iso_cal = data_inicio.isocalendar()
+                ano_calc = iso_cal[0]
+                semana_calc = iso_cal[1]
+            except Exception:
+                pass
+        
+        # Obter parceiro_id do utilizador
+        parceiro_id = user['id'] if user['role'] == 'parceiro' else user.get('parceiro_id')
         
         for row_num, row in enumerate(csv_reader, start=2):
             try:
@@ -93,10 +109,13 @@ async def importar_ganhos_uber(
                     'id': str(uuid.uuid4()),
                     'uuid_motorista_uber': uuid_motorista,
                     'motorista_id': motorista_id,
+                    'parceiro_id': parceiro_id,
                     'nome_motorista': row.get('Nome próprio do motorista', ''),
                     'apelido_motorista': row.get('Apelido do motorista', ''),
                     'periodo_inicio': periodo_inicio,
                     'periodo_fim': periodo_fim,
+                    'semana': semana_calc,
+                    'ano': ano_calc,
                     'pago_total': pago_total,
                     'rendimentos_total': rendimentos_total,
                     'dinheiro_recebido': parse_float(row.get('Pago a si : Saldo da viagem : Pagamentos : Dinheiro recebido', '0')),
@@ -114,6 +133,8 @@ async def importar_ganhos_uber(
                     'gratificacao': parse_float(row.get('Pago a si:Os seus rendimentos:Gratificação', '0')),
                     'portagens': parse_float(row.get('Pago a si:Saldo da viagem:Reembolsos:Portagem', '0')),
                     'ajustes': parse_float(row.get('Pago a si:Os seus rendimentos:Outros rendimentos:Ajuste', '0')),
+                    'plataforma': 'uber',
+                    'fonte': 'csv_import',
                     'ficheiro_nome': file.filename,
                     'data_importacao': datetime.now(timezone.utc),
                     'importado_por': user['id']
@@ -254,11 +275,16 @@ async def importar_ganhos_bolt(
                     'nome_motorista': row.get('Motorista', ''),
                     'email_motorista': row.get('Email', ''),
                     'telemovel_motorista': row.get('Telemóvel', ''),
-                    'periodo_ano': periodo_ano,
-                    'periodo_semana': periodo_semana,
+                    # Campos de período - usar ambos os formatos para compatibilidade
+                    'periodo_ano': int(periodo_ano) if periodo_ano else None,
+                    'periodo_semana': int(periodo_semana) if periodo_semana else None,
+                    'ano': int(periodo_ano) if periodo_ano else None,
+                    'semana': int(periodo_semana) if periodo_semana else None,
+                    # Valores financeiros
                     'ganhos_brutos_total': parse_float(row.get('Ganhos brutos (total)|€', '0')),
                     'ganhos_brutos_app': parse_float(row.get('Ganhos brutos (pagamentos na app)|€', '0')),
                     'iva_ganhos_app': parse_float(row.get('IVA sobre os ganhos brutos (pagamentos na app)|€', '0')),
+                    'iva_ganhos_brutos_app': parse_float(row.get('IVA sobre os ganhos brutos (pagamentos na app)|€', '0')),
                     'ganhos_brutos_dinheiro': parse_float(row.get('Ganhos brutos (pagamentos em dinheiro)|€', '0')),
                     'iva_ganhos_dinheiro': parse_float(row.get('IVA sobre os ganhos brutos (pagamentos em dinheiro)|€', '0')),
                     'dinheiro_recebido': parse_float(row.get('Dinheiro recebido|€', '0')),
@@ -266,25 +292,58 @@ async def importar_ganhos_bolt(
                     'ganhos_campanha': parse_float(row.get('Ganhos da campanha|€', '0')),
                     'reembolsos_despesas': parse_float(row.get('Reembolsos de despesas|€', '0')),
                     'taxas_cancelamento': parse_float(row.get('Taxas de cancelamento|€', '0')),
+                    'taxa_cancelamento': parse_float(row.get('Taxas de cancelamento|€', '0')),
                     'iva_taxas_cancelamento': parse_float(row.get('IVA das taxas de cancelamento|€', '0')),
+                    'iva_taxa_cancelamento': parse_float(row.get('IVA das taxas de cancelamento|€', '0')),
                     'portagens': parse_float(row.get('Portagens|€', '0')),
+                    'portagens_bolt': parse_float(row.get('Portagens|€', '0')),
                     'taxas_reserva': parse_float(row.get('Taxas de reserva|€', '0')),
+                    'taxa_reserva': parse_float(row.get('Taxas de reserva|€', '0')),
                     'iva_taxas_reserva': parse_float(row.get('IVA das taxas de reserva|€', '0')),
+                    'iva_taxa_reserva': parse_float(row.get('IVA das taxas de reserva|€', '0')),
                     'total_taxas': parse_float(row.get('Total de taxas|€', '0')),
                     'comissoes': parse_float(row.get('Comissões|€', '0')),
+                    'comissao_bolt': parse_float(row.get('Comissões|€', '0')),
                     'reembolsos_passageiros': parse_float(row.get('Reembolsos aos passageiros|€', '0')),
                     'outras_taxas': parse_float(row.get('Outras taxas|€', '0')),
                     'ganhos_liquidos': ganhos_liquidos,
+                    'ganhos': ganhos_liquidos,
                     'pagamento_previsto': parse_float(row.get('Pagamento previsto|€', '0')),
                     'ganhos_brutos_por_hora': parse_float(row.get('Ganhos brutos por hora|€/h', '0')),
                     'ganhos_liquidos_por_hora': parse_float(row.get('Ganhos líquidos por hora|€/h', '0')),
                     'ficheiro_nome': file.filename,
-                    'parceiro_id': parceiro_id,
+                    'parceiro_id': parceiro_id or (user['id'] if user['role'] == 'parceiro' else None),
+                    'fonte': 'csv_import',
                     'data_importacao': datetime.now(timezone.utc),
-                    'importado_por': user['id']
+                    'importado_por': user['id'],
+                    'created_at': datetime.now(timezone.utc).isoformat()
                 }
                 
-                await db.ganhos_bolt.insert_one(ganho)
+                # Buscar veículo associado ao motorista
+                if motorista_id:
+                    veiculo = await db.vehicles.find_one(
+                        {"motorista_id": motorista_id},
+                        {"_id": 0, "id": 1, "matricula": 1}
+                    )
+                    if veiculo:
+                        ganho['veiculo_id'] = veiculo['id']
+                        ganho['veiculo_matricula'] = veiculo.get('matricula')
+                
+                # Verificar duplicado
+                existe = await db.ganhos_bolt.find_one({
+                    "identificador_individual": identificador_individual,
+                    "semana": ganho['semana'],
+                    "ano": ganho['ano']
+                })
+                
+                if existe:
+                    # Actualizar em vez de inserir
+                    await db.ganhos_bolt.update_one(
+                        {"id": existe["id"]},
+                        {"$set": ganho}
+                    )
+                else:
+                    await db.ganhos_bolt.insert_one(ganho)
                 ganho_copy = {k: v for k, v in ganho.items() if k != '_id'}
                 ganhos_importados.append(ganho_copy)
                 total_ganhos += ganhos_liquidos

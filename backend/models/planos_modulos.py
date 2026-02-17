@@ -181,6 +181,14 @@ class ModuloUpdate(BaseModel):
     funcionalidades: Optional[List[str]] = None
 
 
+class TrialConfig(BaseModel):
+    """Configuração avançada de trial"""
+    ativo: bool = False
+    dias: int = 14
+    requer_cartao: bool = False
+    automatico: bool = False  # Se True, trial é aplicado automaticamente a novos utilizadores
+
+
 # ==================== PLANO ====================
 
 class PlanoSistema(BaseModel):
@@ -204,9 +212,12 @@ class PlanoSistema(BaseModel):
     destaque: bool = False
     permite_trial: bool = False
     dias_trial: int = 0
+    trial_config: Optional[TrialConfig] = TrialConfig()  # Configuração avançada de trial
     features_destaque: List[str] = []  # Features para mostrar na UI
     promocoes: List[Promocao] = []
     precos_especiais: List[PrecoEspecial] = []
+    referencia_faturacao: Optional[str] = None  # Referência interna para programa de faturação
+    taxa_iva: float = 23  # Taxa de IVA configurável (padrão 23%)
     created_at: datetime
     updated_at: datetime
 
@@ -226,7 +237,10 @@ class PlanoCreate(BaseModel):
     ordem: int = 0
     permite_trial: bool = False
     dias_trial: int = 0
+    trial_config: Optional[TrialConfig] = TrialConfig()
     features_destaque: List[str] = []
+    referencia_faturacao: Optional[str] = None
+    taxa_iva: float = 23
 
 
 class PlanoUpdate(BaseModel):
@@ -245,7 +259,10 @@ class PlanoUpdate(BaseModel):
     destaque: Optional[bool] = None
     permite_trial: Optional[bool] = None
     dias_trial: Optional[int] = None
+    trial_config: Optional[TrialConfig] = None
     features_destaque: Optional[List[str]] = None
+    referencia_faturacao: Optional[str] = None
+    taxa_iva: Optional[float] = None
 
 
 # ==================== SUBSCRIÇÃO ====================
@@ -490,6 +507,155 @@ class SolicitarAdicaoRequest(BaseModel):
     motoristas_adicionar: int = 0
 
 
+# ==================== SISTEMA DE DOWNGRADE ====================
+
+class StatusDowngrade(str, Enum):
+    """Status do pedido de downgrade"""
+    AGENDADO = "agendado"  # Aguarda fim do ciclo atual
+    APLICADO = "aplicado"
+    CANCELADO = "cancelado"
+
+
+class PedidoDowngrade(BaseModel):
+    """Pedido de downgrade de plano (aplicado no fim do ciclo)"""
+    id: str
+    user_id: str
+    user_nome: Optional[str] = None
+    subscricao_id: str
+    
+    # Plano atual
+    plano_atual_id: str
+    plano_atual_nome: str
+    preco_atual: float
+    
+    # Plano novo (destino do downgrade)
+    plano_novo_id: str
+    plano_novo_nome: str
+    preco_novo: float
+    
+    # Datas
+    data_solicitacao: datetime
+    data_aplicacao: datetime  # Data em que o downgrade será aplicado (fim do ciclo)
+    data_aplicado: Optional[datetime] = None
+    
+    # Status
+    status: StatusDowngrade = StatusDowngrade.AGENDADO
+    
+    # Motivo (opcional)
+    motivo: Optional[str] = None
+    
+    # Metadata
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    cancelado_por: Optional[str] = None
+    cancelado_em: Optional[datetime] = None
+
+
+class SolicitarDowngradeRequest(BaseModel):
+    """Request para solicitar downgrade de plano"""
+    plano_novo_id: str
+    motivo: Optional[str] = None
+
+
+class CancelarDowngradeRequest(BaseModel):
+    """Request para cancelar downgrade agendado"""
+    motivo: Optional[str] = None
+
+
+# ==================== MÓDULO DE HISTÓRICO ====================
+
+class ModuloHistorico(BaseModel):
+    """Módulo de Histórico - permite manter recursos desativados sem cobrança"""
+    id: str
+    user_id: str
+    subscricao_id: str
+    
+    # Preços configuráveis pelo admin
+    preco_por_veiculo_inativo: float = 0.99  # Preço mensal por veículo inativo
+    preco_por_motorista_inativo: float = 0.49  # Preço mensal por motorista inativo
+    
+    # Contagem de recursos inativos
+    veiculos_inativos: int = 0
+    motoristas_inativos: int = 0
+    
+    # Custo total do módulo
+    custo_mensal: float = 0
+    
+    # Status
+    ativo: bool = True
+    data_inicio: datetime
+    data_fim: Optional[datetime] = None
+    
+    # Metadata
+    created_at: datetime
+    updated_at: datetime
+
+
+# ==================== MÓDULOS ADICIONAIS ====================
+
+class TipoCobrancaModulo(str, Enum):
+    """Tipo de cobrança para módulos adicionais"""
+    PRECO_UNICO = "preco_unico"  # Preço fixo independente
+    POR_VEICULO = "por_veiculo"
+    POR_MOTORISTA = "por_motorista"
+
+
+class ModuloAdicionalSubscrito(BaseModel):
+    """Módulo adicional subscrito por parceiro/gestor"""
+    id: str
+    user_id: str
+    subscricao_id: str
+    modulo_id: str
+    modulo_codigo: str
+    modulo_nome: str
+    
+    # Tipo de cobrança escolhido
+    tipo_cobranca: TipoCobrancaModulo
+    
+    # Preços
+    preco_base: float = 0  # Se tipo_cobranca == PRECO_UNICO
+    preco_por_veiculo: float = 0  # Se tipo_cobranca == POR_VEICULO
+    preco_por_motorista: float = 0  # Se tipo_cobranca == POR_MOTORISTA
+    
+    # Quantidade de recursos (para cálculo)
+    num_veiculos: int = 0
+    num_motoristas: int = 0
+    
+    # Custo calculado
+    custo_mensal: float = 0
+    
+    # Periodicidade
+    periodicidade: Periodicidade = Periodicidade.MENSAL
+    
+    # Status
+    ativo: bool = True
+    data_inicio: datetime
+    data_fim: Optional[datetime] = None
+    proxima_cobranca: Optional[datetime] = None
+    
+    # Metadata
+    created_at: datetime
+    updated_at: datetime
+
+
+class AdicionarModuloRequest(BaseModel):
+    """Request para adicionar módulo ao plano"""
+    modulo_id: str
+    tipo_cobranca: TipoCobrancaModulo
+    num_veiculos: Optional[int] = None  # Obrigatório se tipo_cobranca == POR_VEICULO
+    num_motoristas: Optional[int] = None  # Obrigatório se tipo_cobranca == POR_MOTORISTA
+    periodicidade: Periodicidade = Periodicidade.MENSAL
+
+
+class CalculoPlanoRequest(BaseModel):
+    """Request para calcular preço de plano com recursos"""
+    plano_id: str
+    num_veiculos: int
+    num_motoristas: int
+    periodicidade: Periodicidade = Periodicidade.MENSAL
+    modulos_adicionais: List[AdicionarModuloRequest] = []
+
+
 class IniciarPagamentoRequest(BaseModel):
     """Request para iniciar pagamento de um pedido"""
     pedido_id: str
@@ -596,6 +762,18 @@ MODULOS_PREDEFINIDOS = {
         "cor": "#14B8A6",
         "ordem": 9,
         "funcionalidades": ["criar_vistoria", "checklist", "fotos_vistoria", "relatorio_vistoria"]
+    },
+    "historico_recursos": {
+        "nome": "Histórico de Recursos",
+        "descricao": "Manter veículos e motoristas desativados sem contar na cobrança do plano. Preserva todo o histórico.",
+        "tipo_usuario": "parceiro",
+        "tipo_cobranca": "por_recurso_inativo",
+        "icone": "📚",
+        "cor": "#9333EA",
+        "ordem": 10,
+        "funcionalidades": ["historico_veiculos", "historico_motoristas", "preservar_dados", "relatorios_historicos"],
+        "preco_por_veiculo_inativo": 0.99,
+        "preco_por_motorista_inativo": 0.49
     },
     
     # Módulos para Motoristas

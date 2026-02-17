@@ -30,6 +30,7 @@ import ConfiguracaoSincronizacao from "@/pages/ConfiguracaoSincronizacao";
 import CredenciaisParceiros from "@/pages/CredenciaisParceiros";
 import ConfiguracaoUber from "@/pages/ConfiguracaoUber";
 import ConfiguracaoUberParceiro from "@/pages/ConfiguracaoUberParceiro";
+import ConfiguracaoPrioParceiro from "@/pages/ConfiguracaoPrioParceiro";
 import ImportarDados from "@/pages/ImportarDados";
 import ImportarPlataformas from "@/pages/ImportarPlataformas";
 import ImportarMotoristasVeiculos from "@/pages/ImportarMotoristasVeiculos";
@@ -118,6 +119,7 @@ import ConfiguracaoCSV from "@/pages/ConfiguracaoCSV";
 import ImportarDespesas from "@/pages/ImportarDespesas";
 import FichaMotorista from "@/pages/FichaMotorista";
 import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
+import CopiaSeguranca from "@/pages/CopiaSeguranca";
 // RPA - Apenas Designer e Automação activos
 import RPAAutomacao from "@/pages/RPAAutomacao";
 import RPADesigner from "@/pages/RPADesigner";
@@ -127,7 +129,9 @@ import GestaoPermissoesParceiros from "@/pages/GestaoPermissoesParceiros";
 import GestaoFuncionalidades from "@/pages/GestaoFuncionalidades";
 import GestaoServicos from "@/pages/GestaoServicos";
 import Terabox from "@/pages/Terabox";
+import GestaoDocumentos from "@/pages/GestaoDocumentos";
 import AdminFornecedores from "@/pages/AdminFornecedores";
+import AdminPlataformas from "@/pages/AdminPlataformas";
 import WhatsAppEnvio from "@/pages/WhatsAppEnvio";
 import RelatorioFornecedores from "@/pages/RelatorioFornecedores";
 import AlertasCustos from "@/pages/AlertasCustos";
@@ -330,10 +334,10 @@ function App() {
           <Route
             path="/loja-planos"
             element={
-              user && user.role === 'parceiro' ? (
+              user && ['parceiro', 'motorista', 'gestao', 'admin'].includes(user.role) ? (
                 <LojaPlanos user={user} onLogout={handleLogout} />
               ) : (
-                <Navigate to="/dashboard" />
+                <Navigate to="/login" />
               )
             }
           />
@@ -770,6 +774,16 @@ function App() {
             }
           />
           <Route
+            path="/configuracao-prio"
+            element={
+              user && user.role === 'parceiro' ? (
+                <ConfiguracaoPrioParceiro user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/importar-dados"
             element={
               user ? (
@@ -1003,6 +1017,16 @@ function App() {
             }
           />
           <Route
+            path="/admin/plataformas"
+            element={
+              user && user.role === 'admin' ? (
+                <AdminPlataformas user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/whatsapp"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
@@ -1043,10 +1067,30 @@ function App() {
             }
           />
           <Route
+            path="/copia-seguranca"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin') ? (
+                <CopiaSeguranca user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/terabox"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
                 <Terabox user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/gestao-documentos"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
+                <GestaoDocumentos user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/login" />
               )

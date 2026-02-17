@@ -18,8 +18,59 @@ class TipoFornecedor(str, Enum):
     VIA_VERDE = "via_verde"
     GPS = "gps"
     COMBUSTIVEL = "combustivel"
+    COMBUSTIVEL_FOSSIL = "combustivel_fossil"
     CARREGAMENTO_ELETRICO = "carregamento_eletrico"
+    COMBUSTIVEL_ELETRICO = "combustivel_eletrico"
+    SEGUROS = "seguros"
+    MANUTENCAO = "manutencao"
+    LAVAGEM = "lavagem"
+    PNEUS = "pneus"
     OUTRO = "outro"
+
+
+class MetodoIntegracao(str, Enum):
+    """Métodos de integração disponíveis"""
+    UPLOAD_EXCEL = "upload_excel"  # Upload manual de ficheiro
+    UPLOAD_CSV = "upload_csv"
+    API = "api"  # Integração via API
+    RPA_BROWSER = "rpa_browser"  # Automação de browser
+
+
+class CampoMapeamento(BaseModel):
+    """Mapeamento de um campo do ficheiro para o sistema"""
+    campo_sistema: str  # Nome do campo no sistema (ex: "matricula", "valor", "data")
+    coluna_ficheiro: Optional[str] = None  # Nome ou índice da coluna no ficheiro (ex: "A", "Matrícula")
+    tipo_dados: str = "texto"  # texto, numero, data, moeda
+    formato_data: Optional[str] = None  # Ex: "DD/MM/YYYY", "YYYY-MM-DD"
+    obrigatorio: bool = False
+    valor_default: Optional[str] = None
+    transformacao: Optional[str] = None  # Ex: "uppercase", "trim", "replace(-,)"
+
+
+class ConfiguracaoIntegracao(BaseModel):
+    """Configuração de integração para um fornecedor"""
+    metodo: MetodoIntegracao
+    
+    # Para Upload Excel/CSV
+    linha_cabecalho: int = 1  # Linha onde estão os nomes das colunas
+    linha_inicio_dados: int = 2  # Linha onde começam os dados
+    encoding: str = "utf-8"
+    separador_csv: str = ";"  # Para CSV
+    
+    # Para API
+    api_url: Optional[str] = None
+    api_metodo: str = "GET"  # GET, POST
+    api_headers: Optional[Dict[str, str]] = None
+    api_params_template: Optional[Dict[str, str]] = None  # Parâmetros com {{variaveis}}
+    
+    # Para RPA Browser
+    automacao_id: Optional[str] = None  # ID da automação associada
+    
+    # Mapeamento de campos
+    mapeamento_campos: List[CampoMapeamento] = []
+    
+    # Campos do sistema disponíveis para este tipo de fornecedor
+    campos_destino: Optional[List[str]] = None
 
 
 class TipoAcao(str, Enum):
@@ -44,12 +95,17 @@ class Fornecedor(BaseModel):
     id: Optional[str] = None
     nome: str  # Ex: "Frotcom", "Galp", "Prio"
     tipo: TipoFornecedor
-    url_login: str  # URL da página de login
+    url_login: Optional[str] = None  # URL da página de login (se aplicável)
     url_base: Optional[str] = None
     logo_url: Optional[str] = None
     descricao: Optional[str] = None
     
-    # Configurações de login
+    # Contacto
+    contacto_email: Optional[str] = None
+    contacto_telefone: Optional[str] = None
+    website: Optional[str] = None
+    
+    # Configurações de login (para RPA)
     campo_email_seletor: str = 'input[type="email"]'
     campo_password_seletor: str = 'input[type="password"]'
     botao_login_seletor: str = 'button[type="submit"]'
@@ -58,7 +114,10 @@ class Fornecedor(BaseModel):
     requer_2fa: bool = False
     tipo_2fa: Optional[str] = None  # "email", "sms", "app"
     
-    # Automação associada
+    # Configuração de Integração (NOVO)
+    integracao: Optional[ConfiguracaoIntegracao] = None
+    
+    # Automação associada (legacy, usar integracao.automacao_id)
     automacao_id: Optional[str] = None
     
     # Metadata
@@ -72,14 +131,24 @@ class FornecedorCreate(BaseModel):
     """Modelo para criar fornecedor"""
     nome: str
     tipo: TipoFornecedor
-    url_login: str
+    url_login: Optional[str] = None
     url_base: Optional[str] = None
     descricao: Optional[str] = None
+    
+    # Contacto
+    contacto_email: Optional[str] = None
+    contacto_telefone: Optional[str] = None
+    website: Optional[str] = None
+    
+    # Configurações de login (para RPA)
     campo_email_seletor: str = 'input[type="email"]'
     campo_password_seletor: str = 'input[type="password"]'
     botao_login_seletor: str = 'button[type="submit"]'
     requer_2fa: bool = False
     tipo_2fa: Optional[str] = None
+    
+    # Configuração de Integração
+    integracao: Optional[ConfiguracaoIntegracao] = None
 
 
 class PassoAutomacao(BaseModel):

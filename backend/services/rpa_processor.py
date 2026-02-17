@@ -113,26 +113,48 @@ def extrair_dados_csv_uber(filepath: str) -> Dict[str, Any]:
         "bonus": 0,
         "promocoes": 0,
         "taxa_servico": 0,
+        "portagens": 0,  # uPort
+        "gratificacoes": 0,  # uGrat (gorjetas + bonus + promocoes)
         "ganhos_liquidos": 0
     }
     
     df = pd.read_csv(filepath)
     
     # Tentar encontrar colunas relevantes
-    colunas = df.columns.str.lower()
-    
     for col in df.columns:
         col_lower = col.lower()
-        if any(x in col_lower for x in ['ganho', 'earning', 'total', 'amount']):
-            if 'tip' not in col_lower and 'gorjeta' not in col_lower:
+        # Ganhos brutos/líquidos
+        if any(x in col_lower for x in ['net fare', 'valor líquido', 'net_fare']):
+            dados["ganhos_liquidos"] = df[col].sum()
+        elif any(x in col_lower for x in ['gross fare', 'valor bruto', 'gross_fare']):
+            dados["ganhos_brutos"] = df[col].sum()
+        elif any(x in col_lower for x in ['ganho', 'earning', 'amount']) and 'tip' not in col_lower:
+            if dados["ganhos_brutos"] == 0:  # Fallback
                 dados["ganhos_brutos"] = df[col].sum()
-        elif any(x in col_lower for x in ['gorjeta', 'tip']):
+        # Gorjetas
+        elif any(x in col_lower for x in ['gorjeta', 'tip', 'gratifica']):
             dados["gorjetas"] = df[col].sum()
-        elif any(x in col_lower for x in ['bonus', 'bónus']):
+        # Bónus
+        elif any(x in col_lower for x in ['bonus', 'bónus', 'incentivo']):
             dados["bonus"] = df[col].sum()
+        # Promoções
+        elif any(x in col_lower for x in ['promo', 'campanha']):
+            dados["promocoes"] = df[col].sum()
+        # Portagens
+        elif any(x in col_lower for x in ['toll', 'portagem', 'portagens']):
+            dados["portagens"] = df[col].sum()
+        # Taxa Uber
+        elif any(x in col_lower for x in ['commission', 'comissão', 'taxa', 'fee']):
+            dados["taxa_servico"] = df[col].sum()
     
     dados["viagens"] = len(df)
-    dados["ganhos_liquidos"] = dados["ganhos_brutos"] + dados["gorjetas"] + dados["bonus"]
+    
+    # Calcular gratificações totais (uGrat)
+    dados["gratificacoes"] = dados["gorjetas"] + dados["bonus"] + dados["promocoes"]
+    
+    # Se não temos ganhos_liquidos, calcular
+    if dados["ganhos_liquidos"] == 0:
+        dados["ganhos_liquidos"] = dados["ganhos_brutos"] - dados["taxa_servico"]
     
     return dados
 
@@ -427,6 +449,8 @@ async def guardar_no_resumo_semanal(
                 "promocoes": dados.get("promocoes", 0),
                 "taxa_servico": dados.get("taxa_servico", 0),
                 "viagens": dados.get("viagens", 0),
+                "portagens": dados.get("portagens", 0),  # uPort
+                "gratificacoes": dados.get("gratificacoes", 0),  # uGrat
                 "fonte": "rpa",
                 "importado_em": now,
                 "atualizado_em": now
@@ -444,7 +468,7 @@ async def guardar_no_resumo_semanal(
                 upsert=True
             )
             resultado["colecao"] = "ganhos_uber"
-            resultado["campos_atualizados"] = ["rendimentos", "viagens", "gorjetas", "bonus"]
+            resultado["campos_atualizados"] = ["rendimentos", "viagens", "gorjetas", "bonus", "portagens", "gratificacoes"]
             
         elif "bolt" in plataforma_lower:
             # Guardar na coleção ganhos_bolt

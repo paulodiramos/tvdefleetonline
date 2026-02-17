@@ -14,7 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import axios from 'axios';
 
-const API_URL = 'https://fleet-dashboard-rpa.preview.emergentagent.com/api';
+const API_URL = 'https://provider-link-3.preview.emergentagent.com/api';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

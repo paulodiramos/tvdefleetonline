@@ -77,6 +77,7 @@ class PlanosModulosService:
         }
         
         await self.db.modulos_sistema.insert_one(modulo)
+        modulo.pop("_id", None)  # Remove MongoDB ObjectId before returning
         logger.info(f"Módulo criado: {modulo['nome']} por {criado_por}")
         return modulo
     
@@ -183,7 +184,10 @@ class PlanosModulosService:
             "destaque": False,
             "permite_trial": data.permite_trial,
             "dias_trial": data.dias_trial,
+            "trial_config": data.trial_config.model_dump() if data.trial_config and hasattr(data.trial_config, 'model_dump') else (dict(data.trial_config) if data.trial_config else {"ativo": False, "dias": 14, "requer_cartao": False, "automatico": False}),
             "features_destaque": data.features_destaque,
+            "referencia_faturacao": data.referencia_faturacao,
+            "taxa_iva": data.taxa_iva,
             "promocoes": [],
             "precos_especiais": [],
             "created_at": now,
@@ -192,6 +196,7 @@ class PlanosModulosService:
         }
         
         await self.db.planos_sistema.insert_one(plano)
+        plano.pop("_id", None)  # Remove MongoDB ObjectId before returning
         logger.info(f"Plano criado: {plano['nome']} por {criado_por}")
         return plano
     

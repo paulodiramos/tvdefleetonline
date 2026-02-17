@@ -309,7 +309,7 @@ const Layout = ({ children, user, onLogout }) => {
                     <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium">{user?.name}</p>
@@ -318,70 +318,60 @@ const Layout = ({ children, user, onLogout }) => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
 
-                  {/* Admin Panel */}
+                  {/* Admin Panel - Reorganizado */}
                   {user.role === 'admin' && (
                     <>
-                      {/* Gestão Principal */}
+                      {/* Gestão de Utilizadores e Planos */}
+                      <div className="px-2 py-1.5">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          Gestão
+                        </div>
+                      </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/usuarios" className="flex items-center space-x-2 cursor-pointer">
+                        <Link to="/usuarios" className="flex items-center space-x-2 cursor-pointer pl-4">
                           <Users className="w-4 h-4" />
                           <span>Utilizadores</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/planos-parceiros" className="flex items-center space-x-2 cursor-pointer">
+                        <Link to="/admin/gestao-planos" className="flex items-center space-x-2 cursor-pointer pl-4">
                           <Package className="w-4 h-4" />
-                          <span>Planos & Módulos</span>
+                          <span>Planos</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/admin/gestao-funcionalidades" className="flex items-center space-x-2 cursor-pointer">
+                        <Link to="/admin/gestao-funcionalidades" className="flex items-center space-x-2 cursor-pointer pl-4">
                           <Settings className="w-4 h-4" />
-                          <span>Permissões Parceiros</span>
+                          <span>Permissões</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/comissoes" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <span>💰 Comissões</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />
                       
-                      {/* Sincronização & Dados */}
+                      {/* Integrações e Sincronização - Simplificado */}
                       <div className="px-2 py-1.5">
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
-                          Sincronização
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          Integrações
                         </div>
                       </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracoes-admin" className="flex items-center space-x-2 cursor-pointer pl-4">
-                          <span>⚙️ Configurações Gerais</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracao-sincronizacao" className="flex items-center space-x-2 cursor-pointer pl-4">
-                          <span>🔄 Sincronização Auto</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-4">
-                          <span>📥 Importação Dados</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/rpa-designer" className="flex items-center space-x-2 cursor-pointer pl-4">
-                          <span>⚡ RPA Designer</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracao-uber" className="flex items-center space-x-2 cursor-pointer pl-4" data-testid="configuracao-uber-link">
-                          <span>🚗 Configuração Uber</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/executar-rpa" className="flex items-center space-x-2 cursor-pointer pl-4" data-testid="executar-rpa-link">
-                          <span>▶️ Executar RPA</span>
+                        <Link to="/admin/plataformas" className="flex items-center space-x-2 cursor-pointer pl-4" data-testid="admin-plataformas-link">
+                          <span>🔌 Plataformas</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/admin/sincronizacao-hub" className="flex items-center space-x-2 cursor-pointer pl-4" data-testid="sincronizacao-hub-link">
-                          <span>📊 Hub Sincronização</span>
+                          <span>📊 Sincronização</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracoes-admin" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <span>⚙️ Configurações</span>
                         </Link>
                       </DropdownMenuItem>
                       
@@ -389,7 +379,7 @@ const Layout = ({ children, user, onLogout }) => {
                       
                       {/* Comunicações */}
                       <div className="px-2 py-1.5">
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                           Comunicações
                         </div>
                       </div>
@@ -400,7 +390,7 @@ const Layout = ({ children, user, onLogout }) => {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/comunicacoes" className="flex items-center space-x-2 cursor-pointer pl-4">
-                          <span>📧 Comunicações</span>
+                          <span>📧 Notificações</span>
                         </Link>
                       </DropdownMenuItem>
                       
@@ -408,7 +398,7 @@ const Layout = ({ children, user, onLogout }) => {
                       
                       {/* Sistema */}
                       <div className="px-2 py-1.5">
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                           Sistema
                         </div>
                       </div>
@@ -419,8 +409,13 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/copia-seguranca" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <span>💾 Backup</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/termos-privacidade" className="flex items-center space-x-2 cursor-pointer pl-4">
-                          <span>📜 Termos & Privacidade</span>
+                          <span>📜 Termos</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -449,6 +444,12 @@ const Layout = ({ children, user, onLogout }) => {
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem asChild>
+                        <Link to="/gestao-documentos" className="flex items-center space-x-2 cursor-pointer" data-testid="link-gestao-documentos">
+                          <FileText className="w-4 h-4" />
+                          <span>Gestão de Documentos</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
@@ -463,22 +464,7 @@ const Layout = ({ children, user, onLogout }) => {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/configuracoes-parceiro?tab=credenciais" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🔐 Credenciais Plataformas</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/minha-configuracao-uber" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🚗 Configuração Uber</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/login-plataformas" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-login-plataformas">
-                          <span>🔑 Login Plataformas</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracoes-parceiro?tab=sincronizacao" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🔄 Sincronização Auto</span>
+                          <span>🔐 Plataformas</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -486,16 +472,14 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>⚙️ Configurações Relatórios</span>
                         </Link>
                       </DropdownMenuItem>
-                      {itemPermitido('📥 Importação Dados') && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-6">
-                            <span>📥 Importação Dados</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
                       <DropdownMenuItem asChild>
-                        <Link to="/exportar-dados" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-exportar-dados">
-                          <span>📤 Exportar Dados</span>
+                        <Link to="/copia-seguranca" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-copia-seguranca">
+                          <span>💾 Cópia de Segurança</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/config/comissoes" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="config-comissoes-link">
+                          <span>💰 Comissões</span>
                         </Link>
                       </DropdownMenuItem>
                       {itemPermitido('📱 WhatsApp') && (
@@ -505,13 +489,23 @@ const Layout = ({ children, user, onLogout }) => {
                           </Link>
                         </DropdownMenuItem>
                       )}
-                      {temModuloComissoes() && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/config/comissoes" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="config-comissoes-link">
-                            <span>💰 Comissões</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5">
+                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                          <Zap className="w-3 h-3" />
+                          <span>Login Plataformas</span>
+                        </div>
+                      </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/minha-configuracao-uber" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="parceiro-login-uber">
+                          <span>🚗 Login Uber</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracao-prio" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="parceiro-login-prio">
+                          <span>⛽ Login Prio</span>
+                        </Link>
+                      </DropdownMenuItem>
                     </>
                   )}
 

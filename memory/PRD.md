@@ -1,1351 +1,480 @@
 # TVDEFleet - Product Requirements Document
 
 ## Visão Geral
-Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro, automações RPA, sistema de permissões granular, e **App Móvel para Motoristas**.
+Sistema de gestão de frotas TVDE (Uber/Bolt) com sincronização automática de dados financeiros.
 
-## ✅ ATUALIZAÇÃO: RPA Designer Visual (05/02/2026)
+## Requisitos Principais
 
-### Descrição
-Sistema onde o Admin desenha/grava fluxos de automação uma vez, e esses designs ficam disponíveis para todos os parceiros executarem automaticamente.
+### Funcionalidades Implementadas
 
-### Arquitectura
-```
-ADMIN (1 vez)                    PARCEIRO (automático)
-─────────────                    ────────────────────
-1. Escolhe plataforma            1. Vai a "Resumo Semanal"
-2. Usa sessão do parceiro        2. Clica "Sincronizar"
-   (evita CAPTCHA!)              3. Sistema usa design admin
-3. Grava passos no browser       4. Executa com creds parceiro
-4. Define variáveis (semanas)    5. Dados importados ✅
-5. Guarda 4 designs (semanas)
-```
+#### 1. Sincronização Automática Uber via CSV (P0) ✅
+**Data: 2026-02-13**
+- Implementado RPA (Playwright) para download automático do relatório CSV do portal Uber
+- Fluxo: Login → Navegar para Relatórios → Encontrar relatório → Download CSV → Processar dados
+- Endpoint: `POST /api/uber/sincronizar-csv`
+- Campos extraídos: tarifa, gratificacao (uGrat), portagens (uPort), pago_total, taxa_servico
 
-### Correções e Melhorias Recentes (05/02/2026)
+#### 2. Separação de Portagens e Gratificações Uber (P0) ✅
+**Data: 2026-02-13**
+- Adicionadas colunas uPort e uGrat no resumo semanal
+- Backend calcula e retorna os valores separados
+- Frontend exibe nas colunas dedicadas
 
-#### ✅ Bug Fix P0: Criação de Motoristas
-- **Problema:** Quando um parceiro criava um motorista, o `parceiro_id` não era atribuído automaticamente
-- **Solução:** Modificado `/app/backend/routes/motoristas.py` endpoint `POST /motoristas/register`
-- **Lógica atual:**
-  - Se utilizador = parceiro → `parceiro_id` atribuído automaticamente
-  - Se utilizador = admin/gestão → usa `parceiro_id` do body (se fornecido)
+#### 3. Edição Manual de Ganhos Uber ✅
+**Data: 2026-02-13**
+- Endpoint: `PUT /api/ganhos-uber/{ganho_id}`
+- Permite corrigir manualmente valores de portagens/gratificações
 
-#### ✅ Melhoria P1: Sessões de Parceiros para evitar CAPTCHA
-- **Problema:** Browser interativo era bloqueado por CAPTCHA Uber/Bolt
-- **Solução:** 
-  1. Novo endpoint `GET /api/rpa-designer/sessoes-parceiros` lista parceiros com sessões ativas
-  2. Admin pode selecionar sessão de parceiro ao iniciar gravação
-  3. Sistema usa cookies do parceiro → sem passar pelo login/CAPTCHA
+#### 4. Correcção do RPA - Seleção da Semana Correcta ✅
+**Data: 2026-02-14**
+- Implementada função `_formatar_data_pt()` para converter datas para formato PT
+- Implementada função `_verificar_intervalo_corresponde()` para comparar intervalos de datas
+- O RPA agora identifica e descarrega apenas o relatório da semana específica solicitada
+- Removida a lógica problemática que clicava no primeiro download encontrado
+
+#### 5. Prevenção de Duplicados na Importação ✅
+**Data: 2026-02-14**
+- Verificação por UUID do motorista Uber como prioridade
+- Fallback para verificação por nome do motorista
+- Update em vez de insert quando já existe registo para semana/ano/motorista
+
+#### 6. Correcção do Cálculo do Rendimento Uber (P0) ✅
+**Data: 2026-02-14**
+- **Bug:** O rendimento total da Uber (uRendimento) estava a mostrar 344,63€ em vez de 266,30€
+- **Causa raiz:** No ficheiro `sincronizacao.py`, linha 2951, o campo `rendimentos` estava a ser guardado com o valor de `tarifa` (359,58€) em vez de `ganho/pago_total` (281,72€)
+- **Impacto:** O cálculo em `relatorios.py` usava `rendimentos` como base e subtraía portagens e gratificações: 359,58 - 13,45 - 1,50 = 344,63€ (incorreto)
+- **Correção:** Alterado para usar `ganho` (pago_total) como valor de `rendimentos`: 281,72 - 13,45 - 1,50 = 266,77€ ≈ 266,30€ (correto)
+- **Ficheiro corrigido:** `backend/routes/sincronizacao.py`
+- **Nota:** Dados já existentes na BD precisam ser re-sincronizados para corrigir os valores
+
+#### 7. Totais uPort e uGrat na Tabela do Resumo Semanal ✅
+**Data: 2026-02-14**
+- Adicionados totais de uPort (portagens Uber) e uGrat (gratificações Uber) na linha de TOTAIS da tabela
+- Totais alinhados com as colunas correspondentes
+- Ficheiro corrigido: `frontend/src/pages/ResumoSemanalParceiro.js`
+
+#### 8. Correcção da Selecção de Semana na Sincronização Uber ✅
+**Data: 2026-02-14**
+- **Bug:** A sincronização da semana 6 usava os dados da semana 5 (fallback incorreto)
+- **Causa raiz:** O scraper `platform_scrapers.py` usava o último relatório como fallback quando não encontrava o período específico
+- **Correções aplicadas:**
+  1. Adicionado método `_verificar_intervalo_corresponde()` para verificação robusta de datas em múltiplos formatos
+  2. Adicionado método `_formatar_data_pt()` para converter datas para formato português
+  3. Removido o fallback que usava o último relatório - agora só usa o relatório da semana específica
+  4. Melhorada a lógica de geração de novo relatório para definir explicitamente as datas
+- **Ficheiro corrigido:** `backend/integrations/platform_scrapers.py`
+
+#### 9. Nova Lógica de Cálculo "Lucro do Parceiro" ✅
+**Data: 2026-02-14**
+- **Requisito do utilizador:** O lucro do parceiro deve ser calculado de forma diferente consoante o saldo do motorista
+- **Nova regra implementada:**
+  - Se saldo do motorista >= 0: Lucro Parceiro = aluguer + extras
+  - Se saldo do motorista < 0: Lucro Parceiro = aluguer + extras + saldo (diminuído pela dívida)
+- **Alterações efectuadas:**
+  1. **Frontend (`ResumoSemanalParceiro.js`):**
+     - Adicionada nova coluna "Lucro Parc." na tabela de motoristas
+     - Actualizada caixa "Lucro Parceiro" para mostrar a nova lógica
+     - Calcula o total de lucro do parceiro somando os lucros individuais de cada motorista
+  2. **Backend (`relatorios.py`):**
+     - PDF geral do resumo semanal: Adicionada coluna "L.Parc." na tabela e actualizado resumo final ✅
+     - PDF individual do motorista: **REMOVIDO** (ver ponto 10 abaixo)
+  3. **Mensagens WhatsApp e Email (`envio_relatorios.py`):**
+     - Mantidos os campos uPort, uGrat, Aluguer, Extras
+     - **REMOVIDO** o campo "Lucro do Parceiro" dos relatórios enviados aos motoristas (ver ponto 10)
+- **Exemplo de cálculo:**
+  - Motorista com líquido = -109,89€ e aluguer = 220,00€
+  - Lucro Parceiro = 220,00 + 0,00 + (-109,89) = 110,11€
+
+#### 10. Remoção do "Lucro do Parceiro" dos Relatórios do Motorista ✅
+**Data: 2026-02-14**
+- **Requisito do utilizador:** Remover o campo "Lucro do Parceiro" de todos os relatórios destinados aos motoristas
+- **Alterações efectuadas:**
+  1. **PDF individual do motorista (`relatorios.py` - função `generate_motorista_pdf`):**
+     - Removida a linha "LUCRO DO PARCEIRO" da tabela do PDF
+     - O PDF termina agora em "VALOR LÍQUIDO MOTORISTA"
+  2. **Texto WhatsApp (`envio_relatorios.py` - função `generate_relatorio_motorista_text`):**
+     - Não continha o campo "Lucro do Parceiro" (já estava correcto)
+  3. **Email HTML (`envio_relatorios.py` - função `generate_relatorio_motorista_html`):**
+     - Removida a secção "Lucro do Parceiro" do template HTML
+     - Mantida apenas a secção "Saldo Motorista"
+- **O que mantém o "Lucro do Parceiro":**
+  - UI do parceiro (`ResumoSemanalParceiro.js`) - coluna "Lucro Parc." na tabela ✅
+  - PDF geral do resumo semanal (`generate_resumo_semanal_pdf`) - coluna "L.Parc." e resumo final ✅
+
+#### 11. Correcção da Lógica do Cartão "Motoristas" ✅
+**Data: 2026-02-14**
+- **Requisito do utilizador:** Clarificar a lógica de cálculo no cartão "Motoristas":
+  - **Ganhos Totais** = Soma dos líquidos **positivos** dos motoristas
+  - **Dívidas** = Soma dos líquidos **negativos** (valor absoluto, com sinal negativo)
+  - **Total Pagamentos** = Ganhos Totais - Dívidas - Extras
+- **Alteração efectuada:**
+  - **Ficheiro:** `frontend/src/pages/ResumoSemanalParceiro.js` (linhas ~1312-1362)
+  - Corrigido "Total Pagamentos" que estava a SOMAR extras em vez de SUBTRAIR
+  - Adicionado sinal negativo às dívidas e ao total quando negativo
+- **Exemplo de cálculo (motorista com líquido -109,89€):**
+  - Ganhos Totais: 0,00€ (nenhum líquido positivo)
+  - Dívidas: -109,89€ (valor absoluto do líquido negativo com sinal)
+  - Extras: 0,00€
+  - Total Pagamentos: 0,00 - 109,89 - 0,00 = **-109,89€**
+- **Teste realizado:** Screenshot confirmou os valores correctos no cartão
+
+#### 12. Sistema de Browser Remoto para Prio (com SMS 2FA) ✅
+**Data: 2026-02-14**
+- **Requisito do utilizador:** Criar sistema idêntico ao Uber para login manual na Prio (com verificação SMS)
+- **Ficheiros criados:**
+  - `backend/services/browser_interativo_prio.py` - Serviço de browser Playwright
+  - `backend/routes/browser_prio.py` - API endpoints para browser remoto
+  - `frontend/src/pages/ConfiguracaoPrioParceiro.js` - Página de configuração
+- **Funcionalidades:**
+  - Browser remoto com screenshots em tempo real
+  - Login manual com suporte a SMS 2FA
+  - Sessão guardada para extracções automáticas
+  - Extracção de combustível (Excel) via menu "Transações Frota"
+  - Extracção de elétrico (CSV) via menu "Transações Electric"
+- **Acesso:** Menu Financeiro → Configuração Prio
+
+#### 13. Sincronização Separada Combustível/Elétrico Prio ✅
+**Data: 2026-02-14**
+- **Requisito do utilizador:** "vamos criar sistema de sincronização para cada um combustível e elétrico"
+- **Implementação:**
+  1. **UI com dois botões separados:**
+     - "Sincronizar Combustível" (cor âmbar) - Extrai ficheiro XLS da página "Transações Frota"
+     - "Sincronizar Elétrico" (cor verde) - Extrai ficheiro CSV da página "Transações Electric"
+  2. **Processador de Ficheiros (`backend/services/prio_processor.py`):**
+     - `processar_combustivel_xls()` - Processa ficheiros Excel de combustível
+     - `processar_eletrico_csv()` - Processa ficheiros CSV de carregamentos elétricos
+  3. **Armazenamento:**
+     - Combustível → colecção `abastecimentos_combustivel`
+     - Elétrico → colecção `despesas_combustivel`
+  4. **Lógica de extracção actualizada baseada nos vídeos do utilizador:**
+     - Login: `https://myprio.com/MyPrioReactiveTheme/Login`
+     - Combustível: `https://myprio.com/Transactions/Transactions`
+     - Elétrico: `https://myprio.com/Transactions/Transactions?tab=electric`
 - **Ficheiros modificados:**
-  - `/app/backend/routes/rpa_designer.py` - Novo endpoint e lógica de sessão
-  - `/app/frontend/src/pages/RPADesigner.js` - UI para selecionar sessão
-
-### Funcionalidades Implementadas
-- **Gestão de Plataformas**: Criar/editar plataformas (Uber, Bolt, Via Verde, etc.)
-- **Designs por Semana**: Cada plataforma pode ter até 4 designs (semana atual, -1, -2, -3)
-- **Browser Interativo**: Admin navega no site e o sistema grava os cliques
-- **Usar Sessão de Parceiro**: Evita CAPTCHA usando cookies de login manual do parceiro
-- **URL Inicial Customizada**: Admin pode começar de qualquer URL (não só a base)
-- **Tipos de Passos Suportados**:
-  - `goto` - Navegar URL
-  - `click` - Clicar em elemento
-  - `type` - Escrever texto
-  - `fill_credential` - Preencher com credencial do parceiro
-  - `select` - Selecionar opção
-  - `wait` - Esperar X ms
-  - `wait_selector` - Esperar elemento aparecer
-  - `press` - Pressionar tecla (Enter, Tab, etc.)
-  - `scroll` - Scroll na página
-  - `download` - Aguardar download de ficheiro
-  - `screenshot` - Tirar screenshot (debug)
-- **Variáveis Dinâmicas**: `{{SEMANA_INICIO}}`, `{{SEMANA_FIM}}`, `{{SEMANA_OFFSET}}`
-- **Agendamento por Parceiro**: Manual ou automático (diário/semanal/mensal)
-
-### Endpoints Backend
-**Admin - Plataformas:**
-- `GET /api/rpa-designer/plataformas` - Listar plataformas
-- `POST /api/rpa-designer/plataformas` - Criar plataforma
-- `PUT /api/rpa-designer/plataformas/{id}` - Atualizar
-- `DELETE /api/rpa-designer/plataformas/{id}` - Desativar
-- `POST /api/rpa-designer/seed-plataformas` - Criar predefinidas (Uber, Bolt, Via Verde)
-
-**Admin - Designs:**
-- `GET /api/rpa-designer/designs` - Listar designs
-- `POST /api/rpa-designer/designs` - Criar design
-- `PUT /api/rpa-designer/designs/{id}` - Atualizar
-- `DELETE /api/rpa-designer/designs/{id}` - Eliminar
-
-**Admin - Sessões de Parceiros:**
-- `GET /api/rpa-designer/sessoes-parceiros` - Listar sessões ativas de parceiros
-
-**Admin - Sessão de Gravação:**
-- `POST /api/rpa-designer/sessao/iniciar` - Iniciar sessão de design (aceita `parceiro_id` e `url_inicial`)
-- `POST /api/rpa-designer/sessao/{id}/gravar-passo` - Gravar passo
-- `GET /api/rpa-designer/sessao/{id}/passos` - Obter passos
-- `POST /api/rpa-designer/sessao/{id}/guardar` - Guardar como design
-- `DELETE /api/rpa-designer/sessao/{id}` - Cancelar sessão
-- `WS /api/rpa-designer/ws/design/{id}` - WebSocket para browser interativo
-
-**Parceiro - Agendamento:**
-- `GET /api/rpa-designer/agendamentos` - Listar agendamentos
-- `POST /api/rpa-designer/agendamentos` - Configurar agendamento
-
-**Parceiro - Execução:**
-- `POST /api/rpa-designer/executar` - Executar design manual
-- `GET /api/rpa-designer/execucoes` - Histórico de execuções
-- `GET /api/rpa-designer/execucoes/{id}` - Detalhes execução
-
-**Credenciais:**
-- `GET /api/rpa-designer/credenciais/{plataforma_id}` - Obter credenciais
-- `POST /api/rpa-designer/credenciais/{plataforma_id}` - Guardar credenciais
-
-### Páginas Frontend
-- `/rpa-designer` - Interface de gravação de designs (Admin)
-- `/gestao-plataformas-rpa` - Gestão de plataformas (Admin)
-
-### Ficheiros Criados
-- `/app/backend/models/rpa_designer.py` - Modelos Pydantic
-- `/app/backend/services/rpa_executor.py` - Motor de execução
-- `/app/backend/routes/rpa_designer.py` - Endpoints API
-- `/app/frontend/src/pages/RPADesigner.js` - UI Designer
-- `/app/frontend/src/pages/GestaoPlataformasRPA.js` - UI Gestão
-
-### Plataformas Predefinidas Criadas
-1. **Uber Fleet** - https://supplier.uber.com
-2. **Bolt Partner** - https://fleets.bolt.eu
-3. **Via Verde Empresas** - https://www.viaverde.pt/empresas
-
-### Próximos Passos
-1. Admin grava designs para cada plataforma (4 semanas)
-2. Parceiros configuram credenciais e agendamentos
-3. Sistema executa automaticamente ou parceiro clica "Sincronizar"
-
----
-
-## ✅ Extração CSV Rendimentos Uber (04/02/2026)
-
-### Separação de Responsabilidades (Segurança)
-
-**Admin** → Página `/configuracao-uber` (Monitorização):
-- Dashboard: Total parceiros, sessões ativas, sessões expiradas
-- Lista de todos os parceiros com estado da sessão
-- Apenas visualização - contactar parceiros com sessão expirada
-
-**Parceiro** → Página `/minha-configuracao-uber` (Utilização):
-- Configurar credenciais Uber (email, password, telefone)
-- Fazer login manual quando houver CAPTCHA
-- Selecionar semana e extrair rendimentos CSV
-- Ver histórico das suas importações
-
-### Endpoints Backend
-**Para Admin:**
-- `GET /api/rpa/uber/sessao-status/{parceiro_id}` - Estado da sessão
-- `GET /api/rpa/uber/historico/{parceiro_id}` - Histórico de importações
-
-**Para Parceiro:**
-- `GET /api/rpa/uber/minhas-credenciais` - Obtém credenciais próprias
-- `POST /api/rpa/uber/minhas-credenciais` - Guarda credenciais
-- `GET /api/rpa/uber/minha-sessao-status` - Estado da sessão
-- `POST /api/rpa/uber/meu-login` - Iniciar login
-- `POST /api/rpa/uber/minha-extracao` - Extrair rendimentos
-- `GET /api/rpa/uber/meu-historico` - Histórico próprio
-
-## ✅ Correção Menu Configuração Uber (04/02/2026)
-
-### Bug Corrigido
-- **Issue:** Link "Configuração Uber" não aparecia no menu admin
-- **Causa:** O link estava incorretamente colocado dentro da secção de parceiros
-- **Solução:** Movido para a secção correta de admin em `Layout.js`
-
-## Arquitetura
-- **Frontend Web**: React (porta 3000)
-- **Backend**: FastAPI (porta 8001)
-- **Database**: MongoDB (`tvdefleet_db`)
-- **App Móvel**: React Native via Expo Snack (prototipagem)
-
-## ✅ Correções App Móvel (04/02/2026) - Sessão 2
-
-### Bugs Corrigidos
-1. **Extras - Botão Voltar**: Adicionado botão voltar quando motorista selecionado
-2. **Extras - Apenas motoristas ativos**: Filtro para mostrar só motoristas ativos
-3. **Extras - Interface simplificada**: Removida lista completa, apenas dropdown
-4. **Roteamento Backend**: Corrigido ordem de rotas para `/frota` funcionar
-
-### Novas Funcionalidades
-| Funcionalidade | Descrição |
-|----------------|-----------|
-| **Vistorias Frota (Parceiro)** | Nova tab "Frota" com todas as vistorias da empresa |
-| **Detalhe Vistoria Frota** | Ver fotos, danos, assinatura e dados completos |
-| **Fotos no Motorista** | Motorista vê fotos da vistoria antes de aceitar |
-| **Filtros de Vistorias** | Filtrar por pendentes/aprovadas/todas |
-
-### Novo Endpoint Backend
-- `GET /api/vistorias/frota` - Lista todas as vistorias da frota do parceiro
-
-### Tabs Atualizadas (Parceiro)
-- 📥 Nova (criar vistoria)
-- 📋 Frota (consultar vistorias)
-- 📊 Resumo
-- 💸 Extras  
-- 📄 Recibos
-
----
-
-## ✅ Correções e Melhorias App Móvel (04/02/2026)
-
-### Bug Fixes
-1. **Vistorias Pendentes não apareciam para Motorista**
-   - Corrigido filtro no endpoint `/api/vistorias/pendentes-aceitacao`
-   - Agora filtra por `status=pendente` e `motorista_aceite=None`
-   
-2. **Endpoint confirmar-motorista não atualizava status**
-   - Adicionada atualização de `status` para "aprovada" ou "rejeitada_motorista"
-
-3. **Vistoria não associada ao veículo na WebApp**
-   - Endpoint `/api/vistorias/{id}/aprovar` agora atualiza coleção `vehicles`
-   - Adiciona referência da vistoria e atualiza `ultima_vistoria`
-
-### Novas Funcionalidades App Móvel
-1. **Extras/Dívidas**
-   - Dropdown para selecionar motorista
-   - Campo de email para notificação opcional
-   - Lista de motoristas com email visível
-
-2. **Resumo Semanal (Parceiro/Gestor)**
-   - Dashboard com totais da empresa (Uber, Bolt, Via Verde, Abastecimentos, Extras, Líquido)
-   - Dropdown para filtrar por motorista específico
-   - Estado com ícones visuais (⏳ pendente, 💰 pago, ✅ confirmado)
-
-3. **Vistoria - Pesquisa por Matrícula**
-   - Campo de pesquisa por matrícula ou nome
-   - Botão OCR para ler matrícula via foto (IA)
-   - Endpoint `/api/vistorias/ocr-matricula` criado
-
-4. **Vistoria - Múltiplas Fotos**
-   - Possibilidade de adicionar mais de 1 foto por campo
-   - Badge com contagem de fotos
-   - Botão "+ Mais" para adicionar fotos extras
-
-5. **Assinatura com Dedo**
-   - Modal com canvas para assinar
-   - Captura de assinatura via foto como fallback
-
-### Ficheiro Atualizado
-- `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js` → `/app/frontend/public/ExpoSnackCode.txt`
-
----
-
-## ✅ WebApp - Ficha de Motorista Expandida (04/02/2026)
-
-### Novas Tabs na Ficha de Motorista
-
-1. **Tab App (Permissões)**
-   - Limite de Horas (24h rolante)
-   - Período de Descanso Mínimo
-   - Switch: Permitir Edição de Registos
-   - Switch: Permitir Alterar Limite de Horas
-   - Botão Guardar Configurações
-
-2. **Tab Ponto (Relógio de Ponto)**
-   - Cards: Últimas 24h e Esta Semana
-   - Estado Atual (Online/Offline/Em Pausa)
-   - Tabela de Últimos Registos (Data, Início, Fim, Duração, Tipo)
-
-3. **Tab Turnos (Horário de Trabalho)**
-   - Seletor de veículo atribuído
-   - 7 dias da semana com toggle ativo/folga
-   - Inputs de hora início e fim para cada dia
-   - Botão Guardar Turnos
-
----
-
-## ✅ App Móvel TVDEFleet Drivers - EM DESENVOLVIMENTO (04/02/2026)
-
-### Descrição
-Aplicação móvel para motoristas TVDE com funcionalidades de relógio de ponto, ganhos, suporte e configurações.
-
-### Funcionalidades Implementadas
-1. **Relógio de Ponto**
-   - Check-in/Check-out com matrícula opcional
-   - Timer em tempo real (HH:MM:SS) durante turno
-   - Barra de progresso visual das 24h trabalhadas
-   - Sistema de pausas
-   - Histórico diário com navegação por data
-   - Edição de registos (com permissão do parceiro)
-   - **NOVO:** Tipo de registo (Trabalho/Pessoal) - tempo pessoal não conta para horas
-   - Limite de horas em janela de 24h rolante
-   - Bloqueio automático ao atingir limite
-
-2. **Ganhos**
-   - Visualização semanal de ganhos (Uber/Bolt)
-   - Despesas (Via Verde, Combustível)
-   - Seletor de semanas
-   - **NOVO:** Sistema de Recibos Semanais
-     - Botão "Enviar Recibo" quando não enviado
-     - Estados: pendente, aprovado, rejeitado
-     - Bloqueio após aprovação
-
-3. **Suporte (Tickets)**
-   - Criação de tickets por categoria
-   - **Categorias expandidas:** Pagamentos, Técnico, Esclarecimentos, Relatórios, Acidente, Avaria
-   - **NOVO:** Upload de múltiplas fotos ao criar ticket
-   - Destaque para fotos em categorias Acidente/Avaria
-   - Botões rápidos para categorias
-   - Chat com mensagens
-   - Visualização de fotos anexadas
-
-4. **Turnos (NOVO)**
-   - Visualização do horário de trabalho atual
-   - Calendário semanal com turnos
-   - Indicação do dia atual
-   - Informação do veículo atribuído
-   - Histórico de horários anteriores
-
-5. **Vistorias (NOVO - Tipo WeProov)**
-   - Vistoria de Entrada (ao receber veículo)
-   - Vistoria de Saída (ao devolver veículo)
-   - Fotos obrigatórias: frente, traseira, laterais, km, combustível
-   - Diagrama interativo para marcar danos
-   - Tipos de dano: Risco, Amolgadela, Vidro partido, Falta peça, Sujidade
-   - Campo de observações
-   - Assinatura digital
-   - Resumo final antes de enviar
-   - Histórico de vistorias
-
-6. **Configurações**
-   - Perfil do utilizador
-   - Limite de horas (configurável com permissão)
-   - Período de descanso
-   - Estado de permissões
-
-### Ficheiros
-- `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js` - Código fonte
-- `/app/frontend/public/ExpoSnackCode.txt` - Versão para copiar
-
-### Como Testar
-1. Aceder a: https://fleet-dashboard-rpa.preview.emergentagent.com/ExpoSnackCode.txt
-2. Copiar todo o conteúdo
-3. Colar em: https://snack.expo.dev
-4. Testar na preview ou no dispositivo
-
----
-
-## ✅ Sincronização RPA Via Verde - COMPLETA (01/02/2026)
-
-### Descrição
-Automação completa para extrair dados de portagens da Via Verde usando **download direto de Excel** (sem necessidade de email).
-
-### Fluxo de Funcionamento
-1. Login automático no portal Via Verde Empresas (`#txtUsername`, `#txtPassword`)
-2. Navegação para "Extratos e Movimentos" → Tab "Movimentos"
-3. Clique no botão **"Exportar excel"** (classe: `a.link-download.dropdown-link`)
-4. Seleção de **Excel** no dropdown
-5. Download automático do ficheiro `.xlsx`
-6. Parsing do Excel com todas as colunas:
-   - License Plate, Entry Date, Entry/Exit Point, Value, Liquid Value, etc.
-7. Importação automática para a BD (`portagens_viaverde`)
-8. Detecção de duplicados (evita reimportar dados existentes)
-
-### Ficheiros Relevantes
-- `/app/backend/services/rpa_viaverde_v2.py` - Script RPA com download direto
-- `/app/backend/routes/sincronizacao.py` - Endpoints da API
-
-### Resultados
-- **14.837 portagens** importadas na BD
-- **9 execuções RPA** registadas
-- Última execução: 548 movimentos processados
-
-### Credenciais de Teste
-- **Email:** geral@zmbusines.com
-- **Password Via Verde:** 5+?n74vi%*8GJ3e
-
----
-
-## ✅ Sistema de Agendamento RPA (Implementado: 25/01/2025)
-
-### Descrição
-Sistema que permite agendar execuções automáticas de automações RPA (Bolt, Uber, Via Verde, etc).
-
-### Componentes
-- **Serviço Scheduler**: `/app/backend/services/rpa_scheduler.py`
-  - Loop de verificação a cada 5 minutos
-  - Verifica `rpa_agendamentos` com `proxima_execucao` no passado
-  - Executa automações em background
-  - Atualiza `proxima_execucao` após cada execução
-
-### Endpoints
-- `POST /api/rpa-auto/agendamentos` - Criar novo agendamento
-- `GET /api/rpa-auto/agendamentos` - Listar agendamentos
-- `PUT /api/rpa-auto/agendamentos/{id}` - Atualizar agendamento
-- `DELETE /api/rpa-auto/agendamentos/{id}` - Eliminar agendamento
-- `POST /api/rpa-auto/agendamentos/executar-pendentes` - Forçar execução (admin)
-
-### Frequências Suportadas
-- **Diário**: Executa todos os dias à hora configurada
-- **Semanal**: Executa no dia da semana configurado (0=Segunda, 6=Domingo)
-- **Mensal**: Executa no dia 1 de cada mês
-
-### Ficheiros Relevantes
-- `/app/backend/services/rpa_scheduler.py`
-- `/app/backend/routes/rpa_automacao.py`
-
----
-
-## ✅ Sistema de Permissões de Funcionalidades (Implementado: 25/01/2025)
-
-### Descrição
-Sistema que permite ao admin controlar granularmente quais funcionalidades cada parceiro pode aceder.
-
-### Funcionalidades Disponíveis (15 total)
-- **comunicacao**: whatsapp, email
-- **veiculos**: vistorias, veiculos, agenda_veiculos, anuncios_venda
-- **documentos**: contratos, documentos
-- **automacao**: rpa_automacao, importacao_csv
-- **financeiro**: relatorios, financeiro
-- **gestao**: motoristas
-- **sistema**: alertas
-- **integracao**: terabox
-
-### Endpoints Backend
-- `GET /api/permissoes/minhas` - Retorna funcionalidades do utilizador atual
-- `GET /api/permissoes/funcionalidades` - Lista todas as funcionalidades disponíveis
-- `GET /api/permissoes/parceiro/{id}` - Permissões de um parceiro específico
-- `PUT /api/permissoes/parceiro/{id}` - Atualizar permissões (admin only)
-- `GET /api/permissoes/admin/todos-parceiros` - Listar todos os parceiros com permissões
-
-### Frontend
-- **Layout.js**: Carrega permissões via `GET /api/permissoes/minhas` no `useEffect`
-- **itemPermitido()**: Função que verifica se um item de menu deve ser mostrado
-- **filtrarSubmenu()**: Filtra submenus baseado nas permissões
-
-### Ficheiros Relevantes
-- `/app/backend/routes/permissoes_funcionalidades.py`
-- `/app/frontend/src/components/Layout.js`
-- `/app/frontend/src/contexts/PermissionsContext.js`
-
----
-
-## ✅ Sistema de Permissões de Plataformas RPA (Implementado)
-
-### Descrição
-Sistema que permite ao admin controlar quais plataformas de RPA cada parceiro pode utilizar.
-
-### Endpoints
-- `GET /api/rpa-auto/plataformas` - Lista plataformas (filtradas por permissões)
-- `GET /api/rpa-auto/parceiro-plataformas/{id}` - Permissões de plataformas de um parceiro
-- `PUT /api/rpa-auto/parceiro-plataformas/{id}` - Atualizar permissões (admin only)
-
----
-
-## ✅ WhatsApp Business Cloud API (Atualizado: 24/01/2025)
-
-### Nova Arquitetura (Sem Railway!)
-A integração WhatsApp usa a **API oficial da Meta**:
-
-```
-TVDEFleet → Meta Graph API → Mensagem ✅
+  - `backend/services/browser_interativo_prio.py` - Lógica de extracção actualizada
+  - `backend/services/prio_processor.py` - NOVO processador de ficheiros
+  - `backend/routes/browser_prio.py` - Endpoint de extracção com processamento
+  - `frontend/src/pages/ConfiguracaoPrioParceiro.js` - UI com botões separados
+- **Testes:** 100% passou (iteration_39.json)
+
+#### 14. Sessão Persistente de 30 Dias para Prio e Uber ✅
+**Data: 2026-02-14**
+- **Requisito do utilizador:** "login prio fica com sessao ligada durante 30 dias nao desliga"
+- **Implementação:**
+  1. **Alteração de `storage_state` para `launch_persistent_context`:**
+     - Anteriormente: Usava `storage_state` com ficheiro JSON em `/tmp/`
+     - Agora: Usa `launch_persistent_context` com directório persistente em `/app/data/`
+  2. **Directórios de sessão persistentes:**
+     - Prio: `/app/data/prio_sessions/parceiro_{id}/`
+     - Uber: `/app/data/uber_sessions/parceiro_{id}/`
+  3. **Dados guardados automaticamente:**
+     - Cookies de autenticação
+     - localStorage
+     - sessionStorage
+     - IndexedDB
+     - Cache do browser
+  4. **Vantagem:** Os dados são guardados automaticamente pelo Chromium, incluindo timestamps de expiração de cookies
+- **Ficheiros modificados:**
+  - `backend/services/browser_interativo_prio.py` - Sessão persistente Prio
+  - `backend/services/browser_interativo.py` - Sessão persistente Uber
+- **Resultado:** Após login manual uma vez, a sessão é mantida até os cookies expirarem (tipicamente 30 dias)
+
+#### 23. Sistema de Gestão de Plataformas Configurável ✅
+**Data: 2026-02-16**
+- **Novo sistema unificado** para gerir todas as integrações de dados (Uber, Bolt, GPS, Prio, Via Verde, etc.)
+- **Categorias de plataformas:**
+  - `plataforma` - Plataformas TVDE (Uber, Bolt)
+  - `gps` - GPS/Tracking (Verizon, Cartrack, Radius)
+  - `portagens` - Portagens (Via Verde)
+  - `abastecimento` - Combustível e Elétrico (Prio, Galp, Radius Fuel)
+- **Métodos de integração:**
+  - `rpa` - Automação com Playwright
+  - `api` - Integração via API
+  - `upload_manual` - Upload de ficheiro Excel/CSV
+- **Tipos de login:**
+  - `manual` - Parceiro faz login manualmente (Uber, Prio)
+  - `automatico` - Sistema faz login com credenciais guardadas
+- **Funcionalidades Admin:**
+  - Criar/editar/eliminar plataformas
+  - Configurar passos RPA (login + extração)
+  - Configurar mapeamento de campos para importação
+  - Definir campos de credenciais por plataforma
+- **9 plataformas pré-definidas** criadas via seed
+- **Ficheiros criados:**
+  - `backend/models/plataformas.py` - Modelos de dados
+  - `backend/routes/plataformas.py` - Endpoints API
+  - `frontend/src/pages/AdminPlataformas.js` - Interface de Admin
+- **Acesso:** Menu Admin → Sincronização → Gestão Plataformas
+
+#### 24. Optimização da Base de Dados MongoDB ✅
+**Data: 2026-02-16**
+- Criados índices para melhorar performance em:
+  - `motoristas`: parceiro_id, ativo, email
+  - `vehicles`: parceiro_id, matricula, ativo
+  - `users`: email (único), parceiro_id, role
+  - `plataformas`: categoria, ativo, nome
+  - `credenciais_parceiros`: parceiro_id, plataforma_id (composto único)
+  - `ganhos_bolt`: parceiro_id, motorista_id, data
+  - `relatorios_semanais`: parceiro_id, motorista_id, semana
+
+#### 25. Limpeza e Refatoração do Projecto ✅
+**Data: 2026-02-16**
+- **Espaço recuperado:** ~400 MB
+- **Cache Python** limpo em todo o projecto
+- **Screenshots RPA/Debug** removidos
+- **Ficheiros .bak** removidos
+- **Ficheiros de teste** organizados em `/app/tests/`
+- **Sessões WhatsApp antigas** removidas
+- **Cache de browser** limpo (Prio + WhatsApp)
+- **Ficheiros temporários** (+30 dias) removidos
+- **Logs antigos** (+7 dias) removidos
+
+### Funcionalidades Pendentes
+
+#### Sistema de Sincronização Dinâmica (P0 - Em Progresso)
+- Criar serviço que lê a configuração da plataforma e executa sincronização dinamicamente
+- Refatorar menu de sincronização do parceiro para usar plataformas configuradas
+
+#### Alertas Avançados (P1)
+- Notificações por Email/SMS/Push
+- Requer integração com serviço de terceiros
+
+#### Comissões Avançadas (P1)
+- Bónus de performance
+- Relatórios detalhados
+
+#### UI de Downgrade (P1)
+- Interface para solicitar downgrade de plano
+
+### Backlog (P2)
+
+#### Refatoração Frontend (Componentes Criados mas Não Integrados)
+Os componentes foram extraídos mas ainda não estão a ser usados nos ficheiros principais:
+
+**FichaVeiculo.js** (6055 linhas)
+- Componentes em `/app/frontend/src/pages/FichaVeiculo/components/`
+- VeiculoSeguroTab.js, VeiculoInspecaoTab.js, VeiculoExtintorTab.js, etc.
+
+**AdminGestaoPlanos.js** (3032 linhas)
+- Componentes em `/app/frontend/src/pages/Admin/GestaoPlanos/components/`
+- PlanosTab.js, CategoriasTab.js, ModulosTab.js, etc.
+
+**FichaMotorista.js** (2668 linhas)
+- Componentes em `/app/frontend/src/pages/FichaMotorista/components/`
+- MotoristaDadosPessoaisTab.js, MotoristaFinanceiroTab.js, etc.
+
+## Arquitectura Técnica
+
+### Stack
+- Backend: FastAPI (Python)
+- Frontend: React.js com Vite
+- Database: MongoDB
+- UI: Shadcn/UI
+- Automação: Playwright
+
+### Ficheiros Chave
+- `backend/services/rpa_uber.py`: Lógica RPA para Uber (corrigido 2026-02-14)
+- `backend/routes/sincronizacao.py`: Endpoints de sincronização (corrigido 2026-02-14)
+- `backend/routes/ganhos_uber_manual.py`: Edição manual de ganhos
+- `backend/routes/relatorios.py`: Relatórios e resumos semanais
+- `backend/routes/plataformas.py`: Gestão de plataformas e integrações (novo 2026-02-16)
+- `backend/models/plataformas.py`: Modelos de dados de plataformas (novo 2026-02-16)
+- `frontend/src/pages/ResumoSemanalParceiro.js`: UI do resumo semanal
+- `frontend/src/pages/AdminPlataformas.js`: Gestão de plataformas Admin (novo 2026-02-16)
+
+### Schema MongoDB (ganhos_uber)
+```json
+{
+  "id": "uuid",
+  "parceiro_id": "uuid",
+  "uuid_motorista_uber": "uuid",
+  "nome_motorista": "string",
+  "semana": "int",
+  "ano": "int",
+  "data_inicio": "date",
+  "data_fim": "date",
+  "pago_total": "float",
+  "tarifa": "float",
+  "gratificacao": "float",
+  "portagens": "float",
+  "taxa_servico": "float",
+  "fonte": "csv_rpa|rpa_uber|manual",
+  "execucao_id": "uuid",
+  "importado_em": "datetime"
+}
 ```
 
-### Vantagens
-- ✅ **100% oficial** - API da Meta
-- ✅ **Sem Railway** - Integração direta
-- ✅ **Sem QR Code** - Não precisa escanear
-- ✅ **1000 msgs grátis/mês** por número
-
-### Configuração por Parceiro
-Cada parceiro acede a `Configurações → WhatsApp` e:
-1. Cria conta em developers.facebook.com
-2. Adiciona número WhatsApp Business
-3. Copia Phone Number ID e Access Token
-4. Cola nas configurações e testa
-
-### Ficheiros Relevantes
-- `/app/backend/routes/whatsapp_cloud.py`
-- `/app/frontend/src/pages/ConfiguracoesParceiro.js`
-
----
-
-## ✅ Sistema de Email SMTP por Parceiro
-
-Cada parceiro configura o seu próprio email:
-- **Gmail**: smtp.gmail.com:587 + App Password
-- **Outlook**: smtp.office365.com:587
-- **Outros**: Configuração personalizada
-
----
-
-## ✅ Sistema RPA
-
-- Plataformas pré-definidas: Uber, Bolt, Via Verde, Prio
-- Criar plataformas personalizadas (admin)
-- Execução de scripts Playwright
-- Importação de CSV (manual ou agendada)
-- Páginas: RPA Automação, RPA Designer, Importação Dados
-
----
-
-## Credenciais de Teste
-- Admin: `admin@tvdefleet.com` / `123456`
-- Parceiro Zeny: `geral@zmbusines.com` / `zeny123`
-
----
-
-## Tarefas Concluídas (25/01/2025)
-- ✅ **Sistema de Permissões de Funcionalidades** - Backend + Frontend + Testes
-- ✅ **Limpeza de código obsoleto** - Removidos whatsapp-vps-deploy/ e whatsapp.py
-- ✅ **Correção UI Modal de Execução RPA** - Seletores de semana/ano inicializados com valores atuais (25/01/2025)
-- ✅ **Correção Modal de Detalhes da Execução RPA** - Carregamento de detalhes funcionando (25/01/2025)
-
-## Tarefas Concluídas (26/01/2025)
-- ✅ **Sistema de Gestão de Planos e Módulos** - Estrutura completa implementada
-  - Backend: Modelos, serviço e rotas em `/app/backend/routes/gestao_planos.py`
-  - Frontend Admin: `/app/frontend/src/pages/AdminGestaoPlanos.js`
-  - Módulos predefinidos: Emails, Manutenção, Agenda, Publicidade, Contratos, WhatsApp, Relatórios, RPA, Vistorias, Autofaturação
-  - Planos base: Gratuito, Profissional, Enterprise (parceiros) + Gratuito, Premium (motoristas)
-  - Tipos de cobrança: fixo, por_veiculo, por_motorista
-  - Periodicidades: semanal, mensal, anual
-  - Promoções e campanhas (normal, pioneiro, lançamento)
-  - Preços especiais por parceiro
-- ✅ **Atribuição de Planos/Módulos nos Detalhes do Parceiro**
-  - Componente: `/app/frontend/src/components/PlanoModulosParceiroTab.js`
-  - Atribuir plano com trial, oferta gratuita ou desconto especial
-  - Adicionar módulos individuais com trial ou oferta
-  - Visualizar módulos ativos
-
-## Tarefas Concluídas (27/01/2025)
-- ✅ **UI de Preços por Veículo e Motorista** - Campos adicionados no modal de planos
-  - Modal de criação/edição agora mostra:
-    - **Preço Base do Plano** (semanal/mensal/anual)
-    - **Preço por Veículo** (semanal/mensal/anual)
-    - **Preço por Motorista** (semanal/mensal/anual)
-    - **Taxa de Setup**
-  - Cards de planos exibem estrutura de preços completa
-  - Para planos de motoristas, mostra preços simples
-  - Testado com 100% de sucesso (7/7 features)
-
-- ✅ **Sistema de Pré-Pagamento Pro-Rata** - Implementado e testado
-  - Backend: `/app/backend/services/prepagamento_service.py`
-  - API: `/app/backend/routes/prepagamento.py`
-  - Frontend: `/app/frontend/src/components/AdicionarRecursosCard.js`
-  - Funcionalidades:
-    - Parceiro solicita adição de veículos/motoristas na página `/meu-plano`
-    - Sistema calcula valor pro-rata até à data de renovação
-    - **Bloqueio automático** até pagamento ser confirmado
-    - Modal de pagamento com opções: Multibanco, MBWAY, Cartão
-    - Admin pode confirmar pagamento manualmente
-    - Após confirmação: recursos são aplicados e mensalidade atualizada
-  - Testado: 100% sucesso (16/16 backend + 8/8 frontend)
-  - **NOTA: Gateway Ifthenpay SIMULADA** - referências são placeholders
-
-## Tarefas Pendentes
-
-### P1 - Alta Prioridade
-- [x] ~~Refatoração do `server.py`~~ - Removidas 1538 linhas, ~42 endpoints duplicados (25/01/2025)
-- [x] ~~Implementar lógica de agendamento de RPA~~ - Scheduler automático implementado (25/01/2025)
-- [x] ~~Sistema de Gestão de Planos e Módulos~~ - Implementado (26/01/2025)
-- [x] ~~UI de preços por veículo/motorista~~ - Implementado (27/01/2025)
-- [x] ~~Sistema de Pré-Pagamento Pro-Rata~~ - Implementado (27/01/2025)
-- [x] ~~Configuração Ifthenpay e Moloni~~ - Página admin `/admin/integracoes` (27/01/2025)
-- [x] ~~Sistema de Comissões por Escala~~ - Implementado (27/01/2025)
-- [x] ~~Classificação de Motoristas (5 níveis)~~ - Implementado (27/01/2025)
-- [x] ~~Configuração de Comissões pelo Parceiro~~ - Implementado (27/01/2025)
-- [x] ~~Turnos de motoristas por veículo~~ - Implementado (27/01/2025)
-- [x] ~~Sistema de Sincronização Automática~~ - Implementado (27/01/2025)
-- [x] ~~Refatoração Parcial server.py~~ - Criados import_ganhos.py e bolt_integration.py (27/01/2025)
-- [x] ~~Sistema de Exportação de Dados CSV~~ - Implementado com seleção de campos (29/01/2025)
-- [x] ~~Sistema de Importação de Dados CSV~~ - Funcionalidade completa de importação com preview e atualização (29/01/2025)
-- [x] ~~Página "Meu Plano" para Parceiros~~ - Página completa com detalhes do plano, custos e módulos (29/01/2025)
-- [x] ~~Correção Resumo Semanal Bolt~~ - Query suporta período_semana/ano além de semana/ano (30/01/2025)
-- [x] ~~Segurança na Sincronização~~ - Verifica parceiro_id e parceiro_atribuido (30/01/2025)
-- [x] ~~Correção API Bolt getFleetOrders~~ - company_ids como array + extração de ganhos de order_price (30/01/2025)
-- [x] ~~Sistema RPA Central~~ - Credenciais centrais geridas pelo Admin para todos os parceiros (30/01/2025)
-- [ ] **Processamento real Ifthenpay** - Usar credenciais para gerar referências MB
-- [ ] **Processamento real Moloni** - Emitir faturas automaticamente
-- [ ] Continuar refatoração do server.py (~36 endpoints @app restantes, ~16000 linhas)
-
-### P2 - Média Prioridade
-- [x] ~~Limitar "Próximos Eventos" no dashboard~~ - Alertas limitados a 5 itens (25/01/2025)
-- [x] ~~Testar parser CSV com ficheiros reais~~ - Bolt e Uber testados com sucesso (25/01/2025)
-- [x] ~~Página "Meu Plano" para parceiros~~ - Implementada com cálculo de custos (29/01/2025)
-- [x] ~~Loja online de planos/módulos~~ - Interface completa para ver e comparar planos (29/01/2025)
-- [x] ~~Consolidação de menus~~ - Credenciais Plataformas integrado em Configurações Parceiro (29/01/2025)
-- [x] ~~Integração Bolt API Oficial~~ - OAuth2 com client_id/client_secret (29/01/2025)
-- [ ] Testar parser CSV da Via Verde com ficheiro de exemplo
-
----
-
-## ✅ Sistema de Sincronização Automática de Dados (Implementado: 27/01/2025)
-
-### Descrição
-Sistema completo para automatizar a recolha de dados de Uber, Bolt, Via Verde e Abastecimentos, com agendamento e notificações.
-
-### Funcionalidades
-- **Fontes de Dados**: Uber (RPA/CSV), Bolt (API/RPA/CSV), Via Verde (RPA/CSV), Abastecimentos (RPA/CSV)
-- **Métodos de Recolha**: Automático (RPA), API Oficial, Upload Manual (CSV)
-- **Agendamento Global**: Frequência (diário/semanal/mensal), dia da semana/mês, hora
-- **Resumo Semanal**: Geração automática, envio email/WhatsApp aos motoristas
-- **Notificações ao Parceiro**: Sistema, Email, WhatsApp
-- **Histórico**: Listagem de sincronizações com status, fontes e timestamps
-- **Estatísticas**: Total, taxa de sucesso, última sync, próxima execução
-
-### Endpoints
-- `GET /api/sincronizacao-auto/fontes` - Listar fontes disponíveis
-- `GET /api/sincronizacao-auto/config` - Obter configuração do parceiro
-- `PUT /api/sincronizacao-auto/config` - Atualizar configuração
-- `POST /api/sincronizacao-auto/executar` - Executar sincronização manual
-- `GET /api/sincronizacao-auto/historico` - Obter histórico de execuções
-- `GET /api/sincronizacao-auto/estatisticas` - Obter estatísticas
-
-### Ficheiros
-- `/app/frontend/src/components/ConfigSincronizacao.js` - Componente de configuração
-- `/app/frontend/src/pages/ConfiguracoesParceiro.js` - Tab "Sincronização"
-- `/app/backend/routes/sincronizacao.py` - Endpoints de sincronização automática
-- `/app/backend/services/sincronizacao_service.py` - Serviço de sincronização
-
-### Módulo para Cobrança
-- Valor fixo por frota (não por veículo/motorista)
-- Disponível após contratação do módulo
-
----
-
-## ✅ Gestão de Turnos de Veículos (Implementado: 27/01/2025)
-
-### Descrição
-Sistema para atribuir múltiplos motoristas a um veículo com horários de início/fim e dias da semana.
-
-### Funcionalidades
-- **Motorista Principal**: Responsável padrão do veículo
-- **Turnos Configurados**: Tabela com motorista, horário (HH:MM - HH:MM), dias da semana, estado (ativo/inativo), notas
-- **Cobertura Semanal**: Visualização dos turnos por dia da semana
-- **Modal de Turno**: Adicionar/editar com seleção de motorista, horas, dias da semana, notas
-
-### Endpoints
-- `GET /api/comissoes/turnos/veiculo/{id}` - Listar turnos do veículo
-- `POST /api/comissoes/turnos/veiculo/{id}` - Adicionar turno
-- `PUT /api/comissoes/turnos/veiculo/{id}/turno/{turno_id}` - Atualizar turno
-- `DELETE /api/comissoes/turnos/veiculo/{id}/turno/{turno_id}` - Remover turno
-- `PUT /api/comissoes/turnos/veiculo/{id}/principal` - Definir motorista principal
-
-### Ficheiros
-- `/app/frontend/src/components/VeiculoTurnos.js` - Componente de gestão de turnos
-- `/app/frontend/src/pages/FichaVeiculo.js` - Tab "Turnos" adicionada
-- `/app/backend/routes/comissoes.py` - Endpoints de turnos
-- `/app/backend/services/comissoes_service.py` - Lógica de negócio
-
----
-
-## ✅ Configuração de Comissões pelo Parceiro (Implementado: 27/01/2025)
-
-### Descrição
-Página para parceiros configurarem as suas próprias escalas de comissão (se módulo ativo).
-
-### Funcionalidades
-- **Tipo de Comissão**: Valor fixo (€/semana), Percentagem fixa (%), ou Escala por valor faturado
-- **Escala Própria**: Criar/editar níveis com valor mínimo, máximo e percentagem
-- **Classificação Própria**: Personalizar bónus por nível de classificação
-- **Gestão de Motoristas**: Atribuir classificação manual aos motoristas
-
-### Acesso Condicional
-Link "💰 Comissões" só aparece no menu se parceiro tiver módulo `relatorios_avancados`, `comissoes` ou similar.
-
-### Ficheiros
-- `/app/frontend/src/pages/ConfigComissoesParceiro.js` - Página de configuração
-- `/app/frontend/src/components/Layout.js` - Link condicional no menu
-- `/app/backend/routes/comissoes.py` - Endpoints `/parceiro/config`
-
----
-
-## ✅ Sistema de Comissões e Classificação de Motoristas (Implementado: 27/01/2025)
-
-### Descrição
-Sistema flexível de comissões baseado em valor faturado com bónus por classificação de motorista.
-
-### Escalas de Comissão (níveis ilimitados)
-- Comissão % baseada no **valor faturado semanal**
-- Escala padrão: 10% (até €500) → 12% → 14% → 16% → 18% (>€2000)
-- Admin pode criar/editar escalas em `/admin/comissoes`
-
-### Classificação de Motoristas (5 níveis)
-| Nível | Meses Mín. | Cuidado Veículo | Bónus |
-|-------|------------|-----------------|-------|
-| 🥉 Bronze | 0 | 0% | +0% |
-| 🥈 Prata | 3 | 60% | +1% |
-| 🥇 Ouro | 6 | 75% | +2% |
-| 💎 Platina | 12 | 85% | +3.5% |
-| 👑 Diamante | 24 | 95% | +5% |
-
-### Cálculo Total
-- **Comissão Total = Comissão Base (escala) + Bónus (classificação)**
-- Exemplo: €1200 faturado + Ouro = 14% + 2% = **16% (€192)**
-
-### Ficheiros
-- Backend: `/app/backend/services/comissoes_service.py`, `/app/backend/routes/comissoes.py`
-- Frontend: `/app/frontend/src/pages/AdminComissoes.js`
-
----
-
-## ✅ Sistema de Gestão de Planos e Módulos (Implementado: 26/01/2025)
-
-### Descrição
-Sistema completo para criar, gerir e atribuir planos e módulos a parceiros e motoristas.
-
-### Estrutura de Preços
-- **Por Veículo**: Preço multiplicado pelo número de veículos
-- **Por Motorista**: Preço multiplicado pelo número de motoristas
-- **Preço Fixo**: Preço único independente da quantidade
-- **Periodicidades**: Semanal, Mensal, Anual
-
-### Funcionalidades Admin
-- Criar/Editar/Desativar planos
-- Criar/Editar/Desativar módulos
-- Definir limites (máx veículos/motoristas)
-- Adicionar promoções (normal, pioneiro, lançamento)
-- Definir preços especiais por parceiro
-- Atribuir planos/módulos com trial ou oferta gratuita
-- Ver estatísticas (subscrições ativas, receita mensal)
-
-### Funcionalidades Parceiro
-- Ver plano atual e módulos ativos
-- Atualizar para plano superior (futuramente)
-- Comprar módulos individuais (futuramente)
-
-### Endpoints Principais
-- `GET /api/gestao-planos/planos` - Listar planos
-- `GET /api/gestao-planos/modulos` - Listar módulos
-- `POST /api/gestao-planos/subscricoes/atribuir-plano` - Atribuir plano
-- `POST /api/gestao-planos/subscricoes/atribuir-modulo` - Atribuir módulo
-- `GET /api/gestao-planos/subscricoes/user/{id}` - Ver subscrição de utilizador
-- `POST /api/gestao-planos/seed` - Popular dados iniciais
-
-### Ficheiros Principais
-- `/app/backend/models/planos_modulos.py` - Modelos Pydantic
-- `/app/backend/services/planos_modulos_service.py` - Lógica de negócio
-- `/app/backend/routes/gestao_planos.py` - Endpoints API
-- `/app/frontend/src/pages/AdminGestaoPlanos.js` - UI Admin
-- `/app/frontend/src/components/PlanoModulosParceiroTab.js` - UI Detalhes Parceiro
-
-### Próximos Passos
-1. Integração If Then Pay para pagamentos online
-2. Integração Moloni para faturação automática
-3. Loja online para parceiros/motoristas
-
----
-
-## ✅ Sistema de Exportação/Importação de Dados (Implementado: 29/01/2025)
-
-### Descrição
-Sistema completo para exportar e importar dados de motoristas e veículos via CSV.
-
-### Exportação
-- **Campos Selecionáveis**: 20 campos para motoristas, 22 campos para veículos
-- **Delimitadores**: Ponto-e-vírgula (;) para Excel PT, Vírgula (,) para internacional
-- **Formatos**: CSV individual ou ZIP com ambos os ficheiros
-- **BOM UTF-8**: Incluído para compatibilidade com Excel
-
-### Importação
-- **Apenas Atualização**: Não cria registos novos, apenas atualiza existentes
-- **Chaves Únicas**: NIF para motoristas, Matrícula para veículos
-- **Preview**: Pré-visualização das alterações antes de confirmar
-- **Validação**: Erros detalhados para linhas ignoradas
-
-### Endpoints
-- `GET /api/exportacao/campos` - Listar campos disponíveis
-- `GET /api/exportacao/motoristas` - Exportar motoristas para CSV
-- `GET /api/exportacao/veiculos` - Exportar veículos para CSV
-- `GET /api/exportacao/completa` - Exportar ambos em ZIP
-- `POST /api/exportacao/importar/motoristas/preview` - Preview de importação
-- `POST /api/exportacao/importar/motoristas/confirmar` - Confirmar importação
-- `POST /api/exportacao/importar/veiculos/preview` - Preview de veículos
-- `POST /api/exportacao/importar/veiculos/confirmar` - Confirmar importação
-
-### Ficheiros
-- `/app/backend/routes/exportacao.py` - Endpoints de export/import
-- `/app/frontend/src/pages/ExportarDados.js` - UI completa
-
----
-
-## Ficheiros Removidos (25/01/2025)
-- `/app/whatsapp-vps-deploy/` - Directório obsoleto do Railway
-- `/app/backend/routes/whatsapp.py` - Substituído por whatsapp_cloud.py
-
----
-
-## ✅ Loja de Planos e Módulos (Implementado: 29/01/2025)
-
-### Descrição
-Interface para parceiros visualizarem e compararem planos disponíveis.
-
-### Funcionalidades
-- **Listagem de Planos**: Gratuito, Profissional, Enterprise com preços e features
-- **Toggle Mensal/Anual**: Mostra preços anuais com desconto de 17%
-- **Tab de Módulos**: Lista de módulos disponíveis com indicador de incluído/não incluído
-- **Modal de Upgrade**: Preparado para integração com pagamento (Ifthenpay)
-- **Marcação de Plano Atual**: Indica claramente qual é o plano ativo
-
-### Ficheiros
-- `/app/frontend/src/pages/LojaPlanos.js` - Página da loja
-- `/app/frontend/src/pages/MeuPlanoParceiro.js` - Link para a loja
-
-### Notas
-- A funcionalidade de pagamento real depende da integração Ifthenpay (P1)
-- Por agora, mostra mensagem para contactar suporte
-
----
-
-## ✅ Integração Bolt API Oficial (Implementado: 29/01/2025)
-
-### Descrição
-Integração com a API oficial da Bolt Fleet usando OAuth2 Client Credentials.
-
-### Funcionalidades
-- **Autenticação OAuth2**: Token endpoint com client_id e client_secret
-- **Auto-refresh de Token**: Token renova automaticamente antes de expirar (10 min)
-- **Endpoints disponíveis**:
-  - `POST /api/bolt/api/test-connection` - Testar conexão
-  - `POST /api/bolt/api/save-credentials` - Guardar credenciais
-  - `GET /api/bolt/api/credentials` - Obter credenciais (mascaradas)
-  - `POST /api/bolt/api/sync-data` - Sincronizar dados
-  - `GET /api/bolt/api/fleet-info` - Info da frota
-  - `GET /api/bolt/api/drivers` - Lista de motoristas
-
-### Ficheiros
-- `/app/backend/services/bolt_api_service.py` - Cliente da API Bolt
-- `/app/backend/routes/bolt_integration.py` - Endpoints (legado + API oficial)
-- `/app/frontend/src/pages/ConfiguracoesParceiro.js` - UI com campos API
-
-### Como obter credenciais
-1. Aceder a fleets.bolt.eu
-2. Ir a API Credentials
-3. Clicar "Generate credentials"
-4. Copiar Client ID e Secret
-
----
-
-## ✅ Correções de Bugs - Resumo Semanal Bolt (30/01/2025)
-
-### Bug 1: Valores Bolt não aparecem no Resumo Semanal
-**Problema**: Os valores de ganhos da Bolt sincronizados não apareciam nas semanas 1 e 2 do resumo semanal.
-
-**Causa Raiz**: A query de `ganhos_bolt` só verificava `semana/ano`, mas os dados importados usam `periodo_semana/periodo_ano`.
-
-**Correção**: Adicionado `periodo_semana/periodo_ano` à query `$or` em `/app/backend/routes/relatorios.py` (linhas 896-912).
-
-**Verificação**: Semana 2/2026 agora mostra €7506.32 em ganhos Bolt (8 motoristas).
-
-### Bug 2: Sincronização não deve criar/mover motoristas
-**Problema**: Risco da sincronização criar motoristas novos ou associar motoristas de outros parceiros.
-
-**Causa Raiz**: A query só verificava `parceiro_id`, não `parceiro_atribuido`.
-
-**Correção**: Adicionado `parceiro_atribuido` à query `$or` em `/app/backend/routes/sincronizacao.py` (linhas 1006-1048). A lógica apenas atualiza motoristas existentes.
-
-**Verificação**: Código revisto confirma que não há operações de criação de motoristas.
-
----
-
-## Notas Importantes
-- **Railway foi desativado** - WhatsApp usa API Cloud oficial
-- **Sistema de permissões activo** - Menu filtrado por funcionalidades
-
----
-
-## 🔄 Em Progresso: Correção RPA Via Verde (02/02/2026)
-
-### Problema Principal
-O RPA da Via Verde não consegue filtrar por semana específica no site. A interface real difere do esperado:
-1. Os campos de data "De:" e "Até:" não são facilmente acessíveis
-2. O formato do site é MM/YYYY (não DD/MM/YYYY)
-3. O dropdown de exportar oferece: PDF, XML, CSV, HTML (não Excel)
-
-### Solução Implementada
-1. **Filtragem pós-download**: O sistema agora descarrega todos os dados e filtra por semana no código Python
-2. **Exportação CSV**: Alterado para usar CSV em vez de Excel (opção disponível no site)
-3. **Via Verde Mensal**: Conforme decisão do utilizador, a Via Verde será versão mensal
-
-### Estado Atual
-- ✅ Login funciona
-- ✅ Navegação funciona
-- ❌ Download do CSV está com timeout (precisa de investigação adicional)
-
----
-
-## ✅ NOVO: Script RPA Uber (02/02/2026)
-
-### Descrição
-Implementado script RPA para extração de dados do portal Uber Fleet.
-
-### Funcionalidades
-1. **Login automático** com email e password
-2. **Navegação** para secção "Rendimentos"
-3. **Seleção de período** (última semana, semana específica, personalizado)
-4. **Extração de dados** da tabela de motoristas
-5. **Download de relatório** (se disponível)
-
-### Dados Extraídos por Motorista
-- Nome do motorista
-- Rendimentos totais
-- Reembolsos e despesas
-- Ajustes
-- Pagamento
-- Rendimentos líquidos
-
-### Endpoint
-`POST /api/uber/executar-rpa`
-
-### Ficheiros
-- `/app/backend/services/rpa_uber.py` - Script RPA
-- `/app/backend/routes/sincronizacao.py` - Endpoint adicionado
-
-### Requisitos
-O parceiro precisa de configurar credenciais Uber em Configurações → Plataformas
-
-### Descrição
-Sistema completo de sincronização automática de portagens Via Verde que:
-1. O parceiro clica no botão "Sincronizar" na página de Resumo Semanal
-2. Seleciona o período (última semana, semana específica ou datas personalizadas)
-3. O sistema executa RPA automaticamente: login → filtrar → download Excel → processar → importar
-4. Os dados aparecem automaticamente no Resumo Semanal do motorista
-
-### Funcionalidades Implementadas
-- **RPA Via Verde com Download Direto de Excel** - Script Playwright (`rpa_viaverde_v2.py`)
-- **Parser de Excel robusto** - Suporta todas as colunas do ficheiro Via Verde
-- **Associação automática** - Vincula portagens a veículos/motoristas pela matrícula
-- **Cálculo de semana** - Determina automaticamente a semana ISO de cada transação
-- **Detecção de duplicados** - Evita reimportar dados existentes
-- **Auto-criação de veículos** - Cria veículos placeholder para matrículas desconhecidas
-
-### Correções Aplicadas (02/02/2026)
-- **Bug de filtragem de datas** - RPA agora interage corretamente com o calendário popup do site Via Verde
-- **Bug 422 no frontend** - Strings vazias convertidas para null em campos opcionais
-- **Bug "valor" vs "value"** - Query do resumo semanal agora suporta ambos os campos
-- **Bug de associação** - Via Verde busca por `matricula`, `vehicle_id` e `motorista_id`
-- **Bug vehicles KeyError** - Tratamento de campos created_at/updated_at ausentes
-
-### Resultados Testados
-- **Semana 5/2026**: €99.11 em Via Verde distribuídos por 11 motoristas
-- **Taxa de sucesso**: Backend 95%, Frontend 100%
-
-### Ficheiros Relevantes
-- `/app/backend/services/rpa_viaverde_v2.py` - Script RPA com Playwright (método expandir_filtro_e_selecionar_datas corrigido)
-- `/app/backend/routes/sincronizacao.py` - Endpoint `/viaverde/executar-rpa` + função `auto_criar_veiculos_viaverde`
-- `/app/backend/routes/relatorios.py` - Resumo Semanal com agregação Via Verde
-- `/app/frontend/src/pages/ResumoSemanalParceiro.js` - UI com dropdown de sincronização
+### Endpoints API Principais
+- `POST /api/uber/sincronizar-csv` - Sincronização automática via CSV
+- `POST /api/uber/executar-rpa` - RPA antigo (scraping UI)
+- `GET /api/uber/execucoes` - Histórico de execuções
+- `PUT /api/ganhos-uber/{ganho_id}` - Edição manual
+- `GET /api/relatorios/parceiro/resumo-semanal` - Resumo semanal
+
+## Integrações
+
+### Uber Supplier Portal
+- URL: https://supplier.uber.com
+- Autenticação: Email/Password com possível 2FA (SMS)
+- Método: RPA com Playwright
+- Dados extraídos: Relatório CSV de pagamentos
 
 ### Credenciais de Teste
-- **Parceiro**: geral@zmbusines.com / zeny123
-- **Via Verde**: geral@zmbusines.com / 5+?n74vi%*8GJ3e
+- Email: tsacamalda@gmail.com
+- Sistema: TVDEFleet
 
 ---
 
-## ✅ Sistema de Desativação de Motoristas (02/02/2026)
+## Changelog Recente
 
-### Descrição
-Sistema que permite desativar motoristas com uma data específica, impedindo que apareçam em relatórios de semanas futuras.
+### 2026-02-16: Melhoria na Verificação de Sessão Prio ✅
 
-### Funcionalidades
-- Pop-up de desativação com seleção de data
-- Motoristas desativados não aparecem no Resumo Semanal após a data de desativação
-- Endpoint: `PUT /api/motoristas/{id}/desativar` com `data_desativacao`
+**Problema Reportado:** O utilizador precisava fazer login na Prio após cada sincronização, mesmo com sessão persistente configurada.
 
-### Ficheiros Relevantes
-- `/app/backend/routes/motoristas.py` (linhas 570-630) - Endpoint de desativação
-- `/app/frontend/src/pages/Motoristas.js` (linhas 2230-2305) - Pop-up de desativação
+**Investigação:** 
+- A sessão da Prio tinha realmente expirado (o portal redirecionou para login)
+- O sistema de verificação confiava no estado guardado por demasiado tempo (24h) sem verificar activamente
 
+**Melhorias Implementadas:**
 
----
+1. **Verificação Activa de Sessão** (`browser_interativo_prio.py`):
+   - Novo método `_verificar_e_restaurar_sessao()` que navega para página protegida
+   - Novo método `refrescar_sessao()` para manter sessão activa
+   - Parâmetro `verificar_sessao` no `get_browser_prio()`
 
-## ✅ Sistema de Gestão de Utilizadores (02/02/2026)
+2. **Endpoints Melhorados** (`routes/browser_prio.py`):
+   - `GET /api/prio/sessao` agora faz verificação activa se última verificação > 60 min
+   - `POST /api/prio/sessao/verificar-activa` - verificação sob demanda
+   - `POST /api/prio/sessao/refrescar` - refrescar sessão manualmente
 
-### Descrição
-Sistema completo para criar e gerir utilizadores com diferentes perfis (Admin, Gestor, Parceiro, Motorista), incluindo associação de gestores a parceiros.
+3. **UI Melhorada**:
+   - Banner de aviso "Não tem sessão Prio activa" agora aparece correctamente
+   - Toast com botão "Ir para Login Prio" quando sincronização falha
 
-### Funcionalidades
-- **Listagem de Utilizadores**: Página `/utilizadores` com cards de utilizadores
-- **Filtro por Role**: Dropdown para filtrar por Admin, Gestão, Parceiro, Motorista
-- **Busca**: Campo de pesquisa por nome ou email
-- **Criação de Utilizadores**: Modal com formulário para criar novos utilizadores
-- **Tipos de Utilizador**:
-  - **Motorista**: Pode ver ganhos, enviar recibos, aceder área do motorista
-  - **Parceiro**: Gere motoristas, veículos e relatórios financeiros
-  - **Gestor**: Pode gerir múltiplos parceiros associados (requer seleção de parceiros)
-  - **Admin**: Acesso total ao sistema
-- **Associação Gestor-Parceiro**: Tabela `gestor_parceiro` para relacionar gestores a parceiros
-- **Validações**: Email duplicado, password mínima 6 caracteres, gestor requer ≥1 parceiro
+**Resultado:**
+- ✅ Sistema verifica activamente se sessão está válida antes de sincronizar
+- ✅ Alerta visual claro quando sessão expirou
+- ✅ Botões de acção para renovar sessão facilmente
 
-### Endpoints
-- `GET /api/users/all` - Listar todos os utilizadores (admin/gestão)
-- `POST /api/auth/register` - Criar novo utilizador com role e parceiros_associados
-- `GET /api/users/pending` - Utilizadores pendentes de aprovação
-- `GET /api/parceiros` - Lista de parceiros para associação
+**Nota Importante:** A sessão da Prio pode expirar naturalmente pelo portal (timeout por inactividade). Quando isso acontece, o utilizador precisa fazer login novamente na página "Configuração Prio".
 
-### Ficheiros Relevantes
-- `/app/frontend/src/pages/GestaoUtilizadores.js` - Página de gestão de utilizadores
-- `/app/backend/routes/auth.py` - Endpoint de registo com suporte a roles
-- `/app/backend/routes/users.py` - Endpoints de gestão de utilizadores
-- `/app/backend/models/user.py` - Modelo com roles e parceiros_associados
+### 2026-02-15: Correção Sincronização Prio Combustível ✅
 
-### Credenciais de Teste
-- **Admin**: admin@tvdefleet.com / 123456
-- **Parceiro (criado via UI)**: parceiro.criado.ui@example.com / parceiro123
-- **Parceiro (Zeny)**: geral@zmbusines.com / zeny123
+**Problema:** O botão "Sincronizar Prio Combustível" no Resumo Semanal não funcionava.
 
-### Correção Aplicada
-- Corrigido endpoint de `/api/users` para `/api/users/all` no frontend
+**Causa Raiz:** Incompatibilidade de versão do Playwright browser:
+- O Playwright procurava: `/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell`
+- Browser instalado: `/pw-browsers/chromium_headless_shell-1208/chrome-linux/headless_shell`
 
+**Solução Aplicada:** Criação de symlink:
+```bash
+ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_shell-1194
+```
 
----
+**Resultado:** O fluxo de sincronização da Prio está operacional:
+1. ✅ Botão "Sincronizar Prio Combustível" funciona
+2. ✅ Verifica sessão da Prio correctamente
+3. ✅ Mostra mensagem com botão para login se sessão expirada
+4. ✅ Extracção de dados funciona quando sessão está activa
 
-## ✅ App Móvel - Funcionalidades Expandidas (03/02/2026)
+### 2026-02-15: Alerta Automático de Expiração da Sessão Prio ✅
 
-### Descrição
-Expansão da app móvel TVDEFleet Drivers com novas funcionalidades para motoristas.
+**Funcionalidade:** Sistema de notificação automática quando a sessão Prio está prestes a expirar.
 
-### Funcionalidades Implementadas
+**Implementação:**
+1. **Backend (`routes/browser_prio.py`):**
+   - Novo endpoint `GET /api/prio/sessao/status-completo` com informações detalhadas
+   - Função `_calcular_dias_restantes()` para calcular tempo até expiração
+   - Retorna `alerta` com severidade (error/warning/info) baseado nos dias restantes
 
-#### 1. Relógio de Ponto (já existente)
-- Check-in / Check-out
-- Pausas
-- Resumo semanal
+2. **Frontend (`ResumoSemanalParceiro.js`):**
+   - Hook `useEffect` para verificar estado da sessão ao carregar a página
+   - Banner de alerta visual quando sessão está prestes a expirar (≤3 dias) ou expirada
+   - Botão "Renovar Sessão Prio" que navega para `/configuracao-prio`
 
-#### 2. Ganhos e Relatórios Semanais (NOVO)
-- Visualização de ganhos Uber e Bolt
-- Despesas (Via Verde, Combustível, Elétrico, Aluguer)
-- Valor líquido
-- Horas trabalhadas
-- Histórico das últimas semanas
+**Regras de Alerta:**
+- 0 dias: Alerta vermelho "Sessão expirada!"
+- 1-3 dias: Alerta laranja "Sessão expira em X dias!"
+- 4-7 dias: Info discreta (sem banner)
+- >7 dias: Sem alerta
 
-#### 3. Upload de Documentos com Histórico (NOVO)
-- Tipos: Recibo, Registo Criminal, Carta Condução, Certificado TVDE, CC, IBAN
-- Histórico automático: documento anterior é arquivado quando se faz upload de um novo
-- Validação por parceiro/gestor/admin
-- Histórico completo visível para parceiros
+### 2026-02-16: Browser Virtual Embutido para RPA Admin ✅
 
-#### 4. Sistema de Tickets/Suporte com Chat (NOVO)
-- Criação de tickets por categoria
-- Chat em tempo real entre motorista e suporte
-- Estados: Aberto, Em Análise, A Processar, Aguardar Resposta, Resolvido, Fechado
-- Auto-fechamento após 7 dias sem resposta
-- Anexos de ficheiros
-- Hierarquia: Motorista → Parceiro/Gestor → Admin
+**Funcionalidade:** O administrador pode agora usar um browser virtual embutido directamente na interface de Gestão de Plataformas para gravar e testar passos de automação RPA.
 
-### Endpoints Backend (Novos)
+**Implementação:**
 
-#### Ponto (expandido)
-- `GET /api/ponto/relatorio-diario` - Relatório diário de horas
-- `GET /api/ponto/ganhos-semana` - Ganhos e despesas da semana
-- `GET /api/ponto/historico-semanas` - Histórico das últimas N semanas
+1. **Backend (`routes/browser_virtual_admin.py`):**
+   - `POST /api/admin/browser-virtual/sessao/iniciar` - Inicia sessão Playwright
+   - `DELETE /api/admin/browser-virtual/sessao/{id}` - Termina sessão
+   - `GET /api/admin/browser-virtual/sessao/{id}/screenshot` - Captura screenshot
+   - `POST /api/admin/browser-virtual/sessao/{id}/acao` - Executa acção (click, type, scroll)
+   - `POST /api/admin/browser-virtual/sessao/{id}/gravar` - Toggle gravação
+   - `POST /api/admin/browser-virtual/sessao/{id}/passos/guardar` - Guarda passos na plataforma
+   - `GET /api/admin/browser-virtual/sessoes` - Lista sessões activas
+   - `GET /api/admin/browser-virtual/rascunho/{plataforma_id}` - Obtém rascunho auto-guardado
+   - `DELETE /api/admin/browser-virtual/rascunho/{plataforma_id}` - Limpa rascunho
+   - WebSocket para comunicação em tempo real
 
-#### Tickets
-- `POST /api/tickets/criar` - Criar ticket
-- `GET /api/tickets/meus` - Listar tickets do utilizador
-- `GET /api/tickets/para-gerir` - Tickets para gestão (admin/gestor/parceiro)
-- `GET /api/tickets/{id}` - Detalhes do ticket
-- `POST /api/tickets/{id}/mensagem` - Adicionar mensagem (chat)
-- `POST /api/tickets/{id}/anexo` - Adicionar anexo
-- `PATCH /api/tickets/{id}/status` - Atualizar status
-- `POST /api/tickets/{id}/fechar` - Fechar ticket
-- `GET /api/tickets/estatisticas/resumo` - Estatísticas
+2. **Frontend (`components/admin/BrowserVirtualEmbutido.jsx`):**
+   - Visualização de screenshot em tempo real
+   - Barra de URL com estado de conexão
+   - Input de texto com botão Enviar
+   - Botões de controlo: Enter, Tab, Scroll (cima/baixo), Espera
+   - Toggle de gravação com indicador visual
+   - Painel lateral "Passos Gravados" com contador
+   - Botões para guardar como Login ou Extração
+   - Botão Terminar para fechar sessão
+   - **Badge "Auto-save"** quando há passos gravados
+   - **Mensagem de recuperação** quando rascunho é carregado
 
-#### Documentos Motorista
-- `POST /api/documentos-motorista/upload` - Upload de documento
-- `GET /api/documentos-motorista/meus` - Documentos do motorista
-- `GET /api/documentos-motorista/motorista/{id}` - Documentos de um motorista (parceiro/admin)
-- `GET /api/documentos-motorista/ficheiro/{id}` - Download do ficheiro
-- `POST /api/documentos-motorista/{id}/validar` - Validar documento
-- `POST /api/documentos-motorista/{id}/rejeitar` - Rejeitar documento
-- `GET /api/documentos-motorista/historico/{motorista_id}/{tipo}` - Histórico de um tipo
-- `GET /api/documentos-motorista/pendentes` - Documentos pendentes de validação
+3. **Integração (`pages/AdminPlataformas.js`):**
+   - Nova tab "Testar" no modal de edição de plataformas
+   - Resumo da configuração (passos login, extração, 2FA)
+   - Opção "Browser Embutido" - abre o browser na mesma página
+   - Opção "RPA Designer" - abre em nova janela
 
-### Ficheiros Criados
-- `/app/backend/routes/tickets.py` - Sistema de tickets completo
-- `/app/backend/routes/documentos_motorista.py` - Gestão de documentos
-- `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js` - Código completo para Expo Snack
+4. **Auto-save de Passos RPA:**
+   - Passos são guardados automaticamente na colecção `rpa_rascunhos` a cada acção
+   - Rascunho persiste mesmo quando sessão é terminada ou browser fechado
+   - Ao iniciar nova sessão, passos anteriores são recuperados automaticamente
+   - Toast de notificação com opção de limpar quando rascunho é recuperado
+   - Rascunho é limpo automaticamente ao guardar passos definitivamente
 
-### Como Testar (Expo Snack)
-1. Aceder a https://snack.expo.dev
-2. Colar o código de `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js`
-3. Escanear QR code com Expo Go
-4. Login: admin@tvdefleet.com / 123456
+5. **Replay de Passos (Testar Automação):**
+   - Botão "Testar Replay" executa todos os passos gravados em sequência
+   - Mostra resultado: passos OK vs passos com erro
+   - Permite verificar se a automação funciona antes de guardar definitivamente
+   - Badge verde/vermelho indica sucesso ou falha do replay
+
+**Acesso:** Admin > Plataformas > Editar qualquer plataforma RPA > Tab "Testar"
+
+**Nota:** O WebSocket pode não funcionar através do proxy Cloudflare. A API REST funciona como fallback fiável para todas as operações.
 
 ---
 
-## ✅ Sistema de Vistorias Móveis com IA (04/02/2026)
-
-### Descrição
-Sistema completo de vistorias de veículos realizadas pelos motoristas na app móvel, com análise automática por IA (GPT-4 Vision) para deteção de danos e OCR de matrículas.
-
-### Backend Implementado
-- **Serviço de IA** (`/app/backend/services/vistoria_ia.py`):
-  - `analisar_danos_imagem()` - Analisa fotos e deteta danos
-  - `ler_matricula_imagem()` - OCR de matrículas portuguesas
-  - `comparar_vistorias()` - Compara com vistorias anteriores
-  - `gerar_relatorio_vistoria()` - Gera relatório formatado para WhatsApp
-
-- **Endpoints Mobile** (`/app/backend/routes/vistorias_mobile.py`):
-  - `POST /api/vistorias/criar` - Criar vistoria com análise IA
-  - `GET /api/vistorias/minhas` - Listar vistorias do motorista
-  - `GET /api/vistorias/{id}` - Detalhes da vistoria
-  - `GET /api/vistorias/pendentes/lista` - Pendentes para aprovação
-  - `GET /api/vistorias/todas` - Todas as vistorias
-  - `GET /api/vistorias/aprovadas` - Vistorias aprovadas
-  - `GET /api/vistorias/rejeitadas` - Vistorias rejeitadas
-  - `POST /api/vistorias/{id}/aprovar` - Aprovar vistoria
-  - `POST /api/vistorias/{id}/rejeitar` - Rejeitar vistoria
-
-### WebApp Implementada
-- **Página VistoriasMobile** (`/app/frontend/src/pages/VistoriasMobile.js`):
-  - Cards de estatísticas (Pendentes, Aprovadas, Rejeitadas, Total)
-  - Filtros por tabs e pesquisa por motorista/matrícula
-  - Lista de vistorias com detalhes
-  - Modal de detalhes com:
-    - Análise IA (danos detetados, OCR matrícula)
-    - Comparação com vistoria anterior
-    - Fotos do veículo
-    - Danos marcados manualmente
-    - Assinatura digital
-    - Ações de aprovação/rejeição
-
-### App Móvel
-- Interface completa em `ExpoSnackCode.js` com:
-  - Fluxo guiado de 5 passos
-  - Captura de fotos obrigatórias (frente, traseira, laterais, km, combustível)
-  - Diagrama interativo para marcar danos
-  - Campo de observações
-  - Assinatura digital
-  - Envio com análise IA automática
-
-### Menu
-- Veículos → Vistorias Móveis (`/vistorias-mobile`)
-
----
-
-## ✅ Correção de Bug - Ficheiro ponto.py (04/02/2026)
-
-### Problema
-O backend não iniciava devido a um erro de sintaxe no ficheiro `/app/backend/routes/ponto.py` - faltava fechar um parêntesis numa exceção HTTPException.
-
-### Correção
-- Corrigido `raise HTTPException` sem parêntesis de fecho na linha 1063-1066
-- Removido código duplicado órfão nas linhas 1289-1311
-
-### Verificação de Endpoints App Móvel
-Todos os endpoints necessários para a app móvel foram testados e estão funcionais:
-
-| Endpoint | Perfis | Status |
-|----------|--------|--------|
-| `GET /api/motoristas/meus` | inspetor, parceiro, gestor | ✅ OK |
-| `GET /api/ponto/parceiro/resumo-semanal` | parceiro, gestor | ✅ OK |
-| `GET /api/ponto/parceiro/recibos-pendentes` | parceiro, gestor | ✅ OK |
-| `POST /api/extras-motorista/adicionar` | parceiro, gestor | ✅ OK |
-| `GET /api/ponto/ganhos-semana` | motorista | ✅ OK |
-| `GET /api/vistorias/pendentes-aceitacao` | motorista | ✅ OK |
-| `POST /api/vistorias/criar` | inspetor, parceiro, gestor | ✅ OK |
-
----
-
-## 📋 Tarefas Pendentes
-
-### P0 - Críticas
-1. ~~**Via Verde RPA - Filtragem de Datas**~~: ✅ Implementada filtragem via Pandas após download
-2. ~~**Endpoints App Móvel**~~: ✅ Todos os endpoints funcionais (04/02/2026)
-
-### P1 - Importantes
-2. ~~**UI Desativação de Motorista**~~: ✅ Já implementada na página de motoristas
-3. **API Uber**: Aguarda aprovação de scopes pela Uber
-
-### P2 - Próximas
-4. **WebApp - Página de Tickets**: Interface para parceiros/admins gerirem tickets
-5. **WebApp - Histórico Documentos**: Visualizar histórico de documentos dos motoristas
-6. ~~**Vistorias de Veículos na App Móvel**~~: ✅ Implementado com IA
-
-### Backlog
-- Integração Ifthenpay (processamento real de pagamentos)
-- Integração Moloni (faturação automática)
-- Simulação CSV para Admins
-- Envio de relatórios de vistoria via WhatsApp
-
----
-
-## ✅ Sistema de Perfis Múltiplos na App Móvel (04/02/2026)
-
-### Descrição
-App móvel agora suporta 4 perfis diferentes com funcionalidades específicas para cada um.
-
-### Perfis Implementados
-
-| Perfil | Tabs Disponíveis | Funcionalidades |
-|--------|-----------------|-----------------|
-| **Motorista** | Ponto, Turnos, Vistorias, Ganhos, Suporte | Consulta vistorias, aceita entrada/saída |
-| **Inspetor** | Vistorias | Apenas realiza vistorias de veículos |
-| **Gestor** | Vistorias, Recibos, Resumo, Extras, Alertas | Gestão completa + pode fazer vistorias |
-| **Parceiro** | Vistorias, Recibos, Resumo, Extras, Alertas | Gestão completa + pode fazer vistorias |
-
-### Backend - Gestão de Inspetores
-- **Endpoints** (`/app/backend/routes/inspetores.py`):
-  - `POST /api/inspetores/criar` - Criar inspetor
-  - `GET /api/inspetores/lista` - Listar inspetores
-  - `GET /api/inspetores/{id}` - Detalhes do inspetor
-  - `PUT /api/inspetores/{id}` - Atualizar inspetor
-  - `DELETE /api/inspetores/{id}` - Desativar inspetor
-
-### WebApp - Página de Inspetores
-- **Página** (`/app/frontend/src/pages/GestaoInspetores.js`):
-  - Cards de estatísticas
-  - Lista de inspetores com parceiros associados
-  - Modal para criar novo inspetor
-  - Detalhes e ações (ativar/desativar)
-  - Menu: Veículos → Inspetores
-
-### Regras de Associação
-- **Parceiro cria inspetor**: Associado apenas a esse parceiro
-- **Gestor cria inspetor**: Associado a TODOS os parceiros do gestor
-- **Admin**: Pode associar manualmente a qualquer parceiro
-
-### App Móvel - Novos Ecrãs (Gestor/Parceiro)
-- **RecibosGestaoScreen**: Verificar e aprovar/rejeitar recibos
-- **ResumoSemanalGestaoScreen**: Ver resumo e alterar estados
-- **ExtrasGestaoScreen**: Adicionar débitos/créditos aos motoristas
-- **AlertasGestaoScreen**: Ver alertas pendentes
-
-### Ficheiros Atualizados
-- `/app/backend/models/user.py` - Adicionado role INSPETOR
-- `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js` - TabBar dinâmica + novos ecrãs
-- `/app/frontend/public/ExpoSnackCode.txt` - Versão atualizada
-
-### Credenciais de Teste
-- **Inspetor**: inspetor1@teste.com / inspetor123
-
----
-
-## ✅ Correções e Melhorias (06/02/2026)
-
-### Bug Fix P0: Dados Prio em Categoria Errada
-- **Problema:** Os valores de combustível da Prio eram guardados na categoria "Elétrico" em vez de "Combustível"
-- **Causa raiz:** O código em `/app/backend/routes/relatorios.py` usava a coleção `despesas_combustivel` para calcular **elétrico** quando deveria usar para **combustível fóssil**
-- **Solução:**
-  - Adicionada busca de `despesas_combustivel` na secção de **Combustível Fóssil** (linha ~1050)
-  - Corrigida secção de **Carregamento Elétrico** para buscar de:
-    - `combustivel_eletrico` (carregamentos elétricos)
-    - `despesas_combustivel` apenas onde `kwh > 0` (elétrico)
-    - `rpa_carregamento_eletrico` (dados de RPA)
-- **Resultado:** Combustível €111,06 agora aparece corretamente na coluna "Comb." em vez de "Elétr."
-
-### Bug Fix P1: Página Resumo Semanal não lia parâmetros URL
-- **Problema:** A página `/resumo-semanal` ignorava parâmetros `?semana=X&ano=Y` da URL
-- **Solução:** 
-  - Adicionado `useSearchParams` do React Router
-  - useEffect agora verifica parâmetros URL antes de usar valores default
-- **Ficheiro:** `/app/frontend/src/pages/ResumoSemanalParceiro.js`
-- **Resultado:** Agora é possível navegar diretamente para uma semana específica via URL
-
-### Melhoria: Links de Navegação Adicionados
-1. **Menu do Parceiro:** Adicionado "🔑 Login Plataformas"
-2. **Menu do Admin:** Adicionado "▶️ Executar RPA" na secção Sincronização
-3. **Menu Financeiro:** Adicionado "📥 Importar Dados"
-- **Ficheiro:** `/app/frontend/src/components/Layout.js`
-
-### Correção de Password do Parceiro Tomas
-- Password actualizada para `D@niel18` na base de dados
-
----
-
-## Issues Pendentes
-
-### Issue P1: RPA da Uber falha no botão "Gerar"
-- **Descrição:** O campo "Organização" não é preenchido antes do clique no botão Gerar
-- **Status:** Pendente - requer análise adicional do scraper
-
-### Issue P2: Falha no RPA da Via Verde
-- **Descrição:** Problema no login devido a popup de cookies ou alteração no site
-- **Status:** Pendente
-
-### Issue P3: Não é possível guardar RPA com zero passos
-- **Descrição:** Mensagem de erro ao tentar guardar design vazio
-- **Status:** VERIFICADO - Backend já permite designs vazios (validação não encontrada)
-
----
-
-## Próximas Tarefas
-
-1. (P1) ~~Corrigir RPA da Uber~~ - Melhorado, aguarda teste com sessão real
-2. (P1) ~~Corrigir RPA da Via Verde~~ - CORRIGIDO ✅
-3. (P2) Implementar agendador de tarefas RPA automático
-4. (P2) Geração de PDF da Vistoria
-
-## Backlog Futuro
-
-- Integração com API oficial da Uber
-- Integrações: Ifthenpay, Moloni, Verizon GPS
-- Refatorar ficheiros monolíticos (`server.py`, `platform_scrapers.py`)
-- Envio de relatórios via WhatsApp
-
----
-
-## ✅ Correções UberScraper (06/02/2026 - Sessão 2)
-
-### UberScraper - Refatorado
-**Problema:** O `UberScraper` em `platform_scrapers.py` estava incompleto e tinha erros:
-- Faltava import `os` e `json`
-- Não tinha `context` no `BaseScraper`
-- Não carregava sessões de parceiro corretamente
-
-**Correções implementadas:**
-1. Adicionados imports necessários (`os`, `json`, `BrowserContext`)
-2. Adicionado `self.context` ao `BaseScraper` para suportar cookies de sessão
-3. Método `initialize()` agora cria contexto com viewport e user-agent anti-deteção
-4. `UberScraper.extract_data()` reescrito com 7 passos robustos:
-   - Navega diretamente para `/orgs/{org_id}/reports/earning-reports`
-   - Deteta org_id da URL atual
-   - Seleciona tipo de relatório "Pagamentos de motorista"
-   - Seleciona período (última semana)
-   - Seleciona organização (dropdown com fallback para checkboxes)
-   - Verifica se botão "Gerar" está ativo antes de clicar
-   - Screenshots de debug em cada passo
-
-**Ficheiro:** `/app/backend/integrations/platform_scrapers.py`
-
-**Status:** Implementado, requer teste com sessão real do parceiro.
-
-### Link Hub Sincronização - Adicionado
-- Adicionado link "📊 Hub Sincronização" → `/admin/sincronizacao-hub` no menu admin
-- **Ficheiro:** `/app/frontend/src/components/Layout.js`
-
----
-
-## ✅ Correções P1 - RPAs (06/02/2026)
-
-### RPA Via Verde - CORRIGIDO ✅
-**Problema:** O login falhava porque um cookie consent banner bloqueava a interação.
-
-**Correções implementadas:**
-1. Adicionada lógica para aceitar cookies automaticamente antes do login
-2. Verificação adicional de cookies antes de clicar no botão de submit
-3. Melhoria no seletor do botão Login - usar locator do dialog
-4. Fallback com pressionar Enter se o clique falhar
-
-**Ficheiro:** `/app/backend/integrations/platform_scrapers.py`
-
-**Resultado:** Login bem-sucedido confirmado via teste!
-
-### RPA Uber - Melhorado (pendente teste real)
-**Problema:** O campo "Organização" não era selecionado, deixando o botão "Gerar" desativado.
-
-**Correções implementadas:**
-1. Adicionados mais seletores para encontrar o dropdown de organização
-2. Screenshots de debug em cada passo (uber_05_before_org.png, uber_06_org_dropdown_open.png)
-3. Múltiplas abordagens para selecionar a opção (role="option", checkbox, menu-item)
-4. Fallback: procurar no modal pelo último dropdown
-
-**Ficheiro:** `/app/backend/services/uber_extractor.py`
-
-**Status:** Melhorado, requer teste com sessão real do parceiro.
-
----
-
-## Resumo das Correções Hoje (06/02/2026)
-
-1. ✅ **Bug Prio → Combustível** - Valores agora aparecem em "Combustível" em vez de "Elétrico"
-2. ✅ **Parâmetros URL Resumo Semanal** - `/resumo-semanal?semana=5&ano=2026` funciona
-3. ✅ **Links de Navegação** - Adicionados "Login Plataformas", "Executar RPA", "Importar Dados"
-4. ✅ **RPA Via Verde** - Login funciona com aceitação automática de cookies
-5. 🔄 **RPA Uber** - Melhorado, pendente teste real
-
+## Backlog
+
+### P0 - Concluído ✅
+1. ~~**Implementar Serviço de Execução RPA Dinâmico**~~ - Já existe em `services/rpa_dinamico.py`
+   - Classe `RPADinamicoExecutor` com login, extração, datas dinâmicas
+   - Endpoint `POST /api/plataformas/sincronizar` executa em background
+
+2. ~~**Seletor de Credenciais de Parceiro no Browser Virtual**~~ (2026-02-16)
+   - O browser NÃO inicia automaticamente quando há parceiros disponíveis
+   - Mostrada UI para selecionar parceiro com credenciais antes de iniciar
+   - Botão "Iniciar Browser" controla o arranque manual
+   - **Botões "Inserir Email" e "Inserir Password"** - Inserem credenciais no browser sem as expor ao admin
+   - Gravação usa REST API (fallback quando WebSocket bloqueado)
+   - Botões de controlo têm texto branco legível
+   - Novos endpoints: `POST /api/admin/browser-virtual/sessao/{id}/inserir-credencial`, `GET /api/admin/browser-virtual/sessao/{id}/tem-credenciais`
+
+### P1 - Próximas Tarefas
+1. **Alertas Avançados:** Implementar notificações por Email/SMS/Push na página de alertas.
+2. **Comissões Avançadas:** Expandir a página de comissões com bónus e relatórios.
+3. **UI de Downgrade:** Criar interface para solicitar downgrade do plano.
+4. **Refatorar página de sincronização do Parceiro** - Gerar botões dinamicamente com base nas plataformas activas
+
+### P2 - Futuro
+1. **Refatoração dos "God Components":** FichaVeiculo.js, AdminGestaoPlanos.js, FichaMotorista.js
+2. **Filtro de datas do portal Prio:** O portal Prio não filtra correctamente por datas. A mitigação actual (filtrar no backend após download) funciona.

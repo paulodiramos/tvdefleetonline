@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +37,8 @@ import {
   MapPin,
   Play,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -66,6 +67,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [historico, setHistorico] = useState([]);
   const [semana, setSemana] = useState(null);
   const [ano, setAno] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Forçar refresh
   const [editingMotorista, setEditingMotorista] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
@@ -91,6 +93,9 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [syncLoading, setSyncLoading] = useState({});
   const [showSyncMenu, setShowSyncMenu] = useState(false);
   const [uploadingViaVerde, setUploadingViaVerde] = useState(false);
+  
+  // Estado para alerta de sessão Prio
+  const [prioSessionAlert, setPrioSessionAlert] = useState(null);
 
   // Estados para totais recebidos da empresa (Uber/Bolt)
   const [totaisEmpresa, setTotaisEmpresa] = useState({
@@ -150,6 +155,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
 
   const datasSemana = semana && ano ? calcularDatasSemana(semana, ano) : null;
 
+  // Inicialização da semana - corre apenas uma vez no mount
   useEffect(() => {
     // Verificar parâmetros da URL primeiro
     const semanaParam = searchParams.get('semana');
@@ -157,10 +163,14 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     
     if (semanaParam && anoParam) {
       // Usar parâmetros da URL
-      setSemana(parseInt(semanaParam));
-      setAno(parseInt(anoParam));
-    } else {
-      // Usar semana atual como default
+      const novaSemana = parseInt(semanaParam);
+      const novoAno = parseInt(anoParam);
+      if (novaSemana !== semana || novoAno !== ano) {
+        setSemana(novaSemana);
+        setAno(novoAno);
+      }
+    } else if (semana === null && ano === null) {
+      // Usar semana atual como default (apenas se não tiver valores)
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
@@ -170,23 +180,43 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   }, [searchParams]);
 
+  // Fetch data when semana/ano change or refreshKey changes
   useEffect(() => {
     if (semana && ano) {
-      fetchResumo();
+      fetchResumo(refreshKey > 0);
       fetchHistorico();
       fetchStatusAprovacao();
       fetchTotaisEmpresa();
     }
-  }, [semana, ano]);
+  }, [semana, ano, refreshKey]);
 
-  const fetchResumo = async () => {
+  const fetchResumo = async (forceRefresh = false) => {
+    if (!semana || !ano) return;
+    
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      
+      // Cache buster para forçar nova requisição
+      const cacheBuster = forceRefresh ? `&refresh=${Date.now()}` : '';
+      
       const response = await axios.get(
-        `${API}/api/relatorios/parceiro/resumo-semanal?semana=${semana}&ano=${ano}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/relatorios/parceiro/resumo-semanal?semana=${semana}&ano=${ano}${cacheBuster}`,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          } 
+        }
       );
+      
+      console.log('Resumo carregado:', {
+        semana,
+        ano,
+        via_verde: response.data?.totais?.total_via_verde,
+        combustivel: response.data?.totais?.total_combustivel
+      });
+      
       setResumo(response.data);
     } catch (error) {
       console.error('Erro ao carregar resumo semanal:', error);
@@ -215,6 +245,30 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       setTotaisEmpresa({ uber_recebido: 0, bolt_recebido: 0 });
     }
   };
+
+  // Verificar estado da sessão Prio
+  const checkPrioSessionStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/api/prio/sessao/status-completo`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data && response.data.alerta) {
+        setPrioSessionAlert(response.data.alerta);
+      } else {
+        setPrioSessionAlert(null);
+      }
+    } catch (error) {
+      // Ignorar erro - funcionalidade opcional
+      console.log('Erro ao verificar sessão Prio:', error);
+    }
+  };
+
+  // Verificar sessão Prio ao carregar a página
+  useEffect(() => {
+    checkPrioSessionStatus();
+  }, []);
 
   // Guardar totais recebidos da empresa
   const saveTotaisEmpresa = async () => {
@@ -481,6 +535,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     setEditForm({
       ganhos_uber: motorista.ganhos_uber || 0,
       uber_portagens: motorista.uber_portagens || 0,
+      uber_gratificacoes: motorista.uber_gratificacoes || 0,
       ganhos_bolt: motorista.ganhos_bolt || 0,
       ganhos_campanha_bolt: motorista.ganhos_campanha_bolt || 0,
       via_verde: motorista.via_verde || 0,
@@ -663,15 +718,131 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   };
 
   // Função de sincronização
+  // Função auxiliar para verificar status do RPA Via Verde
+  const checkViaVerdeRpaStatus = async (token) => {
+    try {
+      const response = await axios.get(
+        `${API}/api/viaverde/execucoes?limit=1`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data && response.data.length > 0) {
+        return response.data[0];
+      }
+      return null;
+    } catch (error) {
+      console.error('Erro ao verificar status RPA:', error);
+      return null;
+    }
+  };
+
+  // Função para recarregar dados completamente (força nova instância de estado)
+  const forceReloadData = async () => {
+    setLoading(true);
+    setResumo(null);
+    
+    // Pequeno delay para garantir que o estado foi limpo
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Buscar dados frescos
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.get(
+        `${API}/api/relatorios/parceiro/resumo-semanal?semana=${semana}&ano=${ano}&_t=${Date.now()}`,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          } 
+        }
+      );
+      
+      console.log('Dados recarregados:', {
+        semana,
+        ano,
+        via_verde: response.data?.totais?.total_via_verde,
+        combustivel: response.data?.totais?.total_combustivel
+      });
+      
+      // Atualizar estado com novos dados
+      setResumo(response.data);
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Erro ao recarregar dados:', error);
+      toast.error('Erro ao atualizar dados');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSync = async (fonte) => {
     setSyncLoading(prev => ({ ...prev, [fonte]: true }));
     
     try {
       const token = localStorage.getItem('token');
       
-      // Via Verde usa endpoint específico de RPA
+      // Sincronização Prio (combustível ou elétrico) - requer login no browser interativo
+      if (fonte === 'prio_combustivel' || fonte === 'prio_eletrico') {
+        const tipoPrio = fonte === 'prio_combustivel' ? 'combustivel' : 'eletrico';
+        
+        // Verificar se está realmente logado na Prio (verifica sessão real, não apenas cookies)
+        toast.info('Prio: A verificar sessão...');
+        
+        try {
+          const sessaoRes = await axios.get(`${API}/api/prio/sessao`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (!sessaoRes.data.logado) {
+            toast.warning(
+              `Prio: ${sessaoRes.data.motivo || 'Sessão não activa'}. Faça login primeiro.`,
+              {
+                duration: 8000,
+                action: {
+                  label: 'Ir para Login Prio',
+                  onClick: () => navigate('/configuracao-prio')
+                }
+              }
+            );
+            return;
+          }
+          
+          // Sessão activa - extrair dados
+          toast.info(`Prio ${tipoPrio === 'combustivel' ? 'Combustível' : 'Elétrico'}: A iniciar extração...`);
+          
+          const extractRes = await axios.post(`${API}/api/prio/extrair`, {
+            tipo: tipoPrio,
+            semana: semana,
+            ano: ano
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (extractRes.data.sucesso) {
+            const proc = extractRes.data.processamento;
+            if (proc && proc.sucesso) {
+              toast.success(
+                `Prio ${tipoPrio === 'combustivel' ? 'Combustível' : 'Elétrico'}: ` +
+                `${proc.registos_processados || 0} registos (${proc.registos_inseridos || 0} novos)`
+              );
+            } else {
+              toast.success(`Prio ${tipoPrio === 'combustivel' ? 'Combustível' : 'Elétrico'}: Ficheiro extraído!`);
+            }
+            await forceReloadData();
+          } else {
+            toast.error(`Prio: ${extractRes.data.erro || 'Erro na extração'}`);
+          }
+        } catch (error) {
+          console.error('Erro Prio:', error);
+          toast.error(`Prio: ${error.response?.data?.detail || error.message || 'Erro ao verificar sessão'}`);
+        }
+        
+        return;
+      }
+      
       if (fonte === 'viaverde') {
-        const response = await axios.post(
+        // Via Verde usa endpoint específico de RPA
+        const startResponse = await axios.post(
           `${API}/api/viaverde/executar-rpa`,
           { 
             tipo_periodo: 'semana_especifica',
@@ -681,33 +852,92 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        if (response.data.success) {
-          toast.success(`Via Verde: RPA agendado para Semana ${semana}/${ano}`);
-          // O RPA executa em background, recarregar dados após alguns segundos
-          setTimeout(() => fetchResumo(), 5000);
-        } else {
-          toast.error(response.data.error || 'Erro ao agendar Via Verde');
+        toast.success(`Via Verde: Sincronização iniciada para Semana ${semana}/${ano}`);
+        
+        // Aguardar sincronização verificando o status real do RPA
+        // Máximo 120 segundos (24 verificações de 5 segundos)
+        let concluido = false;
+        for (let i = 1; i <= 24 && !concluido; i++) {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          
+          const execucao = await checkViaVerdeRpaStatus(token);
+          
+          if (execucao) {
+            const status = execucao.status;
+            console.log(`Via Verde RPA status (${i * 5}s): ${status}`);
+            
+            if (status === 'concluido' || status === 'sucesso') {
+              concluido = true;
+              toast.success('Via Verde: Sincronização concluída!');
+            } else if (status === 'erro' || status === 'falha') {
+              toast.error(`Via Verde: Erro na sincronização - ${execucao.erro || 'Verifique as credenciais'}`);
+              break;
+            } else {
+              // Ainda em execução - mostrar progresso
+              if (i % 3 === 0) { // A cada 15 segundos
+                toast.info(`Via Verde: A processar... (${i * 5}s)`);
+              }
+            }
+          }
         }
+        
+        // Atualização final - forçar recarga completa
+        await forceReloadData();
+        
+      } else if (fonte === 'bolt') {
+        // Bolt usa endpoint de sincronização automática com API
+        await axios.post(
+          `${API}/api/sincronizacao-auto/executar`,
+          {
+            fontes: ['bolt'],
+            metodo: 'api',
+            semana: semana,
+            ano: ano
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        toast.success(`Bolt: Sincronização iniciada para Semana ${semana}/${ano}`);
+        
+        // Bolt é mais rápido - aguardar 10 segundos e depois atualizar
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        
+        // Atualização final - forçar recarga completa
+        await forceReloadData();
+        toast.success('Bolt: Sincronização concluída!');
+        
       } else {
-        // Outras fontes usam o endpoint geral
+        // Outras fontes (Uber, etc.)
         const response = await axios.post(
           `${API}/api/sincronizacao-auto/executar`,
           { fontes: [fonte], semana, ano },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        if (response.data.sucesso) {
-          const resultado = response.data.resultados?.[fonte];
-          if (resultado?.sucesso) {
-            toast.success(`${fonte.charAt(0).toUpperCase() + fonte.slice(1)} sincronizado com sucesso!`);
-            fetchResumo();
+        const resultado = response.data.resultados?.[fonte];
+        
+        if (response.data.sucesso && resultado?.sucesso) {
+          // Verificar se há dados
+          const numMotoristas = resultado.num_motoristas || 0;
+          if (numMotoristas > 0) {
+            toast.success(`${fonte.charAt(0).toUpperCase() + fonte.slice(1)}: ${numMotoristas} motorista(s) sincronizado(s)!`);
           } else {
-            toast.error(resultado?.erro || `Erro ao sincronizar ${fonte}`);
+            toast.info(`${fonte.charAt(0).toUpperCase() + fonte.slice(1)}: Sem dados para a Semana ${semana}/${ano}`);
           }
+          await forceReloadData();
         } else {
-          toast.error(response.data.erros?.[0] || 'Erro na sincronização');
+          // Mostrar erro específico
+          const erroMsg = resultado?.erro || response.data.erros?.[0] || `Erro ao sincronizar ${fonte}`;
+          
+          // Verificar se é erro de "relatório não encontrado"
+          if (erroMsg.includes('não encontrado') || erroMsg.includes('not found')) {
+            toast.warning(`${fonte.charAt(0).toUpperCase() + fonte.slice(1)}: Sem dados semanais para Semana ${semana}/${ano}. Gere o relatório no portal primeiro.`);
+          } else {
+            toast.error(erroMsg);
+          }
         }
       }
+      
     } catch (error) {
       console.error(`Erro ao sincronizar ${fonte}:`, error);
       toast.error(error.response?.data?.detail || `Erro ao sincronizar ${fonte}`);
@@ -812,6 +1042,9 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     { id: 'viaverde', name: 'Via Verde', icon: CreditCard, color: 'bg-emerald-500 text-white' },
     { id: 'gps', name: 'GPS', icon: MapPin, color: 'bg-blue-500 text-white' },
     { id: 'combustivel', name: 'Combustível', icon: Fuel, color: 'bg-orange-500 text-white' },
+    { id: 'eletrico', name: 'Elétrico', icon: Zap, color: 'bg-cyan-500 text-white' },
+    { id: 'prio_combustivel', name: 'Prio Combustível', icon: Fuel, color: 'bg-amber-600 text-white' },
+    { id: 'prio_eletrico', name: 'Prio Elétrico', icon: Zap, color: 'bg-green-600 text-white' },
   ];
 
   if (loading) {
@@ -835,9 +1068,33 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const totalVendas = totais.total_vendas || 0;
   const totalReceitas = totais.total_receitas_parceiro || (totalAluguer + totalExtras + totalVendas);
   const totalDespesas = totais.total_despesas_operacionais || 0;
-  // CORRIGIDO: Usar a soma dos líquidos dos motoristas em vez do cálculo do parceiro
-  const liquidoParceiro = totais.total_liquido_motoristas || totais.total_liquido_parceiro || (totalReceitas - totalDespesas);
+  
+  // Calcular líquido total dos motoristas: (Uber + uPort + uGrat + Bolt) - (Via Verde + Comb. + Elétr. + Aluguer + Extras)
+  const liquidoCalculado = (
+    (totais.total_ganhos_uber || 0) + 
+    (totais.total_uber_portagens || 0) + 
+    (totais.total_uber_gratificacoes || 0) + 
+    (totais.total_ganhos_bolt || 0) - 
+    (totais.total_via_verde || 0) - 
+    (totais.total_combustivel || 0) - 
+    (totais.total_eletrico || 0) - 
+    (totalAluguer || 0) - 
+    (totalExtras || 0)
+  );
+  const liquidoParceiro = liquidoCalculado;
   const isPositive = liquidoParceiro >= 0;
+  
+  // Calcular Lucro Total do Parceiro por motorista
+  // Regra: Se saldo do motorista >= 0, lucro = aluguer + extras. Se saldo < 0, lucro = aluguer + extras + saldo (diminuído pela dívida)
+  const totalLucroParceiro = motoristas.reduce((total, m) => {
+    const liquidoMot = (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.uber_gratificacoes || 0) + (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - 
+                       (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0) - (m.extras || 0);
+    const aluguerMot = m.aluguer_veiculo || 0;
+    const extrasMot = m.extras || 0;
+    const lucroParcMot = liquidoMot >= 0 ? (aluguerMot + extrasMot) : (aluguerMot + extrasMot + liquidoMot);
+    return total + lucroParcMot;
+  }, 0);
+  
   const maxValue = Math.max(...historico.map(h => Math.max(h.ganhos || 0, h.despesas || 0, Math.abs(h.liquido || 0))), 1);
 
   return (
@@ -868,11 +1125,19 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
             </Button>
           </div>
           
+          {/* Indicador de sincronização em progresso */}
+          {Object.values(syncLoading).some(v => v) && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-100 rounded-md">
+              <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">A sincronizar...</span>
+            </div>
+          )}
+          
           {/* Botão de Sincronização com Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="default" className="h-7 text-xs bg-blue-600 hover:bg-blue-700">
-                {syncLoading.all ? (
+                {Object.values(syncLoading).some(v => v) ? (
                   <Loader2 className="w-3 h-3 animate-spin mr-1" />
                 ) : (
                   <RefreshCw className="w-3 h-3 mr-1" />
@@ -968,6 +1233,41 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           </Button>
         </div>
       </div>
+
+      {/* Alerta de sessão Prio */}
+      {prioSessionAlert && (prioSessionAlert.severidade === 'error' || prioSessionAlert.severidade === 'warning') && (
+        <div className={`mx-4 p-3 rounded-lg flex items-center justify-between ${
+          prioSessionAlert.severidade === 'error' 
+            ? 'bg-red-50 border border-red-200' 
+            : 'bg-amber-50 border border-amber-200'
+        }`}>
+          <div className="flex items-center gap-2">
+            <AlertCircle className={`w-4 h-4 ${
+              prioSessionAlert.severidade === 'error' ? 'text-red-600' : 'text-amber-600'
+            }`} />
+            <span className={`text-sm ${
+              prioSessionAlert.severidade === 'error' ? 'text-red-700' : 'text-amber-700'
+            }`}>
+              {prioSessionAlert.mensagem}
+            </span>
+          </div>
+          {prioSessionAlert.acao && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => navigate(prioSessionAlert.acao)}
+              className={`h-7 text-xs ${
+                prioSessionAlert.severidade === 'error' 
+                  ? 'border-red-300 text-red-700 hover:bg-red-100' 
+                  : 'border-amber-300 text-amber-700 hover:bg-amber-100'
+              }`}
+            >
+              <Fuel className="w-3 h-3 mr-1" />
+              Renovar Sessão Prio
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Modal de confirmação */}
       {showDeleteAllConfirm && (
@@ -1077,6 +1377,14 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               <span className="font-medium text-green-700">{formatCurrency(totais.total_ganhos_uber)}</span>
             </div>
             <div className="flex justify-between text-xs">
+              <span className="text-slate-600 pl-2" title="Portagens reembolsadas pela Uber">↳ uPort</span>
+              <span className="font-medium text-amber-600">{formatCurrency(totais.total_uber_portagens || 0)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600 pl-2" title="Gratificações/gorjetas Uber">↳ uGrat</span>
+              <span className="font-medium text-purple-600">{formatCurrency(totais.total_uber_gratificacoes || 0)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
               <span className="text-slate-600">Bolt</span>
               <span className="font-medium text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</span>
             </div>
@@ -1128,11 +1436,30 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           <CardContent className="px-3 pb-3 space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Ganhos Totais</span>
-              <span className="font-medium text-green-600">{formatCurrency(totais.total_ganhos_uber + totais.total_ganhos_bolt)}</span>
+              <span className="font-medium text-green-600">{formatCurrency(
+                motoristas.reduce((sum, m) => {
+                  // Calcular líquido do motorista (apenas positivos vão para Ganhos Totais)
+                  const liquidoMot = (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.uber_gratificacoes || 0) + 
+                                     (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - 
+                                     (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - 
+                                     (m.aluguer_veiculo || 0) - (m.extras || 0);
+                  return sum + (liquidoMot > 0 ? liquidoMot : 0);
+                }, 0)
+              )}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Dívidas</span>
-              <span className="font-medium text-red-600">{formatCurrency(motoristas.reduce((sum, m) => sum + (m.divida || 0), 0))}</span>
+              <span className="font-medium text-red-600">-{formatCurrency(
+                motoristas.reduce((sum, m) => {
+                  // Calcular líquido do motorista (negativos vão para Dívidas)
+                  const liquidoMot = (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.uber_gratificacoes || 0) + 
+                                     (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - 
+                                     (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - 
+                                     (m.aluguer_veiculo || 0) - (m.extras || 0);
+                  // Se líquido negativo, usar valor absoluto como dívida
+                  return sum + (liquidoMot < 0 ? Math.abs(liquidoMot) : 0);
+                }, 0)
+              )}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Extras</span>
@@ -1140,12 +1467,30 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
             </div>
             <div className="border-t pt-1 flex justify-between text-xs font-bold">
               <span>Total Pagamentos</span>
-              <span className="text-blue-800">{formatCurrency(
-                (totais.total_ganhos_uber || 0) + 
-                (totais.total_ganhos_bolt || 0) + 
-                motoristas.reduce((sum, m) => sum + (m.divida || 0), 0) + 
-                motoristas.reduce((sum, m) => sum + (m.extras || 0), 0)
-              )}</span>
+              {(() => {
+                // Total Pagamentos = Ganhos Totais - Dívidas - Extras
+                const ganhosTotais = motoristas.reduce((sum, m) => {
+                  const liquidoMot = (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.uber_gratificacoes || 0) + 
+                                     (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - 
+                                     (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - 
+                                     (m.aluguer_veiculo || 0) - (m.extras || 0);
+                  return sum + (liquidoMot > 0 ? liquidoMot : 0);
+                }, 0);
+                const dividas = motoristas.reduce((sum, m) => {
+                  const liquidoMot = (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.uber_gratificacoes || 0) + 
+                                     (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - 
+                                     (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - 
+                                     (m.aluguer_veiculo || 0) - (m.extras || 0);
+                  return sum + (liquidoMot < 0 ? Math.abs(liquidoMot) : 0);
+                }, 0);
+                const extras = motoristas.reduce((sum, m) => sum + (m.extras || 0), 0);
+                const totalPagamentos = ganhosTotais - dividas - extras;
+                return (
+                  <span className={totalPagamentos >= 0 ? "text-blue-800" : "text-red-600"}>
+                    {totalPagamentos < 0 ? '-' : ''}{formatCurrency(Math.abs(totalPagamentos))}
+                  </span>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>
@@ -1163,17 +1508,29 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               <span className="font-medium text-purple-700">{formatCurrency(totalAluguer)}</span>
             </div>
             <div className="flex justify-between text-xs">
+              <span className="text-slate-600">Extras</span>
+              <span className="font-medium text-purple-700">{formatCurrency(totalExtras)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
               <span className="text-slate-600">Vendas</span>
               <span className="font-medium text-purple-700">{formatCurrency(totalVendas)}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-slate-600">Extras</span>
-              <span className="font-medium text-purple-700">{formatCurrency(totalExtras)}</span>
+              <span className="text-slate-600" title="Ajuste por dívidas dos motoristas (saldos negativos)">Dívidas</span>
+              <span className="font-medium text-red-600">{formatCurrency(
+                -1 * motoristas.reduce((sum, m) => {
+                  const liquidoMot = (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.uber_gratificacoes || 0) + 
+                                     (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - 
+                                     (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - 
+                                     (m.aluguer_veiculo || 0) - (m.extras || 0);
+                  return sum + (liquidoMot < 0 ? Math.abs(liquidoMot) : 0);
+                }, 0)
+              )}</span>
             </div>
             <div className="border-t pt-1 flex justify-between text-xs font-bold">
-              <span>Total</span>
-              <span className={totalAluguer + totalVendas + totalExtras >= 0 ? "text-green-800" : "text-red-800"}>
-                {formatCurrency(totalAluguer + totalVendas + totalExtras)}
+              <span>Total Lucro</span>
+              <span className={totalLucroParceiro >= 0 ? "text-green-800" : "text-red-800"}>
+                {formatCurrency(totalLucroParceiro)}
               </span>
             </div>
           </CardContent>
@@ -1358,17 +1715,20 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                       data-testid="checkbox-select-all"
                     />
                   </th>
-                  <th className="text-left p-2">Motorista</th>
-                  <th className="text-right p-2">Uber</th>
-                  <th className="text-right p-2">Bolt</th>
-                  <th className="text-right p-2">Via Verde</th>
-                  <th className="text-right p-2">Comb.</th>
-                  <th className="text-right p-2">Elétr.</th>
-                  <th className="text-right p-2">Aluguer</th>
-                  <th className="text-right p-2">Extras</th>
-                  <th className="text-right p-2">Líquido</th>
-                  <th className="text-center p-2 w-32">Status</th>
-                  <th className="text-center p-2 w-28">Ações</th>
+                  <th className="text-left p-2 min-w-[120px]">Motorista</th>
+                  <th className="text-right p-2 w-16">Uber</th>
+                  <th className="text-right p-2 w-14 text-amber-700" title="Portagens reembolsadas pela Uber">uPort</th>
+                  <th className="text-right p-2 w-14 text-purple-700" title="Gratificações/gorjetas Uber">uGrat</th>
+                  <th className="text-right p-2 w-16">Bolt</th>
+                  <th className="text-right p-2 w-16">Via Verde</th>
+                  <th className="text-right p-2 w-14">Comb.</th>
+                  <th className="text-right p-2 w-14">Elétr.</th>
+                  <th className="text-right p-2 w-16">Aluguer</th>
+                  <th className="text-right p-2 w-14">Extras</th>
+                  <th className="text-right p-2 w-16 font-bold">Líquido</th>
+                  <th className="text-right p-2 w-16 font-bold text-purple-700" title="Lucro do Parceiro">Lucro Parc.</th>
+                  <th className="text-center p-2 w-24">Status</th>
+                  <th className="text-center p-2 w-20">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -1376,10 +1736,15 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                   const isEditing = editingMotorista === m.motorista_id;
                   const isSelected = selectedMotoristas.includes(m.motorista_id);
                   // Se estiver em modo de edição, usar valores do formulário para cálculo em tempo real
-                  // Líquido = Uber + Bolt - Via Verde - Combustível - Elétrico - Aluguer - Extras
+                  // Líquido = (Uber + uPort + uGrat) + Bolt + Campanha Bolt - Via Verde - Combustível - Elétrico - Aluguer - Extras
                   const liquido = isEditing 
-                    ? (editForm.ganhos_uber || 0) + (editForm.ganhos_bolt || 0) - (editForm.via_verde || 0) - (editForm.combustivel || 0) - (editForm.eletrico || 0) - (editForm.aluguer || 0) - (editForm.extras || 0)
-                    : (m.ganhos_uber || 0) + (m.ganhos_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0) - (m.extras || 0);
+                    ? (editForm.ganhos_uber || 0) + (editForm.uber_portagens || 0) + (editForm.uber_gratificacoes || 0) + (editForm.ganhos_bolt || 0) + (editForm.ganhos_campanha_bolt || 0) - (editForm.via_verde || 0) - (editForm.combustivel || 0) - (editForm.eletrico || 0) - (editForm.aluguer || 0) - (editForm.extras || 0)
+                    : (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.uber_gratificacoes || 0) + (m.ganhos_bolt || 0) + (m.ganhos_campanha_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0) - (m.extras || 0);
+                  
+                  // Lucro do Parceiro: Se saldo do motorista >= 0, lucro = aluguer. Se saldo < 0, lucro = aluguer + saldo (diminuído pela dívida)
+                  const aluguerMot = isEditing ? (editForm.aluguer || 0) : (m.aluguer_veiculo || 0);
+                  const extrasMot = isEditing ? (editForm.extras || 0) : (m.extras || 0);
+                  const lucroParceiro = liquido >= 0 ? (aluguerMot + extrasMot) : (aluguerMot + extrasMot + liquido);
                   
                   return (
                     <tr key={m.motorista_id} className={`border-b hover:bg-slate-50 ${isSelected ? 'bg-blue-50' : ''}`}>
@@ -1392,10 +1757,20 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                           data-testid={`checkbox-motorista-${m.motorista_id}`}
                         />
                       </td>
-                      <td className="p-2 font-medium">{m.motorista_nome}</td>
+                      <td className="p-2 font-medium">
+                        <button 
+                          onClick={() => navigate(`/motoristas/${m.motorista_id}`)}
+                          className="text-left hover:text-blue-600 hover:underline cursor-pointer"
+                          title="Ver ficha do motorista"
+                        >
+                          {m.motorista_nome}
+                        </button>
+                      </td>
                       {isEditing ? (
                         <>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.ganhos_uber} onChange={(e) => setEditForm({...editForm, ganhos_uber: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
+                          <td className="p-1"><Input type="number" step="0.01" value={editForm.uber_portagens} onChange={(e) => setEditForm({...editForm, uber_portagens: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" title="uPort - Portagens Uber" /></td>
+                          <td className="p-1"><Input type="number" step="0.01" value={editForm.uber_gratificacoes} onChange={(e) => setEditForm({...editForm, uber_gratificacoes: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" title="uGrat - Gratificações Uber" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.ganhos_bolt} onChange={(e) => setEditForm({...editForm, ganhos_bolt: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.via_verde} onChange={(e) => setEditForm({...editForm, via_verde: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.combustivel} onChange={(e) => setEditForm({...editForm, combustivel: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
@@ -1406,6 +1781,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                       ) : (
                         <>
                           <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_uber)}</td>
+                          <td className="p-2 text-right text-amber-600" title="Portagens reembolsadas pela Uber">{formatCurrency(m.uber_portagens)}</td>
+                          <td className="p-2 text-right text-purple-600" title="Gratificações/gorjetas Uber">{formatCurrency(m.uber_gratificacoes)}</td>
                           <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_bolt)}</td>
                           <td className="p-2 text-right">
                             <div className="flex flex-col items-end">
@@ -1431,6 +1808,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                         </>
                       )}
                       <td className={`p-2 text-right font-bold ${liquido >= 0 ? 'text-green-700' : 'text-red-700'}`}>{formatCurrency(liquido)}</td>
+                      <td className={`p-2 text-right font-bold ${lucroParceiro >= 0 ? 'text-purple-700' : 'text-red-700'}`} title={liquido < 0 ? `Aluguer (${formatCurrency(aluguerMot)}) + Extras (${formatCurrency(extrasMot)}) + Dívida (${formatCurrency(liquido)})` : `Aluguer (${formatCurrency(aluguerMot)}) + Extras (${formatCurrency(extrasMot)})`}>{formatCurrency(lucroParceiro)}</td>
                       <td className="p-2 text-center">
                         <select
                           value={statusAprovacao[m.motorista_id]?.status_aprovacao || 'pendente'}
@@ -1475,7 +1853,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                   );
                 })}
                 {motoristas.length === 0 && (
-                  <tr><td colSpan="11" className="text-center py-6 text-slate-500">Nenhum dado encontrado</td></tr>
+                  <tr><td colSpan="15" className="text-center py-6 text-slate-500">Nenhum dado encontrado</td></tr>
                 )}
               </tbody>
               {motoristas.length > 0 && (
@@ -1484,6 +1862,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                     <td className="p-2"></td>
                     <td className="p-2">TOTAIS</td>
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_uber)}</td>
+                    <td className="p-2 text-right text-amber-700">{formatCurrency(totais.total_uber_portagens || 0)}</td>
+                    <td className="p-2 text-right text-purple-700">{formatCurrency(totais.total_uber_gratificacoes || 0)}</td>
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_via_verde)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_combustivel)}</td>
@@ -1491,6 +1871,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                     <td className="p-2 text-right text-blue-700">{formatCurrency(totalAluguer)}</td>
                     <td className="p-2 text-right text-orange-700">{formatCurrency(totalExtras)}</td>
                     <td className={`p-2 text-right ${isPositive ? 'text-green-700' : 'text-red-700'}`}>{formatCurrency(liquidoParceiro)}</td>
+                    <td className={`p-2 text-right ${totalLucroParceiro >= 0 ? 'text-purple-700' : 'text-red-700'}`} title="Total Lucro do Parceiro">{formatCurrency(totalLucroParceiro)}</td>
                     <td className="p-2"></td>
                     <td className="p-2"></td>
                   </tr>

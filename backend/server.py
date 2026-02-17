@@ -102,6 +102,7 @@ from routes.rpa_automacao import router as rpa_automacao_router
 from routes.rpa_designer import router as rpa_designer_router
 from routes.rpa_uber_config import router as rpa_uber_config_router
 from routes.browser_interativo import router as browser_interativo_router
+from routes.browser_prio import router as browser_prio_router
 from routes.uber_sync import router as uber_sync_router
 from routes.uploads import router as uploads_router
 from routes.importacao_dados import router as importacao_dados_router
@@ -114,6 +115,7 @@ from routes.prepagamento import router as prepagamento_router
 from routes.integracoes_config import router as integracoes_router
 from routes.comissoes import router as comissoes_router
 from routes.import_ganhos import router as import_ganhos_router
+from routes.ganhos_uber_manual import router as ganhos_uber_manual_router
 from routes.bolt_integration import router as bolt_integration_router
 from routes.exportacao import router as exportacao_router
 from routes.ponto import router as ponto_router
@@ -122,6 +124,9 @@ from routes.documentos_motorista import router as documentos_motorista_router
 from routes.turnos import router as turnos_router
 from routes.vistorias_mobile import router as vistorias_mobile_router
 from routes.inspetores import router as inspetores_router
+from routes.backup import router as backup_router
+from routes.plataformas import router as plataformas_router
+from routes.browser_virtual_admin import router as browser_virtual_admin_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
@@ -12647,6 +12652,7 @@ app.include_router(rpa_automacao_router, prefix="/api")
 app.include_router(rpa_designer_router, prefix="/api")
 app.include_router(rpa_uber_config_router, prefix="/api")
 app.include_router(browser_interativo_router, prefix="/api")
+app.include_router(browser_prio_router, prefix="/api")
 app.include_router(uber_sync_router, prefix="/api")
 app.include_router(uploads_router, prefix="/api")
 app.include_router(importacao_dados_router, prefix="/api")
@@ -12659,6 +12665,7 @@ app.include_router(prepagamento_router, prefix="/api")
 app.include_router(integracoes_router, prefix="/api")
 app.include_router(comissoes_router, prefix="/api")
 app.include_router(import_ganhos_router, prefix="/api")
+app.include_router(ganhos_uber_manual_router, prefix="/api")
 app.include_router(bolt_integration_router, prefix="/api")
 app.include_router(exportacao_router, prefix="/api")
 app.include_router(ponto_router, prefix="/api")
@@ -12667,6 +12674,9 @@ app.include_router(documentos_motorista_router, prefix="/api")
 app.include_router(turnos_router, prefix="/api")
 app.include_router(vistorias_mobile_router, prefix="/api")
 app.include_router(inspetores_router, prefix="/api")
+app.include_router(backup_router, prefix="/api")
+app.include_router(plataformas_router, prefix="/api")
+app.include_router(browser_virtual_admin_router, prefix="/api")
 
 # api_router will be included at the very end of the file, after all routes are defined
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
@@ -16083,3 +16093,15 @@ app.include_router(api_router)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Endpoint temporário para download do backup da base de dados
+@app.get("/api/download-backup")
+async def download_backup():
+    backup_path = ROOT_DIR / "static" / "tvdefleet_backup.archive"
+    if backup_path.exists():
+        return FileResponse(
+            path=str(backup_path),
+            filename="tvdefleet_backup.archive",
+            media_type="application/octet-stream"
+        )
+    raise HTTPException(status_code=404, detail="Backup not found")

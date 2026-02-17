@@ -1,6 +1,7 @@
 """
 Serviço de Browser Interativo para Login Uber
 Permite ao utilizador ver e interagir com o browser Playwright via WebSocket
+Utiliza sessão persistente de 30 dias para evitar login repetido
 """
 import asyncio
 import base64
@@ -15,9 +16,12 @@ logger = logging.getLogger(__name__)
 # Configurar Playwright
 os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
 
+# Directório persistente para sessões Uber (sobrevive a restarts)
+UBER_SESSIONS_DIR = "/app/data/uber_sessions"
+
 
 class BrowserInterativo:
-    """Browser Playwright com interface interativa via screenshots"""
+    """Browser Playwright com interface interativa via screenshots - Sessão persistente de 30 dias"""
     
     def __init__(self, parceiro_id: str):
         self.parceiro_id = parceiro_id
@@ -27,16 +31,30 @@ class BrowserInterativo:
         self.page = None
         self.ativo = False
         self.ultimo_screenshot = None
-        self.session_path = f"/tmp/uber_sessao_{parceiro_id}.json"
+        # Directório persistente para guardar toda a sessão do browser (cookies, localStorage, etc.)
+        self.user_data_dir = os.path.join(UBER_SESSIONS_DIR, f"parceiro_{parceiro_id}")
         
     async def iniciar(self):
-        """Iniciar browser em modo headless com screenshots"""
+        """Iniciar browser com contexto persistente (sessão de 30 dias)"""
         from playwright.async_api import async_playwright
+        
+        # Criar directório de sessão
+        os.makedirs(self.user_data_dir, exist_ok=True)
         
         self.playwright = await async_playwright().start()
         
-        self.browser = await self.playwright.chromium.launch(
+        # Usar launch_persistent_context para manter sessão entre utilizações
+        # Isto guarda cookies, localStorage, sessionStorage, IndexedDB - tudo!
+        logger.info(f"Iniciando browser Uber com sessão persistente: {self.user_data_dir}")
+        
+        self.context = await self.playwright.chromium.launch_persistent_context(
+            user_data_dir=self.user_data_dir,
             headless=True,
+            viewport={"width": 1280, "height": 800},
+            accept_downloads=True,
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+            locale='pt-PT',
+            timezone_id='Europe/Lisbon',
             args=[
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -45,33 +63,20 @@ class BrowserInterativo:
             ]
         )
         
-        # Tentar carregar sessão existente
-        storage_state = None
-        if os.path.exists(self.session_path):
-            try:
-                storage_state = self.session_path
-                logger.info(f"Carregando sessão existente: {self.session_path}")
-            except Exception as e:
-                logger.warning(f"Erro ao carregar sessão: {e}")
-        
-        self.context = await self.browser.new_context(
-            viewport={"width": 1280, "height": 800},
-            accept_downloads=True,
-            storage_state=storage_state,
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-            locale='pt-PT',
-            timezone_id='Europe/Lisbon'
-        )
-        
         # Anti-detecção
         await self.context.add_init_script("""
             Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
         """)
         
-        self.page = await self.context.new_page()
+        # Usar página existente ou criar nova
+        if self.context.pages:
+            self.page = self.context.pages[0]
+        else:
+            self.page = await self.context.new_page()
+        
         self.ativo = True
         
-        logger.info(f"Browser interativo iniciado para parceiro {self.parceiro_id}")
+        logger.info(f"Browser interativo Uber iniciado para parceiro {self.parceiro_id} (sessão persistente)")
         return True
         
     async def navegar(self, url: str):
@@ -133,15 +138,23 @@ class BrowserInterativo:
         return {"logado": False, "url": url}
         
     async def guardar_sessao(self):
-        """Guardar estado da sessão"""
+        """
+        Guardar estado da sessão.
+        Com launch_persistent_context, a sessão é automaticamente guardada no user_data_dir.
+        Este método existe para compatibilidade e apenas confirma que o directório existe.
+        """
         if not self.context:
             return False
         try:
-            await self.context.storage_state(path=self.session_path)
-            logger.info(f"Sessão guardada: {self.session_path}")
-            return True
+            # Com contexto persistente, os dados são guardados automaticamente
+            if os.path.exists(self.user_data_dir):
+                logger.info(f"Sessão Uber persistente activa em: {self.user_data_dir}")
+                return True
+            else:
+                logger.warning(f"Directório de sessão não encontrado: {self.user_data_dir}")
+                return False
         except Exception as e:
-            logger.error(f"Erro ao guardar sessão: {e}")
+            logger.error(f"Erro ao verificar sessão Uber: {e}")
             return False
             
     async def extrair_rendimentos(self) -> dict:
@@ -246,13 +259,19 @@ class BrowserInterativo:
             return 0.0
             
     async def fechar(self):
-        """Fechar browser"""
+        """Fechar browser (a sessão persiste no user_data_dir)"""
         self.ativo = False
-        if self.browser:
-            await self.browser.close()
-        if self.playwright:
-            await self.playwright.stop()
-        logger.info(f"Browser fechado para parceiro {self.parceiro_id}")
+        try:
+            # Com launch_persistent_context, o context inclui o browser
+            if self.context:
+                await self.context.close()
+            if self.playwright:
+                await self.playwright.stop()
+            self.context = None
+            self.page = None
+            logger.info(f"Browser Uber fechado para parceiro {self.parceiro_id} (sessão persistente mantida)")
+        except Exception as e:
+            logger.error(f"Erro ao fechar browser Uber: {e}")
 
 
 # Dicionário global de browsers ativos

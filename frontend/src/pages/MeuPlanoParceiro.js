@@ -176,30 +176,56 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
             {/* Cost Breakdown */}
             <Card className="border-slate-200 bg-slate-50">
               <CardHeader>
-                <CardTitle className="text-base">Detalhes do Custo</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Detalhes do Custo Mensal
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
+                {/* Preço Base */}
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Preço base semanal:</span>
-                  <span className="font-medium">{detalhes_calculo?.preco_base_semanal || 0}€</span>
+                  <span className="text-slate-600">Preço base:</span>
+                  <span className="font-medium">€{detalhes_calculo?.preco_base_semanal ? (detalhes_calculo.preco_base_semanal * 4).toFixed(2) : '0.00'}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Tipo de cobrança:</span>
-                  <span className="font-medium">{detalhes_calculo?.tipo_cobranca === 'por_veiculo' ? 'Por Veículo' : 'Fixo'}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Custo base ({detalhes_calculo?.tipo_cobranca === 'por_veiculo' ? `${total_veiculos} × ` : ''}base):</span>
-                  <span className="font-medium">{detalhes_calculo?.custo_base || 0}€</span>
-                </div>
-                {plano.opcao_recibos_motorista && (
+                
+                {/* Custo por Veículos */}
+                {detalhes_calculo?.por_veiculo_semanal > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Recibos ({motoristas_com_recibos} motoristas):</span>
-                    <span className="font-medium">+{detalhes_calculo?.custo_recibos || 0}€</span>
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <Car className="w-4 h-4 text-blue-500" />
+                      {total_veiculos} veículo(s) × €{(detalhes_calculo.por_veiculo_semanal * 4).toFixed(2)}:
+                    </span>
+                    <span className="font-medium text-blue-600">+€{(detalhes_calculo.custo_veiculos * 4).toFixed(2)}</span>
                   </div>
                 )}
-                <div className="border-t pt-2 flex justify-between font-bold">
-                  <span>Total Semanal:</span>
-                  <span className="text-blue-600">{custo_semanal}€</span>
+                
+                {/* Custo por Motoristas */}
+                {detalhes_calculo?.por_motorista_semanal > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <Users className="w-4 h-4 text-green-500" />
+                      {total_motoristas} motorista(s) × €{(detalhes_calculo.por_motorista_semanal * 4).toFixed(2)}:
+                    </span>
+                    <span className="font-medium text-green-600">+€{(detalhes_calculo.custo_motoristas * 4).toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {/* Recibos */}
+                {plano.opcao_recibos_motorista && detalhes_calculo?.custo_recibos > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Recibos ({motoristas_com_recibos} motoristas):</span>
+                    <span className="font-medium">+€{(detalhes_calculo.custo_recibos * 4).toFixed(2)}</span>
+                  </div>
+                )}
+                
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total Mensal:</span>
+                    <span className="text-blue-600">€{custo_mensal.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    * Valor atualizado automaticamente quando adiciona veículos ou motoristas
+                  </p>
                 </div>
               </CardContent>
             </Card>

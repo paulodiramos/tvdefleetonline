@@ -342,8 +342,49 @@ async def sync_bolt_data(client_id: str, client_secret: str, start_date: str, en
         # Get vehicles
         vehicles_data = await client.get_vehicles(company_id, start_ts, end_ts)
         
-        # Get orders (rides) for the date range
-        orders_data = await client.get_fleet_orders(company_id, start_ts, end_ts)
+        # Get ALL orders with pagination
+        all_orders = []
+        offset = 0
+        limit = 500  # Maximum per request
+        max_iterations = 20  # Safety limit (500 * 20 = 10000 orders max)
+        
+        logger.info(f"Bolt API: Fetching orders from {start_date} to {end_date}")
+        
+        for iteration in range(max_iterations):
+            orders_batch = await client.get_fleet_orders(company_id, start_ts, end_ts, limit=limit, offset=offset)
+            
+            if orders_batch.get("code") != 0:
+                logger.warning(f"Bolt API getFleetOrders error: {orders_batch.get('message')}")
+                break
+            
+            batch_orders = orders_batch.get("data", {}).get("orders", [])
+            batch_count = len(batch_orders)
+            
+            logger.info(f"Bolt API: Batch {iteration + 1} fetched {batch_count} orders (offset={offset})")
+            
+            if batch_count == 0:
+                break
+            
+            all_orders.extend(batch_orders)
+            
+            # If we got fewer than the limit, we've reached the end
+            if batch_count < limit:
+                break
+            
+            offset += limit
+            
+            # Small delay to avoid rate limiting
+            await asyncio.sleep(0.5)
+        
+        logger.info(f"Bolt API: Total orders fetched: {len(all_orders)}")
+        
+        # Build response with all orders
+        orders_data = {
+            "code": 0,
+            "data": {
+                "orders": all_orders
+            }
+        }
         
         return {
             "success": True,
@@ -352,6 +393,7 @@ async def sync_bolt_data(client_id: str, client_secret: str, start_date: str, en
             "drivers": drivers_data,
             "vehicles": vehicles_data,
             "orders": orders_data,
+            "total_orders": len(all_orders),
             "synced_at": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:

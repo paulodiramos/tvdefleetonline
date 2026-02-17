@@ -75,6 +75,32 @@ def calcular_periodo_semana(semana: int, ano: int) -> tuple:
     return inicio_semana.strftime("%Y-%m-%d"), fim_semana.strftime("%Y-%m-%d")
 
 
+def calcular_periodo_semana_uber(semana: int, ano: int) -> tuple:
+    """
+    Calcular período da semana para a Uber.
+    
+    Baseado nos relatórios Uber reais (2026):
+    - Semana 5: 20260126-20260202 = 26 jan (seg) - 2 fev (seg)
+    - Semana 6: 20260201-20260208 = 1 fev (dom) - 8 fev (dom)
+    
+    A Uber parece usar Segunda a Segunda como referência no ficheiro.
+    """
+    from datetime import datetime, timedelta
+    
+    # Usar cálculo ISO como base (segunda a domingo)
+    jan4 = datetime(ano, 1, 4)  # 4 de janeiro está sempre na semana 1 ISO
+    inicio_semana_iso = jan4 - timedelta(days=jan4.weekday())  # Segunda da semana 1
+    inicio_semana_iso = inicio_semana_iso + timedelta(weeks=semana - 1)  # Segunda da semana solicitada
+    
+    # A Uber usa Segunda a Segunda (7 dias)
+    # Início: Segunda da semana ISO
+    # Fim: Segunda seguinte
+    inicio_semana_uber = inicio_semana_iso
+    fim_semana_uber = inicio_semana_uber + timedelta(days=7)
+    
+    return inicio_semana_uber.strftime("%Y-%m-%d"), fim_semana_uber.strftime("%Y-%m-%d")
+
+
 class AgendamentoCreate(BaseModel):
     plataforma: str
     tipo_extracao: str = "todos"

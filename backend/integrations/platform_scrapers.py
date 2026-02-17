@@ -265,13 +265,71 @@ class UberScraper(BaseScraper):
                 "error": "Sessão Uber expirada ou não existe. O parceiro deve fazer login manual em /login-plataformas"
             }
     
+    def _formatar_data_pt(self, data_str: str) -> str:
+        """
+        Formatar data YYYY-MM-DD para formato português "DD de mês".
+        Ex: "2025-01-27" → "27 de janeiro"
+        """
+        meses_pt = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
+        try:
+            dt = datetime.strptime(data_str, "%Y-%m-%d")
+            return f"{dt.day} de {meses_pt[dt.month - 1]}"
+        except:
+            return data_str
+
+    def _verificar_intervalo_corresponde(self, texto_linha: str, data_inicio: str, data_fim: str) -> bool:
+        """
+        Verifica se o texto da linha contém o intervalo de datas correcto.
+        
+        A Uber mostra intervalos no formato:
+        - "27 de janeiro - 2 de fevereiro"
+        - "20250127-20250202" (no nome do ficheiro)
+        
+        NOTA: A Uber usa um formato próprio que pode diferir do ISO.
+        Aplicamos tolerância de +/- 1 dia tanto no início como no fim.
+        """
+        dt_inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+        dt_fim = datetime.strptime(data_fim, "%Y-%m-%d")
+        texto_lower = texto_linha.lower()
+        
+        meses_pt = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
+        
+        # Formato 1: Datas no formato YYYYMMDD-YYYYMMDD (nome do ficheiro)
+        # Verificar com tolerância de +/- 1 dia tanto no início como no fim
+        for delta_inicio in [0, 1, -1]:
+            for delta_fim in [0, 1, -1]:
+                dt_inicio_ajustado = dt_inicio + timedelta(days=delta_inicio)
+                dt_fim_ajustado = dt_fim + timedelta(days=delta_fim)
+                data_pattern = f"{dt_inicio_ajustado.strftime('%Y%m%d')}-{dt_fim_ajustado.strftime('%Y%m%d')}"
+                if data_pattern in texto_linha:
+                    logger.info(f"✅ Match por padrão de ficheiro: {data_pattern}")
+                    return True
+        
+        # Formato 2: Verificar intervalo em português
+        # Verificar com tolerância de +/- 1 dia no início
+        for delta_inicio in [0, 1, -1]:
+            dt_inicio_ajustado = dt_inicio + timedelta(days=delta_inicio)
+            dia_inicio = dt_inicio_ajustado.day
+            mes_inicio = meses_pt[dt_inicio_ajustado.month - 1]
+            
+            # Procurar padrão específico: "DD de mês - " (data de início seguida de hífen)
+            pattern_inicio_com_hifen = rf"{dia_inicio}\s*de\s*{mes_inicio}\s*-"
+            if re.search(pattern_inicio_com_hifen, texto_lower):
+                if "pagamento" in texto_lower or "payment" in texto_lower:
+                    logger.info(f"✅ Match por data de início: {dia_inicio} de {mes_inicio}")
+                    return True
+        
+        return False
+
     async def extract_data(self, start_date: str = None, end_date: str = None, **kwargs) -> Dict:
         """
         Extrair dados de ganhos da Uber Fleet usando sessão guardada.
         
         Novo fluxo otimizado:
         1. Navegar para a página de earning-reports
-        2. Procurar relatório existente para o período solicitado
+        2. Procurar relatório existente para o período solicitado (SEMANA ESPECÍFICA)
         3. Se existir → Descarregar
         4. Se não existir → Gerar novo e descarregar
         5. Processar ficheiro CSV/PDF
@@ -319,16 +377,17 @@ class UberScraper(BaseScraper):
             # ============ PASSO 2: PROCURAR RELATÓRIO EXISTENTE ============
             logger.info("📍 Passo 2: Procurando relatórios existentes...")
             
-            # Formatar datas para procurar no nome do relatório (formato: YYYYMMDD)
-            start_formatted = start_date.replace("-", "") if start_date else ""
-            end_formatted = end_date.replace("-", "") if end_date else ""
+            # Formatar datas para log
+            data_inicio_pt = self._formatar_data_pt(start_date) if start_date else ""
+            data_fim_pt = self._formatar_data_pt(end_date) if end_date else ""
+            logger.info(f"🔍 A procurar relatório da semana: {data_inicio_pt} - {data_fim_pt}")
             
             # Procurar botões de download na tabela
             download_buttons = self.page.locator('button:has-text("download"), a:has-text("download"), button:has-text("Faça o download")')
             download_count = await download_buttons.count()
             logger.info(f"📊 Encontrados {download_count} botões de download")
             
-            # Procurar na tabela de relatórios pelo período
+            # Procurar na tabela de relatórios pelo período ESPECÍFICO
             report_found = False
             report_row = None
             
@@ -341,24 +400,27 @@ class UberScraper(BaseScraper):
                 row = rows.nth(i)
                 row_text = await row.inner_text()
                 
+                # Ignorar linhas vazias ou cabeçalhos
+                if not row_text.strip() or "Nome" in row_text and "Tipo" in row_text:
+                    continue
+                
+                logger.info(f"📋 Linha {i}: {row_text[:120]}...")
+                
                 # Verificar se o relatório é de "Pagamentos de motorista" ou "Driver payments"
                 if "pagamentos" in row_text.lower() or "payments" in row_text.lower() or "driver" in row_text.lower():
-                    # Verificar se o período corresponde (aproximadamente)
-                    if start_formatted in row_text or end_formatted in row_text:
-                        logger.info(f"✅ Relatório encontrado para o período: {row_text[:100]}...")
+                    # Verificar se o período corresponde usando método robusto
+                    if start_date and end_date and self._verificar_intervalo_corresponde(row_text, start_date, end_date):
+                        logger.info(f"✅ ENCONTRADO! Relatório da semana {data_inicio_pt} - {data_fim_pt} na linha {i}")
                         report_found = True
                         report_row = row
                         break
-                    
-                    # Se não encontrou período específico, usar o mais recente como fallback
-                    if not report_found:
-                        report_row = row
+                    # NÃO usar fallback - queremos apenas o relatório da semana específica
             
             await self.page.screenshot(path='/tmp/uber_03_reports_list.png')
             
             # ============ PASSO 3: DESCARREGAR RELATÓRIO ============
-            if report_row:
-                logger.info("📍 Passo 3: Descarregando relatório...")
+            if report_found and report_row:
+                logger.info("📍 Passo 3: Descarregando relatório da semana específica...")
                 
                 # Procurar botão de download na linha
                 download_btn = report_row.locator('button:has-text("download"), a:has-text("download"), button:has-text("Faça o download")')
@@ -386,265 +448,34 @@ class UberScraper(BaseScraper):
                         await asyncio.sleep(5)
                         await self.page.screenshot(path='/tmp/uber_04_after_click.png')
             
-            # Se não encontrou relatório, tentar gerar um novo
-            logger.info("⚠️ Relatório não encontrado para o período, tentando gerar novo...")
+            # Se não encontrou relatório, retornar erro claro
+            # A geração automática de relatórios é instável devido a overlays e modais da Uber
+            logger.warning(f"⚠️ Relatório não encontrado para o período {data_inicio_pt} - {data_fim_pt}")
             
-            # ============ PASSO 2: CLICAR EM "GERAR RELATÓRIO" ============
-            logger.info("📍 Passo 2: Clicando em Gerar relatório...")
-            
-            gerar_clicked = False
-            gerar_selectors = [
-                'button:has-text("Gerar relatório")',
-                'button:has-text("Generate report")',
-                'button:has-text("Generate")',
-                '[data-testid="generate-report-button"]',
-                'button[aria-label*="Generate"]',
-                'button[aria-label*="Gerar"]'
-            ]
-            
-            for selector in gerar_selectors:
+            # Listar relatórios disponíveis para ajudar o utilizador
+            relatorios_disponiveis = []
+            for i in range(min(row_count, 5)):
                 try:
-                    btn = self.page.locator(selector)
-                    if await btn.count() > 0 and await btn.first.is_visible(timeout=3000):
-                        await btn.first.click()
-                        gerar_clicked = True
-                        await asyncio.sleep(3)
-                        logger.info(f"✅ Clicou em Gerar relatório: {selector}")
-                        break
-                except Exception as e:
-                    logger.debug(f"Selector {selector} não funcionou: {e}")
-                    continue
-            
-            if not gerar_clicked:
-                logger.warning("⚠️ Botão 'Gerar relatório' não encontrado, tentando screenshot da página")
-                await self.page.screenshot(path='/tmp/uber_03_no_generate_btn.png')
-            
-            await self.page.screenshot(path='/tmp/uber_03_after_generate_click.png')
-            
-            # ============ PASSO 3: SELECIONAR TIPO DE RELATÓRIO ============
-            logger.info("📍 Passo 3: Selecionando tipo de relatório (Pagamentos de motorista)...")
-            
-            # Aguardar modal aparecer
-            await asyncio.sleep(2)
-            
-            # Primeiro, abrir o dropdown de tipo de relatório
-            tipo_dropdown = self.page.locator('text="Tipo de relatório"').locator('..').locator('select, [role="combobox"], [role="listbox"]')
-            if await tipo_dropdown.count() == 0:
-                # Tentar clicar no elemento que contém o tipo atual
-                tipo_dropdown = self.page.locator('text="Atividade do motorista"')
-            
-            if await tipo_dropdown.count() > 0:
-                await tipo_dropdown.first.click()
-                await asyncio.sleep(1)
-                logger.info("✅ Dropdown de tipo aberto")
-                
-                # Selecionar "Pagamentos de motorista"
-                pagamentos_option = self.page.locator('text="Pagamentos de motorista"')
-                if await pagamentos_option.count() > 0:
-                    await pagamentos_option.first.click()
-                    await asyncio.sleep(1)
-                    logger.info("✅ Tipo 'Pagamentos de motorista' selecionado")
-            else:
-                logger.warning("⚠️ Dropdown de tipo não encontrado")
-            
-            await self.page.screenshot(path='/tmp/uber_04_tipo_selecionado.png')
-            
-            # ============ PASSO 4: AS DATAS JÁ ESTÃO CORRETAS ============
-            logger.info("📍 Passo 4: Verificando período (já deve estar definido)...")
-            # O modal já mostra as datas corretas baseado na semana selecionada
-            
-            await self.page.screenshot(path='/tmp/uber_05_periodo.png')
-            
-            # ============ PASSO 5: SELECIONAR ORGANIZAÇÃO (CRÍTICO) ============
-            logger.info("📍 Passo 5: Selecionando organização (CRÍTICO)...")
-            
-            org_selected = False
-            
-            # O campo de organização tem o texto "Selecione as organizações a incluir no relatório"
-            # É um dropdown/multi-select que precisa ser clicado para abrir
-            
-            # Estratégia 1: Procurar pelo placeholder text
-            org_field_selectors = [
-                'text="Selecione as organizações a incluir no relatório"',
-                'text="Selecione as organizações"',
-                '[placeholder*="organiza"]',
-                'input[placeholder*="organiza"]',
-                '[aria-label*="organiza"]',
-            ]
-            
-            for selector in org_field_selectors:
-                try:
-                    org_field = self.page.locator(selector)
-                    if await org_field.count() > 0 and await org_field.first.is_visible(timeout=2000):
-                        # Clicar para abrir o dropdown
-                        await org_field.first.click()
-                        await asyncio.sleep(2)
-                        logger.info(f"✅ Campo de organização clicado: {selector}")
-                        
-                        await self.page.screenshot(path='/tmp/uber_05b_org_dropdown_open.png')
-                        
-                        # Agora procurar opções no dropdown aberto
-                        # Pode ser checkboxes, options, ou list items
-                        option_selectors = [
-                            '[role="option"]',
-                            '[role="menuitem"]',
-                            'li[role="option"]',
-                            'input[type="checkbox"]',
-                            '[data-testid*="option"]',
-                            '.option',
-                            'label:has(input[type="checkbox"])'
-                        ]
-                        
-                        for opt_sel in option_selectors:
-                            try:
-                                options = self.page.locator(opt_sel)
-                                count = await options.count()
-                                if count > 0:
-                                    logger.info(f"📊 Encontradas {count} opções com selector: {opt_sel}")
-                                    # Clicar na primeira opção
-                                    first_opt = options.first
-                                    if await first_opt.is_visible(timeout=1000):
-                                        await first_opt.click()
-                                        org_selected = True
-                                        await asyncio.sleep(1)
-                                        logger.info(f"✅ Organização selecionada via: {opt_sel}")
-                                        
-                                        # Fechar dropdown (clicar fora ou pressionar Escape)
-                                        await self.page.keyboard.press('Escape')
-                                        await asyncio.sleep(1)
-                                        break
-                            except Exception as opt_err:
-                                logger.debug(f"Erro com option selector {opt_sel}: {opt_err}")
-                                continue
-                        
-                        if org_selected:
-                            break
-                except Exception as e:
-                    logger.debug(f"Erro com selector {selector}: {e}")
-                    continue
-            
-            # Estratégia 2: Se não funcionou, tentar via JavaScript
-            if not org_selected:
-                logger.info("⚠️ Tentando seleção de organização via JavaScript...")
-                try:
-                    # Procurar todos os elementos que parecem ser dropdowns no modal
-                    js_result = await self.page.evaluate('''() => {
-                        // Procurar campo de organização
-                        const modal = document.querySelector('[role="dialog"]') || document.body;
-                        const selects = modal.querySelectorAll('select, [role="combobox"], [role="listbox"]');
-                        const results = [];
-                        selects.forEach((el, idx) => {
-                            results.push({idx: idx, text: el.innerText || el.placeholder || 'unknown'});
-                        });
-                        return results;
-                    }''')
-                    logger.info(f"📊 Elementos encontrados via JS: {js_result}")
-                    
-                    # Tentar clicar em qualquer checkbox no modal
-                    checkboxes = self.page.locator('[role="dialog"] input[type="checkbox"], [role="dialog"] [role="checkbox"]')
-                    cb_count = await checkboxes.count()
-                    logger.info(f"📊 Encontrados {cb_count} checkboxes no modal")
-                    
-                    if cb_count > 0:
-                        for i in range(cb_count):
-                            cb = checkboxes.nth(i)
-                            if await cb.is_visible():
-                                is_checked = await cb.is_checked() if await cb.get_attribute('type') == 'checkbox' else False
-                                if not is_checked:
-                                    await cb.click()
-                                    org_selected = True
-                                    logger.info(f"✅ Checkbox {i} marcado via fallback JS")
-                                    await asyncio.sleep(1)
-                                    break
-                except Exception as js_err:
-                    logger.warning(f"⚠️ Fallback JS falhou: {js_err}")
-            
-            await self.page.screenshot(path='/tmp/uber_06_org_selecionada.png')
-            logger.info(f"📊 Organização selecionada: {org_selected}")
-            
-            # ============ PASSO 6: CLICAR EM "GERAR" ============
-            logger.info("📍 Passo 6: Clicando no botão Gerar final...")
-            
-            await asyncio.sleep(2)
-            
-            gerar_final_btn = self.page.locator('button:has-text("Gerar"), button:has-text("Generate")')
-            if await gerar_final_btn.count() > 0:
-                # Verificar estado do botão
-                is_disabled = await gerar_final_btn.first.is_disabled()
-                
-                if is_disabled:
-                    logger.error("❌ Botão 'Gerar' está desabilitado - faltam campos obrigatórios")
-                    await self.page.screenshot(path='/tmp/uber_07_gerar_disabled.png')
-                    
-                    return {
-                        "success": False,
-                        "error": "Botão 'Gerar' está desabilitado. Verifique se organização e período estão selecionados.",
-                        "screenshots": [
-                            "/tmp/uber_01_dashboard.png",
-                            "/tmp/uber_06_org_selecionada.png",
-                            "/tmp/uber_07_gerar_disabled.png"
-                        ]
-                    }
-                
-                # Clicar no botão
-                await gerar_final_btn.first.click()
-                await asyncio.sleep(5)
-                logger.info("✅ Botão Gerar clicado")
-            else:
-                logger.warning("⚠️ Botão Gerar final não encontrado")
-            
-            await self.page.screenshot(path='/tmp/uber_07_after_generate.png')
-            
-            # ============ PASSO 7: DOWNLOAD ============
-            logger.info("📍 Passo 7: Aguardando download...")
-            
-            # Fechar modal se ainda aberto
-            try:
-                close_btn = self.page.locator('[aria-label="close"], button:has-text("Cancelar")')
-                if await close_btn.count() > 0:
-                    await close_btn.first.click()
-                    await asyncio.sleep(2)
-            except:
-                pass
-            
-            # Procurar botão de download na lista de relatórios
-            download_found = False
-            download_selectors = [
-                'button:has-text("download")',
-                'a:has-text("Download")',
-                '[data-testid*="download"]',
-                'button[aria-label*="Download"]'
-            ]
-            
-            for selector in download_selectors:
-                try:
-                    dl_btn = self.page.locator(selector)
-                    if await dl_btn.count() > 0 and await dl_btn.first.is_visible(timeout=5000):
-                        download_found = True
-                        logger.info(f"✅ Botão de download encontrado: {selector}")
-                        
-                        # TODO: Implementar download real
-                        # async with self.page.expect_download() as download_info:
-                        #     await dl_btn.first.click()
-                        # download = await download_info.value
-                        break
+                    row = rows.nth(i)
+                    row_text = await row.inner_text()
+                    if row_text.strip() and ("pagamento" in row_text.lower() or "payment" in row_text.lower()):
+                        # Extrair intervalo de datas do texto
+                        relatorios_disponiveis.append(row_text[:100].strip())
                 except:
                     continue
             
-            await self.page.screenshot(path='/tmp/uber_08_final.png')
+            await self.page.screenshot(path='/tmp/uber_03_not_found.png')
             
             return {
-                "success": True,
+                "success": False,
                 "platform": "uber",
-                "data": [],
-                "org_selected": org_selected,
-                "download_available": download_found,
-                "message": f"Extração Uber: Organização {'selecionada' if org_selected else 'NÃO selecionada'}. Download {'disponível' if download_found else 'não encontrado'}.",
+                "error": f"Relatório não encontrado para o período {data_inicio_pt} - {data_fim_pt}. Por favor, gere o relatório manualmente no portal da Uber e tente novamente.",
+                "periodo_solicitado": f"{start_date} a {end_date}",
+                "relatorios_disponiveis": relatorios_disponiveis,
+                "dica": "Vá ao portal Uber → Relatórios → Gerar relatório → Selecione 'Pagamentos de motorista' → Escolha o período desejado → Aguarde e tente sincronizar novamente.",
                 "screenshots": [
-                    "/tmp/uber_01_dashboard.png",
                     "/tmp/uber_02_reports_page.png",
-                    "/tmp/uber_06_org_selecionada.png",
-                    "/tmp/uber_08_final.png"
+                    "/tmp/uber_03_not_found.png"
                 ]
             }
             
@@ -720,14 +551,30 @@ class UberScraper(BaseScraper):
                                 row.get('earnings', '0'))))))
                         
                         # Limpar e converter valor
-                        if ganho:
-                            ganho_str = str(ganho).replace('€', '').replace(',', '.').replace(' ', '').strip()
+                        def parse_valor(valor_str):
+                            if not valor_str:
+                                return 0.0
                             try:
-                                ganho_valor = float(ganho_str)
+                                return float(str(valor_str).replace('€', '').replace(',', '.').replace(' ', '').strip())
                             except:
-                                ganho_valor = 0.0
-                        else:
-                            ganho_valor = 0.0
+                                return 0.0
+                        
+                        ganho_valor = parse_valor(ganho)
+                        
+                        # Extrair gratificação
+                        gratificacao = parse_valor(row.get('Pago a si:Os seus rendimentos:Gratificação', 
+                                                          row.get('Pago a si : Os seus rendimentos : Gratificação', '0')))
+                        
+                        # Extrair portagens (reembolsos + imposto sobre tarifa)
+                        portagens_reembolso = parse_valor(row.get('Pago a si:Saldo da viagem:Reembolsos:Portagem', 
+                                                                  row.get('Pago a si : Saldo da viagem : Reembolsos : Portagem', '0')))
+                        imposto_tarifa = parse_valor(row.get('Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa',
+                                                             row.get('Pago a si : Saldo da viagem : Impostos : Imposto sobre a tarifa', '0')))
+                        portagens_total = portagens_reembolso + imposto_tarifa
+                        
+                        # Extrair tarifa
+                        tarifa = parse_valor(row.get('Pago a si : Os seus rendimentos : Tarifa',
+                                                     row.get('Pago a si:Os seus rendimentos:Tarifa', '0')))
                         
                         # UUID do motorista para referência
                         uuid_motorista = row.get('UUID do motorista', row.get('Driver UUID', ''))
@@ -742,13 +589,18 @@ class UberScraper(BaseScraper):
                                 "motorista": motorista,
                                 "uuid": uuid_motorista,
                                 "ganho": ganho_valor,
+                                "tarifa": tarifa,
+                                "gratificacao": gratificacao,
+                                "portagens": portagens_total,
+                                "portagens_reembolso": portagens_reembolso,
+                                "imposto_tarifa": imposto_tarifa,
                                 "periodo_inicio": periodo_inicio,
                                 "periodo_fim": periodo_fim,
                                 "semana_detectada": semana_detectada,
                                 "ano_detectado": ano_detectado
                             })
                             total_ganhos += ganho_valor
-                            logger.info(f"  📊 {motorista}: €{ganho_valor:.2f}")
+                            logger.info(f"  📊 {motorista}: €{ganho_valor:.2f} (grat={gratificacao:.2f}, port={portagens_total:.2f})")
                             
                     except Exception as row_err:
                         logger.warning(f"⚠️ Erro ao processar linha: {row_err}")
@@ -1671,6 +1523,40 @@ class PrioScraper(BaseScraper):
                 except Exception:
                     continue
             
+            # Verificar se apareceu "Bem-vindo" e tentar entrar no dashboard
+            if await self.page.locator('text=Bem-vindo').count() > 0:
+                logger.info("✅ Login confirmado - 'Bem-vindo' encontrado")
+                
+                # Tentar clicar em links para entrar no dashboard
+                dashboard_links = [
+                    'text=Entrar',
+                    'text=Continuar', 
+                    'text=Dashboard',
+                    'text=Início',
+                    'text=Home',
+                    'a.btn',
+                    'button.btn-primary',
+                    '[class*="enter"]',
+                    '[class*="continue"]'
+                ]
+                
+                for link in dashboard_links:
+                    try:
+                        locator = self.page.locator(link)
+                        if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
+                            await locator.first.click(force=True)
+                            await asyncio.sleep(3)
+                            new_url = self.page.url
+                            if 'Login' not in new_url:
+                                logger.info(f"✅ Entrou no dashboard via: {link}")
+                                break
+                    except Exception:
+                        continue
+                
+                await self.page.screenshot(path='/tmp/prio_03b_after_dashboard_click.png')
+                logger.info(f"📍 URL após tentar entrar: {self.page.url}")
+                return {"success": True}
+            
             # Verificar se saiu da página de login
             if "Login" not in current_url or "Dashboard" in current_url or "Home" in current_url:
                 logger.info("✅ Login Prio bem sucedido!")
@@ -1723,15 +1609,92 @@ class PrioScraper(BaseScraper):
             except Exception:
                 logger.debug("Cookie banner não encontrado ou já aceite")
             
-            # ============ PASSO 1: NAVEGAR DIRETAMENTE PARA PRIO FROTA TRANSAÇÕES ============
-            # URL correta descoberta: https://www.myprio.com/Transactions/Transactions
+            # ============ PASSO 1: NAVEGAR PARA PRIO FROTA TRANSAÇÕES ============
+            # Tentar navegar directamente primeiro, se falhar usar menu
             logger.info("📍 Passo 1: Navegando para Prio Frota Transações...")
             
             try:
-                prio_frota_url = "https://www.myprio.com/Transactions/Transactions"
-                await self.page.goto(prio_frota_url, wait_until='networkidle', timeout=30000)
-                await asyncio.sleep(3)
-                logger.info(f"✅ Navegou para: {self.page.url}")
+                # Guardar URL actual antes de navegar
+                current_url = self.page.url
+                logger.info(f"📍 URL actual antes de navegar: {current_url}")
+                
+                # Se ainda estiver na página de login, esperar mais ou tentar entrar
+                if 'Login' in current_url:
+                    logger.info("📍 Ainda na página de login, aguardando redirect...")
+                    await asyncio.sleep(3)
+                    
+                    # Tentar clicar em qualquer link/botão visível para avançar
+                    enter_options = [
+                        'a.btn',
+                        'button.btn',
+                        'text=Entrar',
+                        'text=Continuar',
+                        '.btn-primary',
+                        '[class*="submit"]'
+                    ]
+                    
+                    for opt in enter_options:
+                        try:
+                            loc = self.page.locator(opt)
+                            if await loc.count() > 0 and await loc.first.is_visible(timeout=1000):
+                                await loc.first.click(force=True)
+                                await asyncio.sleep(3)
+                                if 'Login' not in self.page.url:
+                                    logger.info(f"✅ Avançou para: {self.page.url}")
+                                    break
+                        except Exception:
+                            continue
+                    
+                    current_url = self.page.url
+                
+                # Primeiro, tentar clicar em elementos do menu para navegar
+                menu_options = [
+                    'text=Transações',
+                    'text=Transacoes', 
+                    'a:has-text("Transações")',
+                    'text=Prio Frota',
+                    'text=Consumos',
+                    'text=Movimentos',
+                    'text=Extratos',
+                    '[href*="Transaction"]',
+                    '[href*="transaction"]',
+                    '[class*="menu"] a',
+                    'nav a'
+                ]
+                
+                navigated = False
+                for menu_item in menu_options:
+                    try:
+                        locator = self.page.locator(menu_item)
+                        if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
+                            logger.info(f"📍 Tentando clicar em: {menu_item}")
+                            await locator.first.click(force=True)
+                            await asyncio.sleep(3)
+                            new_url = self.page.url
+                            if new_url != current_url and 'Login' not in new_url:
+                                logger.info(f"✅ Navegou via menu para: {new_url}")
+                                navigated = True
+                                break
+                    except Exception as e:
+                        logger.debug(f"Menu item {menu_item} não disponível: {e}")
+                        continue
+                
+                # Se não conseguiu via menu, tentar navegação directa
+                if not navigated:
+                    logger.info("📍 Tentando navegação directa...")
+                    prio_frota_url = "https://www.myprio.com/Transactions/Transactions"
+                    await self.page.goto(prio_frota_url, wait_until='networkidle', timeout=30000)
+                    await asyncio.sleep(3)
+                    
+                    # Verificar se foi redirecionado para login
+                    final_url = self.page.url
+                    if 'Login' in final_url:
+                        logger.warning("⚠️ Sessão perdida após navegação directa")
+                        await self.page.screenshot(path='/tmp/prio_error_session.png')
+                        # A sessão foi perdida, retornar erro
+                        return {"success": False, "error": "Sessão expirou. Tente novamente.", "data": []}
+                    
+                    logger.info(f"✅ Navegou para: {final_url}")
                     
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao navegar: {e}")
@@ -1746,53 +1709,111 @@ class PrioScraper(BaseScraper):
                 start_formatted = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d/%m/%Y')
                 end_formatted = datetime.strptime(end_date, '%Y-%m-%d').strftime('%d/%m/%Y')
                 
-                # Preencher data início - procurar pelo campo "Início"
+                # NOTA: O site MyPRIO tem 2 campos de data com IDs dinâmicos:
+                # - Campo INÍCIO: Contém label "INÍCIO" acima do input
+                # - Campo FIM: Contém label "FIM" acima do input
+                # Ambos os inputs têm 'Input_StartDate' no ID (confuso!)
+                # Usamos a posição relativa: primeiro input é INÍCIO, segundo é FIM
+                
+                # Encontrar todos os inputs de data na área de datas (placeholder dd/mm/aaaa)
+                date_inputs = self.page.locator('input[placeholder="dd/mm/aaaa"]')
+                date_inputs_count = await date_inputs.count()
+                logger.info(f"📅 Encontrados {date_inputs_count} inputs de data")
+                
+                # Preencher data início (primeiro input)
                 try:
-                    inicio_selectors = [
-                        'input[id*="Inicio"]',
-                        'input[placeholder*="Início"]',
-                        'input[name*="start"]',
-                        'input[id*="Start"]',
-                        '#DataInicio',
-                        'input.date-inicio'
-                    ]
-                    
-                    for selector in inicio_selectors:
-                        try:
-                            inicio_input = self.page.locator(selector).first
-                            if await inicio_input.count() > 0 and await inicio_input.is_visible(timeout=2000):
-                                await inicio_input.clear()
-                                await inicio_input.fill(start_formatted)
+                    if date_inputs_count >= 1:
+                        inicio_input = date_inputs.nth(0)
+                        if await inicio_input.is_visible(timeout=2000):
+                            # NOTA: O site Prio usa OutSystems com React que pode ignorar eventos de teclado normais
+                            # Usamos JavaScript para forçar o valor e disparar eventos
+                            
+                            # Obter o ID do elemento
+                            inicio_id = await inicio_input.get_attribute('id')
+                            logger.info(f"📅 ID do campo início: {inicio_id}")
+                            
+                            # Usar JavaScript para definir o valor e disparar eventos
+                            await self.page.evaluate(f'''(value) => {{
+                                const input = document.getElementById('{inicio_id}');
+                                if (input) {{
+                                    // Focar o campo
+                                    input.focus();
+                                    
+                                    // Limpar e definir valor
+                                    input.value = '';
+                                    input.value = value;
+                                    
+                                    // Disparar eventos que o OutSystems/React espera
+                                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                                    input.dispatchEvent(new KeyboardEvent('keyup', {{ bubbles: true }}));
+                                    
+                                    // Blur para confirmar
+                                    input.blur();
+                                    
+                                    console.log('Data início definida:', input.value);
+                                }}
+                            }}''', start_formatted)
+                            
+                            await asyncio.sleep(0.5)
+                            
+                            # Verificar se o valor foi preenchido correctamente
+                            valor_actual = await inicio_input.input_value()
+                            if valor_actual == start_formatted:
                                 logger.info(f"✅ Data início preenchida: {start_formatted}")
-                                break
-                        except Exception:
-                            continue
+                            else:
+                                logger.warning(f"⚠️ Data início pode não ter sido preenchida correctamente: esperado={start_formatted}, actual={valor_actual}")
+                                # Tentar método alternativo: clicar + digitar lentamente
+                                await inicio_input.click(click_count=3)
+                                await asyncio.sleep(0.2)
+                                await self.page.keyboard.press('Delete')
+                                for char in start_formatted:
+                                    await self.page.keyboard.type(char, delay=100)
+                                await self.page.keyboard.press('Tab')
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao preencher data início: {e}")
                 
                 await asyncio.sleep(1)
                 
-                # Preencher data fim - procurar pelo campo "Fim"
+                # Preencher data fim (segundo input)
                 try:
-                    fim_selectors = [
-                        'input[id*="Fim"]',
-                        'input[placeholder*="Fim"]',
-                        'input[name*="end"]',
-                        'input[id*="End"]',
-                        '#DataFim',
-                        'input.date-fim'
-                    ]
-                    
-                    for selector in fim_selectors:
-                        try:
-                            fim_input = self.page.locator(selector).first
-                            if await fim_input.count() > 0 and await fim_input.is_visible(timeout=2000):
-                                await fim_input.clear()
-                                await fim_input.fill(end_formatted)
+                    if date_inputs_count >= 2:
+                        fim_input = date_inputs.nth(1)
+                        if await fim_input.is_visible(timeout=2000):
+                            # Obter o ID do elemento
+                            fim_id = await fim_input.get_attribute('id')
+                            logger.info(f"📅 ID do campo fim: {fim_id}")
+                            
+                            # Usar JavaScript para definir o valor e disparar eventos
+                            await self.page.evaluate(f'''(value) => {{
+                                const input = document.getElementById('{fim_id}');
+                                if (input) {{
+                                    input.focus();
+                                    input.value = '';
+                                    input.value = value;
+                                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                                    input.dispatchEvent(new KeyboardEvent('keyup', {{ bubbles: true }}));
+                                    input.blur();
+                                    console.log('Data fim definida:', input.value);
+                                }}
+                            }}''', end_formatted)
+                            
+                            await asyncio.sleep(0.5)
+                            
+                            # Verificar se o valor foi preenchido correctamente
+                            valor_actual = await fim_input.input_value()
+                            if valor_actual == end_formatted:
                                 logger.info(f"✅ Data fim preenchida: {end_formatted}")
-                                break
-                        except Exception:
-                            continue
+                            else:
+                                logger.warning(f"⚠️ Data fim pode não ter sido preenchida correctamente: esperado={end_formatted}, actual={valor_actual}")
+                                # Tentar método alternativo
+                                await fim_input.click(click_count=3)
+                                await asyncio.sleep(0.2)
+                                await self.page.keyboard.press('Delete')
+                                for char in end_formatted:
+                                    await self.page.keyboard.type(char, delay=100)
+                                await self.page.keyboard.press('Tab')
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao preencher data fim: {e}")
                 
@@ -1801,7 +1822,12 @@ class PrioScraper(BaseScraper):
                 # ============ PASSO 3: CLICAR EM PESQUISAR ============
                 logger.info("📍 Passo 3: Clicando em PESQUISAR...")
                 try:
+                    # Primeiro, clicar fora dos campos de data para confirmar os valores
+                    await self.page.keyboard.press('Tab')
+                    await asyncio.sleep(0.5)
+                    
                     pesquisar_selectors = [
+                        'button.btn-primary:has-text("PESQUISAR")',
                         'button:has-text("PESQUISAR")',
                         'button:has-text("Pesquisar")',
                         'input[value="PESQUISAR"]',
@@ -1818,7 +1844,8 @@ class PrioScraper(BaseScraper):
                                 await btn.click()
                                 clicked_pesquisar = True
                                 logger.info(f"✅ Clicou em Pesquisar: {selector}")
-                                await asyncio.sleep(4)  # Aguardar resultados
+                                # Aguardar mais tempo para a tabela recarregar
+                                await asyncio.sleep(6)
                                 break
                         except Exception:
                             continue
@@ -1826,7 +1853,7 @@ class PrioScraper(BaseScraper):
                     if not clicked_pesquisar:
                         # Tentar via JavaScript
                         await self.page.evaluate('''() => {
-                            const btns = document.querySelectorAll('button');
+                            const btns = document.querySelectorAll('button.btn-primary');
                             for (let btn of btns) {
                                 if (btn.textContent.includes('PESQUISAR') || btn.textContent.includes('Pesquisar')) {
                                     btn.click();
@@ -1835,7 +1862,7 @@ class PrioScraper(BaseScraper):
                             }
                             return false;
                         }''')
-                        await asyncio.sleep(4)
+                        await asyncio.sleep(6)
                         
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao clicar em Pesquisar: {e}")
@@ -1848,83 +1875,115 @@ class PrioScraper(BaseScraper):
             
             try:
                 # Aguardar tabela carregar
-                await asyncio.sleep(2)
+                await asyncio.sleep(3)
                 
                 # Colunas da tabela (do vídeo):
                 # POSTO, REDE, DATA, CARTÃO, ESTADO, LITROS, COMB., RECIBO, KM'S, ID. CONDUTOR, FATURA, VALOR UNIT. (S/IVA), TOTAL
                 
-                table = self.page.locator('table').first
-                if await table.count() > 0:
-                    rows = await self.page.locator('table tbody tr').all()
+                # Usar seletor mais específico - a tabela de transações tem classe específica
+                # Evitar capturar tabelas de calendário (datepicker)
+                table_selectors = [
+                    'table.table',
+                    'table.transactions-table',
+                    '#TransactionsTable table',
+                    '.table-responsive table',
+                    'div[id*="Transaction"] table',
+                    'table'  # Fallback
+                ]
+                
+                table = None
+                for sel in table_selectors:
+                    table_loc = self.page.locator(sel).first
+                    if await table_loc.count() > 0:
+                        # Verificar se é a tabela correcta (tem pelo menos 10 colunas)
+                        header_cells = await table_loc.locator('th').count()
+                        if header_cells >= 10:
+                            table = table_loc
+                            logger.info(f"✅ Tabela de transações encontrada: {sel} ({header_cells} colunas)")
+                            break
+                
+                if table:
+                    rows = await table.locator('tbody tr').all()
                     logger.info(f"📊 Encontradas {len(rows)} linhas na tabela")
                     
                     for row in rows[:100]:  # Limitar a 100 registos
                         try:
                             cells = await row.locator('td').all()
                             num_cells = len(cells)
+                            
+                            # Ignorar linhas com menos de 10 células (não são transações reais)
+                            # Linhas de calendário têm tipicamente 7 células
+                            if num_cells < 10:
+                                continue
+                            
                             logger.info(f"    Linha com {num_cells} células")
                             
-                            if num_cells >= 6:
-                                # Extrair todos os valores para análise
-                                all_values = []
-                                for i, cell in enumerate(cells):
-                                    text = await cell.text_content()
-                                    all_values.append(f"[{i}]='{text.strip()[:30] if text else ''}'")
-                                logger.info(f"    Células: {' '.join(all_values[:8])}...")
-                                
-                                # Colunas (14 células):
-                                # 0: POSTO, 1: REDE, 2: DATA, 3: CARTÃO, 4: ESTADO, 5: LITROS, 6: COMB., 
-                                # 7: RECIBO, 8: KM'S, 9: ID COND., 10: FATURA, 11: V.UNIT (S/IVA), 12: TOTAL, 13: ???
-                                
-                                posto = await cells[0].text_content() if num_cells > 0 else ""
-                                data_trans = await cells[2].text_content() if num_cells > 2 else ""
-                                litros_raw = await cells[5].text_content() if num_cells > 5 else "0"
-                                
-                                # Procurar a coluna TOTAL (que tem valor €)
-                                # É provável que seja a coluna 11 ou 12 (índice 10, 11 ou 12)
-                                total_raw = "0"
-                                # Tentar diferentes índices para encontrar o valor €
-                                for idx in [12, 11, -2, -3]:
-                                    if abs(idx) < num_cells:
-                                        val = await cells[idx].text_content()
-                                        if val and ('€' in val or val.strip().replace(',', '').replace('.', '').isdigit()):
-                                            total_raw = val
-                                            logger.info(f"    Encontrou total em índice {idx}: '{val}'")
-                                            break
-                                
-                                # Log valores brutos
-                                logger.info(f"    Bruto - posto:'{posto[:20] if posto else ''}' data:'{data_trans}' litros:'{litros_raw}' total:'{total_raw}'")
-                                
-                                # Limpar valores
-                                posto = posto.strip() if posto else ""
-                                data_trans = data_trans.strip() if data_trans else ""
-                                litros_clean = litros_raw.strip().replace(",", ".").replace("L", "").replace(" ", "") if litros_raw else "0"
-                                total_clean = total_raw.strip().replace(",", ".").replace("€", "").replace(" ", "") if total_raw else "0"
-                                
-                                # Validar que são números
-                                try:
-                                    litros_float = float(litros_clean) if litros_clean else 0
-                                    total_float = float(total_clean) if total_clean else 0
-                                except ValueError as ve:
-                                    logger.warning(f"    ValueError ao converter: litros='{litros_clean}' total='{total_clean}' - {ve}")
-                                    litros_float = 0
-                                    total_float = 0
-                                
-                                logger.info(f"    Limpo - litros:{litros_float} total:{total_float}")
-                                
-                                if total_float > 0:  # Só adicionar se tiver valor
-                                    row_data = [data_trans, str(litros_float), str(total_float), posto]
-                                    data.append(row_data)
-                                    logger.info(f"  ✅ Linha válida: {data_trans}, {litros_float}L, {total_float}€")
-                                else:
-                                    logger.info(f"    ⚠️ Linha ignorada (total=0)")
+                            # Extrair todos os valores para análise
+                            all_values = []
+                            for i, cell in enumerate(cells):
+                                text = await cell.text_content()
+                                all_values.append(f"[{i}]='{text.strip()[:30] if text else ''}'")
+                            logger.info(f"    Células: {' '.join(all_values[:8])}...")
+                            
+                            # Colunas (14 células):
+                            # 0: POSTO, 1: REDE, 2: DATA, 3: CARTÃO, 4: ESTADO, 5: LITROS, 6: COMB., 
+                            # 7: RECIBO, 8: KM'S, 9: ID COND., 10: FATURA, 11: V.UNIT (S/IVA), 12: TOTAL, 13: ???
+                            
+                            posto = await cells[0].text_content() if num_cells > 0 else ""
+                            data_trans = await cells[2].text_content() if num_cells > 2 else ""
+                            litros_raw = await cells[5].text_content() if num_cells > 5 else "0"
+                            
+                            # Validar que a data tem formato correcto (DD/MM/YYYY HH:MM)
+                            # Isto filtra linhas de calendário que só têm números
+                            if data_trans:
+                                data_trans = data_trans.strip()
+                                if not ('/' in data_trans and ':' in data_trans):
+                                    logger.info(f"    ⚠️ Data inválida (não é DD/MM/YYYY HH:MM): '{data_trans}'")
+                                    continue
+                            
+                            # Procurar a coluna TOTAL (que tem valor €)
+                            total_raw = "0"
+                            for idx in [12, 11, -2, -3]:
+                                if abs(idx) < num_cells:
+                                    val = await cells[idx].text_content()
+                                    if val and '€' in val:
+                                        total_raw = val
+                                        logger.info(f"    Encontrou total em índice {idx}: '{val}'")
+                                        break
+                            
+                            # Log valores brutos
+                            logger.info(f"    Bruto - posto:'{posto[:20] if posto else ''}' data:'{data_trans}' litros:'{litros_raw}' total:'{total_raw}'")
+                            
+                            # Limpar valores
+                            posto = posto.strip() if posto else ""
+                            data_trans = data_trans.strip() if data_trans else ""
+                            litros_clean = litros_raw.strip().replace(",", ".").replace("L", "").replace(" ", "") if litros_raw else "0"
+                            total_clean = total_raw.strip().replace(",", ".").replace("€", "").replace(" ", "") if total_raw else "0"
+                            
+                            # Validar que são números
+                            try:
+                                litros_float = float(litros_clean) if litros_clean else 0
+                                total_float = float(total_clean) if total_clean else 0
+                            except ValueError as ve:
+                                logger.warning(f"    ValueError ao converter: litros='{litros_clean}' total='{total_clean}' - {ve}")
+                                litros_float = 0
+                                total_float = 0
+                            
+                            logger.info(f"    Limpo - litros:{litros_float} total:{total_float}")
+                            
+                            if total_float > 0:  # Só adicionar se tiver valor
+                                row_data = [data_trans, str(litros_float), str(total_float), posto]
+                                data.append(row_data)
+                                logger.info(f"  ✅ Linha válida: {data_trans}, {litros_float}L, {total_float}€")
+                            else:
+                                logger.info(f"    ⚠️ Linha ignorada (total=0)")
                         except Exception as row_err:
                             logger.warning(f"  Erro ao processar linha: {row_err}")
                             continue
                     
                     logger.info(f"✅ Extraídas {len(data)} transações válidas")
                 else:
-                    logger.warning("⚠️ Tabela não encontrada")
+                    logger.warning("⚠️ Tabela de transações não encontrada")
                     
                     # Tentar encontrar mensagem de "sem resultados"
                     no_results = self.page.locator('text="Sem resultados"')
@@ -1953,6 +2012,247 @@ class PrioScraper(BaseScraper):
                 "platform": "prio",
                 "error": str(e)
             }
+
+    async def extract_electric_data(self, start_date: str = None, end_date: str = None, **kwargs) -> Dict:
+        """
+        Extrair dados de carregamentos elétricos do portal Prio Electric.
+        Similar ao extract_data mas navega para a página de carregamentos elétricos.
+        """
+        try:
+            logger.info("⚡ Prio Electric: Iniciando extração de carregamentos elétricos...")
+            
+            await self.page.screenshot(path='/tmp/prio_elec_01_start.png')
+            
+            # ============ ACEITAR COOKIES SE APARECER ============
+            try:
+                await asyncio.sleep(2)
+                cookie_btn = self.page.locator('button:has-text("Ok")')
+                if await cookie_btn.count() > 0 and await cookie_btn.first.is_visible(timeout=3000):
+                    await cookie_btn.first.click(force=True)
+                    await asyncio.sleep(2)
+                    logger.info("✅ Cookies aceites")
+            except Exception:
+                logger.debug("Cookie banner não encontrado ou já aceite")
+            
+            # ============ PASSO 1: NAVEGAR PARA PRIO ELECTRIC TRANSAÇÕES ============
+            logger.info("📍 Passo 1: Navegando para Prio Electric Transações...")
+            
+            try:
+                current_url = self.page.url
+                
+                # Se ainda estiver na página de login, aguardar
+                if 'Login' in current_url:
+                    logger.info("📍 Ainda na página de login, aguardando redirect...")
+                    await asyncio.sleep(3)
+                    
+                    for opt in ['a.btn', 'button.btn', 'text=Entrar', '.btn-primary']:
+                        try:
+                            loc = self.page.locator(opt)
+                            if await loc.count() > 0 and await loc.first.is_visible(timeout=1000):
+                                await loc.first.click(force=True)
+                                await asyncio.sleep(3)
+                                if 'Login' not in self.page.url:
+                                    break
+                        except Exception:
+                            continue
+                    current_url = self.page.url
+                
+                # Tentar navegar via menu
+                menu_options = [
+                    'text=Electric',
+                    'text=Elétrico',
+                    'text=Carregamentos',
+                    'a:has-text("Electric")',
+                    '[href*="electric"]',
+                    '[href*="Electric"]'
+                ]
+                
+                navigated = False
+                for menu_item in menu_options:
+                    try:
+                        locator = self.page.locator(menu_item)
+                        if await locator.count() > 0 and await locator.first.is_visible(timeout=2000):
+                            logger.info(f"📍 Tentando clicar em: {menu_item}")
+                            await locator.first.click(force=True)
+                            await asyncio.sleep(3)
+                            new_url = self.page.url
+                            if new_url != current_url and 'Login' not in new_url:
+                                logger.info(f"✅ Navegou via menu para: {new_url}")
+                                navigated = True
+                                break
+                    except Exception as e:
+                        logger.debug(f"Menu item {menu_item} não disponível: {e}")
+                        continue
+                
+                # Se não conseguiu via menu, tentar navegação directa
+                if not navigated:
+                    logger.info("📍 Tentando navegação directa para Electric...")
+                    prio_electric_url = "https://www.myprio.com/Transactions/Transactions?tab=electric"
+                    await self.page.goto(prio_electric_url, wait_until='networkidle', timeout=30000)
+                    await asyncio.sleep(3)
+                    
+                    final_url = self.page.url
+                    if 'Login' in final_url:
+                        logger.warning("⚠️ Sessão perdida após navegação directa")
+                        await self.page.screenshot(path='/tmp/prio_elec_error_session.png')
+                        return {"success": False, "error": "Sessão expirou. Tente novamente.", "data": []}
+                    
+                    logger.info(f"✅ Navegou para: {final_url}")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao navegar: {e}")
+            
+            await self.page.screenshot(path='/tmp/prio_elec_02_navigation.png')
+            
+            # ============ PASSO 2: PREENCHER DATAS ============
+            if start_date and end_date:
+                logger.info(f"📅 Passo 2: Aplicando filtro de datas: {start_date} a {end_date}")
+                
+                start_formatted = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d/%m/%Y')
+                end_formatted = datetime.strptime(end_date, '%Y-%m-%d').strftime('%d/%m/%Y')
+                
+                date_inputs = self.page.locator('input[placeholder="dd/mm/aaaa"]')
+                date_inputs_count = await date_inputs.count()
+                logger.info(f"📅 Encontrados {date_inputs_count} inputs de data")
+                
+                try:
+                    if date_inputs_count >= 1:
+                        inicio_input = date_inputs.nth(0)
+                        if await inicio_input.is_visible(timeout=2000):
+                            inicio_id = await inicio_input.get_attribute('id')
+                            await self.page.evaluate(f'''(value) => {{
+                                const input = document.getElementById('{inicio_id}');
+                                if (input) {{
+                                    input.focus();
+                                    input.value = '';
+                                    input.value = value;
+                                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                                }}
+                            }}''', start_formatted)
+                            await asyncio.sleep(0.5)
+                            await self.page.keyboard.press('Escape')
+                            logger.info(f"✅ Data início preenchida: {start_formatted}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher data início: {e}")
+                
+                try:
+                    if date_inputs_count >= 2:
+                        fim_input = date_inputs.nth(1)
+                        if await fim_input.is_visible(timeout=2000):
+                            fim_id = await fim_input.get_attribute('id')
+                            await self.page.evaluate(f'''(value) => {{
+                                const input = document.getElementById('{fim_id}');
+                                if (input) {{
+                                    input.focus();
+                                    input.value = '';
+                                    input.value = value;
+                                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                                }}
+                            }}''', end_formatted)
+                            await asyncio.sleep(0.5)
+                            await self.page.keyboard.press('Escape')
+                            logger.info(f"✅ Data fim preenchida: {end_formatted}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher data fim: {e}")
+            
+            await self.page.screenshot(path='/tmp/prio_elec_03_dates.png')
+            
+            # ============ PASSO 3: CLICAR EM PESQUISAR ============
+            logger.info("🔍 Passo 3: Clicando em Pesquisar...")
+            
+            search_clicked = False
+            search_selectors = [
+                'button:has-text("PESQUISAR")',
+                'button:has-text("Pesquisar")',
+                'input[type="submit"][value*="Pesquisar"]',
+                '.btn:has-text("PESQUISAR")',
+                'a:has-text("PESQUISAR")'
+            ]
+            
+            for selector in search_selectors:
+                try:
+                    btn = self.page.locator(selector).first
+                    if await btn.count() > 0 and await btn.is_visible(timeout=2000):
+                        await btn.click(force=True)
+                        search_clicked = True
+                        logger.info(f"✅ Botão Pesquisar clicado via: {selector}")
+                        break
+                except Exception:
+                    continue
+            
+            if not search_clicked:
+                logger.warning("⚠️ Botão Pesquisar não encontrado")
+            
+            await asyncio.sleep(3)
+            await self.page.screenshot(path='/tmp/prio_elec_04_results.png')
+            
+            # ============ PASSO 4: EXTRAIR DADOS DA TABELA ============
+            logger.info("📊 Passo 4: Extraindo dados da tabela de carregamentos...")
+            
+            data = []
+            
+            try:
+                await self.page.wait_for_selector('table', timeout=10000)
+                
+                rows = self.page.locator('table tbody tr')
+                row_count = await rows.count()
+                logger.info(f"📊 Encontradas {row_count} linhas na tabela")
+                
+                for i in range(row_count):
+                    try:
+                        row = rows.nth(i)
+                        cells = row.locator('td')
+                        cell_count = await cells.count()
+                        
+                        if cell_count >= 4:
+                            row_data = {}
+                            for j in range(cell_count):
+                                cell_text = await cells.nth(j).text_content()
+                                row_data[f"col_{j}"] = cell_text.strip() if cell_text else ""
+                            
+                            # Mapear colunas típicas de carregamentos elétricos
+                            # Ajustar conforme estrutura real da tabela
+                            if cell_count >= 6:
+                                row_data["data"] = row_data.get("col_0", "")
+                                row_data["hora"] = row_data.get("col_1", "")
+                                row_data["local"] = row_data.get("col_2", "")
+                                row_data["energia_kwh"] = row_data.get("col_3", "")
+                                row_data["duracao"] = row_data.get("col_4", "")
+                                row_data["valor"] = row_data.get("col_5", "")
+                            
+                            data.append(row_data)
+                            
+                    except Exception as e:
+                        logger.warning(f"⚠️ Erro ao processar linha {i}: {e}")
+                        continue
+                
+                logger.info(f"✅ Extraídos {len(data)} registos de carregamentos elétricos")
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao extrair tabela: {e}")
+            
+            await self.page.screenshot(path='/tmp/prio_elec_05_final.png')
+            
+            return {
+                "success": True,
+                "platform": "prio_electric",
+                "data": data,
+                "rows_extracted": len(data)
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao extrair dados Prio Electric: {e}")
+            import traceback
+            traceback.print_exc()
+            await self.page.screenshot(path='/tmp/prio_elec_99_error.png')
+            return {
+                "success": False,
+                "platform": "prio_electric",
+                "error": str(e)
+            }
+
 
 
 class CombustivelScraper(BaseScraper):

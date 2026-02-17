@@ -154,17 +154,22 @@ async def gerar_relatorio_semanal(
     total_portagens_bolt = 0.0
     
     # Query Uber from multiple collections
+    # Combina identificação do motorista com período
     uber_query = {
-        "$or": [
-            {"motorista_id": motorista_id},
-            {"email_motorista": motorista.get("email")},
-            {"email": motorista.get("email")},
-            {"uuid_motorista": motorista.get("uuid_motorista_uber")}
-        ],
-        "$or": [
-            {"data": {"$gte": data_inicio, "$lte": data_fim}},
-            {"periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}},
-            {"semana": semana, "ano": ano}
+        "$and": [
+            # Identificação do motorista (pelo menos uma deve corresponder)
+            {"$or": [
+                {"motorista_id": motorista_id},
+                {"email_motorista": motorista.get("email")},
+                {"email": motorista.get("email")},
+                {"uuid_motorista": motorista.get("uuid_motorista_uber")}
+            ]},
+            # Período (pelo menos uma deve corresponder)
+            {"$or": [
+                {"data": {"$gte": data_inicio, "$lte": data_fim}},
+                {"periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}},
+                {"$and": [{"semana": semana}, {"ano": ano}]}
+            ]}
         ]
     }
     
@@ -788,66 +793,77 @@ async def get_resumo_semanal_parceiro(
     logger.info(f"📊 Resumo Semanal: Semana {semana}/{ano} ({data_inicio} a {data_fim})")
     
     # Get all motoristas for the parceiro (only active ones)
-    motoristas_query = {
-        "$or": [
-            {"status_motorista": "ativo"},
-            {"status_motorista": {"$exists": False}},  # Legacy: se não tiver status, assumir ativo
-            {"status_motorista": None}
-        ]
-    }
-    if current_user["role"] == UserRole.PARCEIRO:
+    parceiro_id_query = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
+    
+    if parceiro_id_query:
+        # Query para parceiro específico
         motoristas_query = {
             "$and": [
+                # Filtro de parceiro
                 {"$or": [
-                    {"parceiro_id": current_user["id"]},
-                    {"parceiro_atribuido": current_user["id"]}
+                    {"parceiro_id": parceiro_id_query},
+                    {"parceiro_atribuido": parceiro_id_query}
                 ]},
+                # Filtro de status - activos ou sem status definido (legacy)
                 {"$or": [
                     {"ativo": True},
-                    {"status_motorista": "ativo"},
+                    {"ativo": None},  # Legacy - sem status definido
+                    {"ativo": {"$exists": False}},  # Sem campo ativo
                     # Incluir motoristas desativados se a data_desativacao for depois do início da semana
                     {"$and": [
                         {"ativo": False},
-                        {"data_desativacao": {"$gt": data_inicio}}
+                        {"data_desativacao": {"$gte": data_inicio}}
                     ]}
                 ]}
             ]
         }
+    else:
+        # Admin - todos os motoristas activos
+        motoristas_query = {
+            "$or": [
+                {"ativo": True},
+                {"ativo": None},
+                {"ativo": {"$exists": False}},
+                {"$and": [
+                    {"ativo": False},
+                    {"data_desativacao": {"$gte": data_inicio}}
+                ]}
+            ]
+        }
+    
+    logger.info(f"📊 Query motoristas: parceiro={parceiro_id_query}, data_inicio={data_inicio}")
     
     motoristas = await db.motoristas.find(
         motoristas_query, 
         {"_id": 0, "id": 1, "name": 1, "email": 1, "veiculo_atribuido": 1, 
          "uuid_motorista_uber": 1, "identificador_motorista_bolt": 1,
          "valor_aluguer_semanal": 1, "config_financeira": 1,
-         "ativo": 1, "data_desativacao": 1}
+         "ativo": 1, "data_desativacao": 1, "parceiro_id": 1, "parceiro_atribuido": 1}
     ).to_list(1000)
     
-    # Filtrar motoristas desativados antes do início da semana
+    # Filtrar motoristas desativados antes do início da semana (dupla verificação)
     motoristas_filtrados = []
     for m in motoristas:
+        nome = m.get("name", "Sem nome")
+        motorista_parceiro = m.get("parceiro_id") or m.get("parceiro_atribuido")
+        
+        # Verificar se pertence ao parceiro correcto
+        if parceiro_id_query and motorista_parceiro != parceiro_id_query:
+            logger.debug(f"  {nome}: Excluído - parceiro diferente ({motorista_parceiro} != {parceiro_id_query})")
+            continue
+        
         # Se motorista está ativo, incluir sempre
         if m.get("ativo") == True:
             motoristas_filtrados.append(m)
         # Se motorista está inativo, verificar data_desativacao
-        elif m.get("data_desativacao"):
-            try:
-                # Tentar parsear a data de desativação
-                data_desativ = m.get("data_desativacao")
-                if isinstance(data_desativ, str):
-                    # Se a data de desativação for depois do início da semana, incluir
-                    if data_desativ >= data_inicio:
-                        motoristas_filtrados.append(m)
-                        logger.info(f"  {m.get('name')}: Motorista desativado em {data_desativ}, incluído para semana {data_inicio}")
-                    else:
-                        logger.info(f"  {m.get('name')}: Motorista desativado em {data_desativ}, excluído (antes de {data_inicio})")
-            except:
-                pass
-        # Se não tem data_desativacao mas está inativo, incluir (compatibilidade)
-        elif m.get("ativo") is None or m.get("status_motorista") == "ativo":
-            motoristas_filtrados.append(m)
+        elif m.get("ativo") == False and m.get("data_desativacao"):
+            data_desativ = m.get("data_desativacao")
+            if isinstance(data_desativ, str) and data_desativ >= data_inicio:
+                motoristas_filtrados.append(m)
+                logger.info(f"  {nome}: Desativado em {data_desativ}, incluído para semana {data_inicio}")
     
     motoristas = motoristas_filtrados
-    logger.info(f"📊 Encontrados {len(motoristas)} motoristas (após filtro de desativação)")
+    logger.info(f"📊 Encontrados {len(motoristas)} motoristas activos para parceiro {parceiro_id_query}")
     
     # Set para rastrear matrículas já processadas (evitar duplicação Via Verde)
     matriculas_processadas_viaverde = set()
@@ -856,6 +872,8 @@ async def get_resumo_semanal_parceiro(
     resumo_motoristas = []
     totais = {
         "total_ganhos_uber": 0,
+        "total_uber_portagens": 0,  # uPort total
+        "total_uber_gratificacoes": 0,  # uGrat total
         "total_ganhos_bolt": 0,
         "total_ganhos": 0,
         "total_combustivel": 0,
@@ -907,14 +925,25 @@ async def get_resumo_semanal_parceiro(
         uber_query_conditions = [{"motorista_id": motorista_id}]
         if uuid_uber:
             uber_query_conditions.append({"uuid_motorista": uuid_uber})
+            uber_query_conditions.append({"uuid_motorista_uber": uuid_uber})
         if motorista_email:
             uber_query_conditions.append({"motorista_email": motorista_email})
         
+        # Adicionar nome do motorista como critério adicional (útil para importações CSV)
+        if motorista.get("name"):
+            motorista_name = motorista.get("name", "").upper()
+            # Dividir nome em partes e tentar match parcial
+            name_parts = motorista_name.split()
+            for part in name_parts:
+                if len(part) > 2:  # Ignorar partes muito curtas
+                    uber_query_conditions.append({"nome_motorista": {"$regex": part, "$options": "i"}})
+        
+        # Query combinando identificação E período
         uber_query = {
-            "$or": uber_query_conditions,
             "$and": [
+                {"$or": uber_query_conditions},
                 {"$or": [
-                    {"semana": semana, "ano": ano},
+                    {"$and": [{"semana": semana}, {"ano": ano}]},
                     {"data": {"$gte": data_inicio, "$lte": data_fim}},
                     {"periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}}
                 ]}
@@ -922,14 +951,28 @@ async def get_resumo_semanal_parceiro(
         }
         
         uber_records = await db.ganhos_uber.find(uber_query, {"_id": 0}).to_list(100)
-        uber_portagens = 0.0  # Novo campo para portagens Uber
+        uber_portagens = 0.0  # uPort - Portagens que a Uber paga
+        uber_gratificacoes = 0.0  # uGrat - Gratificações/gorjetas que a Uber paga ao motorista
         for r in uber_records:
-            # Usar 'rendimentos' (novo) ou fallback para campos antigos
-            ganhos_uber += float(r.get("rendimentos") or r.get("pago_total") or r.get("rendimentos_total") or r.get("total_pago") or r.get("ganhos") or 0)
-            # Somar portagens Uber (se existir)
-            uber_portagens += float(r.get("uber_portagens") or 0)
+            # Extrair portagens Uber (uPort)
+            uber_portagens += float(r.get("portagens") or r.get("uber_portagens") or 0)
+            # Extrair gratificações Uber (uGrat) - gorjetas, bónus, promoções
+            uber_gratificacoes += float(r.get("gratificacao") or r.get("gratificacoes") or r.get("uber_gratificacoes") or r.get("gorjetas") or r.get("bonus") or 0)
+            
+            # Ganhos Uber = rendimentos líquidos SEM portagens e SEM gratificações
+            # Valor base que entra na comissão (portagens e gratificações tratadas separadamente)
+            valor_base = float(r.get("rendimentos") or r.get("pago_total") or r.get("rendimentos_total") or r.get("total_pago") or r.get("ganhos") or 0)
+            
+            # Se o campo 'rendimentos_sem_extras' existir, usar diretamente
+            if r.get("rendimentos_sem_extras"):
+                ganhos_uber += float(r.get("rendimentos_sem_extras"))
+            else:
+                # Subtrair portagens e gratificações do valor base para obter rendimentos líquidos
+                port = float(r.get("portagens") or r.get("uber_portagens") or 0)
+                grat = float(r.get("gratificacao") or r.get("gratificacoes") or r.get("uber_gratificacoes") or r.get("gorjetas") or r.get("bonus") or 0)
+                ganhos_uber += valor_base - port - grat
         
-        logger.info(f"  {motorista.get('name')}: Uber query returned {len(uber_records)} records, total €{ganhos_uber:.2f}, portagens €{uber_portagens:.2f}")
+        logger.info(f"  {motorista.get('name')}: Uber query returned {len(uber_records)} records, total €{ganhos_uber:.2f}, uPort €{uber_portagens:.2f}, uGrat €{uber_gratificacoes:.2f}")
         
         # ============ GANHOS BOLT ============
         ganhos_bolt = 0.0
@@ -1002,20 +1045,28 @@ async def get_resumo_semanal_parceiro(
         
         if veiculo and veiculo.get("matricula"):
             matricula_veiculo = veiculo.get("matricula", "").upper().strip()
+            # Normalizar matrícula (remover hífens e espaços) para buscar no Via Verde
+            matricula_normalizada = matricula_veiculo.replace("-", "").replace(" ", "")
             
             # Verificar se esta matrícula já foi processada
-            if matricula_veiculo in matriculas_processadas_viaverde:
+            if matricula_normalizada in matriculas_processadas_viaverde:
                 logger.info(f"  {motorista.get('name')}: Via Verde matrícula {matricula_veiculo} já processada, ignorando duplicação")
             else:
                 # Marcar matrícula como processada
-                matriculas_processadas_viaverde.add(matricula_veiculo)
+                matriculas_processadas_viaverde.add(matricula_normalizada)
                 
+                # Query com matrícula normalizada (sem hífens)
                 vv_query = {
-                    "matricula": matricula_veiculo,
                     "$or": [
-                        {"semana": semana, "ano": ano},
-                        {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
-                        {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                        {"matricula": matricula_veiculo},       # Formato original com hífens
+                        {"matricula": matricula_normalizada}    # Formato normalizado sem hífens
+                    ],
+                    "$and": [
+                        {"$or": [
+                            {"semana": semana, "ano": ano},
+                            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
+                            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                        ]}
                     ]
                 }
         elif motorista_id:
@@ -1046,6 +1097,8 @@ async def get_resumo_semanal_parceiro(
         
         # ============ COMBUSTÍVEL FÓSSIL ============
         combustivel_total = 0.0
+        parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
+        
         comb_query_conditions = [{"motorista_id": motorista_id}]
         if cartao_combustivel:
             comb_query_conditions.append({"cartao_via_verde": cartao_combustivel})
@@ -1053,6 +1106,10 @@ async def get_resumo_semanal_parceiro(
             comb_query_conditions.append({"vehicle_id": veiculo_id})
         if veiculo and veiculo.get("matricula"):
             comb_query_conditions.append({"matricula": veiculo.get("matricula")})
+            # Para dados Prio RPA, adicionar condição de matrícula normalizada
+            matricula_norm = veiculo.get("matricula", "").upper().replace(" ", "").replace("-", "")
+            if matricula_norm:
+                comb_query_conditions.append({"matricula_normalizada": matricula_norm})
         
         # Buscar por data OU por semana/ano
         comb_query = {
@@ -1075,14 +1132,23 @@ async def get_resumo_semanal_parceiro(
         if comb_records:
             logger.info(f"  {motorista.get('name')}: Combustível (abastecimentos) query returned {len(comb_records)} records, total €{combustivel_total:.2f}")
         
-        # ============ BUSCAR TAMBÉM DE DESPESAS_COMBUSTIVEL (Prio RPA) ============
-        # Query para despesas_combustivel (dados importados via RPA da Prio)
-        parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
+        # ============ BUSCAR TAMBÉM DE DESPESAS_COMBUSTIVEL (dados via RPA) ============
+        # Query para despesas_combustivel (dados importados via RPA da Prio - colecção diferente)
         despesas_comb_query_conditions = [{"motorista_id": motorista_id}]
-        if parceiro_id:
-            despesas_comb_query_conditions.append({"parceiro_id": parceiro_id})
         if veiculo_id:
+            # Suportar ambos os nomes de campo: veiculo_id e vehicle_id
+            despesas_comb_query_conditions.append({"veiculo_id": veiculo_id})
             despesas_comb_query_conditions.append({"vehicle_id": veiculo_id})
+        # Buscar pelo cartão Prio associado ao veículo
+        if cartao_combustivel:
+            despesas_comb_query_conditions.append({"cartao": cartao_combustivel})
+            despesas_comb_query_conditions.append({"cartao_frota_id": cartao_combustivel})
+        if veiculo and veiculo.get("matricula"):
+            despesas_comb_query_conditions.append({"matricula": veiculo.get("matricula")})
+            # Para dados Prio RPA, adicionar condição de matrícula normalizada
+            matricula_norm = veiculo.get("matricula", "").upper().replace(" ", "").replace("-", "")
+            if matricula_norm:
+                despesas_comb_query_conditions.append({"matricula_normalizada": matricula_norm})
         
         despesas_comb_query = {
             "$and": [
@@ -1104,7 +1170,7 @@ async def get_resumo_semanal_parceiro(
             combustivel_total += float(r.get("valor_total") or r.get("valor") or 0)
         
         if despesas_comb_records:
-            logger.info(f"  {motorista.get('name')}: Combustível (despesas_combustivel/Prio) query returned {len(despesas_comb_records)} records, adicionado €{sum(float(r.get('valor_total') or r.get('valor') or 0) for r in despesas_comb_records):.2f}, total €{combustivel_total:.2f}")
+            logger.info(f"  {motorista.get('name')}: Combustível (despesas_combustivel) query returned {len(despesas_comb_records)} records, adicionado €{sum(float(r.get('valor_total') or r.get('valor') or 0) for r in despesas_comb_records):.2f}, total €{combustivel_total:.2f}")
         
         # ============ CARREGAMENTO ELÉTRICO ============
         eletrico_total = 0.0
@@ -1112,10 +1178,16 @@ async def get_resumo_semanal_parceiro(
         if cartao_eletrico:
             elet_query_conditions.append({"cartao_frota_id": cartao_eletrico})
             elet_query_conditions.append({"card_code": cartao_eletrico})
+            elet_query_conditions.append({"cartao": cartao_eletrico})
         if veiculo_id:
             elet_query_conditions.append({"vehicle_id": veiculo_id})
+            elet_query_conditions.append({"veiculo_id": veiculo_id})
         if veiculo and veiculo.get("matricula"):
             elet_query_conditions.append({"matricula": veiculo.get("matricula")})
+            # Para dados Prio RPA, adicionar condição de matrícula normalizada
+            matricula_norm = veiculo.get("matricula", "").upper().replace(" ", "").replace("-", "")
+            if matricula_norm:
+                elet_query_conditions.append({"matricula_normalizada": matricula_norm})
         
         elet_query = {
             "$or": elet_query_conditions,
@@ -1196,6 +1268,7 @@ async def get_resumo_semanal_parceiro(
             # Substituir valores pelos valores do ajuste manual
             ganhos_uber = ajuste_manual.get("ganhos_uber", ganhos_uber)
             uber_portagens = ajuste_manual.get("uber_portagens", uber_portagens)
+            uber_gratificacoes = ajuste_manual.get("uber_gratificacoes", uber_gratificacoes)
             ganhos_bolt = ajuste_manual.get("ganhos_bolt", ganhos_bolt)
             ganhos_campanha_bolt = ajuste_manual.get("ganhos_campanha_bolt", ganhos_campanha_bolt)
             via_verde_total = ajuste_manual.get("via_verde", via_verde_total)
@@ -1206,8 +1279,9 @@ async def get_resumo_semanal_parceiro(
             logger.info(f"📝 Ajuste manual aplicado para {motorista.get('name')} - S{semana}/{ano}")
         
         # ============ CALCULAR TOTAIS ============
-        # Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt + Ganhos Campanha Bolt
-        total_ganhos = ganhos_uber + uber_portagens + ganhos_bolt + ganhos_campanha_bolt
+        # Total Ganhos = Rendimentos Uber + uPort + uGrat + Ganhos Bolt + Campanha Bolt
+        # (uPort e uGrat são reembolsos/gorjetas que o motorista recebe)
+        total_ganhos = ganhos_uber + uber_portagens + uber_gratificacoes + ganhos_bolt + ganhos_campanha_bolt
         
         # Se acumular_viaverde está activo, Via Verde vai para o acumulado (não desconta)
         via_verde_a_descontar = 0.0 if acumular_viaverde else via_verde_total
@@ -1238,7 +1312,8 @@ async def get_resumo_semanal_parceiro(
             "tem_ajuste_manual": has_manual_adjustment,
             # Ganhos do Motorista
             "ganhos_uber": round(ganhos_uber, 2),
-            "uber_portagens": round(uber_portagens, 2),  # NOVO: Portagens reembolsadas pela Uber
+            "uber_portagens": round(uber_portagens, 2),  # uPort: Portagens reembolsadas pela Uber
+            "uber_gratificacoes": round(uber_gratificacoes, 2),  # uGrat: Gratificações/gorjetas Uber
             "ganhos_bolt": round(ganhos_bolt, 2),
             "ganhos_campanha_bolt": round(ganhos_campanha_bolt, 2),  # Ganhos de campanha Bolt (manual)
             "total_ganhos": round(total_ganhos, 2),
@@ -1277,7 +1352,8 @@ async def get_resumo_semanal_parceiro(
         
         # Update totals
         totais["total_ganhos_uber"] += ganhos_uber
-        totais["total_uber_portagens"] = totais.get("total_uber_portagens", 0) + uber_portagens  # NOVO
+        totais["total_uber_portagens"] = totais.get("total_uber_portagens", 0) + uber_portagens
+        totais["total_uber_gratificacoes"] = totais.get("total_uber_gratificacoes", 0) + uber_gratificacoes
         totais["total_ganhos_bolt"] += ganhos_bolt
         totais["total_ganhos_campanha_bolt"] = totais.get("total_ganhos_campanha_bolt", 0) + ganhos_campanha_bolt
         totais["total_ganhos"] += total_ganhos
@@ -1552,6 +1628,7 @@ async def generate_motorista_pdf(
     # Buscar dados do motorista
     ganhos_uber = 0.0
     uber_portagens = 0.0
+    uber_gratificacoes = 0.0
     uber_records = await db.ganhos_uber.find({
         "motorista_id": motorista_id,
         "$or": [
@@ -1562,8 +1639,13 @@ async def generate_motorista_pdf(
     }, {"_id": 0}).to_list(100)
     for r in uber_records:
         # Usar 'rendimentos' (campo da nova importação) ou fallback para campos antigos
-        ganhos_uber += float(r.get("rendimentos") or r.get("pago_total") or r.get("rendimentos_total") or 0)
-        uber_portagens += float(r.get("uber_portagens") or r.get("portagens") or 0)
+        valor_base = float(r.get("rendimentos") or r.get("pago_total") or r.get("rendimentos_total") or 0)
+        port = float(r.get("portagens") or r.get("uber_portagens") or 0)
+        grat = float(r.get("gratificacao") or r.get("gratificacoes") or r.get("uber_gratificacoes") or r.get("gorjetas") or r.get("bonus") or 0)
+        # Ganhos Uber = valor base menos portagens e gratificações
+        ganhos_uber += valor_base - port - grat
+        uber_portagens += port
+        uber_gratificacoes += grat
     
     ganhos_bolt = 0.0
     # Buscar em ganhos_bolt
@@ -1583,23 +1665,117 @@ async def generate_motorista_pdf(
         ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or r.get("valor_liquido") or 0)
     
     via_verde = 0.0
-    vv_records = await db.portagens_viaverde.find({
-        "motorista_id": motorista_id,
-        "$or": [{"semana": semana, "ano": ano}, {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}]
-    }, {"_id": 0}).to_list(1000)
-    for r in vv_records:
-        via_verde += float(r.get("value") or 0)
+    vv_transacoes = []  # Lista para as transações Via Verde
+    
+    # Via Verde - buscar por vehicle_id ou parceiro_id (não existe por motorista_id)
+    parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else motorista.get("parceiro_id")
+    vehicle_id = motorista.get("veiculo_atribuido")
+    
+    vv_query_conditions = []
+    if vehicle_id:
+        vv_query_conditions.append({"vehicle_id": vehicle_id})
+    if matricula:
+        # Normalizar matrícula para busca (remover hífens)
+        matricula_norm = matricula.replace("-", "")
+        vv_query_conditions.append({"matricula": matricula})
+        vv_query_conditions.append({"matricula": matricula_norm})
+    if parceiro_id:
+        vv_query_conditions.append({"parceiro_id": parceiro_id})
+    
+    if vv_query_conditions:
+        vv_records = await db.portagens_viaverde.find({
+            "$and": [
+                {"$or": vv_query_conditions},
+                {"$or": [
+                    {"$and": [{"semana": semana}, {"ano": ano}]},
+                    {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]}
+            ]
+        }, {"_id": 0}).to_list(1000)
+        
+        for r in vv_records:
+            valor = float(r.get("valor") or r.get("value") or 0)
+            via_verde += valor
+            if valor > 0:
+                vv_transacoes.append({
+                    "data": r.get("data") or r.get("entry_date", ""),
+                    "hora": r.get("hora", ""),
+                    "local": r.get("local") or f"{r.get('local_entrada', '')} → {r.get('local_saida', '')}",
+                    "matricula": r.get("matricula", matricula),
+                    "valor": valor
+                })
     
     combustivel = 0.0
-    comb_records = await db.abastecimentos_combustivel.find({
-        "motorista_id": motorista_id,
+    comb_transacoes = []  # Lista para os abastecimentos
+    
+    # Combustível - buscar por parceiro_id (dados Prio são por parceiro/cartão)
+    if parceiro_id:
+        comb_query = {
+            "$and": [
+                {"parceiro_id": parceiro_id},
+                {"$or": [
+                    {"$and": [{"semana": semana}, {"ano": ano}]},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]},
+                {"$or": [
+                    {"litros": {"$gt": 0}},
+                    {"kwh": {"$in": [0, None]}}
+                ]}
+            ]
+        }
+        
+        comb_records = await db.despesas_combustivel.find(comb_query, {"_id": 0}).to_list(100)
+        
+        for r in comb_records:
+            transacoes = r.get("transacoes", [])
+            if transacoes:
+                for t in transacoes:
+                    valor = float(t.get("valor", 0) or 0)
+                    combustivel += valor
+                    if valor > 0:
+                        data_trans = t.get("data", "")
+                        comb_transacoes.append({
+                            "data": data_trans.split(" ")[0] if " " in data_trans else data_trans,
+                            "hora": data_trans.split(" ")[1] if " " in data_trans else "",
+                            "posto": t.get("posto", "Prio"),
+                            "litros": t.get("litros", 0),
+                            "valor": valor
+                        })
+            else:
+                valor = float(r.get("valor_total") or r.get("valor") or 0)
+                if valor > 0:
+                    combustivel += valor
+                    comb_transacoes.append({
+                        "data": r.get("data", ""),
+                        "hora": r.get("hora", ""),
+                        "posto": r.get("posto", "Prio"),
+                        "litros": r.get("litros", 0),
+                        "valor": valor
+                    })
+    
+    # Também buscar em abastecimentos_combustivel (formato antigo)
+    old_comb_records = await db.abastecimentos_combustivel.find({
+        "$or": [
+            {"motorista_id": motorista_id},
+            {"vehicle_id": vehicle_id} if vehicle_id else {"motorista_id": "none"}
+        ],
         "data": {"$gte": data_inicio, "$lte": data_fim}
     }, {"_id": 0}).to_list(100)
-    for r in comb_records:
-        # CORRIGIDO: Incluir IVA no total de combustível
+    
+    for r in old_comb_records:
         valor_sem_iva = float(r.get("valor_liquido") or r.get("valor") or r.get("total") or 0)
         iva_valor = float(r.get("iva") or 0)
-        combustivel += valor_sem_iva + iva_valor
+        total_valor = valor_sem_iva + iva_valor
+        combustivel += total_valor
+        if total_valor > 0:
+            comb_transacoes.append({
+                "data": r.get("data", ""),
+                "hora": r.get("hora", ""),
+                "posto": r.get("posto", "N/A"),
+                "litros": r.get("litros", 0),
+                "valor": total_valor
+            })
     
     eletrico = 0.0
     elet_records = await db.despesas_combustivel.find({
@@ -1657,6 +1833,7 @@ async def generate_motorista_pdf(
         # Substituir valores pelos valores do ajuste manual
         ganhos_uber = ajuste_manual.get("ganhos_uber", ganhos_uber)
         uber_portagens = ajuste_manual.get("uber_portagens", uber_portagens)
+        uber_gratificacoes = ajuste_manual.get("uber_gratificacoes", uber_gratificacoes)
         ganhos_bolt = ajuste_manual.get("ganhos_bolt", ganhos_bolt)
         via_verde = ajuste_manual.get("via_verde", via_verde)
         combustivel = ajuste_manual.get("combustivel", combustivel)
@@ -1665,8 +1842,9 @@ async def generate_motorista_pdf(
         extras = ajuste_manual.get("extras", extras)
         logger.info(f"📝 PDF: Ajuste manual aplicado para {motorista.get('name')} - S{semana}/{ano}")
     
-    # Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt
-    total_ganhos = ganhos_uber + uber_portagens + ganhos_bolt
+    # Total Ganhos = Rendimentos Uber + uPort + uGrat + Ganhos Bolt
+    # (uPort e uGrat são reembolsos/gorjetas que o motorista recebe)
+    total_ganhos = ganhos_uber + uber_portagens + uber_gratificacoes + ganhos_bolt
     total_despesas = via_verde + combustivel + eletrico
     liquido = total_ganhos - total_despesas - aluguer - extras
     
@@ -1696,7 +1874,8 @@ async def generate_motorista_pdf(
     data_table = [
         ["Descrição", "Valor"],
         ["Ganhos Uber", f"€{ganhos_uber:.2f}"],
-        ["Uber Portagens", f"€{uber_portagens:.2f}"],
+        ["uPort (Portagens Uber)", f"€{uber_portagens:.2f}"],
+        ["uGrat (Gratificações Uber)", f"€{uber_gratificacoes:.2f}"],
         ["Ganhos Bolt", f"€{ganhos_bolt:.2f}"],
         ["Total Ganhos", f"€{total_ganhos:.2f}"],
         ["", ""],
@@ -1708,7 +1887,7 @@ async def generate_motorista_pdf(
         ["Aluguer Veículo", f"-€{aluguer:.2f}"],
         ["Extras/Dívidas", f"-€{extras:.2f}"],
         ["", ""],
-        ["VALOR LÍQUIDO", f"€{liquido:.2f}"],
+        ["VALOR LÍQUIDO MOTORISTA", f"€{liquido:.2f}"],
     ]
     
     table = Table(data_table, colWidths=[100*mm, 50*mm])
@@ -1719,10 +1898,13 @@ async def generate_motorista_pdf(
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
+        # Estilo para "Total Ganhos" (linha 5)
+        ('FONTNAME', (0, 5), (-1, 5), 'Helvetica-Bold'),
+        # Estilo para "Total Despesas" (linha 10)
+        ('FONTNAME', (0, 10), (-1, 10), 'Helvetica-Bold'),
+        # Estilo para "VALOR LÍQUIDO MOTORISTA" (última linha - 15)
         ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#d4edda') if liquido >= 0 else colors.HexColor('#f8d7da')),
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 8), (-1, 8), 'Helvetica-Bold'),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
@@ -1734,35 +1916,16 @@ async def generate_motorista_pdf(
     # ==================== LISTAS DETALHADAS ====================
     
     # Lista de Via Verde
-    if mostrar_via_verde and vv_records:
+    if mostrar_via_verde and vv_transacoes:
         elements.append(Spacer(1, 5*mm))
         elements.append(Paragraph("Detalhes Via Verde", section_style))
         elements.append(Spacer(1, 3*mm))
         
-        vv_table_data = [["Data", "Hora", "Local", "Valor"]]
-        for r in sorted(vv_records, key=lambda x: x.get("exit_date", x.get("entry_date", ""))):
-            # Usar campos data_detalhe e hora_detalhe se existirem
-            data_str = r.get("data_detalhe", "")
-            hora_str = r.get("hora_detalhe", "")
-            
-            # Fallback: extrair de exit_date se campos não existirem
-            if not data_str:
-                exit_date = r.get("exit_date", r.get("entry_date", ""))
-                if exit_date:
-                    try:
-                        if "T" in str(exit_date):
-                            exit_date = exit_date.replace("T", " ")
-                        parts = str(exit_date).split(" ")
-                        if len(parts) >= 1:
-                            date_parts = parts[0].split("-")
-                            if len(date_parts) == 3:
-                                data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
-                        if len(parts) >= 2 and not hora_str:
-                            hora_str = parts[1][:5]
-                    except:
-                        data_str = str(exit_date)[:10]
-            else:
-                # Formatar data_detalhe de "2026-01-04" para "04/01/26"
+        vv_table_data = [["Data", "Hora", "Local", "Matrícula", "Valor"]]
+        for t in sorted(vv_transacoes, key=lambda x: (x.get("data", ""), x.get("hora", ""))):
+            data_str = t.get("data", "-")
+            # Formatar data de "2026-01-04" para "04/01/26"
+            if data_str and "-" in data_str:
                 try:
                     date_parts = data_str.split("-")
                     if len(date_parts) == 3:
@@ -1770,31 +1933,23 @@ async def generate_motorista_pdf(
                 except:
                     pass
             
-            if not data_str:
-                data_str = "-"
-            if not hora_str:
-                hora_str = "-"
+            hora_str = t.get("hora", "-") or "-"
+            local = str(t.get("local", "-"))[:30]
+            matricula_vv = t.get("matricula", "-")
+            valor = t.get("valor", 0)
             
-            # Local: usar exit_point
-            local = r.get("exit_point", r.get("entry_name", r.get("local", "-")))
-            if local:
-                local = str(local)[:25]
-            else:
-                local = "-"
-            
-            valor = float(r.get("value") or 0)
-            vv_table_data.append([data_str, hora_str, local, f"€{valor:.2f}"])
+            vv_table_data.append([data_str, hora_str, local, matricula_vv, f"€{valor:.2f}"])
         
         # Linha de total
-        vv_table_data.append(["", "", "TOTAL", f"€{via_verde:.2f}"])
+        vv_table_data.append(["", "", "", "TOTAL", f"€{via_verde:.2f}"])
         
-        vv_table = Table(vv_table_data, colWidths=[22*mm, 18*mm, 90*mm, 25*mm])
+        vv_table = Table(vv_table_data, colWidths=[22*mm, 18*mm, 70*mm, 25*mm, 25*mm])
         vv_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('ALIGN', (3, 0), (3, -1), 'RIGHT'),  # Coluna Valor alinhada à direita
+            ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),  # Coluna Valor alinhada à direita
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9ecef')),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
@@ -1804,37 +1959,16 @@ async def generate_motorista_pdf(
         elements.append(vv_table)
     
     # Lista de Abastecimentos
-    if mostrar_abastecimentos and comb_records:
+    if mostrar_abastecimentos and comb_transacoes:
         elements.append(Spacer(1, 8*mm))
         elements.append(Paragraph("Detalhes Abastecimentos", section_style))
         elements.append(Spacer(1, 3*mm))
         
         comb_table_data = [["Data", "Hora", "Posto", "Litros", "Valor"]]
-        for r in sorted(comb_records, key=lambda x: x.get("data", "")):
-            # Usar campos data_detalhe e hora_detalhe se existirem
-            data_str = r.get("data_detalhe", "")
-            hora_str = r.get("hora_detalhe", r.get("hora", ""))
-            
-            # Fallback: extrair de data se campos não existirem
-            if not data_str:
-                data_raw = r.get("data", "-")
-                if data_raw and data_raw != "-":
-                    try:
-                        if "T" in str(data_raw):
-                            data_raw = str(data_raw).replace("T", " ")
-                        parts = str(data_raw).split(" ")
-                        if len(parts) >= 1:
-                            date_parts = parts[0].split("-")
-                            if len(date_parts) == 3:
-                                data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
-                            else:
-                                data_str = parts[0][:10]
-                        if len(parts) >= 2 and not hora_str:
-                            hora_str = parts[1][:5]
-                    except:
-                        data_str = str(data_raw)[:10]
-            else:
-                # Formatar data_detalhe de "2026-01-04" para "04/01/26"
+        for t in sorted(comb_transacoes, key=lambda x: x.get("data", "")):
+            data_str = t.get("data", "-")
+            # Formatar data de "2026-01-04" para "04/01/26"
+            if data_str and "-" in data_str:
                 try:
                     date_parts = data_str.split("-")
                     if len(date_parts) == 3:
@@ -1842,18 +1976,12 @@ async def generate_motorista_pdf(
                 except:
                     pass
             
-            if not data_str:
-                data_str = "-"
-            if not hora_str:
-                hora_str = "-"
+            hora_str = t.get("hora", "-") or "-"
+            posto = str(t.get("posto", "-"))[:20]
+            litros = float(t.get("litros", 0) or 0)
+            valor = t.get("valor", 0)
             
-            posto = (r.get("posto", r.get("station_name", "-")))[:20]
-            litros = float(r.get("litros", r.get("quantity", 0)) or 0)
-            # CORRIGIDO: Usar valor COM IVA (valor_liquido + iva)
-            valor_sem_iva = float(r.get("valor_liquido") or r.get("total") or 0)
-            iva_valor = float(r.get("iva") or 0)
-            valor_com_iva = valor_sem_iva + iva_valor
-            comb_table_data.append([data_str, hora_str, posto, f"{litros:.2f}L", f"€{valor_com_iva:.2f}"])
+            comb_table_data.append([data_str, hora_str, posto, f"{litros:.1f}L" if litros else "-", f"€{valor:.2f}"])
         
         comb_table_data.append(["", "", "", "TOTAL", f"€{combustivel:.2f}"])
         
@@ -2353,6 +2481,7 @@ async def update_motorista_weekly_data(
         "ano": ano,
         "ganhos_uber": float(data.get("ganhos_uber", 0)),
         "uber_portagens": float(data.get("uber_portagens", 0)),
+        "uber_gratificacoes": float(data.get("uber_gratificacoes", 0)),
         "ganhos_bolt": float(data.get("ganhos_bolt", 0)),
         "ganhos_campanha_bolt": float(data.get("ganhos_campanha_bolt", 0)),  # Ganhos de campanha Bolt
         "via_verde": float(data.get("via_verde", 0)),
@@ -2427,14 +2556,28 @@ async def delete_motorista_weekly_data(
     deleted_counts = {}
     
     # Eliminar ganhos Uber
-    result = await db.ganhos_uber.delete_many({
-        "motorista_id": motorista_id,
+    # Suporta motorista_id e também nome_motorista + parceiro_id (dados RPA)
+    parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else motorista.get("parceiro_id")
+    nome_motorista = motorista.get("name", "")
+    
+    uber_query = {
         "$or": [
-            {"semana": semana, "ano": ano},
-            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            {"motorista_id": motorista_id},
+            # Suporte para dados RPA que usam nome_motorista + parceiro_id
+            {"nome_motorista": nome_motorista, "parceiro_id": parceiro_id} if nome_motorista and parceiro_id else {"motorista_id": motorista_id}
+        ],
+        "$and": [
+            {"$or": [
+                {"semana": semana, "ano": ano},
+                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            ]}
         ]
-    })
+    }
+    
+    result = await db.ganhos_uber.delete_many(uber_query)
     deleted_counts["ganhos_uber"] = result.deleted_count
+    
+    logger.info(f"🗑️ Eliminados {result.deleted_count} ganhos Uber para motorista {motorista_id} S{semana}/{ano}")
     
     # Eliminar ganhos Bolt (de ganhos_bolt)
     result = await db.ganhos_bolt.delete_many({
@@ -2476,12 +2619,14 @@ async def delete_motorista_weekly_data(
     })
     deleted_counts["via_verde"] = result.deleted_count
     
-    # Eliminar combustível - buscar por motorista_id, matrícula ou cartão frota
+    # Eliminar combustível - buscar por motorista_id, matrícula, cartão frota ou veiculo_id
     combustivel_query_conditions = [{"motorista_id": motorista_id}]
     if veiculo and veiculo.get("matricula"):
         combustivel_query_conditions.append({"matricula": veiculo.get("matricula")})
     if veiculo and veiculo.get("cartao_frota_id"):
         combustivel_query_conditions.append({"cartao_frota_id": veiculo.get("cartao_frota_id")})
+    if motorista.get("veiculo_atribuido"):
+        combustivel_query_conditions.append({"veiculo_id": motorista.get("veiculo_atribuido")})
     
     result = await db.abastecimentos_combustivel.delete_many({
         "$and": [
@@ -2491,23 +2636,26 @@ async def delete_motorista_weekly_data(
     })
     deleted_counts["combustivel"] = result.deleted_count
     
-    # Eliminar elétrico - buscar por motorista_id, matrícula ou cartão elétrico
-    eletrico_query_conditions = [{"motorista_id": motorista_id}]
+    # Eliminar despesas combustível (Prio RPA) - buscar por motorista_id, matrícula, cartão elétrico ou veiculo_id
+    despesas_comb_query_conditions = [{"motorista_id": motorista_id}]
     if veiculo and veiculo.get("matricula"):
-        eletrico_query_conditions.append({"matricula": veiculo.get("matricula")})
+        despesas_comb_query_conditions.append({"matricula": veiculo.get("matricula")})
     if veiculo and veiculo.get("cartao_frota_eletric_id"):
-        eletrico_query_conditions.append({"cartao_frota_id": veiculo.get("cartao_frota_eletric_id")})
+        despesas_comb_query_conditions.append({"cartao_frota_id": veiculo.get("cartao_frota_eletric_id")})
+    if motorista.get("veiculo_atribuido"):
+        despesas_comb_query_conditions.append({"veiculo_id": motorista.get("veiculo_atribuido")})
+        despesas_comb_query_conditions.append({"vehicle_id": motorista.get("veiculo_atribuido")})
     
     result = await db.despesas_combustivel.delete_many({
         "$and": [
-            {"$or": eletrico_query_conditions},
+            {"$or": despesas_comb_query_conditions},
             {"$or": [
                 {"semana": semana, "ano": ano},
                 {"data": {"$gte": data_inicio, "$lte": data_fim}}
             ]}
         ]
     })
-    deleted_counts["eletrico"] = result.deleted_count
+    deleted_counts["despesas_combustivel"] = result.deleted_count
     
     # Eliminar extras
     result = await db.despesas_extras.delete_many({
@@ -2775,14 +2923,24 @@ async def delete_all_weekly_data(
     deleted_counts = {}
     
     # Eliminar ganhos Uber
-    result = await db.ganhos_uber.delete_many({
-        "motorista_id": {"$in": motorista_ids},
-        "$or": [
-            {"semana": semana, "ano": ano},
-            {"data": {"$gte": data_inicio, "$lte": data_fim}}
-        ]
-    })
+    # Suporta tanto motorista_id como parceiro_id (dados RPA usam parceiro_id)
+    parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
+    
+    # Query simplificada para eliminar por semana/ano
+    uber_conditions = [
+        {"motorista_id": {"$in": motorista_ids}, "semana": semana, "ano": ano},
+    ]
+    
+    # Adicionar condição para dados RPA que usam parceiro_id
+    if parceiro_id:
+        uber_conditions.append({"parceiro_id": parceiro_id, "semana": semana, "ano": ano})
+    
+    uber_query = {"$or": uber_conditions}
+    
+    result = await db.ganhos_uber.delete_many(uber_query)
     deleted_counts["ganhos_uber"] = result.deleted_count
+    
+    logger.info(f"🗑️ Eliminados {result.deleted_count} ganhos Uber para S{semana}/{ano}")
     
     # Eliminar ganhos Bolt (de ganhos_bolt)
     # Bolt pode ter motorista_id, identificador_motorista_bolt, ou nome_motorista
@@ -2854,22 +3012,51 @@ async def delete_all_weekly_data(
     result = await db.portagens_viaverde.delete_many(vv_query)
     deleted_counts["via_verde"] = result.deleted_count
     
-    # Eliminar combustível
-    result = await db.abastecimentos_combustivel.delete_many({
-        "motorista_id": {"$in": motorista_ids},
-        "data": {"$gte": data_inicio, "$lte": data_fim}
-    })
+    # Eliminar combustível (coleção abastecimentos_combustivel)
+    # Inclui dados por motorista_id E dados Prio RPA por parceiro_id
+    combustivel_conditions = [
+        {"motorista_id": {"$in": motorista_ids}, "data": {"$gte": data_inicio, "$lte": data_fim}}
+    ]
+    
+    # Adicionar condição para dados Prio RPA que usam parceiro_id e semana/ano
+    if parceiro_id:
+        combustivel_conditions.append({
+            "parceiro_id": parceiro_id,
+            "fonte": "rpa_prio",
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            ]
+        })
+    
+    result = await db.abastecimentos_combustivel.delete_many({"$or": combustivel_conditions})
     deleted_counts["combustivel"] = result.deleted_count
     
-    # Eliminar elétrico
-    result = await db.despesas_combustivel.delete_many({
-        "motorista_id": {"$in": motorista_ids},
+    logger.info(f"🗑️ Eliminados {result.deleted_count} registos de combustível para S{semana}/{ano}")
+    
+    # Eliminar despesas combustível (Prio RPA) - pode ter motorista_id OU parceiro_id
+    despesas_comb_query = {
         "$or": [
             {"semana": semana, "ano": ano},
             {"data": {"$gte": data_inicio, "$lte": data_fim}}
         ]
-    })
-    deleted_counts["eletrico"] = result.deleted_count
+    }
+    
+    # Adicionar filtro por parceiro_id ou motorista_id
+    if parceiro_id:
+        despesas_comb_query["$and"] = [
+            {"$or": [
+                {"parceiro_id": parceiro_id},
+                {"motorista_id": {"$in": motorista_ids}},
+                {"veiculo_id": {"$in": vehicle_ids}},
+                {"vehicle_id": {"$in": vehicle_ids}}  # Suportar ambos os nomes
+            ]}
+        ]
+    else:
+        despesas_comb_query["motorista_id"] = {"$in": motorista_ids}
+    
+    result = await db.despesas_combustivel.delete_many(despesas_comb_query)
+    deleted_counts["despesas_combustivel"] = result.deleted_count
     
     # Eliminar extras
     result = await db.despesas_extras.delete_many({
@@ -2950,6 +3137,7 @@ async def generate_resumo_semanal_pdf(
     # Calcular dados por motorista (simplificado)
     motoristas_data = []
     todos_abastecimentos = []  # Lista de todos os abastecimentos da semana
+    todas_portagens = []  # Lista de todas as portagens Via Verde da semana
     totais = {
         "ganhos_uber": 0, "ganhos_bolt": 0, "via_verde": 0,
         "combustivel": 0, "eletrico": 0, "aluguer": 0, "extras": 0
@@ -2957,67 +3145,43 @@ async def generate_resumo_semanal_pdf(
     
     parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
     
-    for m in motoristas:
-        motorista_id = m["id"]
-        motorista_nome = m.get("name", "")
-        
-        # Ganhos Uber
-        uber_records = await db.ganhos_uber.find({
-            "motorista_id": motorista_id,
-            "$or": [
-                {"semana": semana, "ano": ano},
-                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+    # ============ BUSCAR PORTAGENS VIA VERDE POR PARCEIRO (fora do loop de motoristas) ============
+    # Os dados da Via Verde são por veículo/parceiro, não por motorista individual
+    if parceiro_id:
+        vv_query = {
+            "$and": [
+                {"parceiro_id": parceiro_id},
+                {"$or": [
+                    {"$and": [{"semana": semana}, {"ano": ano}]},
+                    {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]}
             ]
-        }, {"_id": 0, "rendimentos": 1, "pago_total": 1}).to_list(100)
-        ganhos_uber = sum(float(r.get("rendimentos") or r.get("pago_total") or 0) for r in uber_records)
+        }
         
-        # Ganhos Bolt
-        bolt_records = await db.ganhos_bolt.find({
-            "motorista_id": motorista_id,
-            "$or": [
-                {"periodo_semana": semana, "periodo_ano": ano},
-                {"semana": semana, "ano": ano}
-            ]
-        }, {"_id": 0, "ganhos_liquidos": 1}).to_list(100)
-        ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+        vv_records_global = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(1000)
         
-        # Via Verde
-        vv_records = await db.portagens_viaverde.find({
-            "motorista_id": motorista_id,
-            "$or": [
-                {"semana": semana, "ano": ano},
-                {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
-            ]
-        }, {"_id": 0, "value": 1}).to_list(1000)
-        via_verde = sum(float(r.get("value") or 0) for r in vv_records)
-        
-        # Combustível - buscar também detalhes para a lista
-        comb_records = await db.abastecimentos_combustivel.find({
-            "motorista_id": motorista_id,
-            "data": {"$gte": data_inicio, "$lte": data_fim}
-        }, {"_id": 0, "valor_total": 1, "valor": 1, "valor_liquido": 1, "data": 1, "hora": 1, "posto": 1}).to_list(100)
-        combustivel = sum(float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0) for r in comb_records)
-        
-        # Adicionar abastecimentos à lista global
-        for r in comb_records:
-            todos_abastecimentos.append({
-                "motorista": motorista_nome,
-                "data": r.get("data", ""),
-                "hora": r.get("hora", ""),
-                "posto": r.get("posto", "N/A"),
-                "valor": float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0)
-            })
-        
-        # Buscar também de despesas_combustivel (Prio RPA)
-        despesas_comb_query_conditions = [{"motorista_id": motorista_id}]
-        if parceiro_id:
-            despesas_comb_query_conditions.append({"parceiro_id": parceiro_id})
-        
+        for r in vv_records_global:
+            valor = float(r.get("valor") or r.get("value") or 0)
+            if valor > 0:
+                # Nota: Não somar ao total aqui, será somado por motorista no loop
+                todas_portagens.append({
+                    "motorista": r.get("matricula", "Frota"),
+                    "data": r.get("data") or r.get("entry_date", ""),
+                    "hora": r.get("hora", ""),
+                    "local": r.get("local") or f"{r.get('local_entrada', '')} → {r.get('local_saida', '')}",
+                    "matricula": r.get("matricula", ""),
+                    "valor": valor
+                })
+    
+    # ============ BUSCAR COMBUSTÍVEL POR PARCEIRO (fora do loop de motoristas) ============
+    # Os dados da Prio são por parceiro/cartão, não por motorista individual
+    if parceiro_id:
         despesas_comb_query = {
             "$and": [
-                {"$or": despesas_comb_query_conditions},
+                {"parceiro_id": parceiro_id},
                 {"$or": [
-                    {"semana": semana, "ano": ano},
+                    {"$and": [{"semana": semana}, {"ano": ano}]},
                     {"data": {"$gte": data_inicio, "$lte": data_fim}}
                 ]},
                 {"$or": [
@@ -3028,73 +3192,215 @@ async def generate_resumo_semanal_pdf(
         }
         
         despesas_comb_records = await db.despesas_combustivel.find(despesas_comb_query, {"_id": 0}).to_list(100)
+        
         for r in despesas_comb_records:
-            valor = float(r.get("valor_total") or r.get("valor") or 0)
-            combustivel += valor
-            todos_abastecimentos.append({
-                "motorista": motorista_nome,
-                "data": r.get("data", ""),
-                "hora": r.get("hora", ""),
-                "posto": r.get("posto", "Prio"),
-                "valor": valor
-            })
+            transacoes = r.get("transacoes", [])
+            if transacoes:
+                # Se tem transações detalhadas, adicionar à lista (mas NÃO somar aos totais aqui)
+                for t in transacoes:
+                    valor = float(t.get("valor", 0) or 0)
+                    # Nota: Não somar ao totais["combustivel"] aqui - será somado por motorista no loop
+                    todos_abastecimentos.append({
+                        "motorista": "Frota",
+                        "data": t.get("data", "").split(" ")[0] if t.get("data") else "",
+                        "hora": t.get("data", "").split(" ")[1] if " " in t.get("data", "") else "",
+                        "posto": t.get("posto", "Prio"),
+                        "valor": valor
+                    })
+            else:
+                # Registo simples sem transações detalhadas
+                valor = float(r.get("valor_total") or r.get("valor") or 0)
+                if valor > 0:
+                    # Nota: Não somar ao totais["combustivel"] aqui - será somado por motorista no loop
+                    todos_abastecimentos.append({
+                        "motorista": "Frota",
+                        "data": r.get("data", ""),
+                        "hora": r.get("hora", ""),
+                        "posto": r.get("posto", "Prio"),
+                        "valor": valor
+                    })
+    
+    for m in motoristas:
+        motorista_id = m["id"]
+        motorista_nome = m.get("name", "")
+        veiculo_id = m.get("veiculo_atribuido")
         
-        # Elétrico
-        elet_records = await db.despesas_combustivel.find({
+        # Buscar veículo para obter matrícula e outros dados
+        veiculo = None
+        matricula_veiculo = None
+        if veiculo_id:
+            veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
+            if veiculo:
+                matricula_veiculo = veiculo.get("matricula", "").upper().strip()
+        
+        # ============ VERIFICAR AJUSTE MANUAL ============
+        # Se existir um ajuste manual para este motorista/semana, usar esses valores
+        ajuste_manual = await db.ajustes_semanais.find_one({
             "motorista_id": motorista_id,
-            "$or": [
-                {"semana": semana, "ano": ano},
-                {"data": {"$gte": data_inicio, "$lte": data_fim}}
-            ]
-        }, {"_id": 0, "valor_total": 1}).to_list(100)
-        eletrico = sum(float(r.get("valor_total") or 0) for r in elet_records)
+            "semana": semana,
+            "ano": ano
+        }, {"_id": 0})
         
-        aluguer = float(m.get("valor_aluguer_semanal") or 0)
+        if ajuste_manual:
+            # Usar valores do ajuste manual
+            ganhos_uber = float(ajuste_manual.get("ganhos_uber") or 0)
+            uber_portagens = float(ajuste_manual.get("uber_portagens") or 0)
+            uber_gratificacoes = float(ajuste_manual.get("uber_gratificacoes") or 0)
+            ganhos_bolt = float(ajuste_manual.get("ganhos_bolt") or 0)
+            via_verde = float(ajuste_manual.get("via_verde") or 0)
+            combustivel = float(ajuste_manual.get("combustivel") or 0)
+            eletrico = float(ajuste_manual.get("eletrico") or 0)
+            aluguer = float(ajuste_manual.get("aluguer") or 0)
+            extras = float(ajuste_manual.get("extras") or 0)
+            
+            logger.info(f"📝 PDF: Usando ajuste manual para {motorista_nome} - S{semana}/{ano}")
+        else:
+            # ============ BUSCAR DADOS AUTOMATICAMENTE ============
+            # Ganhos Uber
+            uber_records = await db.ganhos_uber.find({
+                "motorista_id": motorista_id,
+                "$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]
+            }, {"_id": 0, "rendimentos": 1, "pago_total": 1, "portagens": 1, "gratificacao": 1, "uber_portagens": 1, "uber_gratificacoes": 1}).to_list(100)
+            
+            ganhos_uber = 0.0
+            uber_portagens = 0.0
+            uber_gratificacoes = 0.0
+            for r in uber_records:
+                valor_base = float(r.get("rendimentos") or r.get("pago_total") or 0)
+                port = float(r.get("portagens") or r.get("uber_portagens") or 0)
+                grat = float(r.get("gratificacao") or r.get("uber_gratificacoes") or 0)
+                # Ganhos Uber = valor base menos portagens e gratificações
+                ganhos_uber += valor_base - port - grat
+                uber_portagens += port
+                uber_gratificacoes += grat
+            
+            # Ganhos Bolt
+            bolt_records = await db.ganhos_bolt.find({
+                "motorista_id": motorista_id,
+                "$or": [
+                    {"periodo_semana": semana, "periodo_ano": ano},
+                    {"semana": semana, "ano": ano}
+                ]
+            }, {"_id": 0, "ganhos_liquidos": 1}).to_list(100)
+            ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+            
+            # Via Verde - buscar pela matrícula do veículo do motorista
+            via_verde = 0.0
+            if matricula_veiculo:
+                matricula_normalizada = matricula_veiculo.replace("-", "").replace(" ", "")
+                vv_query = {
+                    "$or": [
+                        {"matricula": matricula_veiculo},
+                        {"matricula": matricula_normalizada}
+                    ],
+                    "$and": [
+                        {"$or": [
+                            {"semana": semana, "ano": ano},
+                            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
+                            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                        ]}
+                    ]
+                }
+                vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(100)
+                for r in vv_records:
+                    market_desc = str(r.get("market_description", "")).strip().lower()
+                    if not market_desc or market_desc in ["portagens", "parques"] or "mensalidade" in market_desc or "mobilidade" in market_desc:
+                        via_verde += float(r.get("valor") or r.get("value") or 0)
+            
+            # Combustível - buscar também detalhes para a lista
+            comb_records = await db.abastecimentos_combustivel.find({
+                "motorista_id": motorista_id,
+                "data": {"$gte": data_inicio, "$lte": data_fim}
+            }, {"_id": 0, "valor_total": 1, "valor": 1, "valor_liquido": 1, "data": 1, "hora": 1, "posto": 1}).to_list(100)
+            combustivel = sum(float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0) for r in comb_records)
+            
+            # Adicionar abastecimentos à lista global
+            for r in comb_records:
+                todos_abastecimentos.append({
+                    "motorista": motorista_nome,
+                    "data": r.get("data", ""),
+                    "hora": r.get("hora", ""),
+                    "posto": r.get("posto", "N/A"),
+                    "valor": float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0)
+                })
+            
+            # Nota: Combustível (Prio) é buscado fora do loop de motoristas porque é por parceiro
+            
+            # Elétrico
+            elet_records = await db.despesas_combustivel.find({
+                "motorista_id": motorista_id,
+                "$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]
+            }, {"_id": 0, "valor_total": 1}).to_list(100)
+            eletrico = sum(float(r.get("valor_total") or 0) for r in elet_records)
+            
+            # Aluguer - buscar do veículo se não estiver definido no motorista
+            aluguer = float(m.get("valor_aluguer_semanal") or 0)
+            if aluguer == 0 and veiculo_id:
+                if veiculo:
+                    aluguer = calcular_aluguer_semanal(veiculo, semana, ano)
+            
+            # Extras
+            extras_records = await db.despesas_extras.find({
+                "motorista_id": motorista_id,
+                "$or": [
+                    {"semana": semana, "ano": ano},
+                    {"semana": None}
+                ]
+            }, {"_id": 0, "valor": 1, "tipo": 1, "status": 1}).to_list(100)
+            extras = 0.0
+            for r in extras_records:
+                # Só somar extras não pagos ou pendentes
+                if r.get("status", "pendente") != "cancelado":
+                    valor_extra = float(r.get("valor") or 0)
+                    # Se for crédito, subtrair; se for débito, somar
+                    if r.get("tipo") == "credito":
+                        extras -= valor_extra
+                    else:
+                        extras += valor_extra
         
-        # Extras
-        extras_records = await db.despesas_extras.find({
-            "motorista_id": motorista_id,
-            "$or": [
-                {"semana": semana, "ano": ano},
-                {"semana": None}
-            ]
-        }, {"_id": 0, "valor": 1, "tipo": 1, "status": 1}).to_list(100)
-        extras = 0.0
-        for r in extras_records:
-            # Só somar extras não pagos ou pendentes
-            if r.get("status", "pendente") != "cancelado":
-                valor_extra = float(r.get("valor") or 0)
-                # Se for crédito, subtrair; se for débito, somar
-                if r.get("tipo") == "credito":
-                    extras -= valor_extra
-                else:
-                    extras += valor_extra
+        # Líquido = (Uber + uPort + uGrat + Bolt) - (Via Verde + Comb. + Elétr. + Aluguer + Extras)
+        liquido = ganhos_uber + uber_portagens + uber_gratificacoes + ganhos_bolt - via_verde - combustivel - eletrico - aluguer - extras
         
-        liquido = ganhos_uber + ganhos_bolt - via_verde - combustivel - eletrico - aluguer - extras
+        # Lucro do Parceiro para este motorista
+        # Regra: Se saldo do motorista (liquido) >= 0, lucro = aluguer + extras
+        # Se saldo < 0, lucro = aluguer + extras + liquido (diminuído pela dívida)
+        lucro_parc_mot = (aluguer + extras) if liquido >= 0 else (aluguer + extras + liquido)
         
         motoristas_data.append({
             "nome": m.get("name", ""),
             "uber": ganhos_uber,
+            "uber_portagens": uber_portagens,
+            "uber_gratificacoes": uber_gratificacoes,
             "bolt": ganhos_bolt,
             "via_verde": via_verde,
             "combustivel": combustivel,
             "eletrico": eletrico,
             "aluguer": aluguer,
             "extras": extras,
-            "liquido": liquido
+            "liquido": liquido,
+            "lucro_parceiro": lucro_parc_mot
         })
         
         totais["ganhos_uber"] += ganhos_uber
+        totais["uber_portagens"] = totais.get("uber_portagens", 0) + uber_portagens
+        totais["uber_gratificacoes"] = totais.get("uber_gratificacoes", 0) + uber_gratificacoes
         totais["ganhos_bolt"] += ganhos_bolt
-        totais["via_verde"] += via_verde
-        totais["combustivel"] += combustivel
+        totais["via_verde"] += via_verde  # Somar via verde por motorista
+        totais["combustivel"] += combustivel  # Somar combustível por motorista
         totais["eletrico"] += eletrico
         totais["aluguer"] += aluguer
         totais["extras"] += extras
+        totais["lucro_parceiro"] = totais.get("lucro_parceiro", 0) + lucro_parc_mot
     
     totais["liquido"] = (
-        totais["ganhos_uber"] + totais["ganhos_bolt"] - 
-        totais["via_verde"] - totais["combustivel"] - totais["eletrico"] - totais["aluguer"]
+        totais["ganhos_uber"] + totais.get("uber_portagens", 0) + totais.get("uber_gratificacoes", 0) + totais["ganhos_bolt"] - 
+        totais["via_verde"] - totais["combustivel"] - totais["eletrico"] - totais["aluguer"] - totais["extras"]
     )
     
     # Gerar PDF
@@ -3114,36 +3420,42 @@ async def generate_resumo_semanal_pdf(
     
     # Tabela de motoristas
     table_data = [
-        ["Motorista", "Uber", "Bolt", "Via Verde", "Comb.", "Elétr.", "Aluguer", "Extras", "Líquido"]
+        ["Motorista", "Uber", "uPort", "uGrat", "Bolt", "V.Verde", "Comb.", "Elétr.", "Alug.", "Extras", "Líquido", "L.Parc."]
     ]
     
     for m in sorted(motoristas_data, key=lambda x: x["nome"]):
         table_data.append([
-            m["nome"][:20],
+            m["nome"][:18],
             f"€{m['uber']:.2f}",
+            f"€{m.get('uber_portagens', 0):.2f}",
+            f"€{m.get('uber_gratificacoes', 0):.2f}",
             f"€{m['bolt']:.2f}",
             f"€{m['via_verde']:.2f}",
             f"€{m['combustivel']:.2f}",
             f"€{m['eletrico']:.2f}",
             f"€{m['aluguer']:.2f}",
             f"€{m['extras']:.2f}",
-            f"€{m['liquido']:.2f}"
+            f"€{m['liquido']:.2f}",
+            f"€{m.get('lucro_parceiro', 0):.2f}"
         ])
     
     # Linha de totais
     table_data.append([
         "TOTAIS",
         f"€{totais['ganhos_uber']:.2f}",
+        f"€{totais.get('uber_portagens', 0):.2f}",
+        f"€{totais.get('uber_gratificacoes', 0):.2f}",
         f"€{totais['ganhos_bolt']:.2f}",
         f"€{totais['via_verde']:.2f}",
         f"€{totais['combustivel']:.2f}",
         f"€{totais['eletrico']:.2f}",
         f"€{totais['aluguer']:.2f}",
         f"€{totais['extras']:.2f}",
-        f"€{totais['liquido']:.2f}"
+        f"€{totais['liquido']:.2f}",
+        f"€{totais.get('lucro_parceiro', 0):.2f}"
     ])
     
-    col_widths = [45*mm, 18*mm, 18*mm, 20*mm, 18*mm, 18*mm, 18*mm, 18*mm, 20*mm]
+    col_widths = [32*mm, 12*mm, 11*mm, 11*mm, 12*mm, 13*mm, 12*mm, 12*mm, 12*mm, 12*mm, 15*mm, 15*mm]
     table = Table(table_data, colWidths=col_widths)
     
     table.setStyle(TableStyle([
@@ -3165,20 +3477,19 @@ async def generate_resumo_semanal_pdf(
     elements.append(table)
     elements.append(Spacer(1, 10*mm))
     
-    # Resumo
-    receitas = totais["aluguer"] + totais["extras"]
-    despesas = totais["via_verde"] + totais["combustivel"] + totais["eletrico"]
-    liquido_parceiro = receitas - despesas
+    # Resumo - usando a nova lógica de lucro do parceiro
+    lucro_parceiro_total = totais.get("lucro_parceiro", 0)
     
     summary_data = [
-        ["Receitas do Parceiro", f"€{receitas:.2f}"],
-        ["  Aluguer", f"€{totais['aluguer']:.2f}"],
+        ["Receitas do Parceiro", ""],
+        ["  Alugueres", f"€{totais['aluguer']:.2f}"],
         ["  Extras", f"€{totais['extras']:.2f}"],
-        ["Despesas Operacionais", f"€{despesas:.2f}"],
+        ["Despesas Operacionais", ""],
         ["  Via Verde", f"€{totais['via_verde']:.2f}"],
         ["  Combustível", f"€{totais['combustivel']:.2f}"],
         ["  Elétrico", f"€{totais['eletrico']:.2f}"],
-        ["LÍQUIDO PARCEIRO", f"€{liquido_parceiro:.2f}"],
+        ["", ""],
+        ["LUCRO TOTAL DO PARCEIRO", f"€{lucro_parceiro_total:.2f}"],
     ]
     
     summary_table = Table(summary_data, colWidths=[80*mm, 40*mm])
@@ -3188,7 +3499,8 @@ async def generate_resumo_semanal_pdf(
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#d4edda') if liquido_parceiro >= 0 else colors.HexColor('#f8d7da')),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9d8fd') if lucro_parceiro_total >= 0 else colors.HexColor('#f8d7da')),
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.HexColor('#6b21a8')),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
@@ -3262,6 +3574,74 @@ async def generate_resumo_semanal_pdf(
         ]))
         
         elements.append(abast_table)
+    
+    # ============ LISTA DE PORTAGENS VIA VERDE ============
+    if todas_portagens:
+        elements.append(Spacer(1, 10*mm))
+        
+        section_style = ParagraphStyle('Section', parent=styles['Heading2'], fontSize=12, textColor=colors.HexColor('#1e3a5f'))
+        elements.append(Paragraph("Detalhes das Portagens Via Verde", section_style))
+        elements.append(Spacer(1, 3*mm))
+        
+        # Ordenar por data
+        todas_portagens_sorted = sorted(todas_portagens, key=lambda x: (x.get("data", ""), x.get("hora", "")))
+        
+        # Criar tabela de portagens
+        portagens_table_data = [
+            ["Motorista", "Data", "Hora", "Local", "Valor"]
+        ]
+        
+        for pg in todas_portagens_sorted:
+            # Formatar data
+            data_str = pg.get("data", "")
+            if data_str:
+                try:
+                    if "T" in data_str:
+                        data_str = data_str.split("T")[0]
+                    data_obj = datetime.strptime(data_str, "%Y-%m-%d")
+                    data_str = data_obj.strftime("%d/%m/%Y")
+                except:
+                    pass
+            
+            portagens_table_data.append([
+                pg.get("motorista", "")[:18],
+                data_str,
+                pg.get("hora", "")[:5] if pg.get("hora") else "",
+                pg.get("local", "")[:25],
+                f"€{pg.get('valor', 0):.2f}"
+            ])
+        
+        # Linha de total
+        total_portagens_valor = sum(pg.get("valor", 0) for pg in todas_portagens)
+        portagens_table_data.append([
+            "TOTAL",
+            "",
+            "",
+            f"{len(todas_portagens)} portagens",
+            f"€{total_portagens_valor:.2f}"
+        ])
+        
+        portagens_col_widths = [40*mm, 22*mm, 15*mm, 40*mm, 18*mm]
+        portagens_table = Table(portagens_table_data, colWidths=portagens_col_widths)
+        
+        portagens_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#22c55e')),  # Verde para Via Verde
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#bbf7d0')),  # Verde claro para total
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('ALIGN', (1, 1), (2, -1), 'CENTER'),
+            ('ALIGN', (4, 1), (4, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#f0fdf4')]),
+        ]))
+        
+        elements.append(portagens_table)
     
     # Rodapé
     elements.append(Spacer(1, 15*mm))

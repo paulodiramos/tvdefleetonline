@@ -1,0 +1,71 @@
+{
+  "summary": "Complete testing of Sistema de Faturação Avançado features: auto-cálculo de preços and descontos configuráveis. All P1 and P2 features tested and working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Plan creation modal",
+        "issues": ["Console warning: Missing `Description` or `aria-describedby={undefined}` for DialogContent - accessibility issue"]
+      }
+    ]
+  },
+  "features_tested": {
+    "P1_auto_calculo_precos": {
+      "status": "PASS",
+      "details": "Auto-calculation works correctly in plan creation modal. Entering 10€ in Semanal field auto-fills: Mensal=40€ (10×4), Anual=520€ (10×52). Works for base price, price per vehicle, and price per driver."
+    },
+    "P2_descontos_tab": {
+      "status": "PASS",
+      "details": "Descontos tab visible in admin gestao planos page. Shows: Descontos Especiais header, Descontos Ativos section, Aplicar Novo Desconto form (Parceiro dropdown, Desconto %, Motivo, Aplicar button)"
+    },
+    "P2_apply_discount_api": {
+      "status": "PASS",
+      "details": "POST /api/gestao-planos/subscricoes/user/{user_id}/desconto?desconto_percentagem=X&motivo=Y works correctly. Returns 200 with sucesso=true or 404 if no active subscription"
+    },
+    "P2_remove_discount_api": {
+      "status": "PASS",
+      "details": "DELETE /api/gestao-planos/subscricoes/user/{user_id}/desconto works correctly. Returns 200 with sucesso=true and restored price"
+    },
+    "P2_list_discounts_api": {
+      "status": "PASS",
+      "details": "GET /api/gestao-planos/subscricoes/com-desconto returns list of subscriptions with active discounts. Returns {subscricoes: [], total: 0}"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_descontos_faturacao.py",
+    "/app/test_reports/pytest/pytest_descontos_faturacao.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Auto-calculation formula correctly implemented: semanal × 4 = mensal, semanal × 52 = anual",
+    "Discount endpoints have proper validation (0-100% range)",
+    "Authorization checks in place - only admin role can apply/remove discounts",
+    "Minor: React console warnings about duplicate keys (c693c9ec-ddd5-400c-b79d-61b651e7b3fd) - not critical but should be fixed"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_descontos_faturacao.py (created)"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "email": "admin@tvdefleet.com",
+      "password": "admin123"
+    }
+  },
+  "seed_data_creation": "None required - tested with existing data",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Sistema de faturação avançado fully tested. Auto-calculation works in plan creation modal (semanal×4=mensal, ×52=anual). Descontos tab visible with full UI for applying/viewing/removing discounts. Backend discount APIs all working (POST/DELETE/GET). Test partner ID: ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e has no active subscription (returns 404) which is expected behavior.",
+  "mocked_integrations": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}

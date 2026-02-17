@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Play, Pause, Square, Save, Plus, Trash2, Settings, 
   Monitor, MousePointer, Type, Clock, Download, Eye,
   ChevronRight, RefreshCw, CheckCircle, XCircle, AlertCircle,
-  User, Key
+  User, Key, ArrowLeft
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { toast } from 'sonner';
 import Layout from '../components/Layout';
+import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -37,8 +38,10 @@ const SELETORES_TIPO = [
 
 export default function RPADesigner({ user, onLogout }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [plataformas, setPlataformas] = useState([]);
   const [plataformaSelecionada, setPlataformaSelecionada] = useState(null);
+  const [plataformaNovoSistema, setPlataformaNovoSistema] = useState(null);
   const [semanaSelecionada, setSemanaSelecionada] = useState(0);
   const [sessionId, setSessionId] = useState(null);
   const [passos, setPassos] = useState([]);

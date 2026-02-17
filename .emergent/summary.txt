@@ -1,224 +1,272 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas, que evoluiu para um sistema de automação (RPA) complexo. O foco tem sido a criação de um RPA Designer visual, a resolução de problemas de extração de dados de plataformas como Uber, Via Verde e Prio, e a automação da importação desses dados para um Resumo Semanal do Parceiro.
-
-O desafio principal é a fragilidade dos RPAs devido a CAPTCHAs e alterações dinâmicas nos websites das plataformas (especialmente a Uber). Para contornar isso, o desenvolvimento focou-se em criar um sistema de sessão persistente, onde o parceiro faz login manualmente uma vez para que o sistema possa reutilizar essa sessão para automações subsequentes.
+O utilizador pretende construir um **Sistema de Integrações Configurável** para a sua aplicação de gestão de frotas. O objetivo é permitir que um administrador defina e configure integrações com vários fornecedores (combustível, TVDE, GPS, etc.). O sistema deve suportar métodos de integração via RPA (com um browser virtual para gravação de passos) e API. O administrador deve poder criar fornecedores, agrupar por categorias, definir os passos de automação, lidar com datas dinâmicas e mapear dados de ficheiros descarregados. Este novo sistema substituirá a lógica de sincronização codificada existente.
 
 **PRODUCT REQUIREMENTS:**
-1.  **RPA Designer Visual:** Permitir que um admin grave, edite e guarde scripts de automação.
-2.  **Motor de Execução RPA:** Um sistema para executar os designs RPA gravados de forma automática e agendada.
-3.  **Sistema de Sessão Persistente:** Uma página () para os parceiros fazerem login manualmente e guardarem a sua sessão.
-4.  **Processamento Automático de Ficheiros:** Após a execução de um RPA e o download de um relatório (PDF/CSV), o sistema deve processar o ficheiro, extrair os dados e atualizar o Resumo Semanal.
-5.  **Página de Importação Manual:** Uma página () que permite o upload manual de ficheiros de relatório.
-6.  **Correção de Bugs RPA:** Resolver problemas de extração e login na Uber, Via Verde e Prio.
+Referir a  para a lista detalhada de requisitos, que foi atualizada para refletir a nova arquitetura de plataformas configuráveis e a implementação do browser virtual.
 
-**User's preferred language**: Portuguese (português)
+**User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-- Uma aplicação full-stack (React + FastAPI + MongoDB).
-- Um **RPA Designer** e um motor de execução RPA funcional para Uber, Prio e Via Verde.
-- Um sistema de **Sessão Persistente** () que guarda cookies para contornar logins e CAPTCHAs, sendo este o fluxo principal da automação.
-- O **RPA da Uber** foi totalmente refatorado: agora consegue navegar para a página de relatórios, interagir com o modal de geração, descarregar o ficheiro CSV, processá-lo e guardar os ganhos na base de dados.
-- A **sincronização da Bolt** foi profundamente analisada. Como a API oficial da Bolt é incompleta (não fornece bónus de campanha), foi implementado um campo de ajuste manual () na base de dados e um endpoint () para o atualizar. A lógica de sincronização foi corrigida para preservar este ajuste manual.
-- A página **Resumo Semanal** () foi limpa, com a remoção das colunas Uber Port. e Bolt Camp. a pedido do utilizador.
-- A navegação do admin agora inclui um link para o **Hub de Sincronização** ().
+A aplicação possui um backend em FastAPI e um frontend em React. No ambiente de desenvolvimento, foi implementado um sistema de RPA com um browser virtual (Playwright) que permite aos administradores gravar, testar e executar automações. As funcionalidades mais recentes incluem um seletor de credenciais de parceiro para testar automações de forma segura (sem expor as senhas), a injeção dessas credenciais nos campos de login, e uma UI refinada para maximizar o espaço do browser. O código-fonte completo da aplicação foi exportado para um repositório no GitHub. Atualmente, está a decorrer um processo de deployment manual num VPS do utilizador (PTISP). O servidor foi preparado com Ubuntu 22.04, Docker (para a MongoDB), Nginx, Node.js e Python.
 
 **Last working item**:
-- **Last item agent was working:** O agente estava a finalizar a correção da sincronização de dados da Bolt. O utilizador reportou que o valor exibido estava incorreto. Após análise, o agente concluiu que a API oficial da Bolt não retorna dados essenciais como ganhos de campanha. Para resolver isto, implementou um sistema de ajuste manual e corrigiu a lógica de sincronização para que os ajustes manuais não se perdessem ao re-sincronizar.
-- **Status:** USER VERIFICATION PENDING
-- **Agent Testing Done:** Y
-- **Which testing method agent to use?** Manual testing by user. O utilizador deve:
-    1. Aceder à página de Resumo Semanal e verificar se o valor da Bolt para a semana 5 é de €300.54.
-    2. Clicar no botão para sincronizar a Bolt novamente.
-    3. Após a sincronização, verificar se o valor de €300.54 foi preservado.
-- **User Testing Done:** N
+-   Last item agent was working: Concluir o deployment manual da aplicação no VPS do utilizador. O agente estava a guiar o utilizador na resolução de um erro de arranque do serviço de backend (). O problema foi diagnosticado como a falta do módulo Python usage: pdfplumber [-h] [--structure | --structure-text]
+                  [--format {csv,json,text}] [--types TYPES [TYPES ...]]
+                  [--include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]]
+                  [--exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]]
+                  [--laparams LAPARAMS] [--precision PRECISION]
+                  [--pages PAGES [PAGES ...]] [--indent INDENT]
+                  [infile]
+
+positional arguments:
+  infile
+
+options:
+  -h, --help            show this help message and exit
+  --structure           Write the structure tree as JSON. All other arguments
+                        except --pages, --laparams, and --indent will be
+                        ignored
+  --structure-text      Write the structure tree as JSON including text
+                        contents. All other arguments except --pages,
+                        --laparams, and --indent will be ignored
+  --format {csv,json,text}
+  --types TYPES [TYPES ...]
+  --include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]
+                        Include *only* these object attributes in output.
+  --exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]
+                        Exclude these object attributes from output.
+  --laparams LAPARAMS
+  --precision PRECISION
+  --pages PAGES [PAGES ...]
+  --indent INDENT       Indent level for JSON pretty-printing.. O agente forneceu o comando de instalação e estava prestes a verificar se o serviço arrancava com sucesso.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N
+-   Which testing method agent to use? N/A. O trabalho atual é um deployment manual no servidor do utilizador. A verificação será feita através de comandos  e -- No entries -- via SSH no VPS e, por fim, acedendo ao domínio  no browser.
+-   User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P1) Não é possível guardar um design RPA com zero passos.**
-- **Issue 2: (P2) O nome do motorista aparece como  no Resumo Semanal.**
+-   Issue 1: Concluir o deployment da aplicação no VPS (P0)
+-   Issue 2: Verificar a Execução de Sincronização Dinâmica (P1)
+-   Issue 3: A sessão da Prio expira após cada sincronização (P2)
+-   Issue 4: Motoristas incorretos/inativos no Resumo Semanal (P2)
+-   Issue 5: Fragilidade da Extração Prio Elétrico (P2)
 
 **Issues Detail:**
-- **Issue 1:**
-    - **Description:** O utilizador reportou que recebe a mensagem Adicione pelo menos um passo antes de guardar ao tentar guardar um design RPA vazio.
-    - **Attempted fixes:** O agente procurou por validações no frontend () e no backend (), mas não encontrou nenhuma lógica que impedisse o ato de guardar um design vazio. Suspeita-se que o problema já possa ter sido corrigido.
-    - **Next debug checklist:** O utilizador deve tentar reproduzir o erro: iniciar uma gravação de RPA, não adicionar passos e clicar em Guardar. Se o erro persistir, verificar a consola do navegador e os logs do backend em busca da origem da mensagem.
-    - **Status:** USER VERIFICATION PENDING
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Frontend
-    - **Blocked on other issue:** None
+-   **Issue 1: Concluir o deployment da aplicação no VPS (P0)**
+    -   **Description:** O serviço de backend () falhou ao iniciar no novo VPS do utilizador devido a dependências em falta.
+    -   **Attempted fixes:** O agente analisou os logs (-- No entries --) e identificou a falta do módulo usage: pdfplumber [-h] [--structure | --structure-text]
+                  [--format {csv,json,text}] [--types TYPES [TYPES ...]]
+                  [--include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]]
+                  [--exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]]
+                  [--laparams LAPARAMS] [--precision PRECISION]
+                  [--pages PAGES [PAGES ...]] [--indent INDENT]
+                  [infile]
 
-- **Issue 2:**
-    - **Description:** Durante a depuração dos valores do resumo semanal, a resposta da API () mostrava o nome do motorista como , embora os valores de ganhos estivessem corretos e o motorista existisse na base de dados com o nome correto.
-    - **Attempted fixes:** Nenhuma tentativa foi feita para corrigir este problema específico.
-    - **Next debug checklist:**
-        1. Analisar a query no ficheiro  que agrega os dados dos motoristas para o resumo semanal.
-        2. Verificar como a informação do motorista (especialmente o campo ) é juntada (joined/looked up) com os dados de ganhos.
-        3. O problema pode estar na forma como os dados são mapeados ou na estrutura do  de agregação do MongoDB.
-    - **Why fix this issue and what will be achieved with the fix?** Garante que o nome do motorista é exibido corretamente na tabela do resumo semanal, melhorando a clareza dos dados.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Backend
-    - **Blocked on other issue:** None
+positional arguments:
+  infile
+
+options:
+  -h, --help            show this help message and exit
+  --structure           Write the structure tree as JSON. All other arguments
+                        except --pages, --laparams, and --indent will be
+                        ignored
+  --structure-text      Write the structure tree as JSON including text
+                        contents. All other arguments except --pages,
+                        --laparams, and --indent will be ignored
+  --format {csv,json,text}
+  --types TYPES [TYPES ...]
+  --include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]
+                        Include *only* these object attributes in output.
+  --exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]
+                        Exclude these object attributes from output.
+  --laparams LAPARAMS
+  --precision PRECISION
+  --pages PAGES [PAGES ...]
+  --indent INDENT       Indent level for JSON pretty-printing.. O comando Looking in indexes: https://pypi.org/simple, https://d33sy5i8bnduwe.cloudfront.net/simple/
+Requirement already satisfied: pdfplumber in /root/.venv/lib/python3.11/site-packages (0.11.9)
+Requirement already satisfied: pdfminer.six==20251230 in /root/.venv/lib/python3.11/site-packages (from pdfplumber) (20251230)
+Requirement already satisfied: Pillow>=9.1 in /root/.venv/lib/python3.11/site-packages (from pdfplumber) (12.0.0)
+Requirement already satisfied: pypdfium2>=4.18.0 in /root/.venv/lib/python3.11/site-packages (from pdfplumber) (5.3.0)
+Requirement already satisfied: charset-normalizer>=2.0.0 in /root/.venv/lib/python3.11/site-packages (from pdfminer.six==20251230->pdfplumber) (3.4.4)
+Requirement already satisfied: cryptography>=36.0.0 in /root/.venv/lib/python3.11/site-packages (from pdfminer.six==20251230->pdfplumber) (46.0.3)
+Requirement already satisfied: cffi>=2.0.0 in /root/.venv/lib/python3.11/site-packages (from cryptography>=36.0.0->pdfminer.six==20251230->pdfplumber) (2.0.0)
+Requirement already satisfied: pycparser in /root/.venv/lib/python3.11/site-packages (from cffi>=2.0.0->cryptography>=36.0.0->pdfminer.six==20251230->pdfplumber) (2.23) foi fornecido como correção.
+    -   **Next debug checklist:**
+        1.  No VPS, executar  para confirmar se o serviço está .
+        2.  Se falhar, executar -- No entries -- para obter os novos logs de erro.
+        3.  Após o backend estar funcional, verificar o estado do Nginx com  e os logs com .
+        4.  Pedir ao utilizador para aceder a  e verificar se a aplicação carrega e funciona (ex: login).
+    -   **Why fix this issue and what will be achieved with the fix?** Para colocar a aplicação em produção no servidor do utilizador, concluindo o objetivo da sessão atual.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Teste manual e E2E no ambiente de produção.
+    -   **Blocked on other issue:** Não.
 
 **In progress Task List**:
-Nenhuma.
+-   **Task 1: Finalizar o Deployment no VPS (P0)**
+    -   **Where to resume:** O utilizador está conectado ao VPS via SSH. O próximo comando a executar é  para verificar se a instalação do usage: pdfplumber [-h] [--structure | --structure-text]
+                  [--format {csv,json,text}] [--types TYPES [TYPES ...]]
+                  [--include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]]
+                  [--exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]]
+                  [--laparams LAPARAMS] [--precision PRECISION]
+                  [--pages PAGES [PAGES ...]] [--indent INDENT]
+                  [infile]
+
+positional arguments:
+  infile
+
+options:
+  -h, --help            show this help message and exit
+  --structure           Write the structure tree as JSON. All other arguments
+                        except --pages, --laparams, and --indent will be
+                        ignored
+  --structure-text      Write the structure tree as JSON including text
+                        contents. All other arguments except --pages,
+                        --laparams, and --indent will be ignored
+  --format {csv,json,text}
+  --types TYPES [TYPES ...]
+  --include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]
+                        Include *only* these object attributes in output.
+  --exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]
+                        Exclude these object attributes from output.
+  --laparams LAPARAMS
+  --precision PRECISION
+  --pages PAGES [PAGES ...]
+  --indent INDENT       Indent level for JSON pretty-printing. resolveu o problema de arranque do serviço.
+    -   **What will be achieved with this?** A aplicação estará totalmente operacional no domínio .
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Teste manual do site em produção.
+    -   **Blocked on something:** Não.
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks:**
-  - (P1) **Implementar importação de CSV para a Bolt:** Substituir a dependência da API incompleta da Bolt por uma função que processe o upload do ficheiro CSV completo (como o que o utilizador forneceu), que contém todos os dados corretos (incluindo ganhos de campanha).
-  - (P1) **Implementar agendador de tarefas RPA:** Criar um serviço de background (ex: ) que executa os designs RPA automaticamente em horários definidos, para automatizar completamente as sincronizações.
-  - (P2) **Geração de PDF da Vistoria:** Implementar a geração de um relatório PDF após a aprovação da vistoria.
-- **Future Tasks:**
-  - Implementar a integração com a **API oficial da Uber**.
-  - Implementar integrações com **Ifthenpay**, **Moloni** e **Verizon GPS**.
-  - Refatorar o ficheiro monolítico .
-  - Implementar o envio de relatórios via WhatsApp.
+*   **Upcoming Tasks:**
+    *   **(P0) Configurar SSL/HTTPS:** Instalar Certbot no VPS e configurar um certificado SSL para o domínio , garantindo que todo o tráfego seja servido via HTTPS.
+    *   **(P1) Refatorar a Página de Sincronização do Parceiro:** Modificar a UI do parceiro para que os botões de sincronização chamem o novo endpoint dinâmico ().
+    *   **(P2) Pedir Validação ao Utilizador:** Planear um ponto de paragem para perguntar ao utilizador se os problemas da sessão da Prio e dos motoristas no resumo foram resolvidos.
+*   **Future Tasks:**
+    *   Implementar integração com WhatsApp (QR Code + API).
+    *   Refatorar God Components como .
+    *   Implementar funcionalidades Alertas Avançados e Comissões Avançadas.
+    *   Arquivar dados antigos da base de dados.
 
 **Completed work in this session**
-- **RPA da Uber (RESOLVED):** O  em  foi totalmente refatorado. Agora consegue usar uma sessão guardada, navegar para a página de relatórios, interagir com o modal de geração (selecionando tipo de relatório e organização), descarregar o CSV, processá-lo e guardar os ganhos na base de dados, associando-os ao motorista correto. A sincronização da Uber está funcional.
-- **Sincronização da Bolt (RESOLVED com Workaround):** Resolvida a discrepância de valores. A API oficial foi considerada incompleta. Foi adicionado um campo  e um endpoint () para ajustes manuais. A lógica de sincronização foi corrigida para preservar este ajuste, garantindo que o valor final no resumo semanal esteja correto.
-- **UI do Resumo Semanal (IMPROVED):** As colunas Uber Port. e Bolt Camp. foram removidas da tabela em .
-- **Lógica de Sincronização (IMPROVED):** A lógica para encontrar ou criar motoristas durante a sincronização () foi melhorada para usar correspondência parcial de nomes, evitando a criação de motoristas duplicados.
-- **Navegação (FIXED):** Foi adicionado o link para  no menu de navegação do admin ().
-- **Problema do Playwright (FIXED):** O erro  foi resolvido executando Downloading Chromium 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-linux-arm64.zip
-|                                                                                |   0% of 175.9 MiB
-|■■■■■■■■                                                                        |  10% of 175.9 MiB
-|■■■■■■■■■■■■■■■■                                                                |  20% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 175.9 MiB
-Chromium 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium-1194
-Downloading Chromium Headless Shell 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-headless-shell-linux-arm64.zip
-|                                                                                |   0% of 106.1 MiB
-|■■■■■■■■                                                                        |  10% of 106.1 MiB
-|■■■■■■■■■■■■■■■■                                                                |  20% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 106.1 MiB
-Chromium Headless Shell 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium_headless_shell-1194
-Downloading Firefox 142.0.1 (playwright build v1495) from https://cdn.playwright.dev/dbazure/download/playwright/builds/firefox/1495/firefox-debian-12-arm64.zip
-|                                                                                |   0% of 88 MiB
-|■■■■■■■■                                                                        |  10% of 88 MiB
-|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
-Firefox 142.0.1 (playwright build v1495) downloaded to /pw-browsers/firefox-1495
-Downloading Webkit 26.0 (playwright build v2215) from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2215/webkit-debian-12-arm64.zip
-|                                                                                |   0% of 88 MiB
-|■■■■■■■■                                                                        |  10% of 88 MiB
-|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
-Webkit 26.0 (playwright build v2215) downloaded to /pw-browsers/webkit-2215.
+-   **Fluxo de UI do RPA (Corrigido e Melhorado):**
+    -   Resolvido o bug que fazia o browser virtual iniciar automaticamente.
+    -   Corrigido o botão de gravação que dependia erradamente de uma conexão WebSocket; agora funciona com a sessão REST.
+-   **Injeção Segura de Credenciais:**
+    -   Implementado um novo endpoint e botões na UI (Inserir Email, Inserir Password) que permitem ao admin usar as credenciais de um parceiro durante a gravação de um RPA sem nunca as visualizar.
+-   **Refatoração da UI do Browser Virtual:**
+    -   Os controlos de gravação, os botões de injeção de credenciais e o botão de terminar foram movidos para o cabeçalho, libertando mais espaço vertical para a visualização do browser.
+    -   Corrigido um problema de layout que escondia parte dos controlos.
+-   **Correções de Lógica de Dados:**
+    -   O backend foi adaptado para procurar credenciais de parceiros numa coleção secundária (), resolvendo um problema em que os dados do utilizador Tomas não eram encontrados.
+-   **Guia de Deployment Manual no VPS:**
+    -   Guiou o utilizador, passo a passo, a reinstalar o OS (Ubuntu 22.04) no seu VPS.
+    -   Forneceu todos os comandos para instalar e configurar o ambiente de produção: Docker, MongoDB, Nginx, Node.js 20, Python 3, e as dependências da aplicação.
+    -   Configurou o Nginx como reverse proxy e criou um serviço  para o backend.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1:**
-    - **Description:** Foi notado numa sessão anterior que dados de combustível do parceiro 'Tomas' desapareceram da coleção . A causa não foi investigada, podendo indicar um bug que apaga dados antigos antes de confirmar a extração de novos dados.
-    - **Debug checklist:** Verificar a lógica de  nos scrapers e endpoints de sincronização para garantir que a eliminação de dados antigos só ocorre após uma nova extração bem-sucedida.
-    - **Why to solve this issue and what will be achieved with this?** Evitar a perda de dados históricos, que é crítico para a integridade da aplicação.
-    - **Should Test frontend/backend/both after fix:** Backend
-    - **Is recurring issue?** N
+-   **Issue 1: Fragilidade da Extração Prio Elétrico**
+    -   **Debug checklist:** A causa do erro (possível bloqueio de proxy, seletores frágeis) precisa ser investigada. O novo executor dinâmico deve ter logging robusto para facilitar este diagnóstico.
+    -   **Why to solve this issue and what will be achieved with this?** Garante uma extração de dados fiável, que é um requisito central da aplicação.
+    -   **Should Test frontend/backend/both after fix:** backend
+    -   **Is recurring issue?** Y
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork:** Falha no RPA da Uber.
-- **Recurrence count:** HIGH
-- **Status:** RESOLVED
+-   **Issue recurrence in previous fork:** Persistência da Sessão Prio.
+-   **Recurrence count:** 3+
+-   **Status:** USER VERIFICATION PENDING
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **API vs. Scraper/CSV:** Ficou claro que as APIs oficiais (como a da Bolt) podem ser incompletas. A fonte de dados mais fiável são os relatórios em CSV ou a extração via RPA diretamente do portal web, o que levou à implementação do workaround .
-- **RPA Robusto:** A correção do RPA da Uber exigiu uma lógica complexa para interagir com modais, dropdowns e seletores dinâmicos, reforçando a necessidade de código Playwright detalhado e com múltiplos fallbacks.
-- **Preservação de Dados Manuais:** A implementação da sincronização da Bolt demonstrou a importância de desenhar fluxos de atualização que não sobrescrevam ajustes manuais críticos (como o ), encontrando o registo existente e preservando certos campos.
-- **Reconciliação de Dados:** Foi crucial implementar lógicas para associar dados de fontes externas (relatórios CSV) a entidades internas (motoristas na BD), utilizando técnicas como correspondência parcial de nomes para evitar duplicados.
+-   **Backend:** FastAPI, Pydantic, MongoDB.
+-   **Frontend:** React.js.
+-   **RPA:** Playwright.
+-   **Deployment:** Deployment manual num VPS Linux (Ubuntu), Nginx como reverse proxy,  para gestão de serviços, Docker para a base de dados.
 
 **key DB schema**
-- : Armazena os ganhos extraídos da Uber.
-- : Contém os ganhos da Bolt. Foi modificado para incluir  para compensar os dados em falta na API.
-- : Armazena cookies de sessão para automações.
-- : Armazena os motoristas associados a um parceiro.
-
-**changes in tech stack**
-Nenhuma.
+-   **plataformas:** Armazena a configuração para cada fornecedor (Prio, Via Verde, etc.).
+-   **parceiros:** Dados dos parceiros da frota.
+-   **rpa_rascunhos:** Guarda rascunhos de passos RPA durante a gravação.
+-   **credenciais_plataforma:** Coleção separada para guardar as credenciais encriptadas dos parceiros para as várias plataformas.
 
 **All files of reference**
-- : Contém a nova lógica robusta do .
-- : Contém a lógica central de sincronização para Uber e Bolt.
-- : Calcula os dados para o resumo semanal.
-- : UI do resumo semanal.
-- : Contém a implementação do cliente para a API da Bolt.
-- : Define a navegação principal da aplicação.
-
-**Areas that need refactoring**:
-- **:** Continua monolítico, com mais de 12.000 linhas. A adição de novos routers diretamente neste ficheiro em vez de usar  aumenta a complexidade.
-- **:** O ficheiro está a tornar-se muito grande e complexo, especialmente a função . A lógica para cada fonte (Uber, Bolt, etc.) poderia ser abstraída para os seus próprios módulos de serviço.
+-   : Componente principal do browser virtual, extensivamente modificado.
+-   : Endpoints que controlam a sessão Playwright.
+-   : Endpoints relacionados com a gestão das plataformas.
+-   : (No VPS) Configuração do Nginx.
+-   : (No VPS) Ficheiro de definição do serviço do backend.
 
 **key api endpoints**
-- : Endpoint principal para iniciar a extração de dados.
-- : Retorna os dados agregados para o resumo semanal.
-- : (NOVO) Endpoint para definir um valor de ajuste manual para os ganhos da Bolt.
+-   : (NOVO) Injeta uma credencial (email/password) na sessão do browser de forma segura.
+-   : (MODIFICADO) Lista parceiros com credenciais para uma dada plataforma.
+-   : Dispara a execução de uma sincronização RPA.
 
 **Critical Info for New Agent**
-- **A API da Bolt é INCOMPLETA.** Não confie nela para obter os ganhos totais. Faltam os bónus de campanha. A solução atual é um workaround com um campo de ajuste manual (). A solução definitiva é usar o upload de CSV ou construir um RPA scraper para a Bolt.
-- **O fluxo de sincronização deve preservar os ajustes manuais.** A lógica implementada em  para a Bolt agora procura por um registo existente e mantém o valor de . Este padrão deve ser seguido se forem necessários outros ajustes manuais.
-- **A correspondência de nomes de motoristas é um desafio.** Os nomes nos relatórios (ELSON MONTEIRO) podem ser diferentes dos nomes registados no sistema (Elson Patrick Varela Monteiro). A lógica atual usa regex para correspondência parcial, mas pode precisar de ajustes.
+-   O foco principal é **concluir o deployment no VPS do utilizador**. Não deve iniciar novas funcionalidades até que a aplicação esteja estável em produção.
+-   Está a interagir com o utilizador para executar comandos num servidor real via SSH. Ferramentas internas como  ou  não são aplicáveis.
+-   O próximo passo é verificar o estado do serviço  no VPS.
+-   Após o backend estar funcional, é crucial guiar o utilizador a testar o site em .
+-   Uma tarefa de alta prioridade, assim que o site estiver no ar, é **configurar o SSL (HTTPS)**.
+-   **Credenciais do VPS:**
+    -   IP: 
+    -   Utilizador: 
+    -   Password: 
 
 **documents and test reports created in this job**
-- : Ficheiro CSV da Bolt fornecido pelo utilizador, que foi crucial para perceber a discrepância de valores.
+-    (Atualizado)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** valor da bolt falta valor possivel os null nao sao null - Reporta que o valor da Bolt no resumo está incorreto.
-2.  **User:** bolt pagou 300.54 ao motorista este e valor correcto analisa e corrige - Confirma o valor correto.
-3.  **Agent:** Tenta re-sincronizar, mas a API da Bolt retorna o mesmo valor incorreto.
-4.  **User:** somar tudo grojetas e tudo tem que dar o valor 300,54 - Pede para que todos os componentes dos ganhos sejam somados.
-5.  **User:** (Fornece um ficheiro CSV da Bolt) coluna ganhos liquidos inclui tudo de ganhos, coluna v podes analisar - Fornece a fonte de dados correta.
-6.  **Agent:** Analisa o CSV, confirma que a API é incompleta e sugere usar o CSV como fonte principal.
-7.  **User:** analisa a fundo a api bolt para conseguir gerar o valor correcto tu consegues - Insiste que a API seja investigada a fundo.
-8.  **Agent:** Investiga a documentação da API da Bolt, confirma que não existem endpoints para bónus de campanha e propõe a solução de um campo de ajuste manual.
-9.  **User:** 2 adicione - Concorda em adicionar o campo de ajuste.
-10. **User:** valor da bolt nao esta completo com ajuste de bonus - Reporta que, após a implementação, o valor continua errado (devido a um bug que não preservava o ajuste).
+O utilizador está a seguir as instruções do agente para fazer o deployment manual da aplicação no seu VPS. A comunicação é uma sequência de comandos e respostas do terminal. Os últimos passos foram a instalação de dependências e a tentativa de iniciar o serviço de backend, que falhou e está a ser depurada. A última mensagem do utilizador () confirma que recebeu a instrução de instalar o usage: pdfplumber [-h] [--structure | --structure-text]
+                  [--format {csv,json,text}] [--types TYPES [TYPES ...]]
+                  [--include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]]
+                  [--exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]]
+                  [--laparams LAPARAMS] [--precision PRECISION]
+                  [--pages PAGES [PAGES ...]] [--indent INDENT]
+                  [infile]
+
+positional arguments:
+  infile
+
+options:
+  -h, --help            show this help message and exit
+  --structure           Write the structure tree as JSON. All other arguments
+                        except --pages, --laparams, and --indent will be
+                        ignored
+  --structure-text      Write the structure tree as JSON including text
+                        contents. All other arguments except --pages,
+                        --laparams, and --indent will be ignored
+  --format {csv,json,text}
+  --types TYPES [TYPES ...]
+  --include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]
+                        Include *only* these object attributes in output.
+  --exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]
+                        Exclude these object attributes from output.
+  --laparams LAPARAMS
+  --precision PRECISION
+  --pages PAGES [PAGES ...]
+  --indent INDENT       Indent level for JSON pretty-printing., mas ainda não executou o comando seguinte para verificar o estado do serviço.
 
 **Project Health Check:**
-- **Broken:** Nada crítico.
-- **Workaround in place:** A sincronização de dados da Bolt depende de um ajuste manual para ser 100% precisa, devido a limitações da API oficial.
-- **Mocked:** Nenhuma funcionalidade está mockada.
+-   **Broken:** A aplicação não está totalmente funcional no servidor de produção do utilizador. O serviço de backend é o principal ponto de falha neste momento.
+-   **Mocked:** N/A
 
 **3rd Party Integrations**
-- **Bolt Fleet API:** Utilizada para sincronizar dados de viagens da Bolt. Verificou-se ser incompleta (não fornece bónus de campanha).
-- **Playwright:** Utilizado para os RPAs da Uber, Prio e Via Verde.
+-   **Playwright:** Essencial para a funcionalidade de RPA.
+-   **Docker:** Usado para correr a base de dados MongoDB no VPS.
+-   **Nginx:** Usado como reverse proxy no VPS.
 
 **Testing status**
-- **Testing agent used after significant changes:** NO
-- **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** Nenhum ficheiro de teste permanente.
-- **Known regressions:** O bug que reiniciava o  da Bolt a cada sincronização foi introduzido e corrigido durante esta sessão.
+-   **Testing agent used after significant changes:** NO (Não aplicável nesta sessão de deployment)
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** None
+-   **Known regressions:** A persistência da sessão Prio é um problema recorrente que aguarda verificação do utilizador.
 
 **Credentials to test flow:**
-- **Admin:**  / 
-- **Parceiro (Tomas):**  / 
-- **Credenciais Prio (para o parceiro Tomas):** Utilizador  / Senha 
+-   **VPS:**  (Password: )
+-   **App Test User:** Tomas (), Password:  (para a plataforma Via Verde)
 
 **What agent forgot to execute**
-Nada. O agente abordou os pontos principais levantados pelo utilizador e os itens pendentes do handoff anterior.</analysis>
+O agente estava a meio de um processo de depuração e não se esqueceu de nada. No entanto, um passo crucial para o futuro deployment não foi explicitamente planeado: a **configuração do SSL/HTTPS** com Certbot/Let's Encrypt. Isto deve ser uma prioridade após a aplicação estar a funcionar em HTTP.</analysis>

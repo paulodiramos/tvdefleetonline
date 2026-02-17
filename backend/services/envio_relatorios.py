@@ -109,6 +109,8 @@ def generate_relatorio_motorista_html(motorista_data: Dict, semana: int, ano: in
     matricula = motorista_data.get("veiculo_matricula", "N/A")
     
     ganhos_uber = motorista_data.get("ganhos_uber", 0)
+    uber_portagens = motorista_data.get("uber_portagens", 0)
+    uber_gratificacoes = motorista_data.get("uber_gratificacoes", 0)
     ganhos_bolt = motorista_data.get("ganhos_bolt", 0)
     total_ganhos = motorista_data.get("total_ganhos", 0)
     
@@ -116,6 +118,9 @@ def generate_relatorio_motorista_html(motorista_data: Dict, semana: int, ano: in
     eletrico = motorista_data.get("carregamento_eletrico", 0)
     via_verde = motorista_data.get("via_verde", 0)
     total_despesas = motorista_data.get("total_despesas_operacionais", 0)
+    
+    aluguer = motorista_data.get("aluguer_veiculo", 0)
+    extras = motorista_data.get("extras", 0)
     
     valor_liquido = motorista_data.get("valor_liquido_motorista", 0)
     
@@ -134,11 +139,14 @@ def generate_relatorio_motorista_html(motorista_data: Dict, semana: int, ano: in
             .value {{ font-size: 24px; font-weight: bold; }}
             .value.positive {{ color: #16a34a; }}
             .value.negative {{ color: #dc2626; }}
+            .value.purple {{ color: #7c3aed; }}
             table {{ width: 100%; border-collapse: collapse; }}
             th, td {{ padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }}
             th {{ background: #f1f5f9; font-weight: 600; }}
             .total-row {{ background: #e0f2fe; font-weight: bold; }}
             .footer {{ text-align: center; padding: 20px; color: #64748b; font-size: 12px; }}
+            .two-columns {{ display: flex; gap: 20px; }}
+            .column {{ flex: 1; }}
         </style>
     </head>
     <body>
@@ -162,6 +170,14 @@ def generate_relatorio_motorista_html(motorista_data: Dict, semana: int, ano: in
                             <td style="text-align: right;">€{ganhos_uber:.2f}</td>
                         </tr>
                         <tr>
+                            <td>uPort (Portagens Uber)</td>
+                            <td style="text-align: right;">€{uber_portagens:.2f}</td>
+                        </tr>
+                        <tr>
+                            <td>uGrat (Gratificações Uber)</td>
+                            <td style="text-align: right;">€{uber_gratificacoes:.2f}</td>
+                        </tr>
+                        <tr>
                             <td>Bolt</td>
                             <td style="text-align: right;">€{ganhos_bolt:.2f}</td>
                         </tr>
@@ -176,12 +192,12 @@ def generate_relatorio_motorista_html(motorista_data: Dict, semana: int, ano: in
                     <div class="section-title">Despesas</div>
                     <table>
                         <tr>
-                            <td>Combustível</td>
-                            <td style="text-align: right;">€{combustivel:.2f}</td>
-                        </tr>
-                        <tr>
                             <td>Via Verde</td>
                             <td style="text-align: right;">€{via_verde:.2f}</td>
+                        </tr>
+                        <tr>
+                            <td>Combustível</td>
+                            <td style="text-align: right;">€{combustivel:.2f}</td>
                         </tr>
                         <tr>
                             <td>Carregamento Elétrico</td>
@@ -194,8 +210,22 @@ def generate_relatorio_motorista_html(motorista_data: Dict, semana: int, ano: in
                     </table>
                 </div>
                 
+                <div class="section">
+                    <div class="section-title">Aluguer e Extras</div>
+                    <table>
+                        <tr>
+                            <td>Aluguer Veículo</td>
+                            <td style="text-align: right;">€{aluguer:.2f}</td>
+                        </tr>
+                        <tr>
+                            <td>Extras/Dívidas</td>
+                            <td style="text-align: right;">€{extras:.2f}</td>
+                        </tr>
+                    </table>
+                </div>
+                
                 <div class="section" style="background: {'#dcfce7' if valor_liquido >= 0 else '#fee2e2'}; padding: 15px; border-radius: 8px; text-align: center;">
-                    <div class="section-title">Valor Líquido</div>
+                    <div class="section-title">Saldo Motorista</div>
                     <div class="value {'positive' if valor_liquido >= 0 else 'negative'}">
                         €{valor_liquido:.2f}
                     </div>
@@ -221,6 +251,8 @@ def generate_relatorio_motorista_text(motorista_data: Dict, semana: int, ano: in
     matricula = motorista_data.get("veiculo_matricula", "N/A")
     
     ganhos_uber = motorista_data.get("ganhos_uber", 0)
+    uber_portagens = motorista_data.get("uber_portagens", 0)
+    uber_gratificacoes = motorista_data.get("uber_gratificacoes", 0)
     ganhos_bolt = motorista_data.get("ganhos_bolt", 0)
     total_ganhos = motorista_data.get("total_ganhos", 0)
     
@@ -228,6 +260,9 @@ def generate_relatorio_motorista_text(motorista_data: Dict, semana: int, ano: in
     eletrico = motorista_data.get("carregamento_eletrico", 0)
     via_verde = motorista_data.get("via_verde", 0)
     total_despesas = motorista_data.get("total_despesas_operacionais", 0)
+    
+    aluguer = motorista_data.get("aluguer_veiculo", 0)
+    extras = motorista_data.get("extras", 0)
     
     valor_liquido = motorista_data.get("valor_liquido_motorista", 0)
     
@@ -239,16 +274,22 @@ Semana {semana}/{ano}
 
 💰 *GANHOS*
 • Uber: €{ganhos_uber:.2f}
+• uPort (Portagens): €{uber_portagens:.2f}
+• uGrat (Gratificações): €{uber_gratificacoes:.2f}
 • Bolt: €{ganhos_bolt:.2f}
 • *Total: €{total_ganhos:.2f}*
 
 📉 *DESPESAS*
-• Combustível: €{combustivel:.2f}
 • Via Verde: €{via_verde:.2f}
+• Combustível: €{combustivel:.2f}
 • Elétrico: €{eletrico:.2f}
 • *Total: €{total_despesas:.2f}*
 
-{'✅' if valor_liquido >= 0 else '⚠️'} *VALOR LÍQUIDO: €{valor_liquido:.2f}*
+🏠 *ALUGUER E EXTRAS*
+• Aluguer Veículo: €{aluguer:.2f}
+• Extras/Dívidas: €{extras:.2f}
+
+{'✅' if valor_liquido >= 0 else '⚠️'} *SALDO: €{valor_liquido:.2f}*
 
 _Gerado por TVDEFleet_"""
     

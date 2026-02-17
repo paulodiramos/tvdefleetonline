@@ -1,0 +1,82 @@
+{
+  "summary": "Complete testing of P0 features for Sistema de Gestão de Planos TVDE: 1) Bidirectional price calculation (frontend), 2) Trial configuration (trial_config), 3) Referência de faturação. All features working correctly after backend fix for MongoDB ObjectId issue.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "backend_fix_applied": {
+    "file": "/app/backend/services/planos_modulos_service.py",
+    "issue": "MongoDB ObjectId not removed from response when creating plans, causing 500 error",
+    "fix": "Added plano.pop('_id', None) after insert_one to remove ObjectId before returning response",
+    "also_added": "Added trial_config, referencia_faturacao and taxa_iva fields to criar_plano function"
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Plan creation modal",
+        "issues": ["Console warning: Missing Description or aria-describedby for DialogContent - accessibility issue (minor)"]
+      },
+      {
+        "screen": "Gestão Planos page",
+        "issues": ["Console warning: Encountered two children with same key c693c9ec-ddd5-400c-b79d-61b651e7b3fd - React key issue (minor)"]
+      }
+    ]
+  },
+  "features_tested": {
+    "P0_bidirectional_price_calculation": {
+      "status": "PASS",
+      "details": "Frontend correctly calculates bidirectional prices. Entering 100€ in Semanal auto-fills: Mensal=400€ (×4), Anual=5200€ (×52). Works for Base, Por Veículo, and Por Motorista price sections."
+    },
+    "P0_trial_config": {
+      "status": "PASS",
+      "details": "Trial configuration UI appears when 'Permitir período trial' is enabled. Shows 'Trial Automático' and 'Requer Cartão' switches. Data correctly persisted to backend with trial_config object containing ativo, dias, requer_cartao, automatico fields."
+    },
+    "P0_referencia_faturacao": {
+      "status": "PASS",
+      "details": "Referência Interna de Faturação field visible in plan creation form with placeholder 'Ex: PLAN-PRO-001, SKU-123'. Value correctly persisted to backend."
+    },
+    "P0_taxa_iva": {
+      "status": "PASS",
+      "details": "Taxa IVA field with default 23% visible in pricing section. s/IVA values automatically calculated and displayed below price inputs."
+    },
+    "API_persistence": {
+      "status": "PASS",
+      "details": "GET /api/gestao-planos/planos returns plans with all new fields (trial_config, referencia_faturacao, taxa_iva, precos_plano). Data correctly persisted to MongoDB."
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p0_planos_features.py",
+    "/app/test_reports/pytest/pytest_p0_planos.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Bidirectional price calculation correctly implemented in frontend: semanal×4=mensal, semanal×52=anual, mensal/4=semanal, mensal×12=anual, etc.",
+    "Trial config UI properly shows/hides based on permite_trial toggle state",
+    "Backend required fix to include new fields (trial_config, referencia_faturacao, taxa_iva) in criar_plano function",
+    "MongoDB _id exclusion fix applied to prevent 500 errors on plan creation"
+  ],
+  "updated_files": [
+    "/app/backend/services/planos_modulos_service.py (fixed MongoDB _id issue and added new fields)",
+    "/app/backend/tests/test_p0_planos_features.py (created)"
+  ],
+  "success_rate": {
+    "backend": "100% (5/5 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "email": "admin@tvdefleet.com",
+      "password": "admin123"
+    }
+  },
+  "seed_data_creation": "Created test plans: Plano Teste P0 API, Plano UI Test via UI",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "P0 features for gestão de planos fully tested. All 3 features working: 1) Bidirectional price calculation in frontend (semanal×4=mensal, ×52=anual), 2) Trial configuration with ativo/dias/requer_cartao/automatico fields, 3) Referência de faturação for billing integration. Backend service was fixed to properly include new fields and remove MongoDB ObjectId from responses.",
+  "mocked_integrations": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}

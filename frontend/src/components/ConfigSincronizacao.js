@@ -54,7 +54,8 @@ import {
   FileText,
   Car,
   Fuel,
-  CreditCard
+  CreditCard,
+  CalendarDays
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -97,6 +98,20 @@ const ConfigSincronizacao = ({ user }) => {
   const [historico, setHistorico] = useState([]);
   const [estatisticas, setEstatisticas] = useState(null);
   const [showHistorico, setShowHistorico] = useState(false);
+  
+  // Estado para seleção de semana para sincronização
+  const [semanaSelecionada, setSemanaSelecionada] = useState(() => {
+    const now = new Date();
+    // Por padrão, selecionar a semana anterior
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const startOfYear = new Date(weekAgo.getFullYear(), 0, 1);
+    const days = Math.floor((weekAgo - startOfYear) / (24 * 60 * 60 * 1000));
+    const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    return {
+      semana: weekNum,
+      ano: weekAgo.getFullYear()
+    };
+  });
 
   const fetchData = useCallback(async () => {
     try {
@@ -148,14 +163,23 @@ const ConfigSincronizacao = ({ user }) => {
     try {
       setExecuting(true);
       const token = localStorage.getItem('token');
+      
+      // Incluir informação da semana selecionada
+      const payload = { 
+        fontes,
+        semana: semanaSelecionada.semana,
+        ano: semanaSelecionada.ano,
+        tipo_periodo: 'semana_especifica'
+      };
+      
       const response = await axios.post(
         `${API}/api/sincronizacao-auto/executar`,
-        { fontes },
+        payload,
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
       
       if (response.data.sucesso) {
-        toast.success('Sincronização iniciada com sucesso!');
+        toast.success(`Sincronização iniciada para Semana ${semanaSelecionada.semana}/${semanaSelecionada.ano}!`);
         // Recarregar dados após alguns segundos
         setTimeout(fetchData, 3000);
       } else {
@@ -167,6 +191,52 @@ const ConfigSincronizacao = ({ user }) => {
     } finally {
       setExecuting(false);
     }
+  };
+  
+  // Helper para calcular datas da semana ISO
+  const getSemanaDatas = (semana, ano) => {
+    const jan4 = new Date(ano, 0, 4);
+    const dayOfWeek = jan4.getDay() || 7;
+    const firstMonday = new Date(jan4.setDate(jan4.getDate() - dayOfWeek + 1));
+    const startDate = new Date(firstMonday);
+    startDate.setDate(startDate.getDate() + (semana - 1) * 7);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 6);
+    
+    const formatDate = (d) => d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
+    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  };
+  
+  // Gerar lista de semanas para seleção (últimas 8 semanas + 4 próximas)
+  const getSemanaOptions = () => {
+    const options = [];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    // Calcular semana atual
+    const startOfYear = new Date(currentYear, 0, 1);
+    const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
+    const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    
+    // Últimas 12 semanas
+    for (let i = 11; i >= 0; i--) {
+      let semana = currentWeek - i;
+      let ano = currentYear;
+      
+      if (semana <= 0) {
+        semana = 52 + semana;
+        ano = currentYear - 1;
+      }
+      
+      options.push({
+        semana,
+        ano,
+        label: `S${semana}/${ano} (${getSemanaDatas(semana, ano)})`,
+        isCurrent: semana === currentWeek && ano === currentYear
+      });
+    }
+    
+    return options;
   };
 
   const updateFonte = (fonte, field, value) => {
@@ -300,6 +370,98 @@ const ConfigSincronizacao = ({ user }) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Seletor de Semana para Sincronização */}
+      <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <CalendarDays className="w-5 h-5 text-blue-600" />
+            Semana a Sincronizar
+          </CardTitle>
+          <CardDescription>Selecione qual semana pretende sincronizar</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+            <div className="flex-1 w-full">
+              <Label className="text-sm font-medium mb-2 block">Selecionar Semana</Label>
+              <Select
+                value={`${semanaSelecionada.semana}-${semanaSelecionada.ano}`}
+                onValueChange={(value) => {
+                  const [semana, ano] = value.split('-').map(Number);
+                  setSemanaSelecionada({ semana, ano });
+                }}
+              >
+                <SelectTrigger className="w-full bg-white" data-testid="select-semana-sync">
+                  <SelectValue placeholder="Selecione uma semana" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getSemanaOptions().map((opt) => (
+                    <SelectItem 
+                      key={`${opt.semana}-${opt.ano}`} 
+                      value={`${opt.semana}-${opt.ano}`}
+                    >
+                      <span className={opt.isCurrent ? 'font-bold text-blue-600' : ''}>
+                        {opt.label} {opt.isCurrent && '(atual)'}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newSemana = semanaSelecionada.semana > 1 
+                    ? semanaSelecionada.semana - 1 
+                    : 52;
+                  const newAno = semanaSelecionada.semana > 1 
+                    ? semanaSelecionada.ano 
+                    : semanaSelecionada.ano - 1;
+                  setSemanaSelecionada({ semana: newSemana, ano: newAno });
+                }}
+                className="px-3"
+              >
+                ← Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newSemana = semanaSelecionada.semana < 52 
+                    ? semanaSelecionada.semana + 1 
+                    : 1;
+                  const newAno = semanaSelecionada.semana < 52 
+                    ? semanaSelecionada.ano 
+                    : semanaSelecionada.ano + 1;
+                  setSemanaSelecionada({ semana: newSemana, ano: newAno });
+                }}
+                className="px-3"
+              >
+                Próxima →
+              </Button>
+            </div>
+          </div>
+          
+          {/* Info sobre semana selecionada */}
+          <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+            <div className="flex items-center gap-2 text-blue-800">
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">
+                Semana {semanaSelecionada.semana} de {semanaSelecionada.ano}
+              </span>
+              <span className="text-sm text-blue-600">
+                ({getSemanaDatas(semanaSelecionada.semana, semanaSelecionada.ano)})
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Os dados sincronizados serão associados a esta semana no Resumo Semanal
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Fontes de Dados */}
       <Card>

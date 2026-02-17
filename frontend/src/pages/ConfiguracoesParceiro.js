@@ -1153,6 +1153,24 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
                     </div>
                   </div>
                 </div>
+                
+                {/* Login Manual Uber */}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Login Manual:</span> Para sincronização automática, é necessário fazer login via browser remoto.
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate('/minha-configuracao-uber')}
+                      className="ml-2 border-blue-200 text-blue-600 hover:bg-blue-50"
+                    >
+                      <Car className="w-4 h-4 mr-1" />
+                      Login Manual Uber
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 

@@ -24,6 +24,8 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
     periodo_inicio: '',
     periodo_fim: '',
     ganhos_uber: 0,
+    uber_portagens: 0,  // uPort - Portagens Uber
+    uber_gratificacoes: 0,  // uGrat - Gratificações Uber
     ganhos_bolt: 0,
     total_combustivel: 0,
     total_via_verde: 0,
@@ -166,6 +168,8 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
     const total_via_verde = despesasViaVerde.reduce((sum, d) => sum + d.valor, 0);
     const total_extras = extrasParceiro.reduce((sum, e) => sum + e.valor, 0);
 
+    // Total ganhos = ganhos_uber (líquido sem extras) + ganhos_bolt
+    // uPort e uGrat são tratados separadamente
     const valor_bruto = parseFloat(relatorioData.ganhos_uber) + parseFloat(relatorioData.ganhos_bolt);
     const valor_descontos = total_combustivel + total_via_verde + total_extras +
                             parseFloat(relatorioData.valor_divida_anterior) +
@@ -434,6 +438,24 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
                       step="0.01"
                       value={relatorioData.ganhos_uber}
                       onChange={(e) => setRelatorioData({...relatorioData, ganhos_uber: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label>uPort - Portagens Uber (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={relatorioData.uber_portagens}
+                      onChange={(e) => setRelatorioData({...relatorioData, uber_portagens: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label>uGrat - Gratificações Uber (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={relatorioData.uber_gratificacoes}
+                      onChange={(e) => setRelatorioData({...relatorioData, uber_gratificacoes: e.target.value})}
                     />
                   </div>
                   <div>

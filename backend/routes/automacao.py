@@ -65,9 +65,88 @@ async def get_tipos_fornecedor():
         {"id": "bolt", "nome": "Bolt", "icone": "⚡", "cor": "#34D399"},
         {"id": "via_verde", "nome": "Via Verde", "icone": "🛣️", "cor": "#22C55E"},
         {"id": "gps", "nome": "GPS/Rastreamento", "icone": "📍", "cor": "#3B82F6"},
-        {"id": "combustivel", "nome": "Combustível", "icone": "⛽", "cor": "#F59E0B"},
-        {"id": "carregamento_eletrico", "nome": "Carregamento Elétrico", "icone": "🔌", "cor": "#8B5CF6"},
+        {"id": "combustivel", "nome": "Combustível Fóssil", "icone": "⛽", "cor": "#F59E0B"},
+        {"id": "combustivel_eletrico", "nome": "Carregamento Elétrico", "icone": "🔌", "cor": "#8B5CF6"},
+        {"id": "seguros", "nome": "Seguros", "icone": "🛡️", "cor": "#EF4444"},
+        {"id": "manutencao", "nome": "Manutenção", "icone": "🔧", "cor": "#6B7280"},
+        {"id": "lavagem", "nome": "Lavagem", "icone": "🧽", "cor": "#06B6D4"},
+        {"id": "pneus", "nome": "Pneus", "icone": "🔘", "cor": "#374151"},
+        {"id": "outro", "nome": "Outro", "icone": "📦", "cor": "#9CA3AF"},
     ]
+
+
+@router.get("/fornecedores/metodos-integracao")
+async def get_metodos_integracao():
+    """Get available integration methods"""
+    return [
+        {"id": "upload_excel", "nome": "Upload Excel", "descricao": "Parceiro faz upload de ficheiro .xlsx"},
+        {"id": "upload_csv", "nome": "Upload CSV", "descricao": "Parceiro faz upload de ficheiro .csv"},
+        {"id": "api", "nome": "API", "descricao": "Integração automática via API do fornecedor"},
+        {"id": "rpa_browser", "nome": "RPA Browser", "descricao": "Automação de browser com login do parceiro"},
+    ]
+
+
+@router.get("/fornecedores/campos-destino/{tipo}")
+async def get_campos_destino(tipo: str):
+    """Get available destination fields for a provider type"""
+    
+    campos_comuns = [
+        {"id": "data", "nome": "Data", "tipo": "data", "obrigatorio": True},
+        {"id": "matricula", "nome": "Matrícula", "tipo": "texto", "obrigatorio": True},
+        {"id": "valor", "nome": "Valor Total", "tipo": "moeda", "obrigatorio": True},
+    ]
+    
+    campos_por_tipo = {
+        "uber": campos_comuns + [
+            {"id": "viagens", "nome": "Nº Viagens", "tipo": "numero"},
+            {"id": "km", "nome": "Quilómetros", "tipo": "numero"},
+            {"id": "tempo_online", "nome": "Tempo Online", "tipo": "texto"},
+            {"id": "ganhos_brutos", "nome": "Ganhos Brutos", "tipo": "moeda"},
+            {"id": "comissao", "nome": "Comissão", "tipo": "moeda"},
+        ],
+        "bolt": campos_comuns + [
+            {"id": "viagens", "nome": "Nº Viagens", "tipo": "numero"},
+            {"id": "km", "nome": "Quilómetros", "tipo": "numero"},
+            {"id": "ganhos_brutos", "nome": "Ganhos Brutos", "tipo": "moeda"},
+            {"id": "comissao", "nome": "Comissão", "tipo": "moeda"},
+        ],
+        "combustivel": [
+            {"id": "data", "nome": "Data", "tipo": "data", "obrigatorio": True},
+            {"id": "matricula", "nome": "Matrícula", "tipo": "texto", "obrigatorio": True},
+            {"id": "valor", "nome": "Valor Total", "tipo": "moeda", "obrigatorio": True},
+            {"id": "litros", "nome": "Litros", "tipo": "numero"},
+            {"id": "preco_litro", "nome": "Preço/Litro", "tipo": "moeda"},
+            {"id": "tipo_combustivel", "nome": "Tipo Combustível", "tipo": "texto"},
+            {"id": "cartao", "nome": "Cartão/Código", "tipo": "texto"},
+            {"id": "local", "nome": "Local/Posto", "tipo": "texto"},
+        ],
+        "combustivel_eletrico": [
+            {"id": "data", "nome": "Data", "tipo": "data", "obrigatorio": True},
+            {"id": "matricula", "nome": "Matrícula", "tipo": "texto", "obrigatorio": True},
+            {"id": "valor", "nome": "Valor Total", "tipo": "moeda", "obrigatorio": True},
+            {"id": "kwh", "nome": "kWh", "tipo": "numero"},
+            {"id": "preco_kwh", "nome": "Preço/kWh", "tipo": "moeda"},
+            {"id": "duracao", "nome": "Duração", "tipo": "texto"},
+            {"id": "cartao", "nome": "Cartão/Código", "tipo": "texto"},
+            {"id": "local", "nome": "Local/Posto", "tipo": "texto"},
+        ],
+        "gps": [
+            {"id": "data", "nome": "Data", "tipo": "data", "obrigatorio": True},
+            {"id": "matricula", "nome": "Matrícula", "tipo": "texto", "obrigatorio": True},
+            {"id": "km_total", "nome": "Km Total", "tipo": "numero"},
+            {"id": "km_privado", "nome": "Km Privado", "tipo": "numero"},
+            {"id": "km_profissional", "nome": "Km Profissional", "tipo": "numero"},
+        ],
+        "via_verde": [
+            {"id": "data", "nome": "Data", "tipo": "data", "obrigatorio": True},
+            {"id": "matricula", "nome": "Matrícula", "tipo": "texto", "obrigatorio": True},
+            {"id": "valor", "nome": "Valor", "tipo": "moeda", "obrigatorio": True},
+            {"id": "tipo", "nome": "Tipo (Portagem/Estacionamento)", "tipo": "texto"},
+            {"id": "local", "nome": "Local", "tipo": "texto"},
+        ],
+    }
+    
+    return campos_por_tipo.get(tipo, campos_comuns)
 
 
 @router.post("/fornecedores")

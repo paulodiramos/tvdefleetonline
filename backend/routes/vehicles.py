@@ -14,6 +14,7 @@ from utils.auth import get_current_user
 from models.veiculo import (
     Vehicle, VehicleCreate, VehicleMaintenance, VehicleVistoria, VistoriaCreate
 )
+from services.subscricao_service import atualizar_contagem_subscricao
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -194,6 +195,10 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depen
         vehicle_dict["parceiro_id"] = current_user["id"]
     
     await db.vehicles.insert_one(vehicle_dict)
+    
+    # Atualizar subscrição automaticamente se for parceiro
+    if current_user["role"] == UserRole.PARCEIRO:
+        await atualizar_contagem_subscricao(current_user["id"])
     
     if isinstance(vehicle_dict["created_at"], str):
         vehicle_dict["created_at"] = datetime.fromisoformat(vehicle_dict["created_at"])
@@ -384,7 +389,16 @@ async def delete_vehicle(vehicle_id: str, current_user: Dict = Depends(get_curre
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Buscar veículo para obter parceiro_id antes de excluir
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"parceiro_id": 1})
+    parceiro_id = vehicle.get("parceiro_id") if vehicle else None
+    
     await db.vehicles.delete_one({"id": vehicle_id})
+    
+    # Atualizar subscrição do parceiro
+    if parceiro_id:
+        await atualizar_contagem_subscricao(parceiro_id)
+    
     return {"message": "Vehicle deleted"}
 
 

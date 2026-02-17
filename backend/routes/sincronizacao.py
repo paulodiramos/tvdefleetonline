@@ -989,7 +989,9 @@ async def executar_rpa_uber(
         if not request.semana or not request.ano:
             raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios para semana_especifica")
         
-        data_inicio, data_fim = calcular_periodo_semana(request.semana, request.ano)
+        # Usar período específico da Uber (Segunda 4:01 até Segunda seguinte 4:00)
+        from routes.rpa_automacao import calcular_periodo_semana_uber
+        data_inicio, data_fim = calcular_periodo_semana_uber(request.semana, request.ano)
         periodo_descricao = f"Semana {request.semana}/{request.ano} ({data_inicio} a {data_fim})"
         
     elif request.tipo_periodo == "datas_personalizadas":
@@ -1058,17 +1060,27 @@ async def executar_rpa_uber(
                 importados = 0
                 
                 for mot in motoristas:
+                    # Usar pago_total como valor principal (mais fiável)
+                    valor_principal = mot.get("pago_total", mot.get("rendimentos_liquidos", 0))
+                    
                     # Criar ou atualizar registo de rendimento Uber
                     rendimento = {
                         "parceiro_id": pid,
                         "nome_motorista": mot.get("nome"),
                         "data_inicio": data_inicio,
                         "data_fim": data_fim,
-                        "rendimentos_totais": mot.get("rendimentos_totais", 0),
-                        "reembolsos_despesas": mot.get("reembolsos_despesas", 0),
+                        "pago_total": valor_principal,
+                        "rendimentos_totais": mot.get("rendimentos_totais", valor_principal),
+                        # NOVOS CAMPOS do RPA melhorado
+                        "tarifa": mot.get("tarifa", 0),  # Ganhos base (Uber para comissões)
+                        "gratificacao": mot.get("gratificacao", 0),  # uGrat
+                        "portagens": mot.get("portagens", 0),  # uPort
+                        "reembolsos_despesas": mot.get("reembolsos_despesas", mot.get("portagens", 0)),
                         "ajustes": mot.get("ajustes", 0),
-                        "pagamento": mot.get("pagamento", 0),
-                        "rendimentos_liquidos": mot.get("rendimentos_liquidos", 0),
+                        "pagamento": mot.get("pagamento", valor_principal),
+                        "rendimentos_liquidos": valor_principal,
+                        "viagens": mot.get("viagens", 0),
+                        "distancia_km": mot.get("distancia_km", 0),
                         "fonte": "rpa",
                         "execucao_id": execucao_id,
                         "importado_em": datetime.now(timezone.utc).isoformat()
@@ -1086,7 +1098,7 @@ async def executar_rpa_uber(
                         await db.rendimentos_uber.insert_one(rendimento)
                         importados += 1
                 
-                logger.info(f"📊 Uber: Importados {importados} rendimentos de motoristas")
+                logger.info(f"📊 Uber: Importados {importados} rendimentos de motoristas com detalhes (tarifa, gratificacao, portagens)")
             
             logger.info(f"✅ RPA Uber {execucao_id} concluído: {resultado.get('sucesso')}")
             
@@ -1116,6 +1128,367 @@ async def executar_rpa_uber(
         },
         "mensagem": f"Extração Uber iniciada para {periodo_descricao}"
     }
+
+
+
+@router.post("/uber/sincronizar-csv")
+async def sincronizar_uber_csv(
+    request: UberRPARequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Sincronização Uber via download de CSV do portal.
+    
+    Fluxo baseado nas screenshots do utilizador:
+    1. Login no portal Uber
+    2. Navegar para Relatórios
+    3. Encontrar relatório da semana pelo intervalo de datas
+    4. Clicar em "Faça o download"
+    5. Processar CSV e importar dados com portagens e gratificações separadas
+    
+    Tipos de período suportados:
+    - ultima_semana: Busca dados da última semana completa
+    - semana_especifica: Busca dados de uma semana específica (semana + ano)
+    - datas_personalizadas: Busca dados entre data_inicio e data_fim
+    """
+    from datetime import timedelta
+    
+    pid = current_user['id']
+    
+    # Verificar se parceiro tem credenciais Uber
+    credenciais = await db.credenciais_plataforma.find_one({
+        "parceiro_id": pid,
+        "plataforma": "uber"
+    })
+    
+    if not credenciais or not credenciais.get("email") or not credenciais.get("password"):
+        raise HTTPException(
+            status_code=400, 
+            detail="Credenciais Uber não configuradas. Vá a Configurações → Plataformas para configurar."
+        )
+    
+    now = datetime.now(timezone.utc)
+    
+    # Calcular datas baseado no tipo de período
+    if request.tipo_periodo == "ultima_semana":
+        today = now.date()
+        last_sunday = today - timedelta(days=(today.weekday() + 1))
+        last_monday = last_sunday - timedelta(days=6)
+        
+        data_inicio = last_monday.strftime("%Y-%m-%d")
+        data_fim = last_sunday.strftime("%Y-%m-%d")
+        periodo_descricao = f"Última semana ({data_inicio} a {data_fim})"
+        
+        # Calcular semana/ano
+        dt_inicio = last_monday
+        iso_cal = dt_inicio.isocalendar()
+        semana_calc = iso_cal[1]
+        ano_calc = iso_cal[0]
+        
+    elif request.tipo_periodo == "semana_especifica":
+        if not request.semana or not request.ano:
+            raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios para semana_especifica")
+        
+        # Calcular datas da semana ISO
+        from datetime import date
+        jan4 = date(request.ano, 1, 4)
+        start_of_week = jan4 - timedelta(days=jan4.weekday()) + timedelta(weeks=request.semana - 1)
+        end_of_week = start_of_week + timedelta(days=6)
+        
+        data_inicio = start_of_week.strftime("%Y-%m-%d")
+        data_fim = end_of_week.strftime("%Y-%m-%d")
+        periodo_descricao = f"Semana {request.semana}/{request.ano} ({data_inicio} a {data_fim})"
+        semana_calc = request.semana
+        ano_calc = request.ano
+        
+    elif request.tipo_periodo == "datas_personalizadas":
+        if not request.data_inicio or not request.data_fim:
+            raise HTTPException(status_code=400, detail="data_inicio e data_fim são obrigatórios para datas_personalizadas")
+        
+        data_inicio = request.data_inicio
+        data_fim = request.data_fim
+        periodo_descricao = f"Personalizado ({data_inicio} a {data_fim})"
+        
+        # Calcular semana/ano
+        dt_inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+        iso_cal = dt_inicio.isocalendar()
+        semana_calc = iso_cal[1]
+        ano_calc = iso_cal[0]
+    else:
+        raise HTTPException(status_code=400, detail=f"Tipo de período inválido: {request.tipo_periodo}")
+    
+    # Criar registo de execução
+    execucao_id = str(uuid.uuid4())
+    execucao = {
+        "id": execucao_id,
+        "parceiro_id": pid,
+        "plataforma": "uber",
+        "metodo": "csv_download",
+        "tipo_periodo": request.tipo_periodo,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "semana": semana_calc,
+        "ano": ano_calc,
+        "periodo_descricao": periodo_descricao,
+        "status": "em_execucao",
+        "started_at": now.isoformat(),
+        "resultado": None,
+        "logs": []
+    }
+    
+    await db.execucoes_rpa_uber.insert_one(execucao)
+    logger.info(f"✅ Sincronização CSV Uber {execucao_id} iniciada: {periodo_descricao}")
+    
+    # Executar em background
+    sms_code = request.sms_code
+    pin_code = request.pin_code
+    
+    async def run_uber_csv_sync():
+        try:
+            from services.rpa_uber import UberRPA
+            
+            # Adicionar log inicial
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$push": {"logs": f"Iniciando sincronização CSV para {periodo_descricao}"}}
+            )
+            
+            rpa = UberRPA(
+                email=credenciais["email"],
+                password=credenciais["password"],
+                sms_code=sms_code,
+                pin_code=pin_code
+            )
+            
+            await rpa.iniciar_browser(headless=True, usar_sessao=True)
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$push": {"logs": "Browser iniciado com sucesso"}}
+            )
+            
+            # Login
+            login_ok = await rpa.fazer_login()
+            if not login_ok:
+                await db.execucoes_rpa_uber.update_one(
+                    {"id": execucao_id},
+                    {"$set": {
+                        "status": "erro",
+                        "resultado": {"sucesso": False, "mensagem": "Falha no login Uber. Pode necessitar de código SMS ou resolver CAPTCHA."},
+                        "completed_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {"logs": "Falha no login - pode necessitar de SMS ou CAPTCHA"}}
+                )
+                await rpa.fechar_browser()
+                return
+            
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$push": {"logs": "Login bem sucedido, a guardar sessão..."}}
+            )
+            await rpa.guardar_sessao()
+            
+            # Download do CSV
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$push": {"logs": f"A procurar relatório CSV para {data_inicio} a {data_fim}..."}}
+            )
+            
+            csv_path = await rpa.gerar_e_download_csv(data_inicio, data_fim)
+            
+            if not csv_path:
+                await db.execucoes_rpa_uber.update_one(
+                    {"id": execucao_id},
+                    {"$set": {
+                        "status": "erro",
+                        "resultado": {"sucesso": False, "mensagem": "Não foi possível obter o relatório CSV"},
+                        "completed_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {"logs": "Falha ao obter relatório CSV"}}
+                )
+                await rpa.fechar_browser()
+                return
+            
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$push": {"logs": f"CSV descarregado: {csv_path}"}}
+            )
+            
+            # Processar CSV
+            motoristas = await rpa.processar_csv_uber(csv_path)
+            
+            await rpa.fechar_browser()
+            
+            if not motoristas:
+                await db.execucoes_rpa_uber.update_one(
+                    {"id": execucao_id},
+                    {"$set": {
+                        "status": "erro",
+                        "resultado": {"sucesso": False, "mensagem": "CSV vazio ou inválido"},
+                        "completed_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {"logs": "CSV não contém dados válidos"}}
+                )
+                return
+            
+            # Importar para a BD
+            importados = 0
+            atualizados = 0
+            total_pago = 0.0
+            total_gratificacao = 0.0
+            total_portagens = 0.0
+            
+            for mot in motoristas:
+                try:
+                    # Construir registo
+                    uuid_motorista = mot.get("uuid_motorista", "").strip()
+                    nome_motorista = mot.get("nome", "").strip()
+                    
+                    # Valores extraídos do CSV
+                    pago_total = mot.get("pago_total", 0)
+                    tarifa = mot.get("tarifa", 0)
+                    gratificacao = mot.get("gratificacao", 0)
+                    portagens = mot.get("portagens", 0)
+                    portagens_reembolso = mot.get("portagens_reembolso", 0)
+                    imposto_tarifa = mot.get("imposto_tarifa", 0)
+                    
+                    logger.info(f"📊 Processando {nome_motorista}: pago={pago_total}, grat={gratificacao}, port={portagens} (reemb={portagens_reembolso}+imp={imposto_tarifa})")
+                    
+                    ganho = {
+                        "id": str(uuid.uuid4()),
+                        "uuid_motorista_uber": uuid_motorista,
+                        "parceiro_id": pid,
+                        "nome_motorista": nome_motorista,
+                        "semana": semana_calc,
+                        "ano": ano_calc,
+                        "data_inicio": data_inicio,
+                        "data_fim": data_fim,
+                        "pago_total": pago_total,
+                        "rendimentos_total": mot.get("rendimentos_total", 0),
+                        "tarifa": tarifa,
+                        "gratificacao": gratificacao,
+                        "portagens": portagens,
+                        "portagens_reembolso": portagens_reembolso,
+                        "imposto_tarifa": imposto_tarifa,
+                        "taxa_servico": mot.get("taxa_servico", 0),
+                        "plataforma": "uber",
+                        "fonte": "csv_rpa",
+                        "execucao_id": execucao_id,
+                        "ficheiro_csv": csv_path,
+                        "importado_em": datetime.now(timezone.utc).isoformat()
+                    }
+                    
+                    total_pago += pago_total
+                    total_gratificacao += gratificacao
+                    total_portagens += portagens
+                    
+                    # Verificar se já existe - usar UUID se disponível, senão usar nome
+                    existe = None
+                    
+                    if uuid_motorista:
+                        # Prioridade: procurar por UUID do motorista Uber
+                        existe = await db.ganhos_uber.find_one({
+                            "parceiro_id": pid,
+                            "uuid_motorista_uber": uuid_motorista,
+                            "semana": semana_calc,
+                            "ano": ano_calc
+                        })
+                    
+                    if not existe and nome_motorista:
+                        # Fallback: procurar por nome do motorista (caso UUID esteja vazio)
+                        existe = await db.ganhos_uber.find_one({
+                            "parceiro_id": pid,
+                            "nome_motorista": nome_motorista,
+                            "semana": semana_calc,
+                            "ano": ano_calc
+                        })
+                    
+                    if existe:
+                        # Atualizar existente (evitar duplicados)
+                        await db.ganhos_uber.update_one(
+                            {"id": existe["id"]},
+                            {"$set": {
+                                "uuid_motorista_uber": uuid_motorista or existe.get("uuid_motorista_uber", ""),
+                                "nome_motorista": nome_motorista or existe.get("nome_motorista", ""),
+                                "pago_total": pago_total,
+                                "rendimentos_total": ganho["rendimentos_total"],
+                                "tarifa": tarifa,
+                                "gratificacao": gratificacao,
+                                "portagens": portagens,
+                                "portagens_reembolso": portagens_reembolso,
+                                "imposto_tarifa": imposto_tarifa,
+                                "taxa_servico": ganho["taxa_servico"],
+                                "fonte": "csv_rpa",
+                                "execucao_id": execucao_id,
+                                "atualizado_em": datetime.now(timezone.utc).isoformat()
+                            }}
+                        )
+                        atualizados += 1
+                        logger.info(f"📝 Atualizado: {nome_motorista} - S{semana_calc}/{ano_calc} - port={portagens}, grat={gratificacao}")
+                    else:
+                        # Inserir novo
+                        await db.ganhos_uber.insert_one(ganho)
+                        importados += 1
+                        logger.info(f"➕ Inserido: {nome_motorista} - S{semana_calc}/{ano_calc} - port={portagens}, grat={gratificacao}")
+                        
+                except Exception as e:
+                    logger.warning(f"Erro ao importar motorista {mot.get('nome')}: {e}")
+                    continue
+            
+            # Atualizar execução com sucesso
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$set": {
+                    "status": "concluido",
+                    "resultado": {
+                        "sucesso": True,
+                        "mensagem": f"Importados {importados} novos, {atualizados} atualizados",
+                        "total_motoristas": len(motoristas),
+                        "total_pago": round(total_pago, 2),
+                        "total_gratificacao": round(total_gratificacao, 2),
+                        "total_portagens": round(total_portagens, 2)
+                    },
+                    "total_motoristas": len(motoristas),
+                    "total_importados": importados,
+                    "total_atualizados": atualizados,
+                    "total_pago": round(total_pago, 2),
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                },
+                "$push": {"logs": f"Concluído! {importados} importados, {atualizados} atualizados. Total: €{total_pago:.2f}, uGrat: €{total_gratificacao:.2f}, uPort: €{total_portagens:.2f}"}}
+            )
+            
+            logger.info(f"✅ Sincronização CSV Uber {execucao_id} concluída: {len(motoristas)} motoristas, €{total_pago:.2f}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro na sincronização CSV Uber: {e}")
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$set": {
+                    "status": "erro",
+                    "resultado": {"sucesso": False, "mensagem": str(e)},
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                },
+                "$push": {"logs": f"Erro: {str(e)}"}}
+            )
+    
+    # Executar em background
+    asyncio.create_task(run_uber_csv_sync())
+    
+    return {
+        "success": True,
+        "execucao_id": execucao_id,
+        "status": "em_execucao",
+        "metodo": "csv_download",
+        "periodo": {
+            "tipo": request.tipo_periodo,
+            "data_inicio": data_inicio,
+            "data_fim": data_fim,
+            "semana": semana_calc,
+            "ano": ano_calc,
+            "descricao": periodo_descricao
+        },
+        "mensagem": f"Sincronização CSV Uber iniciada para {periodo_descricao}"
+    }
+
 
 
 @router.get("/uber/execucoes")
@@ -1170,20 +1543,34 @@ async def executar_rpa_prio(
     pid = current_user['id']
     logger.info(f"🔍 Prio RPA - Parceiro ID: {pid}")
     
-    # Verificar credenciais Prio
+    # Verificar credenciais Prio - primeiro na coleção separada, depois no documento do parceiro
     credenciais = await db.credenciais_plataforma.find_one({
         "parceiro_id": pid,
         "plataforma": {"$in": ["prio", "prio_energy"]}
     })
     
-    if not credenciais or not credenciais.get("username") and not credenciais.get("email") or not credenciais.get("password"):
+    prio_usuario = None
+    prio_password = None
+    
+    if credenciais and (credenciais.get("username") or credenciais.get("email")) and credenciais.get("password"):
+        prio_usuario = credenciais.get("username") or credenciais.get("email")
+        prio_password = credenciais.get("password")
+    else:
+        # Verificar nas credenciais_plataformas do parceiro
+        parceiro = await db.parceiros.find_one({"id": pid}, {"_id": 0, "credenciais_plataformas": 1})
+        if not parceiro:
+            parceiro = await db.users.find_one({"id": pid, "role": "parceiro"}, {"_id": 0, "credenciais_plataformas": 1})
+        
+        if parceiro:
+            creds_parceiro = parceiro.get("credenciais_plataformas", {})
+            prio_usuario = creds_parceiro.get("prio_usuario")
+            prio_password = creds_parceiro.get("prio_password")
+    
+    if not prio_usuario or not prio_password:
         raise HTTPException(
             status_code=400, 
             detail="Credenciais Prio não configuradas. Vá a Configurações → Plataformas para configurar."
         )
-    
-    prio_usuario = credenciais.get("username") or credenciais.get("email")
-    prio_password = credenciais.get("password")
     
     now = datetime.now(timezone.utc)
     
@@ -1348,10 +1735,14 @@ async def executar_rpa_prio(
                             logger.info(f"   ⏭️ Transação fora do período (semana {mov_semana}/{mov_ano} != {semana}/{ano})")
                             continue
                         
-                        # Verificar duplicado
+                        # Verificar duplicado (usando data formatada e data original)
                         existe = await db.despesas_combustivel.find_one({
                             "parceiro_id": pid,
-                            "data": data_trans,
+                            "$or": [
+                                {"data": data_formatada},
+                                {"data": data_trans},
+                                {"data_original": data_trans}
+                            ],
                             "valor": valor,
                             "litros": litros
                         })
@@ -1371,8 +1762,12 @@ async def executar_rpa_prio(
                                     motorista_id = veiculo.get("motorista_id")
                             
                             if not motorista_id and cartao:
+                                # Procurar veículo pelo número do cartão Prio (cartao_frota_id)
                                 veiculo = await db.vehicles.find_one(
-                                    {"cartao_combustivel": cartao, "parceiro_id": pid},
+                                    {"$or": [
+                                        {"cartao_frota_id": cartao},
+                                        {"cartao_combustivel": cartao}
+                                    ], "parceiro_id": pid},
                                     {"_id": 0, "id": 1, "motorista_id": 1}
                                 )
                                 if veiculo:
@@ -1387,7 +1782,8 @@ async def executar_rpa_prio(
                                 "veiculo_id": veiculo_id,
                                 "matricula": matricula,
                                 "cartao": cartao,
-                                "data": data_trans,
+                                "data": data_formatada or data_trans,  # Usar formato YYYY-MM-DD para queries
+                                "data_original": data_trans,  # Guardar formato original para referência
                                 "valor": valor,
                                 "litros": litros,
                                 "preco_litro": round(valor / litros, 3) if litros > 0 else 0,
@@ -2301,14 +2697,29 @@ async def executar_sincronizacao_auto(
             
             # ============ PRIO / COMBUSTÍVEL ============
             if fonte in ["combustivel", "prio"]:
-                # Buscar credenciais da Prio do parceiro (na coleção credenciais_plataforma)
+                # Buscar credenciais da Prio - primeiro na coleção separada, depois no documento do parceiro
                 cred_prio = await db.credenciais_plataforma.find_one({
                     "parceiro_id": pid,
                     "plataforma": {"$in": ["prio", "prio_energy"]}
                 })
                 
-                prio_usuario = cred_prio.get("username") or cred_prio.get("email") if cred_prio else None
-                prio_password = cred_prio.get("password") if cred_prio else None
+                prio_usuario = None
+                prio_password = None
+                
+                if cred_prio:
+                    prio_usuario = cred_prio.get("username") or cred_prio.get("email")
+                    prio_password = cred_prio.get("password")
+                
+                # Se não encontrou na coleção separada, verificar no documento do parceiro
+                if not prio_usuario or not prio_password:
+                    parceiro_doc = await db.parceiros.find_one({"id": pid}, {"_id": 0, "credenciais_plataformas": 1})
+                    if not parceiro_doc:
+                        parceiro_doc = await db.users.find_one({"id": pid, "role": "parceiro"}, {"_id": 0, "credenciais_plataformas": 1})
+                    
+                    if parceiro_doc:
+                        creds_parceiro = parceiro_doc.get("credenciais_plataformas", {})
+                        prio_usuario = prio_usuario or creds_parceiro.get("prio_usuario")
+                        prio_password = prio_password or creds_parceiro.get("prio_password")
                 
                 if not prio_usuario or not prio_password:
                     resultados[fonte] = {
@@ -2429,6 +2840,143 @@ async def executar_sincronizacao_auto(
                         }
                 continue  # Próxima fonte
             
+            # ============ ELÉTRICO (Prio Electric - scraper automático) ============
+            if fonte == "eletrico":
+                # Buscar credenciais da Prio
+                cred_prio = await db.credenciais_plataforma.find_one({
+                    "parceiro_id": pid,
+                    "plataforma": {"$in": ["prio", "prio_energy"]}
+                })
+                
+                prio_usuario = None
+                prio_password = None
+                
+                if cred_prio:
+                    prio_usuario = cred_prio.get("username") or cred_prio.get("email")
+                    prio_password = cred_prio.get("password")
+                
+                if not prio_usuario or not prio_password:
+                    parceiro_doc = await db.parceiros.find_one({"id": pid}, {"_id": 0, "credenciais_plataformas": 1})
+                    if not parceiro_doc:
+                        parceiro_doc = await db.users.find_one({"id": pid, "role": "parceiro"}, {"_id": 0, "credenciais_plataformas": 1})
+                    
+                    if parceiro_doc:
+                        creds_parceiro = parceiro_doc.get("credenciais_plataformas", {})
+                        prio_usuario = prio_usuario or creds_parceiro.get("prio_usuario")
+                        prio_password = prio_password or creds_parceiro.get("prio_password")
+                
+                if not prio_usuario or not prio_password:
+                    resultados[fonte] = {
+                        "sucesso": False,
+                        "metodo": "rpa",
+                        "erro": "Credenciais Prio não configuradas. Configure em Configurações → Plataformas."
+                    }
+                else:
+                    try:
+                        from integrations.platform_scrapers import PrioScraper
+                        from routes.rpa_automacao import calcular_periodo_semana
+                        
+                        data_inicio, data_fim = calcular_periodo_semana(semana, ano)
+                        
+                        logger.info(f"⚡ Sincronizando Prio Electric para parceiro {pid}, Semana {semana}/{ano}")
+                        
+                        async with PrioScraper(headless=True) as scraper:
+                            login_result = await scraper.login(prio_usuario, prio_password)
+                            login_ok = login_result.get("success", False) if isinstance(login_result, dict) else login_result
+                            
+                            if not login_ok:
+                                resultados[fonte] = {
+                                    "sucesso": False,
+                                    "metodo": "rpa",
+                                    "erro": "Falha no login da Prio. Verifique as credenciais ou use 'Prio Elétrico' se tiver 2FA."
+                                }
+                            else:
+                                # Extrair dados de carregamentos elétricos
+                                # data_inicio e data_fim já são strings no formato YYYY-MM-DD
+                                dados = await scraper.extract_electric_data(
+                                    start_date=data_inicio,
+                                    end_date=data_fim
+                                )
+                                
+                                if dados.get("success"):
+                                    rows = dados.get("data", [])
+                                    total_kwh = 0.0
+                                    total_valor = 0.0
+                                    carregamentos_processados = []
+                                    
+                                    for row in rows:
+                                        try:
+                                            # Processar energia (kWh)
+                                            energia_str = row.get("energia_kwh", row.get("col_3", "0"))
+                                            energia = float(str(energia_str).replace(",", ".").replace("kWh", "").strip() or 0)
+                                            total_kwh += energia
+                                            
+                                            # Processar valor
+                                            valor_str = row.get("valor", row.get("col_5", "0"))
+                                            valor = float(str(valor_str).replace(",", ".").replace("€", "").strip() or 0)
+                                            total_valor += valor
+                                            
+                                            carregamentos_processados.append({
+                                                "data": row.get("data", row.get("col_0", "")),
+                                                "local": row.get("local", row.get("col_2", "")),
+                                                "energia_kwh": energia,
+                                                "valor": valor
+                                            })
+                                        except:
+                                            continue
+                                    
+                                    # Guardar em despesas_combustivel (com tipo elétrico)
+                                    if total_valor > 0 or total_kwh > 0:
+                                        registro = {
+                                            "id": str(uuid.uuid4()),
+                                            "parceiro_id": pid,
+                                            "semana": semana,
+                                            "ano": ano,
+                                            "valor_total": round(total_valor, 2),
+                                            "litros": 0,  # Elétrico não tem litros
+                                            "kwh": round(total_kwh, 2),
+                                            "transacoes": carregamentos_processados,
+                                            "fonte": "rpa_prio_electric",
+                                            "plataforma": "Prio Elétrico",
+                                            "synced_at": datetime.now(timezone.utc).isoformat()
+                                        }
+                                        
+                                        await db.despesas_combustivel.update_one(
+                                            {"parceiro_id": pid, "semana": semana, "ano": ano, "fonte": "rpa_prio_electric"},
+                                            {"$set": registro},
+                                            upsert=True
+                                        )
+                                        
+                                        resultados[fonte] = {
+                                            "sucesso": True,
+                                            "metodo": "rpa",
+                                            "mensagem": f"Sincronizado: {len(carregamentos_processados)} carregamentos, {total_kwh:.1f}kWh, {total_valor:.2f}€",
+                                            "total_valor": total_valor,
+                                            "total_kwh": total_kwh,
+                                            "carregamentos": len(carregamentos_processados)
+                                        }
+                                    else:
+                                        resultados[fonte] = {
+                                            "sucesso": True,
+                                            "metodo": "rpa",
+                                            "mensagem": f"Nenhum carregamento encontrado para Semana {semana}/{ano}"
+                                        }
+                                else:
+                                    resultados[fonte] = {
+                                        "sucesso": False,
+                                        "metodo": "rpa",
+                                        "erro": dados.get("error", "Erro ao extrair dados da Prio Electric")
+                                    }
+                                    
+                    except Exception as elec_err:
+                        logger.error(f"Erro ao sincronizar Prio Electric: {elec_err}")
+                        resultados[fonte] = {
+                            "sucesso": False,
+                            "metodo": "rpa",
+                            "erro": str(elec_err)
+                        }
+                continue  # Próxima fonte
+            
             # ============ UBER ============
             if fonte == "uber":
                 # Verificar se existe sessão guardada
@@ -2445,12 +2993,13 @@ async def executar_sincronizacao_auto(
                 else:
                     try:
                         from integrations.platform_scrapers import UberScraper
-                        from routes.rpa_automacao import calcular_periodo_semana
+                        from routes.rpa_automacao import calcular_periodo_semana_uber
                         
-                        # Calcular período da semana
-                        data_inicio, data_fim = calcular_periodo_semana(semana, ano)
+                        # Calcular período da semana (formato Uber: sábado a sábado)
+                        data_inicio, data_fim = calcular_periodo_semana_uber(semana, ano)
                         
                         logger.info(f"🔄 Sincronizando Uber para parceiro {pid}, Semana {semana}/{ano}")
+                        logger.info(f"📅 Período Uber: {data_inicio} a {data_fim}")
                         
                         # Executar scraper com sessão do parceiro
                         async with UberScraper(headless=True, parceiro_id=pid) as scraper:
@@ -2565,9 +3114,20 @@ async def executar_sincronizacao_auto(
                                                 "uuid_motorista": uuid_motorista,  # Fallback
                                                 "semana": semana_motorista,  # Usar semana detectada
                                                 "ano": ano_motorista,  # Usar ano detectado
-                                                "rendimentos": motorista_info.get("ganho", 0),
+                                                # Campos de rendimentos - CORRIGIDO: usar "ganho" (pago_total) como rendimentos
+                                                # O campo "ganho" do CSV é o valor "Pago a si" (líquido final)
+                                                # A lógica em relatorios.py subtrai portagens e gratificações deste valor
+                                                "rendimentos": motorista_info.get("ganho", 0),  # Valor total pago ao motorista
                                                 "pago_total": motorista_info.get("ganho", 0),
-                                                "portagens": 0,
+                                                # CAMPOS extraídos do CSV
+                                                "tarifa": motorista_info.get("tarifa", 0),  # Ganhos base (para comissões)
+                                                "gratificacao": motorista_info.get("gratificacao", 0),  # uGrat
+                                                "portagens": motorista_info.get("portagens", 0),  # uPort (reembolsos + impostos)
+                                                "portagens_reembolso": motorista_info.get("portagens_reembolso", 0),
+                                                "imposto_tarifa": motorista_info.get("imposto_tarifa", 0),
+                                                "ajustes": motorista_info.get("ajustes", 0),
+                                                "viagens": motorista_info.get("viagens", 0),
+                                                "distancia_km": motorista_info.get("distancia_km", 0),
                                                 "plataforma": "uber",
                                                 "fonte": "rpa_uber",
                                                 "periodo_inicio": motorista_info.get("periodo_inicio", data_inicio[:10]),
@@ -2576,17 +3136,29 @@ async def executar_sincronizacao_auto(
                                             }
                                             
                                             # Upsert por parceiro, motorista, semana e ano
-                                            await db.ganhos_uber.update_one(
-                                                {
-                                                    "parceiro_id": pid, 
-                                                    "motorista_id": motorista_id,
-                                                    "semana": semana_motorista,  # Usar semana detectada
-                                                    "ano": ano_motorista
-                                                },
-                                                {"$set": registro},
-                                                upsert=True
-                                            )
-                                            logger.info(f"✅ Guardado ganho Uber: {nome_motorista} (ID: {motorista_id[:8]}...) - €{motorista_info.get('ganho', 0):.2f} → Semana {semana_motorista}/{ano_motorista}")
+                                            # MAS não sobrescrever se foi corrigido manualmente
+                                            existing = await db.ganhos_uber.find_one({
+                                                "parceiro_id": pid, 
+                                                "motorista_id": motorista_id,
+                                                "semana": semana_motorista,
+                                                "ano": ano_motorista,
+                                                "corrigido_manualmente": True
+                                            })
+                                            
+                                            if existing:
+                                                logger.info(f"⚠️ Registo corrigido manualmente - não sobrescrevendo: {nome_motorista} Semana {semana_motorista}/{ano_motorista}")
+                                            else:
+                                                await db.ganhos_uber.update_one(
+                                                    {
+                                                        "parceiro_id": pid, 
+                                                        "motorista_id": motorista_id,
+                                                        "semana": semana_motorista,
+                                                        "ano": ano_motorista
+                                                    },
+                                                    {"$set": registro},
+                                                    upsert=True
+                                                )
+                                                logger.info(f"✅ Guardado ganho Uber: {nome_motorista} (ID: {motorista_id[:8]}...) - €{motorista_info.get('ganho', 0):.2f} → Semana {semana_motorista}/{ano_motorista}")
                                         
                                         resultados[fonte] = {
                                             "sucesso": True,
@@ -2681,8 +3253,13 @@ async def executar_sincronizacao_auto(
                         try:
                             # Calcular período da semana analisada
                             data_inicio, data_fim = calcular_periodo_semana(semana, ano)
-                            start_ts = int(datetime.fromisoformat(data_inicio.replace('Z', '+00:00')).timestamp())
-                            end_ts = int(datetime.fromisoformat(data_fim.replace('Z', '+00:00')).timestamp())
+                            # Converter para timestamps Unix
+                            start_dt = datetime.strptime(data_inicio, '%Y-%m-%d').replace(hour=0, minute=0, second=0, tzinfo=timezone.utc)
+                            end_dt = datetime.strptime(data_fim, '%Y-%m-%d').replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+                            start_ts = int(start_dt.timestamp())
+                            end_ts = int(end_dt.timestamp())
+                            
+                            logger.info(f"Bolt API sync: Semana {semana}/{ano}, período {data_inicio} a {data_fim}")
                             
                             client = BoltAPIClient(cred["client_id"], cred["client_secret"])
                             try:
@@ -2841,9 +3418,12 @@ async def executar_sincronizacao_auto(
                                             
                                             total_viagens = len(driver_orders)
                                             
-                                            # Ganhos líquidos = total_earnings (bruto) - comissão Bolt
-                                            # Esta fórmula inclui automaticamente: gorjetas, bónus, campanhas e portagens
-                                            ganhos_liquidos_calculados = total_ride_price - total_commission
+                                            # Ganhos brutos total = soma de todas as receitas
+                                            ganhos_brutos_total = total_ride_price + total_tips + total_cancellation_fee + total_booking_fee
+                                            
+                                            # Ganhos líquidos = ganhos brutos - comissão Bolt
+                                            # Fórmula simplificada: total - comissão
+                                            ganhos_liquidos_calculados = ganhos_brutos_total - total_commission
                                             
                                             # Criar ou atualizar registo de ganhos
                                             ganho_existente = await db.ganhos_bolt.find_one({
@@ -2868,23 +3448,49 @@ async def executar_sincronizacao_auto(
                                                 "ano": ano,
                                                 "periodo_semana": semana,
                                                 "periodo_ano": ano,
-                                                # Campos da API Bolt
-                                                "ganhos_brutos_total": total_ride_price,
-                                                "ganhos_api": ganhos_liquidos_calculados,  # Valor direto da API
-                                                "ganhos_viagens": total_net_earnings,
-                                                "comissao_bolt": total_commission,
-                                                "gorjetas": total_tips,
-                                                "portagens_bolt": total_toll_fee,
-                                                "taxa_reserva": total_booking_fee,
-                                                "taxa_cancelamento": total_cancellation_fee,
-                                                "desconto_dinheiro": total_cash_discount,
-                                                "desconto_app": total_in_app_discount,
+                                                # === Campos financeiros da API Bolt (por ordem individual) ===
+                                                # ride_price = Preço da viagem (sem gorjetas, sem taxas)
+                                                # booking_fee = Taxa de reserva
+                                                # toll_fee = Portagens
+                                                # commission = Comissão Bolt
+                                                # net_earnings = Ganhos líquidos (ride_price + tips - commission + tolls)
+                                                # tip = Gorjeta
+                                                # cancellation_fee = Taxa de cancelamento
+                                                # in_app_discount = Desconto aplicado na app
+                                                # cash_discount = Desconto em dinheiro
+                                                
+                                                # Ganhos brutos = ride_price + tip + cancellation_fee + booking_fee
+                                                "ganhos_brutos_total": round(ganhos_brutos_total, 2),
+                                                "ganhos_brutos_app": round(total_ride_price + total_tips + total_cancellation_fee, 2),
+                                                "ganhos_api": round(total_net_earnings, 2),
+                                                "ganhos_viagens": round(total_net_earnings, 2),
+                                                
+                                                # Comissões e taxas
+                                                "comissao_bolt": round(total_commission, 2),
+                                                "total_taxas": round(total_commission + total_booking_fee, 2),
+                                                
+                                                # Outros valores
+                                                "gorjetas": round(total_tips, 2),
+                                                "portagens_bolt": round(total_toll_fee, 2),
+                                                "taxa_reserva": round(total_booking_fee, 2),
+                                                "iva_taxa_reserva": 0,  # API não fornece IVA separado
+                                                "taxa_cancelamento": round(total_cancellation_fee, 2),
+                                                "desconto_dinheiro": round(total_cash_discount, 2),
+                                                "desconto_app": round(total_in_app_discount, 2),
+                                                
+                                                # Contagem de viagens
                                                 "numero_viagens": total_viagens,
                                                 "parceiro_id": pid,
                                                 "fonte": "bolt_api",
-                                                # Ganhos líquidos = total_earnings - comissao (já inclui gorjetas, bónus, campanhas, portagens)
-                                                "ganhos_liquidos": ganhos_liquidos_calculados,
-                                                "ganhos": ganhos_liquidos_calculados,
+                                                
+                                                # Ganhos líquidos = ganhos_brutos_total - comissao_bolt
+                                                # Fórmula simplificada: total - comissão
+                                                "ganhos_liquidos": round(ganhos_liquidos_calculados, 2),
+                                                "ganhos": round(ganhos_liquidos_calculados, 2),
+                                                "pagamento_previsto": round(ganhos_liquidos_calculados, 2),
+                                                # Valor original da API para referência
+                                                "ganhos_api_original": round(total_net_earnings, 2),
+                                                
                                                 "synced_at": datetime.now(timezone.utc).isoformat(),
                                                 "updated_at": datetime.now(timezone.utc).isoformat()
                                             }
@@ -2912,6 +3518,7 @@ async def executar_sincronizacao_auto(
                                         "motoristas_associados": motoristas_associados,
                                         "veiculos_associados": veiculos_associados,
                                         "ganhos_criados": ganhos_criados,
+                                        "total_orders_fetched": len(bolt_orders),
                                         "synced_at": datetime.now(timezone.utc).isoformat()
                                     }
                                     await db.bolt_api_sync_data.insert_one(sync_record)
@@ -2919,7 +3526,7 @@ async def executar_sincronizacao_auto(
                                     resultados[fonte] = {
                                         "sucesso": True,
                                         "metodo": "api",
-                                        "mensagem": f"Dados sincronizados: {motoristas_associados} motoristas, {ganhos_criados} registos de ganhos",
+                                        "mensagem": f"Dados sincronizados: {motoristas_associados} motoristas, {ganhos_criados} registos de ganhos, {len(bolt_orders)} viagens",
                                         "motoristas_bolt": len(bolt_drivers),
                                         "motoristas_associados": motoristas_associados,
                                         "veiculos_associados": veiculos_associados,

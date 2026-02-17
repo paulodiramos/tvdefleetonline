@@ -82,6 +82,9 @@ const AdminFornecedores = ({ user, onLogout }) => {
   const [tipoFiltro, setTipoFiltro] = useState('todos');
   const [showDialog, setShowDialog] = useState(false);
   const [editingFornecedor, setEditingFornecedor] = useState(null);
+  const [activeTab, setActiveTab] = useState('info');
+  const [metodosIntegracao, setMetodosIntegracao] = useState([]);
+  const [camposDestino, setCamposDestino] = useState([]);
   const [formData, setFormData] = useState({
     nome: '',
     tipo: '',
@@ -89,7 +92,18 @@ const AdminFornecedores = ({ user, onLogout }) => {
     contacto_email: '',
     contacto_telefone: '',
     website: '',
-    ativo: true
+    url_login: '',
+    requer_2fa: false,
+    tipo_2fa: '',
+    ativo: true,
+    integracao: {
+      metodo: 'upload_excel',
+      linha_cabecalho: 1,
+      linha_inicio_dados: 2,
+      encoding: 'utf-8',
+      separador_csv: ';',
+      mapeamento_campos: []
+    }
   });
 
   const fetchFornecedores = async () => {
@@ -110,7 +124,34 @@ const AdminFornecedores = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchFornecedores();
+    fetchMetodosIntegracao();
   }, []);
+
+  const fetchMetodosIntegracao = async () => {
+    try {
+      const response = await axios.get(`${API}/automacao/fornecedores/metodos-integracao`);
+      setMetodosIntegracao(response.data);
+    } catch (error) {
+      console.error('Error fetching metodos:', error);
+    }
+  };
+
+  const fetchCamposDestino = async (tipo) => {
+    try {
+      const response = await axios.get(`${API}/automacao/fornecedores/campos-destino/${tipo}`);
+      setCamposDestino(response.data);
+    } catch (error) {
+      console.error('Error fetching campos:', error);
+      setCamposDestino([]);
+    }
+  };
+
+  // Carregar campos quando tipo muda
+  useEffect(() => {
+    if (formData.tipo) {
+      fetchCamposDestino(formData.tipo);
+    }
+  }, [formData.tipo]);
 
   const handleSeedFornecedores = async () => {
     try {
@@ -158,6 +199,7 @@ const AdminFornecedores = ({ user, onLogout }) => {
 
   const handleEdit = (fornecedor) => {
     setEditingFornecedor(fornecedor);
+    setActiveTab('info');
     setFormData({
       nome: fornecedor.nome,
       tipo: fornecedor.tipo,
@@ -165,8 +207,22 @@ const AdminFornecedores = ({ user, onLogout }) => {
       contacto_email: fornecedor.contacto_email || '',
       contacto_telefone: fornecedor.contacto_telefone || '',
       website: fornecedor.website || '',
-      ativo: fornecedor.ativo
+      url_login: fornecedor.url_login || '',
+      requer_2fa: fornecedor.requer_2fa || false,
+      tipo_2fa: fornecedor.tipo_2fa || '',
+      ativo: fornecedor.ativo,
+      integracao: fornecedor.integracao || {
+        metodo: 'upload_excel',
+        linha_cabecalho: 1,
+        linha_inicio_dados: 2,
+        encoding: 'utf-8',
+        separador_csv: ';',
+        mapeamento_campos: []
+      }
     });
+    if (fornecedor.tipo) {
+      fetchCamposDestino(fornecedor.tipo);
+    }
     setShowDialog(true);
   };
 
@@ -188,6 +244,7 @@ const AdminFornecedores = ({ user, onLogout }) => {
 
   const resetForm = () => {
     setEditingFornecedor(null);
+    setActiveTab('info');
     setFormData({
       nome: '',
       tipo: '',
@@ -195,8 +252,53 @@ const AdminFornecedores = ({ user, onLogout }) => {
       contacto_email: '',
       contacto_telefone: '',
       website: '',
-      ativo: true
+      url_login: '',
+      requer_2fa: false,
+      tipo_2fa: '',
+      ativo: true,
+      integracao: {
+        metodo: 'upload_excel',
+        linha_cabecalho: 1,
+        linha_inicio_dados: 2,
+        encoding: 'utf-8',
+        separador_csv: ';',
+        mapeamento_campos: []
+      }
     });
+  };
+
+  const addCampoMapeamento = () => {
+    setFormData(prev => ({
+      ...prev,
+      integracao: {
+        ...prev.integracao,
+        mapeamento_campos: [
+          ...prev.integracao.mapeamento_campos,
+          { campo_sistema: '', coluna_ficheiro: '', tipo_dados: 'texto', obrigatorio: false }
+        ]
+      }
+    }));
+  };
+
+  const updateCampoMapeamento = (index, field, value) => {
+    setFormData(prev => {
+      const novoMapeamento = [...prev.integracao.mapeamento_campos];
+      novoMapeamento[index] = { ...novoMapeamento[index], [field]: value };
+      return {
+        ...prev,
+        integracao: { ...prev.integracao, mapeamento_campos: novoMapeamento }
+      };
+    });
+  };
+
+  const removeCampoMapeamento = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      integracao: {
+        ...prev.integracao,
+        mapeamento_campos: prev.integracao.mapeamento_campos.filter((_, i) => i !== index)
+      }
+    }));
   };
 
   const getTipoInfo = (tipoId) => {

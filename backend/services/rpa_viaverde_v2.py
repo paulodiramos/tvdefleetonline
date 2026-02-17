@@ -203,18 +203,38 @@ class ViaVerdeRPA:
                 # Procurar o input próximo
                 de_input = self.page.locator('input').filter(has=self.page.locator('[class*="calendar"], [class*="date"]')).first
                 
-            # Método alternativo: Procurar todos os inputs de data na página
-            all_inputs = await self.page.locator('input').all()
+            # Método alternativo: Procurar todos os inputs de data VISÍVEIS na página
+            all_inputs = await self.page.locator('input:visible').all()
             date_inputs = []
             for inp in all_inputs:
                 try:
+                    inp_type = await inp.get_attribute('type')
+                    # Ignorar inputs hidden
+                    if inp_type == 'hidden':
+                        continue
+                    
                     value = await inp.get_attribute('value')
-                    if value and '/' in value:
-                        date_inputs.append(inp)
-                except:
+                    placeholder = await inp.get_attribute('placeholder') or ''
+                    inp_class = await inp.get_attribute('class') or ''
+                    
+                    # Verificar se é um campo de data (tem "/" no valor ou "data" no placeholder/class)
+                    is_date_field = (
+                        (value and '/' in value and len(value) <= 10) or
+                        'data' in placeholder.lower() or
+                        'date' in placeholder.lower() or
+                        'calendar' in inp_class.lower() or
+                        'date' in inp_class.lower()
+                    )
+                    
+                    if is_date_field:
+                        is_visible = await inp.is_visible()
+                        if is_visible:
+                            date_inputs.append(inp)
+                            logger.info(f"   📅 Input de data encontrado: value='{value}' placeholder='{placeholder}'")
+                except Exception as e:
                     pass
             
-            logger.info(f"📋 Encontrados {len(date_inputs)} inputs de data")
+            logger.info(f"📋 Encontrados {len(date_inputs)} inputs de data visíveis")
             
             # Se encontramos pelo menos 2 inputs de data
             if len(date_inputs) >= 2:
@@ -245,6 +265,37 @@ class ViaVerdeRPA:
                     
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao preencher datas: {e}")
+            else:
+                # Fallback: Tentar método JavaScript para preencher datas
+                logger.warning(f"⚠️ Não encontrou inputs de data visíveis, tentando método JavaScript...")
+                try:
+                    await self.page.evaluate(f'''() => {{
+                        // Procurar todos os inputs com valor de data
+                        const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+                        const dateInputs = inputs.filter(inp => {{
+                            const val = inp.value || '';
+                            return val.match(/\\d{{1,2}}\\/\\d{{1,2}}\\/\\d{{4}}/);
+                        }});
+                        
+                        console.log('Found', dateInputs.length, 'date inputs');
+                        
+                        if (dateInputs.length >= 2) {{
+                            // Preencher primeiro input (De:)
+                            dateInputs[0].value = '{data_inicio}';
+                            dateInputs[0].dispatchEvent(new Event('input', {{ bubbles: true }}));
+                            dateInputs[0].dispatchEvent(new Event('change', {{ bubbles: true }}));
+                            
+                            // Preencher segundo input (Até:)
+                            dateInputs[1].value = '{data_fim}';
+                            dateInputs[1].dispatchEvent(new Event('input', {{ bubbles: true }}));
+                            dateInputs[1].dispatchEvent(new Event('change', {{ bubbles: true }}));
+                            
+                            console.log('Dates filled via JavaScript');
+                        }}
+                    }}''')
+                    logger.info(f"✅ Datas preenchidas via JavaScript")
+                except Exception as js_err:
+                    logger.warning(f"⚠️ Erro no método JavaScript: {js_err}")
             
             # Clicar no botão "Filtrar"
             await self.page.wait_for_timeout(500)
@@ -270,10 +321,14 @@ class ViaVerdeRPA:
             
             await self.screenshot("apos_filtrar")
             
-            # Verificar se há movimentos filtrados
-            movimentos_text = await self.page.locator('text=/\\d+ movimentos? filtrados?/i').first.text_content()
-            if movimentos_text:
-                logger.info(f"📊 {movimentos_text}")
+            # Verificar se há movimentos filtrados (com timeout curto)
+            try:
+                movimentos_locator = self.page.locator('text=/\\d+ movimentos? filtrados?/i').first
+                movimentos_text = await movimentos_locator.text_content(timeout=5000)
+                if movimentos_text:
+                    logger.info(f"📊 {movimentos_text}")
+            except Exception as e:
+                logger.info("📊 Não foi possível verificar texto de movimentos filtrados (continuando)")
             
             return True
             
@@ -474,9 +529,14 @@ def parse_viaverde_excel(filepath: str) -> List[Dict[str, Any]]:
             if 'License Plate' in df.columns and pd.notna(row.get('License Plate')):
                 movimento["matricula"] = str(row['License Plate']).strip().upper()
             
-            # IAI → Identificador
+            # IAI → Identificador (Via Verde ID)
             if 'IAI' in df.columns and pd.notna(row.get('IAI')):
                 movimento["identificador"] = str(row['IAI'])
+                movimento["viaverde_id"] = str(row['IAI'])
+            
+            # OBU → Número do dispositivo
+            if 'OBU' in df.columns and pd.notna(row.get('OBU')):
+                movimento["obu"] = str(row['OBU'])
             
             # Entry Date → Data
             if 'Entry Date' in df.columns and pd.notna(row.get('Entry Date')):
