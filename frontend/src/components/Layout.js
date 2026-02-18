@@ -409,8 +409,8 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/copia-seguranca" className="flex items-center space-x-2 cursor-pointer pl-4">
-                          <span>💾 Backup</span>
+                        <Link to="/admin/backup" className="flex items-center space-x-2 cursor-pointer pl-4" data-testid="admin-backup-link">
+                          <span>💾 Backup Completo</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
