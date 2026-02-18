@@ -1817,6 +1817,16 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardContent>
               </Card>
 
+              {/* Card de Gestão de KM */}
+              <div className="mt-4">
+                <GestaoKmVeiculo 
+                  veiculoId={id}
+                  veiculo={vehicle}
+                  onUpdate={fetchVehicle}
+                  canEdit={canEdit}
+                />
+              </div>
+
               {/* Card de DUA - Documento Único Automóvel */}
               <Card className="mt-4">
                 <CardHeader className="pb-2">
