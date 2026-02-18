@@ -80,7 +80,7 @@ export default function PrecosEspeciais({ user }) {
   const fetchPlanos = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/gestao-planos/planos`, {
+      const response = await axios.get(`${API}/api/gestao-planos/planos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlanos(response.data || []);
@@ -92,7 +92,7 @@ export default function PrecosEspeciais({ user }) {
   const fetchParceiros = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/uber/admin/parceiros`, {
+      const response = await axios.get(`${API}/api/uber/admin/parceiros`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setParceiros(response.data || []);
@@ -104,7 +104,7 @@ export default function PrecosEspeciais({ user }) {
   const fetchPrecosEspeciais = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/precos-especiais`, {
+      const response = await axios.get(`${API}/api/admin/precos-especiais`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPrecosEspeciais(response.data || []);
