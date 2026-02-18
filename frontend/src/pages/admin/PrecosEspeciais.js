@@ -57,7 +57,7 @@ export default function PrecosEspeciais({ user }) {
   const fetchParceiros = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/usuarios/parceiros`, {
+      const response = await axios.get(`${API}/uber/admin/parceiros`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setParceiros(response.data || []);
