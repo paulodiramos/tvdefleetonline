@@ -180,43 +180,171 @@ async def dashboard_totais_empresa(
     
     ano = ano or datetime.now().year
     
-    empresas_query = {"parceiro_id": current_user["id"]} if current_user["role"] == UserRole.PARCEIRO else {}
-    empresas = await db.empresas_faturacao.find(empresas_query, {"_id": 0}).to_list(100)
+    # Query para filtrar por parceiro se não for admin
+    parceiro_filter = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        parceiro_filter = {"parceiro_id": current_user["id"]}
+    
+    empresas = await db.empresas_faturacao.find(parceiro_filter, {"_id": 0}).to_list(100)
     
     resultado = []
     motoristas_data = {}  # Acumulador por motorista
     matriz_data = {}  # Matriz motorista -> empresa -> valor
     
-    # Buscar resumos semanais do ano para ter os valores reais
-    relatorios = await db.resumos_semanais.find({
-        "ano": ano
-    }, {"_id": 0}).to_list(1000)
+    # Buscar dados_semanais (onde estão os rendimentos reais)
+    dados_query = {"ano": ano}
+    if current_user["role"] == UserRole.PARCEIRO:
+        dados_query["parceiro_id"] = current_user["id"]
     
+    dados_semanais = await db.dados_semanais.find(dados_query, {"_id": 0}).to_list(5000)
+    
+    # Processar dados_semanais para criar matriz
+    for dado in dados_semanais:
+        motorista_id = dado.get("motorista_id")
+        motorista_nome = dado.get("motorista_nome", "Desconhecido")
+        empresa_id = dado.get("empresa_faturacao_id")
+        valor_liquido = dado.get("valor_liquido", 0) or 0
+        
+        if not motorista_id:
+            continue
+        
+        # Inicializar motorista se não existir
+        if motorista_id not in motoristas_data:
+            motoristas_data[motorista_id] = {
+                "motorista_id": motorista_id,
+                "motorista_nome": motorista_nome,
+                "total_valor": 0,
+                "total_semanas": 0,
+                "por_empresa": {}
+            }
+            matriz_data[motorista_id] = {}
+        
+        # Acumular total do motorista
+        motoristas_data[motorista_id]["total_valor"] += valor_liquido
+        motoristas_data[motorista_id]["total_semanas"] += 1
+        
+        # Se tem empresa associada, acumular por empresa
+        if empresa_id:
+            empresa_info = next((e for e in empresas if e["id"] == empresa_id), None)
+            empresa_nome = empresa_info["nome"] if empresa_info else "Empresa Desconhecida"
+            
+            if empresa_id not in motoristas_data[motorista_id]["por_empresa"]:
+                motoristas_data[motorista_id]["por_empresa"][empresa_id] = {
+                    "empresa_id": empresa_id,
+                    "empresa_nome": empresa_nome,
+                    "total_valor": 0,
+                    "total_semanas": 0
+                }
+                matriz_data[motorista_id][empresa_id] = 0
+            
+            motoristas_data[motorista_id]["por_empresa"][empresa_id]["total_valor"] += valor_liquido
+            motoristas_data[motorista_id]["por_empresa"][empresa_id]["total_semanas"] += 1
+            matriz_data[motorista_id][empresa_id] += valor_liquido
+        else:
+            # Sem empresa associada - criar entrada "Sem Empresa"
+            sem_empresa_id = "sem_empresa"
+            if sem_empresa_id not in motoristas_data[motorista_id]["por_empresa"]:
+                motoristas_data[motorista_id]["por_empresa"][sem_empresa_id] = {
+                    "empresa_id": sem_empresa_id,
+                    "empresa_nome": "Sem Empresa",
+                    "total_valor": 0,
+                    "total_semanas": 0
+                }
+                matriz_data[motorista_id][sem_empresa_id] = 0
+            
+            motoristas_data[motorista_id]["por_empresa"][sem_empresa_id]["total_valor"] += valor_liquido
+            motoristas_data[motorista_id]["por_empresa"][sem_empresa_id]["total_semanas"] += 1
+            matriz_data[motorista_id][sem_empresa_id] += valor_liquido
+    
+    # Calcular totais por empresa
     for empresa in empresas:
         empresa_id = empresa["id"]
-        empresa_nome = empresa["nome"]
+        total_empresa = sum(
+            matriz_data.get(m_id, {}).get(empresa_id, 0) 
+            for m_id in matriz_data
+        )
         
-        # Buscar em recibos
-        recibos = await db.recibos.find({
-            "empresa_faturacao_id": empresa_id
-        }, {"_id": 0}).to_list(1000)
+        resultado.append({
+            "empresa_id": empresa_id,
+            "empresa_nome": empresa["nome"],
+            "empresa_nipc": empresa.get("nipc", ""),
+            "ano": ano,
+            "total_valor": total_empresa,
+            "total_recibos": sum(1 for m in motoristas_data.values() if empresa_id in m["por_empresa"])
+        })
+    
+    # Adicionar "Sem Empresa" se houver dados
+    total_sem_empresa = sum(
+        matriz_data.get(m_id, {}).get("sem_empresa", 0) 
+        for m_id in matriz_data
+    )
+    if total_sem_empresa > 0:
+        resultado.append({
+            "empresa_id": "sem_empresa",
+            "empresa_nome": "Sem Empresa Associada",
+            "empresa_nipc": "-",
+            "ano": ano,
+            "total_valor": total_sem_empresa,
+            "total_recibos": sum(1 for m in motoristas_data.values() if "sem_empresa" in m["por_empresa"])
+        })
+    
+    # Calcular total geral
+    total_geral = sum(m["total_valor"] for m in motoristas_data.values()) or 1
+    
+    # Converter motoristas para lista com percentagens
+    motoristas_list = []
+    for m in motoristas_data.values():
+        m["percentagem_total"] = round((m["total_valor"] / total_geral) * 100, 1)
         
-        # Buscar em pagamentos_recibos
-        pagamentos = await db.pagamentos_recibos.find({
-            "empresa_faturacao_id": empresa_id
-        }, {"_id": 0}).to_list(1000)
+        # Calcular percentagem por empresa
+        for emp_data in m["por_empresa"].values():
+            emp_data["percentagem"] = round((emp_data["total_valor"] / total_geral) * 100, 1)
         
-        # Buscar dados de resumo semanal com esta empresa
-        for relatorio in relatorios:
-            for motorista in relatorio.get("motoristas", []):
-                motorista_id = motorista.get("motorista_id")
-                motorista_nome = motorista.get("motorista_nome", "Desconhecido")
-                
-                # Verificar se este motorista usou esta empresa de faturação
-                emp_id_rel = motorista.get("empresa_faturacao_id")
-                
-                if emp_id_rel == empresa_id:
-                    valor_liquido = motorista.get("valor_liquido", 0)
+        # Converter dict para lista ordenada
+        m["por_empresa"] = sorted(m["por_empresa"].values(), key=lambda x: x["total_valor"], reverse=True)
+        motoristas_list.append(m)
+    
+    # Ordenar por total_valor descendente
+    motoristas_list.sort(key=lambda x: x["total_valor"], reverse=True)
+    
+    # Preparar colunas de empresas (incluindo "sem empresa" se houver)
+    empresas_colunas = [{"id": e["empresa_id"], "nome": e["empresa_nome"]} for e in resultado]
+    
+    # Preparar matriz para tabela (linhas = motoristas, colunas = empresas)
+    matriz_tabela = []
+    for motorista_id, emp_valores in matriz_data.items():
+        motorista_info = motoristas_data.get(motorista_id, {})
+        row = {
+            "motorista_id": motorista_id,
+            "motorista_nome": motorista_info.get("motorista_nome", "Desconhecido"),
+            "total_anual": motorista_info.get("total_valor", 0),
+            "percentagem_total": motorista_info.get("percentagem_total", 0),
+            "valores_por_empresa": {}
+        }
+        for emp in empresas_colunas:
+            emp_id = emp["id"]
+            valor = emp_valores.get(emp_id, 0)
+            row["valores_por_empresa"][emp_id] = {
+                "valor": valor,
+                "percentagem": round((valor / total_geral) * 100, 1) if total_geral > 0 else 0
+            }
+        matriz_tabela.append(row)
+    
+    # Ordenar matriz por total anual
+    matriz_tabela.sort(key=lambda x: x["total_anual"], reverse=True)
+    
+    return {
+        "ano": ano,
+        "empresas": resultado,
+        "empresas_colunas": empresas_colunas,
+        "motoristas": motoristas_list,
+        "matriz": matriz_tabela,
+        "totais": {
+            "valor": total_geral if total_geral > 1 else 0,
+            "motoristas": len(motoristas_list),
+            "empresas": len(resultado)
+        }
+    }
                     
                     if motorista_id:
                         # Inicializar motorista se não existir
