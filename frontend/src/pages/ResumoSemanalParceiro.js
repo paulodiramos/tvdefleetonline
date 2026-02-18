@@ -97,6 +97,10 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   // Estado para alerta de sessão Prio
   const [prioSessionAlert, setPrioSessionAlert] = useState(null);
 
+  // Estado para empresas de faturação
+  const [empresasFaturacao, setEmpresasFaturacao] = useState([]);
+  const [empresaSelecionada, setEmpresaSelecionada] = useState(null);
+
   // Estados para totais recebidos da empresa (Uber/Bolt)
   const [totaisEmpresa, setTotaisEmpresa] = useState({
     uber_recebido: 0,
