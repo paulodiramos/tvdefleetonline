@@ -10,11 +10,8 @@ from pydantic import BaseModel
 import logging
 import uuid
 
-from server import db
-from auth import get_current_user
-
-router = APIRouter(prefix="/api/backup", tags=["backup"])
 logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/backup", tags=["backup"])
 
 
 # Lista de todas as coleções importantes para backup
