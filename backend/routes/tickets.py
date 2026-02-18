@@ -428,7 +428,7 @@ async def marcar_ticket_lido(
     lido_por = ticket.get("lido_por", [])
     
     # Remover leitura anterior do mesmo utilizador
-    lido_por = [l for l in lido_por if l.get("user_id") != current_user["id"]]
+    lido_por = [entry for entry in lido_por if entry.get("user_id") != current_user["id"]]
     
     # Adicionar nova leitura
     lido_por.append({
