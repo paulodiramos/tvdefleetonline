@@ -1098,6 +1098,9 @@ const FichaMotorista = ({ user }) => {
             <TabsTrigger value="turnos" data-testid="tab-turnos">
               <Calendar className="w-4 h-4 mr-2" /> Turnos
             </TabsTrigger>
+            <TabsTrigger value="historico" data-testid="tab-historico">
+              <History className="w-4 h-4 mr-2" /> Histórico
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab Dados Pessoais */}
