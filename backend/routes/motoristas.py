@@ -647,9 +647,33 @@ async def update_motorista(
         if motorista.get("ativo") != False:
             update_data["data_desativacao"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             logger.info(f"Motorista {motorista_id} desativado em {update_data['data_desativacao']}")
+            # Registar no histórico
+            entrada_historico = {
+                "id": str(uuid.uuid4()),
+                "motorista_id": motorista_id,
+                "tipo": "desativado",
+                "motivo": update_data.get("motivo_desativacao", ""),
+                "data": datetime.now(timezone.utc).isoformat(),
+                "registado_por": current_user["id"],
+                "registado_por_nome": current_user.get("name", "")
+            }
+            await db.historico_atividade_motoristas.insert_one(entrada_historico)
     elif "ativo" in update_data and update_data["ativo"] == True:
         # Se está a reativar, remover a data de desativação
-        update_data["data_desativacao"] = None
+        if motorista.get("ativo") == False:
+            update_data["data_desativacao"] = None
+            update_data["data_ativacao"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            # Registar no histórico
+            entrada_historico = {
+                "id": str(uuid.uuid4()),
+                "motorista_id": motorista_id,
+                "tipo": "ativado",
+                "motivo": "",
+                "data": datetime.now(timezone.utc).isoformat(),
+                "registado_por": current_user["id"],
+                "registado_por_nome": current_user.get("name", "")
+            }
+            await db.historico_atividade_motoristas.insert_one(entrada_historico)
     
     # Update motorista
     await db.motoristas.update_one(
