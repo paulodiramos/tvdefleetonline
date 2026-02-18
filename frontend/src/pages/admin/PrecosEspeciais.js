@@ -274,14 +274,19 @@ export default function PrecosEspeciais({ user }) {
         {/* Info Alert */}
         <Alert className="mb-6 border-blue-200 bg-blue-50">
           <Info className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800">Como funciona?</AlertTitle>
+          <AlertTitle className="text-blue-800">Tipos de Preço Especial</AlertTitle>
           <AlertDescription className="text-blue-700">
             <ul className="list-disc ml-4 mt-2 space-y-1 text-sm">
               <li><strong>Percentagem:</strong> Aplica um desconto percentual sobre o preço base do plano</li>
-              <li><strong>Preço Fixo:</strong> Define um valor fixo mensal para o parceiro, ignorando o preço original</li>
-              <li><strong>Validade:</strong> Defina datas de início e fim para descontos temporários (promoções, testes)</li>
-              <li><strong>Sem limite:</strong> Deixe as datas vazias para descontos permanentes</li>
+              <li><strong>Preço Fixo Total:</strong> Define um valor fixo mensal total para o parceiro</li>
+              <li><strong>Preço Fixo por Veículo:</strong> Valor fixo multiplicado pelo número de veículos</li>
+              <li><strong>Preço Fixo por Motorista:</strong> Valor fixo multiplicado pelo número de motoristas</li>
+              <li><strong>Preço Fixo Motorista + Veículo:</strong> Valor fixo por cada combinação ativa</li>
             </ul>
+            <p className="mt-2 text-xs text-blue-600">
+              <Clock className="w-3 h-3 inline mr-1" />
+              Defina datas de validade para promoções temporárias ou deixe em branco para descontos permanentes.
+            </p>
           </AlertDescription>
         </Alert>
 
