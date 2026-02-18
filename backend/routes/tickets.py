@@ -402,6 +402,117 @@ async def listar_categorias():
     }
 
 
+@router.put("/{ticket_id}/marcar-lido")
+async def marcar_ticket_lido(
+    ticket_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Marcar ticket como lido pelo utilizador atual"""
+    
+    ticket = await db.tickets.find_one({"id": ticket_id}, {"_id": 0})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket não encontrado")
+    
+    # Verificar se tem acesso
+    tem_acesso = (
+        current_user["id"] in ticket.get("intervenientes", []) or
+        current_user["id"] == ticket.get("criado_por_id") or
+        current_user["id"] == ticket.get("destinatario_id") or
+        current_user["role"] == "admin"
+    )
+    
+    if not tem_acesso:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Atualizar lido_por
+    lido_por = ticket.get("lido_por", [])
+    
+    # Remover leitura anterior do mesmo utilizador
+    lido_por = [l for l in lido_por if l.get("user_id") != current_user["id"]]
+    
+    # Adicionar nova leitura
+    lido_por.append({
+        "user_id": current_user["id"],
+        "user_nome": current_user.get("name"),
+        "data_leitura": datetime.now(timezone.utc).isoformat()
+    })
+    
+    await db.tickets.update_one(
+        {"id": ticket_id},
+        {"$set": {"lido_por": lido_por}}
+    )
+    
+    return {"success": True, "message": "Ticket marcado como lido"}
+
+
+@router.get("/arquivo")
+async def listar_tickets_arquivados(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar tickets arquivados (fechados) onde o utilizador é interveniente"""
+    
+    query = {
+        "$or": [
+            {"intervenientes": current_user["id"]},
+            {"criado_por_id": current_user["id"]},
+            {"destinatario_id": current_user["id"]}
+        ],
+        "status": "fechado"
+    }
+    
+    if current_user["role"] == "admin":
+        # Admin vê todos os tickets fechados
+        query = {"status": "fechado"}
+    
+    tickets = await db.tickets.find(query, {"_id": 0}).sort("updated_at", -1).to_list(500)
+    
+    return tickets
+
+
+@router.put("/{ticket_id}/fechar")
+async def fechar_ticket(
+    ticket_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Fechar ticket e arquivar para todos os intervenientes"""
+    
+    ticket = await db.tickets.find_one({"id": ticket_id}, {"_id": 0})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket não encontrado")
+    
+    # Verificar se tem acesso para fechar
+    pode_fechar = (
+        current_user["id"] == ticket.get("criado_por_id") or
+        current_user["id"] == ticket.get("destinatario_id") or
+        current_user["role"] == "admin"
+    )
+    
+    if not pode_fechar:
+        raise HTTPException(status_code=403, detail="Não autorizado a fechar este ticket")
+    
+    await db.tickets.update_one(
+        {"id": ticket_id},
+        {"$set": {
+            "status": "fechado",
+            "arquivado": True,
+            "data_arquivo": datetime.now(timezone.utc).isoformat(),
+            "fechado_por_id": current_user["id"],
+            "fechado_por_nome": current_user.get("name"),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "ultima_comunicacao": {
+                "data": datetime.now(timezone.utc).isoformat(),
+                "por_id": current_user["id"],
+                "por_nome": current_user.get("name"),
+                "tipo": "fechamento"
+            }
+        }}
+    )
+    
+    logger.info(f"Ticket {ticket_id} fechado por {current_user['id']}")
+    
+    return {"success": True, "message": "Ticket fechado e arquivado"}
+
+
 @router.get("/meus")
 async def listar_meus_tickets(
     status: Optional[str] = None,
