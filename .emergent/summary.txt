@@ -1,142 +1,213 @@
 <analysis>**original_problem_statement:**
-O utilizador pretende construir um **Sistema de Integrações Configurável** para a sua aplicação de gestão de frotas. O objetivo evoluiu para incluir novas funcionalidades significativas, nomeadamente:
--   **Sistema de Backup e Migração:** O administrador deve poder exportar e importar configurações de RPA individuais, bem como realizar um backup completo de toda a base de dados para fins de migração ou segurança.
--   **Funcionalidades de Veículos Elétricos:** Permitir que um veículo elétrico tenha múltiplos cartões de frota (ex: Prio Eletric, Prio Online, Mio, Galp, etc.), com os custos totais de carregamento a serem somados e discriminados nos relatórios.
--   **Gestão de Utilizadores Avançada:** O administrador deve poder eliminar utilizadores. Gestores e parceiros devem poder bloquear os motoristas sob a sua gestão.
--   **Sistema de Tickets Melhorado:** Os tickets devem poder ser associados a um veículo e/ou motorista específico. O sistema deve registar o estado de leitura por cada interveniente, a data/hora da última comunicação e permitir o arquivamento de tickets fechados. As permissões devem ser refinadas para que um motorista só possa contactar o admin, o seu parceiro associado e o gestor desse parceiro.
+O utilizador pretende construir um **Sistema de Integrações Configurável** para a sua aplicação de gestão de frotas. Os requisitos evoluíram para incluir um vasto leque de funcionalidades, das quais as mais recentes e prioritárias são:
+-   **Sistema de Recibos e Faturação por Entidade:** Permitir que um parceiro defina múltiplas Empresas de Faturação. Ao aprovar um relatório semanal de um motorista, o parceiro pode emitir o recibo em nome de uma dessas empresas. Um motorista pode trabalhar para um parceiro, mas ter recibos passados por diferentes empresas ao longo do tempo. Requer um dashboard para visualizar os totais faturados por cada entidade anualmente.
+-   **Gestão de Acessos e Permissões:**
+    -   Refinar a visibilidade nos dashboards: parceiros veem apenas os seus dados; gestores veem os parceiros que lhes são atribuídos; o administrador vê tudo.
+    -   Permitir que o administrador possa eliminar utilizadores e motoristas.
+    -   Permitir que parceiros (além de administradores e gestores) possam aprovar motoristas.
+    -   Permitir que o administrador possa atribuir/alterar o parceiro de um motorista.
+-   **Melhorias na Gestão de Veículos:**
+    -   Corrigir a exibição de fotos de veículos na página pública.
+    -   Melhorar os anúncios de veículos com um carrossel de fotos e exibição de mais detalhes (ex: tipo de caixa de velocidades, versão).
+    -   Permitir a gestão de quilometragem com um campo de  e a possibilidade de atualizações manuais.
+-   **Histórico e Relatórios:**
+    -   O resumo semanal deve mostrar apenas os motoristas que estiveram ativos na semana selecionada.
+    -   Implementar um histórico de atividade (ativo/inativo) e um histórico de rendimentos para cada motorista.
+-   **Preços Especiais:** O administrador deve poder definir um preço específico (fixo, por veículo, etc.) para um parceiro/gestor, associado a um plano e com validade.
+-   **Sistema de Backup:** Criar uma interface de frontend para o administrador poder realizar e descarregar backups completos da base de dados.
 
 **PRODUCT REQUIREMENTS:**
-Referir a  para a lista detalhada de requisitos, que foi atualizada com as novas funcionalidades.
+Referir a  para a lista detalhada de requisitos.
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-A aplicação full-stack (FastAPI + React + MongoDB) foi migrada de um complexo processo de deployment manual num VPS para a plataforma de deployment da Emergent, acessível em . No entanto, a base de dados em produção está desatualizada/vazia em comparação com o ambiente de desenvolvimento.
-
-No ambiente de desenvolvimento, foram implementadas várias novas funcionalidades:
--   **Backend para Múltiplos Cartões Elétricos:** O modelo  foi atualizado para suportar múltiplos cartões.
--   **Backend para Sistema de Tickets Avançado:** O modelo  foi melhorado para incluir , , estado de leitura e timestamps. As permissões de criação de tickets foram refinadas.
--   **Backend para Exportação/Importação:** Foram criados endpoints para exportar/importar configurações de RPA () e para exportar um backup completo de toda a base de dados ().
--   **Frontend:** O formulário de veículos foi atualizado para incluir os múltiplos cartões elétricos.
+A aplicação full-stack (FastAPI, React, MongoDB) está funcional no ambiente de desenvolvimento. O agente concluiu várias tarefas importantes:
+-   A funcionalidade de **backup da base de dados** foi totalmente implementada, incluindo uma interface de frontend () que permite exportar backups completos ou parciais, ver estatísticas e histórico.
+-   Foram corrigidos vários bugs críticos de **serialização de ** que impediam a exportação de configurações RPA e backups parciais.
+-   O problema das **fotos dos veículos que não apareciam** na página pública foi resolvido. A solução envolveu a correção da rota de ficheiros estáticos no backend (para ) e a atualização do frontend.
+-   Os **anúncios de veículos foram melhorados** com um carrossel de fotos e a exibição de detalhes como o tipo de caixa de velocidades.
+-   Foram implementadas várias funcionalidades de **gestão de utilizadores e motoristas**, incluindo a UI para o administrador atribuir um parceiro a um motorista e para eliminar utilizadores. As permissões de aprovação de motoristas foram alargadas aos parceiros.
+-   Foi iniciada a implementação do **sistema de Empresas de Faturação** no backend.
 
 **Last working item**:
--   Last item agent was working: O agente acabou de criar a funcionalidade de backend para um **backup completo da base de dados**, que o administrador pode descarregar. O utilizador pediu uma interface para aceder a esta funcionalidade.
--   Status: IN PROGRESS (Backend está concluído, mas o frontend não foi iniciado).
--   Agent Testing Done: Y (O endpoint  foi testado com  e confirmou-se que gera um ficheiro JSON de 29MB com todos os dados).
--   Which testing method agent to use? Frontend testing agent, após a criação da UI.
+-   Last item agent was working: O agente estava a implementar o backend para o **sistema de Empresas de Faturação** (). Esta funcionalidade permitirá que os parceiros definam múltiplas entidades para as quais podem emitir recibos.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N
+-   Which testing method agent to use? backend testing agent
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: A base de dados de produção está desatualizada (P0)
--   Issue 2: Fragilidade da Extração Prio Elétrico (P2)
--   Issue 3: A sessão da Prio expira após cada sincronização (P2)
+-   Issue 1: Conflito de rotas no backend ao implementar as Empresas de Faturação (P0)
+-   Issue 2: A base de dados de produção () está desatualizada (P0 - Bloqueador Crítico)
+-   Issue 3: O Resumo Semanal não filtra motoristas por estado de atividade na semana selecionada (P1)
+-   Issue 4: Fragilidade da extração de dados RPA Prio Elétrico (P2)
+-   Issue 5: A sessão da Prio expira após cada sincronização (P2)
 
 **Issues Detail:**
--   **Issue 1: A base de dados de produção está desatualizada (P0)**
-    -   **Description:** O deploy em  tem uma base de dados vazia ou antiga, o que faz com que funcionalidades como o Resumo Semanal não mostrem dados, apesar de funcionarem corretamente no ambiente de desenvolvimento.
-    -   **Attempted fixes:** O agente criou um endpoint que gera um backup completo da base de dados do ambiente de desenvolvimento. Foi fornecido ao utilizador um modelo de mensagem para contactar o suporte da Emergent e solicitar a importação deste backup para o ambiente de produção.
-    -   **Next debug checklist:** O utilizador precisa de contactar o suporte da Emergent com as instruções fornecidas para migrar os dados. O agente não pode resolver isto diretamente.
-    -   **Why fix this issue and what will be achieved with the fix?** Colocará a aplicação em produção com todos os dados corretos, tornando-a totalmente funcional para o utilizador final.
-    -   **Status:** BLOCKED (Depende do suporte da Emergent e da ação do utilizador).
+-   **Issue 1: Conflito de rotas no backend ao implementar as Empresas de Faturação (P0)**
+    -   **Description:** Ao criar os endpoints para as empresas de faturação sob o prefixo , a rota  entrava em conflito com a rota dinâmica .
+    -   **Attempted fixes:** O agente decidiu criar um ficheiro de router separado () e estava no processo de o integrar no  para isolar as rotas e resolver o conflito.
+    -   **Next debug checklist:**
+        1.  Verificar se o novo router  foi corretamente incluído em .
+        2.  Testar os novos endpoints (ex: ) com  para garantir que funcionam e não entram em conflito com as rotas existentes de recibos.
+    -   **Why fix this issue and what will be achieved with the fix?** É um passo essencial para concluir a funcionalidade de backend do sistema de faturação por entidades, que é um requisito principal do utilizador.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Teste E2E completo após a migração da base de dados.
+    -   **Should Test frontend/backend/both after fix?** Backend.
     -   **Blocked on other issue:** Não.
 
--   **Issue 2: Fragilidade da Extração Prio Elétrico (P2)**
-    -   **Description:** Uma automação RPA para um fornecedor específico é frágil e falha intermitentemente.
+-   **Issue 2: A base de dados de produção () está desatualizada (P0 - Bloqueador Crítico)**
+    -   **Description:** O ambiente de produção não reflete os dados nem o código do ambiente de desenvolvimento, o que causa bugs e impede o utilizador de usar a aplicação (ex: não consegue criar motoristas, resumos não mostram dados).
+    -   **Attempted fixes:** O agente diagnosticou o problema e instruiu o utilizador a usar a funcionalidade Deploy da plataforma Emergent, selecionando a opção **Use new database**. Esta ação irá migrar todo o código e a base de dados do ambiente de desenvolvimento para produção.
+    -   **Next debug checklist:** A resolução depende do utilizador seguir as instruções de deploy. O próximo agente deve reforçar esta instrução e estar pronto para dar suporte durante o processo.
+    -   **Why fix this issue and what will be achieved with the fix?** Sincronizará o ambiente de produção com o desenvolvimento, tornando a aplicação totalmente funcional para o utilizador final e resolvendo uma cascata de bugs reportados.
+    -   **Status:** BLOCKED (Depende da ação do utilizador).
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Ambos, realizar um teste E2E completo após o deploy.
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 3: O Resumo Semanal não filtra motoristas por estado de atividade na semana selecionada (P1)**
+    -   **Description:** O resumo semanal mostra motoristas mesmo que eles não estivessem ativos (ex: bloqueados) durante o período do relatório.
+    -   **Status:** NOT STARTED
+
+-   **Issue 4: Fragilidade da extração de dados RPA Prio Elétrico (P2)**
+    -   **Description:** A automação para este fornecedor é instável e falha intermitentemente.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
 
--   **Issue 3: A sessão da Prio expira após cada sincronização (P2)**
-    -   **Description:** A sessão de login na plataforma Prio não persiste entre sincronizações, exigindo re-autenticação.
+-   **Issue 5: A sessão da Prio expira após cada sincronização (P2)**
+    -   **Description:** A sessão de login na plataforma Prio não persiste, exigindo re-autenticação a cada sincronização.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
 
 **In progress Task List**:
--   **Task 1: Criar Frontend para Sistema de Backup (P0)**
-    -   **Where to resume:** É necessário criar uma nova página ou adicionar uma secção na área de administração do frontend. Esta UI deve ter um botão que, ao ser clicado, faz uma chamada  ao endpoint  e inicia o download do ficheiro de backup no browser do utilizador.
-    -   **What will be achieved with this?** Permitirá que o administrador descarregue facilmente um backup completo da base de dados diretamente da interface da aplicação.
-    -   **Status:** IN PROGRESS (Backend pronto, Frontend por iniciar).
-    -   **Should Test frontend/backend/both after fix?** Frontend.
+-   **Task 1: Concluir o sistema de Empresas de Faturação (P0)**
+    -   **Where to resume:** O backend está a meio da implementação. É necessário finalizar a integração do novo router em , testar os endpoints de CRUD para as empresas de faturação, e depois construir a interface de frontend. A UI deve permitir que um parceiro gira as suas empresas de faturação e, ao aprovar um recibo, possa selecionar a qual empresa o recibo deve ser associado.
+    -   **What will be achieved with this?** Uma funcionalidade de negócio crítica pedida pelo utilizador.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Ambos.
     -   **Blocked on something:** Não.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P1) Criar Frontend para Exportação/Importação de RPA:** Implementar uma UI para que o admin possa usar os endpoints de exportação e importação de configurações de RPA já existentes.
-    *   **(P2) Implementar integração com WhatsApp:** Adicionar funcionalidade de notificação ou interação via WhatsApp.
+    *   **(P1) Implementar Histórico do Motorista:** Adicionar uma secção na ficha do motorista para mostrar o histórico de ativações/desativações e um resumo dos seus rendimentos semanais passados.
+    *   **(P1) Implementar Frontend para Gestão de KM:** Criar UI para o parceiro definir o  e atualizar manualmente os KMs de um veículo.
+    *   **(P1) Dashboard de Faturação Anual:** Criar um novo dashboard para visualizar os totais faturados por cada Empresa de Faturação ao longo do ano.
+    *   **(P2) Implementar Frontend para Preços Especiais:** UI para o admin configurar preços especiais para parceiros/gestores.
+    *   **(P2) Implementar integração com WhatsApp.**
 *   **Future Tasks:**
     *   Refatorar God Components como .
-    *   Implementar funcionalidades Alertas Avançados e Comissões Avançadas.
+    *   Implementar funcionalidades de Alertas Avançados e Comissões Avançadas.
     *   Criar um sistema para arquivar dados antigos da base de dados.
 
 **Completed work in this session**
--   **Conclusão do Deployment e Debugging no VPS:** Guiou o utilizador numa longa e complexa sessão de debugging no seu VPS, resolvendo problemas de , Nginx, firewall, DNS, versão da MongoDB (incompatibilidade com AVX), e dependências Python/Node.
--   **Migração para Deployment na Plataforma Emergent:** Após dificuldades com o VPS, a estratégia mudou para usar o serviço de deployment gerido da Emergent. Guiou na configuração dos registos DNS (A, CNAME) na PTISP.
--   **Implementação de Múltiplos Cartões Elétricos:** Modificou os modelos de backend () e a UI de frontend () para permitir até 6 cartões de frota para veículos elétricos e agregar os seus custos.
--   **Melhoria do Sistema de Tickets:** Atualizou o backend () para associar tickets a veículos/motoristas, adicionar estados de leitura e refinar as permissões de acesso com base na função do utilizador.
--   **Implementação de Exportação/Importação de RPA:** Criou endpoints no backend () para permitir que o admin exporte e importe configurações de RPA como ficheiros JSON.
--   **Criação do Sistema de Backup Completo:** Implementou um novo endpoint ( em ) capaz de exportar as 127 coleções da base de dados num único ficheiro, tratando da serialização de  e .
+-   **Funcionalidade de Backup Completa:** A interface de frontend para o sistema de backup foi encontrada, integrada no menu do admin e confirmada como funcional.
+-   **Correção de Bugs de Exportação:** Resolvidos problemas de serialização de  que impediam a exportação de configurações de RPA e backups parciais.
+-   **Correção e Melhoria das Fotos dos Veículos:** Resolvido o problema das imagens não aparecerem na página pública através da correção do roteamento de ficheiros estáticos (). A página foi melhorada com um carrossel de fotos e mais informações do veículo.
+-   **Funcionalidades de Gestão de Utilizadores:**
+    -   Implementada a UI para o administrador atribuir/alterar o parceiro de um motorista.
+    -   Implementada a UI para o administrador eliminar utilizadores.
+    -   Atualizadas as permissões para permitir que parceiros aprovem motoristas.
+-   **Correção de Bugs Críticos:** Resolvido um crash do servidor causado por uma importação em falta ( em ) e corrigida uma inconsistência de dados que mostrava um motorista no parceiro errado.
+-   **Orientação para o Deploy:** O agente confirmou que a aplicação está pronta para deploy e forneceu instruções claras ao utilizador sobre como proceder para migrar o código e a base de dados para o ambiente de produção.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1: Fragilidade da extração de dados RPA Prio Elétrico**
+    -   **Debug checklist:** Investigar a automação Playwright para a Prio, analisar os pontos de falha e robustecer os seletores e esperas.
+    -   **Why to solve this issue and what will be achieved with this?** Aumentar a fiabilidade de uma funcionalidade central da aplicação.
+    -   **Should Test frontend/backend/both after fix:** Backend.
+    -   **Is recurring issue?** Y
+
+-   **Issue 2: Sessão da Prio expira após cada sincronização**
+    -   **Debug checklist:** Analisar o fluxo de login da automação e investigar métodos para persistir a sessão/cookies entre execuções.
+    -   **Why to solve this issue and what will be achieved with this?** Melhorar a eficiência da automação, evitando logins repetidos.
+    -   **Should Test frontend/backend/both after fix:** Backend.
+    -   **Is recurring issue?** Y
+
+**Known issue recurrence from previous fork**
+-   **Issue recurrence in previous fork:** Os problemas com a automação da Prio são antigos.
+-   **Recurrence count:** Múltiplas vezes.
+-   **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, Pydantic, MongoDB.
--   **Frontend:** React.js.
--   **Deployment:** Plataforma de Deployment da Emergent.
--   **DNS:** Gestão de registos A e CNAME.
--   **Database:**  / , serialização de BSON.
+-   **Backend:** FastAPI, Pydantic, MongoDB
+-   **Frontend:** React, Shadcn UI, Lucide React
+-   **Deployment:** Plataforma Emergent, Ingress, ficheiros estáticos
+-   **Database:** Serialização de BSON (, )
 
 **key DB schema**
--   **veiculos:** Adicionados os campos , , , , , .
--   **tickets:** Adicionados os campos , ,  (array),  (datetime).
+-   **motoristas:** Adicionado . Clarificados os campos  e .
+-   **veiculos:** Adicionado .
+-   **empresas_faturacao (NOVA):** 
+-   **recibos:** A ser modificado para incluir .
 
 **All files of reference**
 -   **Created:**
-    -   : Contém a lógica para o backup completo da base de dados.
+    -   : Roteador dedicado para gerir Empresas de Faturação e evitar conflitos de rota.
 -   **Updated:**
-    -   : Adicionados novos campos para cartões elétricos.
-    -   : Adicionados novos campos para associar a veículos/motoristas e rastrear leitura.
-    -   : Adicionados endpoints de exportação/importação de RPA.
-    -   : Lógica de permissões e funcionalidades de tickets atualizada.
-    -   : Formulário atualizado com os novos campos de cartões.
-    -   : Requisitos do produto atualizados.
+    -   : Para integrar os novos routers e corrigir os existentes.
+    -   , : Corrigida a serialização de .
+    -   : Adicionada a montagem de ficheiros estáticos .
+    -   : Adicionados novos endpoints e permissões (atribuir parceiro, bloquear, aprovar).
+    -   : Adicionado o modelo Pydantic .
+    -   : Refatorado para incluir carrossel de fotos e usar a nova rota .
+    -   : Adicionada UI para o administrador atribuir parceiros.
+    -   : Adicionada UI para eliminar utilizadores.
+    -   : Atualizado o link do menu de admin para a página de backup correta.
+
+**Areas that need refactoring**:
+-   A lógica de negócio para os recibos está a tornar-se complexa (motorista -> parceiro -> empresa de faturação). O modelo de dados dos  precisa de ser cuidadosamente refatorado para suportar esta estrutura.
+-   Componentes como  e  estão a acumular muita lógica e podem ser divididos em subcomponentes mais pequenos.
+
+**key api endpoints**
+-   : Descarrega backup completo da BD.
+-   : Admin atribui um parceiro a um motorista.
+-   : Admin elimina um utilizador.
+-   : Permite que Admin, Gestor ou Parceiro aprovem um motorista.
+-   : (Em Progresso) Endpoint para criar uma nova empresa de faturação.
 
 **Critical Info for New Agent**
--   **O foco principal do utilizador é ter a aplicação a funcionar em  com todos os dados.** A principal barreira é a base de dados de produção estar desatualizada. O utilizador foi instruído a contactar o suporte da Emergent para importar o backup (). Deve acompanhar esta questão.
--   A sessão de trabalho anterior foi extremamente longa e complexa, envolvendo debugging de deployment num VPS, que foi depois abandonado. O contexto desta decisão é importante.
--   O próximo passo de implementação é **criar a interface de frontend para a funcionalidade de backup completo**, conforme solicitado pelo utilizador na sua última mensagem.
+-   **O Deploy é a prioridade máxima do utilizador.** O principal problema é a dessincronização entre o ambiente de desenvolvimento e o de produção (). Reforce que a solução é o utilizador clicar em **Deploy** e escolher **Use new database** para migrar todo o código e dados.
+-   A implementação do sistema de **Empresas de Faturação** foi interrompida a meio. É a primeira tarefa de código a ser retomada.
+-   O utilizador está a pedir funcionalidades de negócio complexas. É crucial confirmar os requisitos e dividir o trabalho em passos pequenos e testáveis antes de começar a codificar.
+-   Esteja atento a crashes no backend após modificações. O agente anterior causou um crash por uma importação em falta. Adote uma prática de verificar o código () ou testar localmente antes de assumir que a alteração está concluída.
 
 **documents and test reports created in this job**
 -    (Atualizado)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **** - Pede uma UI para a funcionalidade de backup recém-criada. (PENDENTE)
-2.   - Confirma que o backup deve ser completo. (CONCLUÍDO)
-3.   - Pede credenciais e solicita novas funcionalidades de exportação de RPA e permissões de tickets. (CONCLUÍDO)
-4.   - Pede as credenciais de um parceiro específico. (RESPONDIDO)
-5.   - Reporta bugs e pede novas funcionalidades para cartões elétricos e tickets. (CONCLUÍDO)
-6.   - Pede ao agente para contactar o suporte sobre a migração da base de dados. (CONCLUÍDO)
-7.   - Confirma a necessidade de um backup completo para migrar para produção. (CONCLUÍDO)
-8.   - Pede para verificar se o ambiente de produção está igual ao de desenvolvimento. (INVESTIGADO)
-9.   - Fornece prova de que o ambiente de produção está desatualizado. (CONFIRMADO)
-10.  - Reporta um bug que se revelou ser um sintoma da base de dados desatualizada. (INVESTIGADO)
+1.  ****: Pedido de várias funcionalidades complexas: filtrar resumo semanal, histórico do motorista e um novo sistema de recibos por entidade de faturação. (EM PROGRESSO)
+2.  ****: Pedido para implementar eliminação de utilizadores, alargar permissões de aprovação e corrigir um bug de dados. (CONCLUÍDO)
+3.  ****: Reportou um bug que impedia a atribuição de parceiro a um motorista. (CONCLUÍDO)
+4.  ****: Pergunta sobre qual opção de base de dados escolher no deploy. (RESPONDIDO)
+5.  ****: Confirmação para fazer o deploy com todos os dados atuais. (CONFIRMADO)
+6.  ****: Pedido do utilizador para preparar o deploy. (CONCLUÍDO)
+7.  ****: Reportou bugs no ambiente de produção, identificados como sendo causados por código/base de dados desatualizados. (DIAGNOSTICADO)
+8.  ****: Reportou que a aplicação estava em baixo. (CONCLUÍDO - Crash do servidor por import em falta)
+9.  ****: Pedido para melhorar os anúncios de veículos com carrossel de fotos. (CONCLUÍDO)
+10. ****: Confirmação para continuar com as tarefas pendentes. (CONFIRMADO)
 
 **Project Health Check:**
--   **Broken:** A aplicação em produção () não está funcional do ponto de vista do utilizador porque a sua base de dados está vazia/desatualizada. A resolução está bloqueada e depende de uma ação do suporte da Emergent, solicitada pelo utilizador.
--   **Mocked:** N/A
+-   **Broken:** O ambiente de produção em  está efetivamente quebrado para o utilizador, pois não contém o código nem os dados mais recentes. A solução (deploy com migração de base de dados) está pendente da ação do utilizador.
 
 **3rd Party Integrations**
--   **Playwright:** Essencial para a funcionalidade de RPA.
--   **Docker:** Usado no VPS (agora obsoleto) e no ambiente de desenvolvimento Emergent.
--   **Nginx:** Usado no VPS (agora obsoleto).
+-   **Playwright:** Usado para automações RPA (ex: Prio).
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None
--   **Known regressions:** A fragilidade da sincronização da Prio é um problema antigo e não resolvido.
+-   **Known regressions:** A automação da Prio continua a ser frágil, um problema conhecido de forks anteriores. Um novo crash no backend foi introduzido e corrigido nesta sessão.
 
 **Credentials to test flow:**
 -   **App Admin User:**  / 
--   **App Partner User (Zeny):**  / </analysis>
+-   **App Partner User (Zeny):**  / 
+
+**What agent forgot to execute**
+-   O agente não abordou os problemas de longa data com a automação RPA da Prio.
+-   Não foram criados testes automatizados para as novas funcionalidades ou correções de bugs, o que aumenta o risco de regressões.
+-   O agente esqueceu-se de verificar (lint/test) o código do backend antes de finalizar uma tarefa, o que resultou num crash do servidor que interrompeu o utilizador.</analysis>
