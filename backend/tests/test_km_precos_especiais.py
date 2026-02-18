@@ -232,7 +232,7 @@ class TestPrecosEspeciais:
     @pytest.fixture(scope="class")
     def parceiro_id(self, admin_token):
         """Get a parceiro ID"""
-        response = requests.get(f"{BASE_URL}/api/usuarios/parceiros",
+        response = requests.get(f"{BASE_URL}/api/uber/admin/parceiros",
                                headers={"Authorization": f"Bearer {admin_token}"})
         if response.status_code == 200:
             parceiros = response.json()
