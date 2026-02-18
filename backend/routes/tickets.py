@@ -158,6 +158,30 @@ async def criar_ticket(
                     logger.warning(f"Erro ao salvar foto {idx}: {e}")
     
     # Criar ticket
+    veiculo_info = None
+    motorista_info = None
+    
+    # Buscar informações do veículo se fornecido
+    if data.veiculo_id:
+        veiculo = await db.vehicles.find_one({"id": data.veiculo_id}, {"_id": 0})
+        if veiculo:
+            veiculo_info = {
+                "id": veiculo["id"],
+                "matricula": veiculo.get("matricula"),
+                "marca": veiculo.get("marca"),
+                "modelo": veiculo.get("modelo")
+            }
+    
+    # Buscar informações do motorista se fornecido
+    if data.motorista_id:
+        motorista = await db.motoristas.find_one({"id": data.motorista_id}, {"_id": 0})
+        if motorista:
+            motorista_info = {
+                "id": motorista["id"],
+                "nome": motorista.get("name"),
+                "email": motorista.get("email")
+            }
+    
     ticket = {
         "id": str(uuid.uuid4()),
         "numero": await _gerar_numero_ticket(),
@@ -173,8 +197,13 @@ async def criar_ticket(
         "criado_por_nome": current_user.get("name"),
         "criado_por_role": current_user["role"],
         "destinatario_tipo": data.destinatario_tipo,
-        "destinatario_id": destinatario_id,
+        "destinatario_id": data.destinatario_id or destinatario_id,
         "destinatario_nome": destinatario_nome,
+        # Novo: Associação com veículo e motorista
+        "veiculo_id": data.veiculo_id,
+        "veiculo_info": veiculo_info,
+        "motorista_id": data.motorista_id,
+        "motorista_info": motorista_info,
         "mensagens": [{
             "id": str(uuid.uuid4()),
             "autor_id": current_user["id"],
