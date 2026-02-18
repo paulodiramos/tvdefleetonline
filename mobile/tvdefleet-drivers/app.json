@@ -22,6 +22,12 @@
         "backgroundColor": "#1e40af"
       },
       "package": "com.tvdefleet.drivers"
+    },
+    "owner": "paulodiramos",
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
     }
   }
 }
