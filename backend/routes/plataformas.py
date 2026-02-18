@@ -434,6 +434,196 @@ async def obter_configuracao_importacao(
     }
 
 
+# ==================== EXPORTAR / IMPORTAR RPA ====================
+
+@router.get("/{plataforma_id}/exportar-rpa")
+async def exportar_rpa_plataforma(
+    plataforma_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Exportar configuração RPA de uma plataforma (Admin only)
+    
+    Exporta:
+    - Configuração da plataforma
+    - Passos RPA configurados
+    - Rascunhos RPA
+    - Mapeamento de dados
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Admin pode exportar RPA")
+    
+    # Buscar plataforma
+    plataforma = await db.plataformas.find_one({"id": plataforma_id}, {"_id": 0})
+    if not plataforma:
+        raise HTTPException(status_code=404, detail="Plataforma não encontrada")
+    
+    # Buscar rascunhos RPA
+    rascunhos = await db.rpa_rascunhos.find({"plataforma_id": plataforma_id}, {"_id": 0}).to_list(100)
+    
+    # Buscar designs RPA
+    designs = await db.rpa_designs.find({"plataforma_id": plataforma_id}, {"_id": 0}).to_list(100)
+    
+    # Buscar execuções (últimas 10 para referência)
+    execucoes = await db.rpa_execucoes.find(
+        {"plataforma_id": plataforma_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(10).to_list(10)
+    
+    # Criar pacote de exportação
+    export_data = {
+        "versao": "1.0",
+        "exportado_em": datetime.now(timezone.utc).isoformat(),
+        "exportado_por": current_user["id"],
+        "plataforma": plataforma,
+        "rpa": {
+            "rascunhos": rascunhos,
+            "designs": designs,
+            "execucoes_exemplo": execucoes
+        },
+        "metadados": {
+            "total_rascunhos": len(rascunhos),
+            "total_designs": len(designs),
+            "total_execucoes": len(execucoes)
+        }
+    }
+    
+    logger.info(f"RPA exportado para plataforma {plataforma.get('nome')} por {current_user['id']}")
+    
+    return export_data
+
+
+class ImportarRPARequest(BaseModel):
+    versao: str
+    plataforma: Dict[str, Any]
+    rpa: Dict[str, Any]
+    substituir_existente: bool = False
+
+
+@router.post("/{plataforma_id}/importar-rpa")
+async def importar_rpa_plataforma(
+    plataforma_id: str,
+    data: ImportarRPARequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Importar configuração RPA para uma plataforma (Admin only)
+    
+    Importa:
+    - Configuração RPA da plataforma
+    - Passos RPA
+    - Mapeamento de dados
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Admin pode importar RPA")
+    
+    # Verificar se plataforma existe
+    plataforma_existente = await db.plataformas.find_one({"id": plataforma_id}, {"_id": 0})
+    if not plataforma_existente:
+        raise HTTPException(status_code=404, detail="Plataforma não encontrada")
+    
+    resultados = {
+        "plataforma_atualizada": False,
+        "rascunhos_importados": 0,
+        "designs_importados": 0
+    }
+    
+    # Atualizar configuração RPA da plataforma
+    plataforma_import = data.plataforma
+    campos_atualizar = {}
+    
+    if "config_rpa" in plataforma_import:
+        campos_atualizar["config_rpa"] = plataforma_import["config_rpa"]
+    if "config_importacao" in plataforma_import:
+        campos_atualizar["config_importacao"] = plataforma_import["config_importacao"]
+    if "metodo" in plataforma_import:
+        campos_atualizar["metodo"] = plataforma_import["metodo"]
+    
+    if campos_atualizar:
+        campos_atualizar["atualizado_em"] = datetime.now(timezone.utc).isoformat()
+        campos_atualizar["importado_de"] = data.plataforma.get("id")
+        campos_atualizar["importado_em"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.plataformas.update_one(
+            {"id": plataforma_id},
+            {"$set": campos_atualizar}
+        )
+        resultados["plataforma_atualizada"] = True
+    
+    # Importar rascunhos RPA
+    if data.rpa.get("rascunhos"):
+        if data.substituir_existente:
+            await db.rpa_rascunhos.delete_many({"plataforma_id": plataforma_id})
+        
+        for rascunho in data.rpa["rascunhos"]:
+            rascunho_novo = {
+                **rascunho,
+                "id": str(uuid.uuid4()),  # Novo ID
+                "plataforma_id": plataforma_id,
+                "importado_em": datetime.now(timezone.utc).isoformat(),
+                "importado_por": current_user["id"]
+            }
+            await db.rpa_rascunhos.insert_one(rascunho_novo)
+            resultados["rascunhos_importados"] += 1
+    
+    # Importar designs RPA
+    if data.rpa.get("designs"):
+        if data.substituir_existente:
+            await db.rpa_designs.delete_many({"plataforma_id": plataforma_id})
+        
+        for design in data.rpa["designs"]:
+            design_novo = {
+                **design,
+                "id": str(uuid.uuid4()),  # Novo ID
+                "plataforma_id": plataforma_id,
+                "importado_em": datetime.now(timezone.utc).isoformat(),
+                "importado_por": current_user["id"]
+            }
+            await db.rpa_designs.insert_one(design_novo)
+            resultados["designs_importados"] += 1
+    
+    logger.info(f"RPA importado para plataforma {plataforma_existente.get('nome')} por {current_user['id']}: {resultados}")
+    
+    return {
+        "sucesso": True,
+        "mensagem": "RPA importado com sucesso",
+        "resultados": resultados
+    }
+
+
+@router.get("/exportar-todos")
+async def exportar_todas_plataformas(
+    current_user: dict = Depends(get_current_user)
+):
+    """Exportar todas as plataformas e RPAs (Admin only) - Para backup completo"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Admin pode exportar")
+    
+    # Buscar todas as plataformas
+    plataformas = await db.plataformas.find({}, {"_id": 0}).to_list(100)
+    
+    # Buscar todos os RPAs
+    rascunhos = await db.rpa_rascunhos.find({}, {"_id": 0}).to_list(500)
+    designs = await db.rpa_designs.find({}, {"_id": 0}).to_list(500)
+    
+    export_data = {
+        "versao": "1.0",
+        "tipo": "backup_completo",
+        "exportado_em": datetime.now(timezone.utc).isoformat(),
+        "exportado_por": current_user["id"],
+        "plataformas": plataformas,
+        "rpa": {
+            "rascunhos": rascunhos,
+            "designs": designs
+        },
+        "metadados": {
+            "total_plataformas": len(plataformas),
+            "total_rascunhos": len(rascunhos),
+            "total_designs": len(designs)
+        }
+    }
+    
+    return export_data
+
+
 # ==================== SEED PLATAFORMAS DEFAULT ====================
 
 @router.post("/seed")
