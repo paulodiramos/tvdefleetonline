@@ -526,7 +526,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                     </div>
 
                     {/* Right: Action Icons */}
-                    <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
+                    <div className="flex items-center space-x-1 flex-shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
