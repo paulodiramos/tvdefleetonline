@@ -878,6 +878,18 @@ async def bloquear_motorista(
         {"$set": {"bloqueado": bloqueado}}
     )
     
+    # Registar no histórico de atividade
+    entrada_historico = {
+        "id": str(uuid.uuid4()),
+        "motorista_id": motorista_id,
+        "tipo": "bloqueado" if bloqueado else "desbloqueado",
+        "motivo": motivo,
+        "data": datetime.now(timezone.utc).isoformat(),
+        "registado_por": current_user["id"],
+        "registado_por_nome": current_user.get("name", "")
+    }
+    await db.historico_atividade_motoristas.insert_one(entrada_historico)
+    
     acao = "bloqueado" if bloqueado else "desbloqueado"
     logger.info(f"Motorista {motorista.get('name')} {acao} por {current_user['id']}")
     
