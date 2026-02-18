@@ -257,7 +257,14 @@ class Vehicle(BaseModel):
     obu: Optional[str] = None  # OBU Via Verde identifier
     cartao_frota_disponivel: bool = False
     cartao_frota_id: Optional[str] = None  # Cartão Frota Combustível ID
-    cartao_frota_eletric_id: Optional[str] = None  # Cartão Frota Elétrico ID
+    cartao_frota_eletric_id: Optional[str] = None  # Cartão Frota Elétrico ID (legacy - Prio)
+    # Múltiplos Cartões Elétricos (5 fornecedores)
+    cartao_prio_eletric: Optional[str] = None  # Prio Electric
+    cartao_mio: Optional[str] = None  # Mio
+    cartao_galp: Optional[str] = None  # Galp
+    cartao_atlante: Optional[str] = None  # Atlante
+    cartao_eletrico_outro: Optional[str] = None  # Outro fornecedor
+    cartao_eletrico_outro_nome: Optional[str] = None  # Nome do outro fornecedor
     tem_garantia: bool = False
     stand_responsavel: Optional[str] = None
     data_limite_garantia: Optional[str] = None
