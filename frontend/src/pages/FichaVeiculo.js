@@ -3936,7 +3936,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     <p className="text-xs text-gray-400">Cartão para abastecimentos de combustível</p>
                   </div>
 
-                  {/* Cartões Combustível Elétrico - 5 Fornecedores */}
+                  {/* Cartões Combustível Elétrico - 6 Fornecedores */}
                   <div className="space-y-4 mt-6">
                     <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
                       <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
@@ -3949,9 +3949,21 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         <Label htmlFor="cartao_prio" className="text-xs">Prio Electric</Label>
                         <Input
                           id="cartao_prio"
-                          placeholder="Nº cartão Prio"
+                          placeholder="Nº cartão Prio Electric"
                           value={vehicle?.cartao_prio_eletric || vehicle?.cartao_frota_eletric_id || ''}
                           onChange={(e) => setVehicle({...vehicle, cartao_prio_eletric: e.target.value})}
+                          disabled={!canEdit || !editMode}
+                        />
+                      </div>
+                      
+                      {/* Prio Online */}
+                      <div className="space-y-1">
+                        <Label htmlFor="cartao_prio_online" className="text-xs">Prio Online</Label>
+                        <Input
+                          id="cartao_prio_online"
+                          placeholder="Nº cartão Prio Online"
+                          value={vehicle?.cartao_prio_online || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_prio_online: e.target.value})}
                           disabled={!canEdit || !editMode}
                         />
                       </div>
