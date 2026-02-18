@@ -615,3 +615,18 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
     "created_by": "uuid"
   }
   ```
+
+#### 28. Dashboard de Faturação Anual ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Dashboard visual com gráficos de receitas por empresa de faturação ao longo do ano
+- **Nova página:** `/dashboard-faturacao` (`DashboardFaturacao.js`)
+- **Funcionalidades:**
+  1. **Seletor de Ano:** Navegação entre anos com setas
+  2. **Cards de Resumo:** Total Faturado, Total Recibos, Empresas Ativas (com gradientes coloridos)
+  3. **Gráfico de Barras:** Faturação por empresa com tooltip interativo
+  4. **Gráfico de Pizza:** Distribuição de receitas em percentagem
+  5. **Tabela Detalhada:** Empresa, NIPC, Total Faturado, Recibos, Média/Recibo, % do Total
+  6. **Botão "Gerir Empresas":** Navegação rápida para gestão de empresas
+- **Biblioteca de gráficos:** Recharts (instalado)
+- **Menu acessível:** User Menu → Dashboard Faturação (ícone TrendingUp)
+
