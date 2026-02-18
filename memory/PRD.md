@@ -478,3 +478,43 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
 ### P2 - Futuro
 1. **Refatoração dos "God Components":** FichaVeiculo.js, AdminGestaoPlanos.js, FichaMotorista.js
 2. **Filtro de datas do portal Prio:** O portal Prio não filtra correctamente por datas. A mitigação actual (filtrar no backend após download) funciona.
+
+#### 18. Múltiplos Cartões Elétricos - 5 Fornecedores ✅
+**Data: 2026-02-18**
+- Adicionados campos para 5 fornecedores de carregamento elétrico:
+  - Prio Electric (`cartao_prio_eletric`)
+  - Mio (`cartao_mio`)
+  - Galp (`cartao_galp`)
+  - Atlante (`cartao_atlante`)
+  - Outro (`cartao_eletrico_outro` + `cartao_eletrico_outro_nome`)
+- Backend soma automaticamente todos os carregamentos na coluna "carregamento_eletrico"
+- Discriminação por fornecedor disponível em `carregamentos_discriminacao`
+- UI atualizada na ficha do veículo com campos para cada fornecedor
+
+#### 19. Bloquear/Desbloquear Utilizadores - Permissões Expandidas ✅
+**Data: 2026-02-18**
+- Admin pode bloquear/desbloquear qualquer utilizador
+- Gestor pode bloquear/desbloquear parceiros e motoristas
+- Parceiro pode bloquear/desbloquear motoristas associados a si
+- Utilizador bloqueado não consegue fazer login
+- Endpoint: `PUT /api/users/{user_id}/status`
+
+#### 20. Sistema de Tickets Melhorado ✅
+**Data: 2026-02-18**
+- Associação de tickets a veículos específicos (`veiculo_id`, `veiculo_info`)
+- Associação de tickets a motoristas específicos (`motorista_id`, `motorista_info`)
+- Novas categorias: revisão, multas, seguro, manutenção
+- Novos endpoints:
+  - `GET /api/tickets/por-veiculo/{veiculo_id}`
+  - `GET /api/tickets/por-motorista/{motorista_id}`
+  - `GET /api/tickets/categorias`
+- Destinatário pode ser especificado com `destinatario_id`
+
+### Backups Disponíveis
+- `/api/download-backup-completo` - Backup MongoDB (2.3 MB, 127 coleções)
+- `/api/download-backup-v2` - Backup com novas funcionalidades
+
+### Próximos Passos
+1. Importar backup para deploy de produção (tvdefleet.com)
+2. Configurar SSL/HTTPS
+3. Testar todas as funcionalidades no deploy
