@@ -162,9 +162,44 @@ async def update_user_status(
     status_data: UserStatusUpdate,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Bloquear/desbloquear um utilizador"""
-    if current_user["role"] != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Apenas Admin")
+    """Bloquear/desbloquear um utilizador
+    
+    Permissões:
+    - Admin: pode bloquear qualquer utilizador
+    - Gestor: pode bloquear parceiros e motoristas sob sua gestão
+    - Parceiro: pode bloquear motoristas associados a si
+    """
+    # Buscar utilizador alvo
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    target_role = target_user.get("role", "")
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.ADMIN:
+        # Admin pode bloquear qualquer um
+        pass
+    elif current_user["role"] == UserRole.GESTAO:
+        # Gestor pode bloquear parceiros e motoristas
+        if target_role not in [UserRole.PARCEIRO, UserRole.MOTORISTA]:
+            raise HTTPException(status_code=403, detail="Gestor só pode bloquear parceiros e motoristas")
+    elif current_user["role"] == UserRole.PARCEIRO:
+        # Parceiro pode bloquear apenas motoristas associados a si
+        if target_role != UserRole.MOTORISTA:
+            raise HTTPException(status_code=403, detail="Parceiro só pode bloquear motoristas")
+        # Verificar se o motorista está associado ao parceiro
+        motorista = await db.motoristas.find_one({
+            "$or": [{"id": user_id}, {"email": target_user.get("email")}]
+        })
+        if motorista:
+            parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
+            if parceiro_id != current_user["id"]:
+                raise HTTPException(status_code=403, detail="Motorista não está associado a si")
+        else:
+            raise HTTPException(status_code=403, detail="Motorista não encontrado")
+    else:
+        raise HTTPException(status_code=403, detail="Não tem permissão para bloquear utilizadores")
     
     # Validate status
     if status_data.status not in ['active', 'blocked']:
@@ -178,8 +213,15 @@ async def update_user_status(
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Utilizador não encontrado")
     
+    # Se for motorista, atualizar também na coleção motoristas
+    if target_role == UserRole.MOTORISTA:
+        await db.motoristas.update_one(
+            {"$or": [{"id": user_id}, {"email": target_user.get("email")}]},
+            {"$set": {"status": status_data.status, "ativo": status_data.status == "active"}}
+        )
+    
     status_str = "bloqueado" if status_data.status == 'blocked' else "ativado"
-    logger.info(f"User {user_id} status changed to {status_data.status} by {current_user['id']}")
+    logger.info(f"User {user_id} status changed to {status_data.status} by {current_user['id']} (role: {current_user['role']})")
     return {"message": f"Utilizador {status_str}"}
 
 
