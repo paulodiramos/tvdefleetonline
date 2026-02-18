@@ -459,6 +459,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                 <tr>
                   <th className="text-left p-4 font-medium text-slate-600">Usuário</th>
                   <th className="text-left p-4 font-medium text-slate-600">Tipo</th>
+                  <th className="text-left p-4 font-medium text-slate-600">Parceiro</th>
                   <th className="text-left p-4 font-medium text-slate-600">Estado</th>
                   <th className="text-left p-4 font-medium text-slate-600">Plano</th>
                   <th className="text-right p-4 font-medium text-slate-600">Ações</th>
