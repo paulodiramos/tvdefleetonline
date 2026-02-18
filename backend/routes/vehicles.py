@@ -447,6 +447,107 @@ async def upload_vehicle_photo(
     return {"message": "Photo uploaded successfully", "photo_url": photo_url}
 
 
+@router.put("/{vehicle_id}/atualizar-km")
+async def atualizar_km_veiculo(
+    vehicle_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar quilometragem do veículo
+    
+    Campos aceites:
+    - km_atual: Novo valor de km (obrigatório)
+    - fonte: Fonte da atualização (manual, gps, inspecao, revisao, manutencao, vistoria)
+    - notas: Notas adicionais (opcional)
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Veículo não encontrado")
+    
+    # Verificar permissão do parceiro
+    if current_user["role"] == UserRole.PARCEIRO:
+        if vehicle.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Veículo pertence a outro parceiro")
+    
+    novo_km = data.get("km_atual")
+    if novo_km is None:
+        raise HTTPException(status_code=400, detail="km_atual é obrigatório")
+    
+    try:
+        novo_km = float(novo_km)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="km_atual deve ser um número")
+    
+    fonte = data.get("fonte", "manual")
+    notas = data.get("notas", "")
+    
+    km_anterior = vehicle.get("km_atual", 0)
+    
+    # Atualizar veículo
+    update_data = {
+        "km_atual": novo_km,
+        "km_fonte": fonte,
+        "km_atualizado_em": datetime.now(timezone.utc).isoformat(),
+        "km_atualizado_por": current_user["id"],
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": update_data}
+    )
+    
+    # Registar no histórico de km
+    historico_entry = {
+        "id": str(uuid.uuid4()),
+        "veiculo_id": vehicle_id,
+        "km_anterior": km_anterior,
+        "km_novo": novo_km,
+        "fonte": fonte,
+        "notas": notas,
+        "atualizado_por": current_user["id"],
+        "atualizado_por_nome": current_user.get("name", current_user.get("email")),
+        "data": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.historico_km.insert_one(historico_entry)
+    
+    # Se a atualização vier de inspeção, revisão, manutenção ou vistoria, sincronizar
+    if fonte in ["inspecao", "revisao", "manutencao", "vistoria"]:
+        # Atualizar última manutenção se for revisão/manutenção
+        if fonte in ["revisao", "manutencao"]:
+            await db.vehicles.update_one(
+                {"id": vehicle_id},
+                {"$set": {"ultima_revisao_km": novo_km}}
+            )
+        
+        # Atualizar próxima revisão com base nos km atuais
+        proxima_revisao_km = vehicle.get("proxima_revisao_km")
+        if proxima_revisao_km and novo_km >= proxima_revisao_km:
+            # Adicionar alerta se km ultrapassou
+            alerta = {
+                "tipo": "revisao_km",
+                "mensagem": f"Km para revisão atingido ({novo_km} >= {proxima_revisao_km})",
+                "data": datetime.now(timezone.utc).isoformat()
+            }
+            await db.vehicles.update_one(
+                {"id": vehicle_id},
+                {"$push": {"alertas_manutencao": alerta}}
+            )
+    
+    logger.info(f"KM atualizado: {vehicle.get('matricula')} de {km_anterior} para {novo_km} ({fonte})")
+    
+    return {
+        "message": "Quilometragem atualizada com sucesso",
+        "km_anterior": km_anterior,
+        "km_atual": novo_km,
+        "fonte": fonte
+    }
+
+
 @router.post("/{vehicle_id}/upload-foto")
 async def upload_vehicle_photo_alt(
     vehicle_id: str,
