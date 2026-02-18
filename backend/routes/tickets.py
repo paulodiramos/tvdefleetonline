@@ -86,6 +86,97 @@ class MensagemCreate(BaseModel):
     conteudo: str
 
 
+@router.get("/destinatarios-disponiveis")
+async def listar_destinatarios_disponiveis(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar destinatários disponíveis para criar tickets com base no role do utilizador
+    
+    Permissões:
+    - Parceiro: gestor, admin e motoristas associados
+    - Gestor: todos os parceiros e motoristas associados
+    - Admin: todos os utilizadores
+    - Motorista: parceiro associado, gestor e admin
+    """
+    
+    destinatarios = {
+        "admins": [],
+        "gestores": [],
+        "parceiros": [],
+        "motoristas": []
+    }
+    
+    if current_user["role"] == "admin":
+        # Admin pode contactar todos
+        users = await db.users.find({"status": {"$ne": "blocked"}}, {"_id": 0, "password": 0}).to_list(1000)
+        for u in users:
+            if u.get("role") == "admin" and u.get("id") != current_user["id"]:
+                destinatarios["admins"].append({"id": u["id"], "nome": u.get("name"), "email": u.get("email")})
+            elif u.get("role") == "gestao":
+                destinatarios["gestores"].append({"id": u["id"], "nome": u.get("name"), "email": u.get("email")})
+            elif u.get("role") == "parceiro":
+                destinatarios["parceiros"].append({"id": u["id"], "nome": u.get("name"), "email": u.get("email")})
+            elif u.get("role") == "motorista":
+                destinatarios["motoristas"].append({"id": u["id"], "nome": u.get("name"), "email": u.get("email")})
+    
+    elif current_user["role"] == "gestao":
+        # Gestor pode contactar admins, parceiros e motoristas associados
+        admins = await db.users.find({"role": "admin", "status": {"$ne": "blocked"}}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(100)
+        destinatarios["admins"] = [{"id": a["id"], "nome": a.get("name"), "email": a.get("email")} for a in admins]
+        
+        # Buscar parceiros e motoristas associados ao gestor
+        parceiros = await db.parceiros.find({"gestor_associado_id": current_user["id"]}, {"_id": 0}).to_list(100)
+        for p in parceiros:
+            destinatarios["parceiros"].append({"id": p.get("id"), "nome": p.get("nome_empresa") or p.get("name"), "email": p.get("email")})
+            # Motoristas do parceiro
+            motoristas = await db.motoristas.find({
+                "$or": [{"parceiro_id": p.get("id")}, {"parceiro_atribuido": p.get("id")}],
+                "ativo": True
+            }, {"_id": 0}).to_list(100)
+            for m in motoristas:
+                destinatarios["motoristas"].append({"id": m.get("id"), "nome": m.get("name"), "email": m.get("email")})
+    
+    elif current_user["role"] == "parceiro":
+        # Parceiro pode contactar admin, gestor e motoristas associados
+        admins = await db.users.find({"role": "admin", "status": {"$ne": "blocked"}}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(100)
+        destinatarios["admins"] = [{"id": a["id"], "nome": a.get("name"), "email": a.get("email")} for a in admins]
+        
+        # Buscar gestor associado
+        parceiro = await db.parceiros.find_one({"id": current_user["id"]}, {"_id": 0})
+        if parceiro and parceiro.get("gestor_associado_id"):
+            gestor = await db.users.find_one({"id": parceiro["gestor_associado_id"]}, {"_id": 0, "id": 1, "name": 1, "email": 1})
+            if gestor:
+                destinatarios["gestores"].append({"id": gestor["id"], "nome": gestor.get("name"), "email": gestor.get("email")})
+        
+        # Motoristas associados ao parceiro
+        motoristas = await db.motoristas.find({
+            "$or": [{"parceiro_id": current_user["id"]}, {"parceiro_atribuido": current_user["id"]}],
+            "ativo": True
+        }, {"_id": 0}).to_list(100)
+        for m in motoristas:
+            destinatarios["motoristas"].append({"id": m.get("id"), "nome": m.get("name"), "email": m.get("email")})
+    
+    elif current_user["role"] == "motorista":
+        # Motorista pode contactar admin, gestor e parceiro associado
+        admins = await db.users.find({"role": "admin", "status": {"$ne": "blocked"}}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(100)
+        destinatarios["admins"] = [{"id": a["id"], "nome": a.get("name"), "email": a.get("email")} for a in admins]
+        
+        # Buscar parceiro e gestor associados
+        motorista = await db.motoristas.find_one({"id": current_user["id"]}, {"_id": 0})
+        if motorista:
+            parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
+            if parceiro_id:
+                parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+                if parceiro:
+                    destinatarios["parceiros"].append({"id": parceiro.get("id"), "nome": parceiro.get("nome_empresa") or parceiro.get("name"), "email": parceiro.get("email")})
+                    if parceiro.get("gestor_associado_id"):
+                        gestor = await db.users.find_one({"id": parceiro["gestor_associado_id"]}, {"_id": 0, "id": 1, "name": 1, "email": 1})
+                        if gestor:
+                            destinatarios["gestores"].append({"id": gestor["id"], "nome": gestor.get("name"), "email": gestor.get("email")})
+    
+    return destinatarios
+
+
 @router.post("/criar")
 async def criar_ticket(
     data: TicketCreate,
