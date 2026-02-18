@@ -280,38 +280,39 @@ const VeiculosPublico = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {veiculosFiltrados.map((veiculo) => {
-              const photoUrl = getFirstValidPhoto(veiculo.fotos_veiculo || veiculo.fotos);
+              const photos = getValidPhotos(veiculo.fotos_veiculo || veiculo.fotos);
               return (
-              <Card key={veiculo.id} className="hover:shadow-xl transition">
-                {photoUrl ? (
-                  <img
-                    src={photoUrl}
-                    alt={`${veiculo.marca} ${veiculo.modelo}`}
-                    className="w-full h-48 object-cover rounded-t-lg"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.parentElement.innerHTML = '<div class="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 rounded-t-lg flex items-center justify-center"><svg class="w-20 h-20 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>';
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 rounded-t-lg flex items-center justify-center">
-                    <Car className="w-20 h-20 text-slate-400" />
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle>{veiculo.marca} {veiculo.modelo}</CardTitle>
-                  <p className="text-sm text-slate-600">{veiculo.ano} • {veiculo.matricula}</p>
+              <Card key={veiculo.id} className="hover:shadow-xl transition" data-testid={`veiculo-card-${veiculo.id}`}>
+                {/* Carrossel de Fotos */}
+                <PhotoCarousel 
+                  photos={photos} 
+                  altText={`${veiculo.marca} ${veiculo.modelo}`} 
+                />
+                
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{veiculo.marca} {veiculo.modelo}</CardTitle>
+                  <p className="text-sm text-slate-600">
+                    {veiculo.ano} • {veiculo.matricula}
+                    {veiculo.versao && <span className="ml-1">• {veiculo.versao}</span>}
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center space-x-4 text-sm text-slate-600">
+                <CardContent className="space-y-3 pt-0">
+                  {/* Características do veículo */}
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
                     <div className="flex items-center space-x-1">
                       <Fuel className="w-4 h-4" />
                       <span>{veiculo.combustivel}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Users className="w-4 h-4" />
-                      <span>{veiculo.lugares} lugares</span>
+                      <span>{veiculo.lugares} lug.</span>
                     </div>
+                    {veiculo.caixa && (
+                      <div className="flex items-center space-x-1">
+                        <Settings2 className="w-4 h-4" />
+                        <span>{veiculo.caixa === 'automatica' || veiculo.caixa === 'Automática' ? 'Auto' : 'Manual'}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Badge para veículo disponível sem motorista */}
@@ -323,7 +324,7 @@ const VeiculosPublico = () => {
                   )}
 
                   {veiculo.descricao_marketplace && (
-                    <p className="text-sm text-slate-600">{veiculo.descricao_marketplace}</p>
+                    <p className="text-sm text-slate-600 line-clamp-2">{veiculo.descricao_marketplace}</p>
                   )}
 
                   {/* Condições do Contrato */}
