@@ -1078,6 +1078,16 @@ function App() {
             }
           />
           <Route
+            path="/admin/backup"
+            element={
+              user && user.role === 'admin' ? (
+                <BackupAdmin user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/terabox"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
