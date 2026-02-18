@@ -9,6 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Car, ArrowLeft, Filter, Euro, Calendar, Fuel, Users, Mail, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Helper para construir URL de fotos
+const getPhotoUrl = (photoPath) => {
+  if (!photoPath) return null;
+  // Se já é uma URL completa
+  if (photoPath.startsWith('http')) return photoPath;
+  // Se começa com / usa API base
+  if (photoPath.startsWith('/')) return `${API.replace('/api', '')}${photoPath}`;
+  // Senão, adiciona / e usa API base
+  return `${API.replace('/api', '')}/${photoPath}`;
+};
+
 const VeiculosPublico = () => {
   const navigate = useNavigate();
   const [veiculos, setVeiculos] = useState([]);
