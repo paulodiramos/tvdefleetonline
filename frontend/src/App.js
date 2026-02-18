@@ -317,6 +317,16 @@ function App() {
             }
           />
           <Route
+            path="/usuarios/:userId"
+            element={
+              user && user.role === 'admin' ? (
+                <PerfilUtilizador user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/planos-parceiros"
             element={
               user && user.role === 'admin' ? (
