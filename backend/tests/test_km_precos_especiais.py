@@ -261,8 +261,8 @@ class TestPrecosEspeciais:
         print(f"Found {len(data)} planos")
     
     def test_get_parceiros_endpoint(self, admin_token):
-        """Test GET /api/usuarios/parceiros works"""
-        response = requests.get(f"{BASE_URL}/api/usuarios/parceiros",
+        """Test GET /api/uber/admin/parceiros works"""
+        response = requests.get(f"{BASE_URL}/api/uber/admin/parceiros",
                                headers={"Authorization": f"Bearer {admin_token}"})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         data = response.json()
