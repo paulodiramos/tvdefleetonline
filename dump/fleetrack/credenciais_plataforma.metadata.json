@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"c23cd3bb73ff454bb4b2cdfccf625d6e","collectionName":"credenciais_plataforma","type":"collection"}

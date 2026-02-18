@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"25e85ee419a54cd398bc468379607142","collectionName":"status_relatorios","type":"collection"}

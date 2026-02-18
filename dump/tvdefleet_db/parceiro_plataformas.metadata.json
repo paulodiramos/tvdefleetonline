@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"cf2dd928c7ff45fba877e7a0bfd7d42e","collectionName":"parceiro_plataformas","type":"collection"}

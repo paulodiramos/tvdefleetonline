@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"dd33ee2caa40410c85a214334b052c1f","collectionName":"rpa_gps","type":"collection"}
