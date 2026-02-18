@@ -15,24 +15,66 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/reports/dashboard")
-async def get_dashboard_stats(current_user: Dict = Depends(get_current_user)):
-    """Get main dashboard statistics"""
+async def get_dashboard_stats(
+    current_user: Dict = Depends(get_current_user),
+    parceiro_id: Optional[str] = None
+):
+    """Get main dashboard statistics
+    
+    Permissões:
+    - Admin: vê todos os dados, pode filtrar por parceiro
+    - Gestor: vê apenas parceiros atribuídos, pode filtrar por parceiro atribuído
+    - Parceiro: vê apenas os seus dados
+    """
     query = {}
     motorista_query = {}
     
     # Filter by role
     if current_user["role"] == UserRole.PARCEIRO:
+        # Parceiro só vê os seus dados
         query["parceiro_id"] = current_user["id"]
         motorista_query["parceiro_atribuido"] = current_user["id"]
+    elif current_user["role"] == UserRole.GESTAO:
+        # Gestor vê parceiros atribuídos
+        parceiros_atribuidos = current_user.get("parceiros_atribuidos", [])
+        if parceiro_id and parceiro_id != "todos":
+            # Verificar se o parceiro está na lista de atribuídos
+            if parceiro_id not in parceiros_atribuidos:
+                raise HTTPException(status_code=403, detail="Parceiro não está na sua lista de atribuídos")
+            query["parceiro_id"] = parceiro_id
+            motorista_query["parceiro_atribuido"] = parceiro_id
+        elif parceiros_atribuidos:
+            query["parceiro_id"] = {"$in": parceiros_atribuidos}
+            motorista_query["parceiro_atribuido"] = {"$in": parceiros_atribuidos}
+        else:
+            # Sem parceiros atribuídos, retornar zeros
+            return {
+                "total_vehicles": 0,
+                "available_vehicles": 0,
+                "total_motoristas": 0,
+                "pending_motoristas": 0,
+                "total_receitas": 0,
+                "total_despesas": 0,
+                "roi": 0
+            }
+    elif current_user["role"] == UserRole.ADMIN:
+        # Admin pode filtrar por parceiro específico
+        if parceiro_id and parceiro_id != "todos":
+            query["parceiro_id"] = parceiro_id
+            motorista_query["parceiro_atribuido"] = parceiro_id
     
     total_vehicles = await db.vehicles.count_documents(query)
     available_vehicles = await db.vehicles.count_documents({**query, "status": "disponivel"})
     total_motoristas = await db.motoristas.count_documents(motorista_query)
     pending_motoristas = await db.motoristas.count_documents({**motorista_query, "approved": False})
     
-    # Filter revenues and expenses by parceiro's vehicles
-    if current_user["role"] == UserRole.PARCEIRO:
-        vehicles = await db.vehicles.find({"parceiro_id": current_user["id"]}, {"_id": 0, "id": 1}).to_list(10000)
+    # Filter revenues and expenses
+    if "parceiro_id" in query:
+        parceiro_filter = query["parceiro_id"]
+        if isinstance(parceiro_filter, dict):
+            vehicles = await db.vehicles.find({"parceiro_id": parceiro_filter}, {"_id": 0, "id": 1}).to_list(10000)
+        else:
+            vehicles = await db.vehicles.find({"parceiro_id": parceiro_filter}, {"_id": 0, "id": 1}).to_list(10000)
         vehicle_ids = [v["id"] for v in vehicles]
         revenues = await db.revenues.find({"vehicle_id": {"$in": vehicle_ids}}, {"_id": 0}).to_list(10000)
         expenses = await db.expenses.find({"vehicle_id": {"$in": vehicle_ids}}, {"_id": 0}).to_list(10000)
