@@ -438,78 +438,142 @@ export default function DashboardFaturacao() {
         </Card>
       )}
 
-      {/* Tabela por Motorista */}
-      {dashboardData?.motoristas?.length > 0 && (
-        <Card>
+      {/* Matriz Motorista x Empresa */}
+      {dashboardData?.matriz?.length > 0 && dashboardData?.empresas_colunas?.length > 0 && (
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5 text-purple-600" />
-              Faturação por Motorista
+              Matriz Motorista x Empresa - {ano}
             </CardTitle>
-            <CardDescription>Valor acumulado anual por cada motorista em {ano}</CardDescription>
+            <CardDescription>
+              Quanto cada motorista ganhou por cada empresa de faturação durante o ano
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full" data-testid="tabela-motoristas">
+              <table className="w-full border-collapse" data-testid="tabela-matriz">
                 <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Motorista</th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-600">Total Faturado</th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-600">Recibos</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-600">% do Total</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Empresas Utilizadas</th>
+                  <tr className="border-b bg-gradient-to-r from-purple-50 to-blue-50">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 sticky left-0 bg-white z-10 border-r">
+                      Motorista
+                    </th>
+                    {dashboardData.empresas_colunas.map((empresa) => (
+                      <th 
+                        key={empresa.id} 
+                        className="text-center py-3 px-3 font-medium text-gray-600 min-w-[120px]"
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <Building2 className="w-4 h-4 text-blue-500" />
+                          <span className="text-xs">{empresa.nome?.substring(0, 12)}</span>
+                        </div>
+                      </th>
+                    ))}
+                    <th className="text-right py-3 px-4 font-semibold text-gray-700 bg-green-50 border-l">
+                      Total Anual
+                    </th>
+                    <th className="text-center py-3 px-4 font-semibold text-gray-700 bg-green-50">
+                      % Total
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {dashboardData.motoristas.map((motorista, index) => (
+                  {dashboardData.matriz.map((row, index) => (
                     <tr 
-                      key={motorista.motorista_id} 
-                      className="border-b hover:bg-gray-50 transition-colors"
-                      data-testid={`row-motorista-${motorista.motorista_id}`}
+                      key={row.motorista_id} 
+                      className={`border-b hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
+                      data-testid={`matriz-row-${row.motorista_id}`}
                     >
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 sticky left-0 bg-inherit z-10 border-r">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-semibold">
-                            {motorista.motorista_nome?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                            {row.motorista_nome?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                           </div>
-                          <span className="font-medium">{motorista.motorista_nome}</span>
+                          <span className="font-medium text-sm">{row.motorista_nome}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-right font-semibold text-green-600">
-                        {formatCurrency(motorista.total_valor)}
+                      {dashboardData.empresas_colunas.map((empresa) => {
+                        const celula = row.valores_por_empresa?.[empresa.id];
+                        const valor = celula?.valor || 0;
+                        const perc = celula?.percentagem || 0;
+                        
+                        return (
+                          <td 
+                            key={empresa.id} 
+                            className={`py-2 px-2 text-center ${valor > 0 ? 'bg-green-50' : ''}`}
+                          >
+                            {valor > 0 ? (
+                              <div className="flex flex-col items-center">
+                                <span className="font-semibold text-green-700 text-sm">
+                                  {formatCurrency(valor)}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  ({perc}%)
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-300">-</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="py-3 px-4 text-right font-bold text-green-700 bg-green-50 border-l">
+                        {formatCurrency(row.total_anual)}
                       </td>
-                      <td className="py-3 px-4 text-right">
-                        {motorista.total_recibos}
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-4 text-center bg-green-50">
                         <Badge 
                           variant="outline" 
                           className={`
-                            ${motorista.percentagem >= 30 ? 'border-green-500 text-green-700 bg-green-50' : ''}
-                            ${motorista.percentagem >= 15 && motorista.percentagem < 30 ? 'border-blue-500 text-blue-700 bg-blue-50' : ''}
-                            ${motorista.percentagem < 15 ? 'border-gray-500 text-gray-700 bg-gray-50' : ''}
+                            ${row.percentagem_total >= 25 ? 'border-green-500 text-green-700 bg-green-100' : ''}
+                            ${row.percentagem_total >= 10 && row.percentagem_total < 25 ? 'border-blue-500 text-blue-700 bg-blue-100' : ''}
+                            ${row.percentagem_total < 10 ? 'border-gray-400 text-gray-600 bg-gray-100' : ''}
                           `}
                         >
-                          {motorista.percentagem}%
+                          {row.percentagem_total}%
                         </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex flex-wrap gap-1">
-                          {motorista.empresas?.map((emp, i) => (
-                            <Badge key={i} variant="secondary" className="text-xs">
-                              {emp.empresa_nome?.substring(0, 15)}: {formatCurrency(emp.total_valor)}
-                            </Badge>
-                          ))}
-                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
+                <tfoot>
+                  <tr className="bg-gradient-to-r from-blue-100 to-purple-100 font-semibold">
+                    <td className="py-3 px-4 sticky left-0 bg-blue-100 z-10 border-r">
+                      TOTAL POR EMPRESA
+                    </td>
+                    {dashboardData.empresas_colunas.map((empresa) => {
+                      const empresaData = dashboardData.empresas?.find(e => e.empresa_id === empresa.id);
+                      return (
+                        <td key={empresa.id} className="py-3 px-2 text-center">
+                          <span className="font-bold text-blue-700">
+                            {formatCurrency(empresaData?.total_valor || 0)}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    <td className="py-3 px-4 text-right font-bold text-green-800 bg-green-100 border-l">
+                      {formatCurrency(dashboardData.totais?.valor || 0)}
+                    </td>
+                    <td className="py-3 px-4 text-center bg-green-100">
+                      <Badge className="bg-green-600 text-white">100%</Badge>
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Info explicativa */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="pt-4">
+          <p className="text-sm text-blue-800">
+            <strong>Como ler esta matriz:</strong> Cada linha representa um motorista, cada coluna uma empresa de faturação. 
+            O valor mostra quanto o motorista ganhou através dessa empresa durante {ano}. 
+            A percentagem indica a contribuição para o total anual.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
