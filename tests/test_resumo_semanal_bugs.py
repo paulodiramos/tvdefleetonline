@@ -13,7 +13,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://driver-analytics-3.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://billing-matrix.preview.emergentagent.com')
 
 # Test credentials
 PARCEIRO_EMAIL = "parceiro@tvdefleet.com"

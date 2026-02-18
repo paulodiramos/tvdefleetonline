@@ -17,7 +17,7 @@ from pathlib import Path
 import csv
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://driver-analytics-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://billing-matrix.preview.emergentagent.com/api"
 
 # Test credentials (from review request)
 TEST_CREDENTIALS = {

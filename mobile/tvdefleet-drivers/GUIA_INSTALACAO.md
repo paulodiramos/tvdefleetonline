@@ -179,7 +179,7 @@ Depois de carregar, vai ver:
 
 ### ❌ Login não funciona
 - Verifique se está a usar credenciais válidas do sistema
-- A app conecta ao servidor: https://driver-analytics-3.preview.emergentagent.com/api
+- A app conecta ao servidor: https://billing-matrix.preview.emergentagent.com/api
 
 ---
 

@@ -1,194 +1,194 @@
 <analysis>**original_problem_statement:**
-O utilizador iniciou com um pedido para um **Sistema de Integrações Configurável**, que evoluiu para um sistema de gestão de frotas completo. Os requisitos mais recentes, incluindo os do último pedido do utilizador, são:
+O utilizador iniciou com um pedido para um **Sistema de Integrações Configurável**, que evoluiu para um sistema de gestão de frotas completo. Os requisitos mais recentes do utilizador, das suas últimas mensagens, são:
 
--   **Sistema de Recibos e Faturação por Entidade:** Concluído. Permite que parceiros definam múltiplas Empresas de Faturação e emitam recibos em nome delas.
--   **Dashboard de Faturação:** Concluído. Exibe os totais faturados por cada entidade anualmente.
--   **Gestão de Acessos e Permissões:**
-    -   Refinar a visibilidade nos dashboards (parceiro vs. gestor vs. admin).
-    -   Permitir eliminação de utilizadores e motoristas pelo admin.
-    -   Permitir que parceiros aprovem motoristas.
-    -   Permitir que o admin atribua/altere o parceiro de um motorista.
--   **Melhorias na Gestão de Veículos:**
-    -   Corrigir exibição de fotos de veículos (Concluído).
-    -   Melhorar anúncios com carrossel de fotos (Concluído).
-    -   Implementar gestão de quilometragem (km\_inicial, atualizações manuais) (Concluído).
--   **Histórico e Relatórios:**
-    -   Filtrar resumo semanal por motoristas ativos na semana selecionada (Concluído).
-    -   Implementar histórico de atividade e rendimentos para cada motorista (Concluído).
--   **Preços Especiais:** Implementar UI para o admin definir um preço específico para um parceiro/gestor (Concluído).
--   **Sistema de Backup:** Interface para o admin realizar e descarregar backups (Concluído).
-
-**Novos Requisitos do Utilizador (da última mensagem):**
-1.  Na ficha do cliente (motorista), mostrar os valores dos recibos associados a cada empresa de faturação.
-2.  No dashboard de faturação, mostrar o valor acumulado anual do motorista associado a cada empresa (em percentagem).
-3.  Garantir que todos os menus das categorias principais estejam sempre visíveis no menu superior.
-4.  Ajustar a lista de utilizadores no perfil de admin para ser mais compacta (conforme imagem em anexo que não foi processada), mostrando ícones para ações, apenas um nome de parceiro, etc.
-5.  Clarificar onde se podem definir os preços especiais para um parceiro/gestor de forma simples e com data de validade.
+1.  **Dashboard de Faturação:** A matriz de Motorista x Empresa precisa de ser dinâmica e suportar até 5 empresas, garantindo que os rendimentos de cada motorista em cada empresa são exibidos corretamente.
+2.  **Geração de Relatórios:** A página de configuração de relatórios () não parece ter uma opção visível para gerar o relatório semanal em PDF, embora o endpoint de backend funcione.
+3.  **Refatoração da UI:** Mover os links do menu Dashboard Faturação e Empresas Faturação da categoria Financeiro para o menu dropdown do Perfil do utilizador.
+4.  **Preços Especiais:** A funcionalidade de Preços Especiais tem um bug que impede a seleção de um parceiro. Além disso, necessita de suportar mais tipos de preços: preço fixo, preço por veículo, por motorista, por motorista+veículo, e percentagem.
+5.  **Refatoração de Código:** Continuar a refatoração do God Component .
+6.  **App Móvel:** Gerar o ficheiro APK da aplicação móvel para submissão na Play Store.
+7.  **Visibilidade do Menu:** Garantir que as categorias principais do menu superior estejam sempre visíveis em todas as páginas da aplicação.
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-A aplicação full-stack (FastAPI, React, MongoDB) está funcional no ambiente de desenvolvimento. O agente anterior implementou com sucesso várias funcionalidades-chave, incluindo um sistema completo de Empresas de Faturação (backend e frontend), um dashboard de faturação anual com gráficos, o histórico de atividade e rendimentos do motorista, a gestão de quilometragem de veículos, e uma interface para o admin gerir preços especiais. Foram também corrigidos vários bugs e feitos ajustes de UX.
+A aplicação é um sistema de gestão de frotas full-stack (FastAPI, React, MongoDB). Na sessão atual, o agente implementou várias melhorias significativas de UI/UX baseadas no feedback do utilizador. Foi criada uma lista de utilizadores mais compacta, um dashboard de faturação com uma matriz detalhada de Motorista x Empresa, e adicionada informação de faturação à ficha do motorista. Foi também implementada a persistência de sessão para o scraper RPA da Prio e iniciado um grande trabalho de refatoração do componente , extraindo várias das suas secções para componentes mais pequenos. A base de dados de desenvolvimento () foi populada com dados de teste para permitir o desenvolvimento e a verificação das funcionalidades do dashboard.
 
 **Last working item**:
--   Last item agent was working: O agente recebeu um novo conjunto de requisitos de UI/UX do utilizador e estava prestes a começar a análise, verificando as imagens em anexo (que não foram processadas com sucesso) para entender os ajustes pretendidos na lista de utilizadores do perfil de administrador.
--   Status: NOT STARTED
+-   Last item agent was working: O agente estava a trabalhar no pedido do utilizador para reorganizar o menu de navegação. Especificamente, estava a mover os links Dashboard Faturação e Empresas Faturação do menu Financeiro para o menu dropdown do Perfil.
+-   Status: IN PROGRESS
 -   Agent Testing Done: N
 -   Which testing method agent to use? frontend testing agent
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Implementar novos ajustes de UI/UX e funcionalidades (P0)
--   Issue 2: A base de dados de produção () está desatualizada (P0 - Bloqueador Crítico)
--   Issue 3: Fragilidade da extração de dados RPA Prio Elétrico (P2)
--   Issue 4: A sessão da Prio expira após cada sincronização (P2)
+-   Issue 1: Reorganizar menus de navegação (P0)
+-   Issue 2: Funcionalidade de Preços Especiais com bugs e incompleta (P1)
+-   Issue 3: UI para gerar relatório PDF semanal em falta (P1)
+-   Issue 4: Base de dados de produção desatualizada (P1 - Bloqueador Crítico)
+-   Issue 5: Fragilidade da extração de dados RPA Prio Elétrico (P2)
 
 **Issues Detail:**
--   **Issue 1: Implementar novos ajustes de UI/UX e funcionalidades (P0)**
-    -   **Description:** O utilizador solicitou um conjunto de alterações e novas funcionalidades na sua última mensagem, focadas em melhorar a visualização de dados e a usabilidade da interface de administração.
-        -   1. Mostrar valores de recibos por empresa na ficha do motorista.
-        -   2. Mostrar valor acumulado anual por motorista no dashboard de faturação.
-        -   3. Garantir visibilidade permanente dos menus principais.
-        -   4. Compactar a lista de utilizadores na página de administração.
-        -   5. Clarificar/Simplificar a UI de gestão de Preços Especiais.
-    -   **Attempted fixes:** Nenhum.
+-   **Issue 1: Reorganizar menus de navegação (P0)**
+    -   **Description:** O utilizador solicitou que os links Dashboard Faturação e Empresas Faturação fossem movidos do menu Financeiro para o menu do Perfil.
+    -   **Attempted fixes:** O agente identificou o ficheiro  como o local para a alteração, mas foi interrompido antes de implementar a mudança.
     -   **Next debug checklist:**
-        1.  Analisar novamente as imagens anexadas pelo utilizador (se disponíveis no próximo fork) para entender o requisito de compactação da lista de utilizadores.
-        2.  Rever  para adicionar os valores dos recibos.
-        3.  Rever  e o endpoint de backend correspondente para incluir os dados por motorista.
-        4.  Rever  para garantir a visibilidade dos menus.
-        5.  Rever  para implementar a UI compacta.
-        6.  Rever  para melhorar a clareza.
-    -   **Why fix this issue and what will be achieved with the fix?** Atende a um pedido direto do utilizador para melhorar a densidade da informação e a usabilidade geral da aplicação.
-    -   **Status:** NOT STARTED
+        1.  Editar o ficheiro .
+        2.  Localizar os menus (para admin e parceiro).
+        3.  Remover os links da secção Financeiro.
+        4.  Adicionar os links ao menu dropdown do Perfil (UserNav).
+    -   **Why fix this issue and what will be achieved with the fix?** Atende a um pedido direto do utilizador para melhorar a organização e a lógica da navegação.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 2: Funcionalidade de Preços Especiais com bugs e incompleta (P1)**
+    -   **Description:** A página de Preços Especiais não permite selecionar um parceiro no modal de criação (o dropdown não abre) e precisa de suportar tipos de preço adicionais (fixo, por veículo, por motorista, etc.).
+    -   **Attempted fixes:** O agente adicionou os novos tipos de preço à UI e ao modelo de dados, mas o bug do dropdown de seleção de parceiro persistiu durante os testes com Playwright. O agente considerou um problema do Playwright com o Radix UI e não investigou mais a fundo.
+    -   **Next debug checklist:**
+        1.  Verificar no browser real se o dropdown de parceiros funciona. Se não funcionar, investigar o componente  de Shadcn/Radix em .
+        2.  Implementar a lógica de backend para os novos tipos de preço no endpoint correspondente.
+        3.  Garantir que a UI se adapta para pedir os dados necessários para cada tipo de preço (ex: selecionar veículo ou motorista).
+    -   **Why fix this issue and what will be achieved with the fix?** Tornará a funcionalidade de preços especiais, que é crítica para o negócio, completamente funcional.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on other issue:** Não.
 
--   **Issue 2: A base de dados de produção () está desatualizada (P0 - Bloqueador Crítico)**
-    -   **Description:** O ambiente de produção não reflete o código nem os dados do ambiente de desenvolvimento, causando bugs críticos que impedem o utilizador de usar a aplicação.
-    -   **Attempted fixes:** O agente anterior diagnosticou o problema e instruiu o utilizador a usar a funcionalidade Deploy com a opção **Use new database**.
-    -   **Next debug checklist:** A resolução depende da ação do utilizador. O próximo agente deve reforçar esta instrução e confirmar se o deploy foi efetuado.
-    -   **Why fix this issue and what will be achieved with the fix?** Sincronizará a produção com o desenvolvimento, tornando a aplicação funcional para o utilizador e resolvendo múltiplos bugs.
+-   **Issue 3: UI para gerar relatório PDF semanal em falta (P1)**
+    -   **Description:** O utilizador reportou que a geração do relatório PDF não está a funcionar a partir da UI em . O agente confirmou que o endpoint da API () funciona, sugerindo que falta um botão ou um trigger na interface.
+    -   **Attempted fixes:** Nenhuma alteração na UI foi feita. Apenas foi testado o endpoint de backend.
+    -   **Next debug checklist:**
+        1.  Analisar o ficheiro  (ou o ficheiro da página de relatórios relevante).
+        2.  Adicionar um botão Gerar PDF que chame o endpoint da API.
+        3.  Garantir que o ficheiro PDF gerado é descarregado pelo browser.
+    -   **Why fix this issue and what will be achieved with the fix?** Permitirá aos utilizadores descarregar relatórios importantes diretamente da aplicação.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 4: Base de dados de produção desatualizada (P1 - Bloqueador Crítico)**
+    -   **Description:** O ambiente de produção () está a usar uma base de dados antiga, o que causa bugs e inconsistências com o código mais recente.
+    -   **Attempted fixes:** O agente anterior instruiu o utilizador a fazer deploy com a opção **Use new database**. Esta ação continua pendente.
+    -   **Next debug checklist:** A resolução depende da ação do utilizador. O próximo agente deve reforçar esta instrução.
+    -   **Why fix this issue and what will be achieved with the fix?** Sincronizará a produção com o desenvolvimento, tornando a aplicação estável e funcional para o utilizador.
     -   **Status:** BLOCKED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on other issue:** Não.
 
--   **Issue 3: Fragilidade da extração de dados RPA Prio Elétrico (P2)**
+-   **Issue 5: Fragilidade da extração de dados RPA Prio Elétrico (P2)**
     -   **Description:** A automação Playwright para este fornecedor é instável.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-
--   **Issue 4: A sessão da Prio expira após cada sincronização (P2)**
-    -   **Description:** A sessão de login na plataforma Prio não persiste, exigindo re-autenticação.
-    -   **Status:** NOT STARTED
+    -   **Attempted fixes:** O agente adicionou persistência de sessão para evitar logins repetidos, mas a instabilidade fundamental da extração (devido ao site alvo ser OutSystems) não foi resolvida.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** Y
 
 **In progress Task List**:
-Nenhuma. As tarefas anteriores foram concluídas e as novas (do Issue 1) ainda não foram iniciadas.
+-   **Task 1: Refatorar  (P1)**
+    -   **Where to resume:** O agente já criou 7 componentes separados (, , , , , , ) na pasta . O próximo passo é modificar  para importar e utilizar estes novos componentes, removendo o código correspondente do ficheiro principal.
+    -   **What will be achieved with this?** Reduzirá a complexidade de um ficheiro com mais de 6000 linhas, melhorando a manutenibilidade e a performance.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on something:** Não.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
     *   (P2) Implementar integração com WhatsApp.
+    *   (P2) Gerar o APK da aplicação móvel (bloqueado, aguarda credenciais Expo do utilizador).
 *   **Future Tasks:**
-    *   Refatorar God Components como .
-    -   Implementar funcionalidades de Alertas Avançados e Comissões Avançadas.
-    -   Criar um sistema para arquivar dados antigos da base de dados.
+    *   Implementar funcionalidades de Alertas Avançados e Comissões Avançadas.
+    *   Criar um sistema para arquivar dados antigos da base de dados.
 
 **Completed work in this session**
--   **Sistema de Empresas de Faturação**: Implementação completa do backend (rotas, modelos) e frontend (página de gestão e integração no fluxo de upload de recibos).
--   **Dashboard de Faturação Anual**: Criada uma nova página () com gráficos (recharts) e tabelas para analisar as receitas anuais por empresa.
--   **Histórico do Motorista**: Criados endpoints de backend e uma nova tab na Ficha do Motorista para exibir o histórico de atividade (ativo/inativo) e o histórico de rendimentos semanais.
--   **Filtro do Resumo Semanal**: A lógica do backend foi melhorada para filtrar e mostrar apenas os motoristas que estiveram ativos durante o período da semana selecionada.
--   **Gestão de KM de Veículos**: Criado um componente () e um endpoint de backend para visualizar o histórico de quilometragem e permitir atualizações.
--   **UI de Preços Especiais**: Criada uma nova página () para o administrador gerir os preços especiais para parceiros.
--   **Correções de Bugs e UX**: Resolvidos múltiplos bugs de serialização, caminhos de importação e lógica, com a ajuda do . O menu de navegação foi ajustado para melhor visibilidade.
-
-**Earlier issues found/mentioned but not fixed**
--   **Issue 1: Fragilidade da extração de dados RPA Prio Elétrico**
--   **Issue 2: Sessão da Prio expira após cada sincronização**
-
-**Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Problemas com a automação da Prio.
--   **Recurrence count:** Múltiplas vezes.
--   **Status:** NOT STARTED
+-   **Dashboard de Faturação**: Implementada uma matriz Motorista x Empresa que mostra os ganhos de cada motorista por empresa de faturação, com totais e percentagens anuais. O backend foi atualizado para fazer a agregação de dados complexa.
+-   **UI da Lista de Utilizadores**: A página de gestão de utilizadores do admin foi completamente redesenhada para uma vista mais compacta com ícones de ação, conforme a imagem fornecida pelo utilizador.
+-   **Melhorias na Ficha do Motorista**: Adicionado um card na ficha do motorista para mostrar os valores totais de recibos associados a cada empresa de faturação.
+-   **Pagamentos de Parceiros**: Implementado um popup na página de pagamentos do parceiro que permite associar um pagamento a uma empresa de faturação específica se existirem várias.
+-   **Correção do RPA da Prio**: Adicionada persistência de sessão ao scraper da Prio para evitar a necessidade de fazer login a cada sincronização.
+-   **Guia de Build da App Móvel**: Foi criado o ficheiro  com as instruções para o utilizador gerar o APK da app Android.
+-   **Criação de Dados de Teste**: Corrigido um problema crítico em que o dashboard não mostrava dados, ao identificar que o backend usava a base de dados  e não . Foram criados endpoints e scripts para popular a BD correta com dados de teste.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, Pydantic, MongoDB
--   **Frontend:** React, Shadcn UI, Lucide React, **Recharts**
--   **Deployment:** Plataforma Emergent
--   **Database:** Serialização de BSON ()
+-   **Backend:** FastAPI, Pydantic, MongoDB (com agregações complexas).
+-   **Frontend:** React, Shadcn UI, Recharts, Lucide React.
+-   **RPA:** Playwright para scraping web.
+-   **Mobile:** React Native (Expo).
+-   **Debugging:** Identificação e correção de problemas relacionados com o âmbito da base de dados e a criação de dados de teste para desenvolvimento.
 
 **key DB schema**
--   **historico\_atividade\_motoristas:** Utilizada para guardar o histórico de alterações de estado (ativo, inativo, bloqueado).
--   **veiculos_km:** Utilizada para guardar o histórico de atualizações de quilometragem.
--   **recibos:** O endpoint de upload foi modificado para aceitar .
+-   **relatorios_semanais**: Confirmada como a coleção de origem para os rendimentos dos motoristas, utilizada pelo Dashboard de Faturação. Contém , , .
+-   **empresas_faturacao**: Armazena as empresas de faturação, ligadas a um .
+-   **precos_especiais**: O modelo de dados foi atualizado para incluir um campo , mas a lógica de backend para os diferentes tipos ainda precisa de ser implementada.
 
 **All files of reference**
 -   **Created:**
-    -   : UI para parceiros gerirem as suas empresas de faturação.
-    -   : UI do dashboard de faturação anual.
-    -   : UI para o admin gerir preços especiais.
-    -   : Componente reutilizável para gerir a quilometragem de um veículo.
+    -   : 7 novos componentes extraídos de .
+    -   : Guia para gerar o APK da app móvel.
 -   **Updated:**
-    -   : Adicionados endpoints para histórico de atividade/rendimentos e lógica para registar alterações de estado.
-    -   : Atualizado endpoint de upload de recibo para associar a uma empresa de faturação.
-    -   : Adicionado endpoint para obter o histórico de KM.
-    -   : Adicionadas as rotas para as novas páginas.
-    -   : Adicionados os links de menu para as novas páginas.
-    -   : Adicionado seletor de empresa de faturação no diálogo de upload de recibo.
-    -   : Adicionada a nova tab Histórico.
-    -   : Integrado o novo componente .
-    -   : Atualizado com as funcionalidades concluídas.
+    -   : Endpoint  reescrito para criar a matriz Motorista x Empresa.
+    -   : Adicionada persistência de sessão.
+    -   : UI completamente redesenhada.
+    -   : UI e lógica atualizadas para a nova matriz de dados.
+    -   : Adicionado modal de seleção de empresa de faturação.
+    -   : Adicionados novos tipos de preço na UI.
+    -   : Modificado para ajustar a visibilidade dos menus.
 
 **Areas that need refactoring**:
--   O componente  continua muito grande, apesar da extração do componente de gestão de KM. Pode ser dividido ainda mais.
--   A página  provavelmente precisará de refatoração para atender ao novo requisito de uma UI mais compacta.
+-   ****: A refatoração foi iniciada, mas o ficheiro principal ainda não foi atualizado para usar os novos componentes. Esta tarefa deve ser continuada.
+-   ****: A lógica para os novos tipos de preço precisa de ser implementada tanto no frontend (para mostrar os campos corretos) como no backend. O bug do dropdown de seleção de parceiro precisa de uma solução definitiva.
 
 **key api endpoints**
--   : Atualizado para aceitar .
--   : Obtém o histórico de alterações de estado de um motorista.
--   : Obtém o histórico de rendimentos semanais de um motorista.
--   : Obtém o histórico de atualizações de KM de um veículo.
--   Endpoints CRUD para .
--   Endpoints CRUD para .
+-   : Endpoint principal do Dashboard de Faturação, agora retorna uma estrutura de dados complexa para a matriz.
+-   : Endpoint para gerar o PDF do resumo semanal, confirmado que funciona.
+-   , : Endpoints temporários criados pelo agente para popular a base de dados de desenvolvimento.
 
 **Critical Info for New Agent**
--   **Prioridade Máxima:** A prioridade absoluta é o último pedido do utilizador (), que define um novo conjunto de tarefas de UI/UX. Comece por aí. Tente obter as imagens em anexo para entender o requisito de design para a página de utilizadores.
--   **Bloqueador de Produção:** O problema de dessincronização da base de dados de produção ainda está pendente de uma ação do utilizador (Deploy com Use new database). Lembre o utilizador disto, pois é a causa de muitos problemas que ele pode experienciar no ambiente live.
--   **Testing Agent é Eficaz:** O agente anterior usou o  com muito sucesso, que corrigiu vários bugs críticos de frontend (paths de API, variáveis indefinidas). Confie e utilize este subagente após implementar as novas funcionalidades.
+-   **Prioridades do Utilizador:** A prioridade máxima é resolver os pedidos das últimas mensagens do utilizador: mover os itens de menu, corrigir a UI de geração de PDF e resolver os bugs/requisitos pendentes da página de Preços Especiais.
+-   **Base de Dados de Desenvolvimento:** Esteja ciente de que a base de dados  está a ser populada com dados de teste. Pode ser necessário criar mais dados para testar funcionalidades específicas.
+-   **Bloqueador de Produção:** O problema de dessincronização da base de dados de produção é crítico e está pendente de uma ação do utilizador (Deploy com Use new database). Relembre o utilizador disto.
+-   **Refatoração Incompleta:** A refatoração de  está a meio. Continue o trabalho importando e usando os componentes já criados antes de extrair mais.
+-   **Bug do Dropdown:** O bug do dropdown na página Preços Especiais pode não ser um problema do Playwright. Teste manualmente no browser e, se persistir, investigue uma solução (ex: verificar colisões de z-index do modal, ou problemas com o  do Radix).
 
 **documents and test reports created in this job**
+-   
+-   
 -    (Atualizado)
--   
--   
--   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **** (Message 254): Utilizador aprova o plano para implementar a Gestão de KM e os Preços Especiais. (CONCLUÍDO)
-2.  **** (Message 339): **Pedido de alta prioridade com múltiplos novos requisitos de UI/UX**, incluindo ajustes no dashboard de faturação, ficha do cliente e página de utilizadores do admin. (PENDENTE)
+1.  **** (): Pede para mover os links do menu para a secção do Perfil. (PENDENTE)
+2.  **** (): Reporta o problema da geração de PDF e pede para o dashboard suportar mais empresas. (PENDENTE/EM PROGRESSO)
+3.  **** (): Reporta que o dashboard não mostrava os dados corretos e que o menu superior devia estar sempre visível. (PARCIALMENTE RESOLVIDO, dados corrigidos)
+4.  **** (): Define um conjunto de tarefas, incluindo gerar o APK, continuar a refatoração e melhorar o dashboard. (EM PROGRESSO)
+5.  **** (): Pede a funcionalidade de associar um recibo a uma empresa na página de pagamentos do parceiro. (CONCLUÍDO)
+6.  **** (): Confirma a ordem de prioridade: 1. Preços Especiais, 2. Refatoração FichaVeiculo, 3. Correção RPA Prio. (EM PROGRESSO)
+7.  **** (): Reporta o bug principal e os novos requisitos para os Preços Especiais. (PENDENTE/EM PROGRESSO)
 
 **Project Health Check:**
--   **Broken:** O ambiente de produção () permanece instável e dessincronizado. A resolução está bloqueada, aguardando uma ação de deploy por parte do utilizador.
+-   **Broken:** O ambiente de produção () está instável e dessincronizado devido a uma base de dados desatualizada. A resolução está bloqueada, aguardando uma ação de deploy por parte do utilizador.
+-   **Mocked:** O desenvolvimento está a depender de dados de teste criados através de endpoints temporários, pois a base de dados de desenvolvimento está vazia.
 
 **3rd Party Integrations**
--   **Playwright:** Usado para automações RPA (ex: Prio).
--   **Recharts:** Usado para os gráficos no Dashboard de Faturação.
+-   **Playwright:** Usado para automação RPA (Prio Elétrico).
+-   **Recharts:** Usado para gráficos no Dashboard de Faturação.
+-   **Expo (React Native):** Utilizado para a aplicação móvel .
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (usado 3 vezes com sucesso)
+-   **Testing agent used after significant changes:** YES
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None
--   **Known regressions:** A automação da Prio continua a ser frágil.
+-   **Test files created:** None. Foram criados dados de teste via API.
+-   **Known regressions:** A instabilidade do scraper da Prio continua a ser um risco.
 
 **Credentials to test flow:**
 -   **App Admin User:**  / 
 -   **App Partner User (Zeny):**  / 
 
 **What agent forgot to execute**
--   O agente não teve tempo de implementar os novos requisitos da última mensagem do utilizador.
--   As questões de longa data sobre a automação RPA (Prio) não foram abordadas.</analysis>
+-   O agente não concluiu a movimentação dos itens de menu, que era a última tarefa solicitada pelo utilizador.
+-   O agente não abordou a falta de um botão na UI para gerar o relatório PDF, apesar de ter identificado o problema.
+-   O agente não resolveu definitivamente o bug de seleção do parceiro na página de Preços Especiais, marcando-o como um problema de ferramenta de teste sem confirmação.
+-   O agente não integrou os novos componentes de  no componente principal, deixando a tarefa de refatoração incompleta.</analysis>
