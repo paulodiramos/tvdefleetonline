@@ -1,8 +1,8 @@
 """
 Backend tests for KM Management and Preços Especiais features
-- GET /api/veiculos/{id}/historico-km - Returns KM history
-- PUT /api/veiculos/{id}/atualizar-km - Update vehicle KM
-- POST /api/gestao/planos/{id}/precos-especiais - Create special price for partner
+- GET /api/vehicles/{id}/historico-km - Returns KM history
+- PUT /api/vehicles/{id}/atualizar-km - Update vehicle KM
+- POST /api/gestao-planos/planos/{id}/precos-especiais - Create special price for partner
 """
 import pytest
 import requests
@@ -70,7 +70,7 @@ class TestKmHistorico:
     @pytest.fixture(scope="class")
     def test_vehicle_id(self, admin_token):
         """Get a test vehicle ID"""
-        response = requests.get(f"{BASE_URL}/api/veiculos", 
+        response = requests.get(f"{BASE_URL}/api/vehicles", 
                                headers={"Authorization": f"Bearer {admin_token}"})
         if response.status_code == 200:
             vehicles = response.json()
@@ -79,12 +79,12 @@ class TestKmHistorico:
         return None
     
     def test_historico_km_endpoint_exists(self, admin_token, test_vehicle_id):
-        """Test GET /api/veiculos/{id}/historico-km returns proper response"""
+        """Test GET /api/vehicles/{id}/historico-km returns proper response"""
         if not test_vehicle_id:
             pytest.skip("No test vehicle available")
         
         response = requests.get(
-            f"{BASE_URL}/api/veiculos/{test_vehicle_id}/historico-km",
+            f"{BASE_URL}/api/vehicles/{test_vehicle_id}/historico-km",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
@@ -95,7 +95,7 @@ class TestKmHistorico:
     def test_historico_km_invalid_vehicle(self, admin_token):
         """Test historico-km with invalid vehicle returns 404"""
         response = requests.get(
-            f"{BASE_URL}/api/veiculos/invalid-vehicle-id-123/historico-km",
+            f"{BASE_URL}/api/vehicles/invalid-vehicle-id-123/historico-km",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 404, f"Expected 404, got {response.status_code}"
@@ -106,7 +106,7 @@ class TestKmHistorico:
             pytest.skip("No test vehicle available")
         
         response = requests.get(
-            f"{BASE_URL}/api/veiculos/{test_vehicle_id}/historico-km",
+            f"{BASE_URL}/api/vehicles/{test_vehicle_id}/historico-km",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 200
@@ -137,7 +137,7 @@ class TestAtualizarKm:
     @pytest.fixture(scope="class")
     def test_vehicle_id(self, admin_token):
         """Get a test vehicle ID"""
-        response = requests.get(f"{BASE_URL}/api/veiculos", 
+        response = requests.get(f"{BASE_URL}/api/vehicles", 
                                headers={"Authorization": f"Bearer {admin_token}"})
         if response.status_code == 200:
             vehicles = response.json()
@@ -146,13 +146,13 @@ class TestAtualizarKm:
         return None
     
     def test_atualizar_km_endpoint_exists(self, admin_token, test_vehicle_id):
-        """Test PUT /api/veiculos/{id}/atualizar-km endpoint exists and works"""
+        """Test PUT /api/vehicles/{id}/atualizar-km endpoint exists and works"""
         if not test_vehicle_id:
             pytest.skip("No test vehicle available")
         
         test_km = 85000 + int(uuid.uuid4().int % 1000)  # Random KM to avoid conflicts
         response = requests.put(
-            f"{BASE_URL}/api/veiculos/{test_vehicle_id}/atualizar-km",
+            f"{BASE_URL}/api/vehicles/{test_vehicle_id}/atualizar-km",
             json={
                 "km_atual": test_km,
                 "fonte": "manual",
@@ -170,7 +170,7 @@ class TestAtualizarKm:
         
         # First, get current history count
         history_response = requests.get(
-            f"{BASE_URL}/api/veiculos/{test_vehicle_id}/historico-km",
+            f"{BASE_URL}/api/vehicles/{test_vehicle_id}/historico-km",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         initial_count = len(history_response.json()) if history_response.status_code == 200 else 0
@@ -178,7 +178,7 @@ class TestAtualizarKm:
         # Update KM
         test_km = 90000 + int(uuid.uuid4().int % 1000)
         update_response = requests.put(
-            f"{BASE_URL}/api/veiculos/{test_vehicle_id}/atualizar-km",
+            f"{BASE_URL}/api/vehicles/{test_vehicle_id}/atualizar-km",
             json={
                 "km_atual": test_km,
                 "fonte": "inspecao",
@@ -190,7 +190,7 @@ class TestAtualizarKm:
         
         # Check history increased
         history_response = requests.get(
-            f"{BASE_URL}/api/veiculos/{test_vehicle_id}/historico-km",
+            f"{BASE_URL}/api/vehicles/{test_vehicle_id}/historico-km",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         new_count = len(history_response.json()) if history_response.status_code == 200 else 0
@@ -209,28 +209,13 @@ class TestAtualizarKm:
             pytest.skip("No test vehicle available")
         
         response = requests.put(
-            f"{BASE_URL}/api/veiculos/{test_vehicle_id}/atualizar-km",
+            f"{BASE_URL}/api/vehicles/{test_vehicle_id}/atualizar-km",
             json={
                 "fonte": "manual"
             },
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 400, f"Expected 400, got {response.status_code}"
-    
-    def test_simple_km_endpoint_doesnt_exist(self, admin_token, test_vehicle_id):
-        """Test PUT /api/veiculos/{id}/km returns 404/405 (endpoint doesn't exist)"""
-        if not test_vehicle_id:
-            pytest.skip("No test vehicle available")
-        
-        response = requests.put(
-            f"{BASE_URL}/api/veiculos/{test_vehicle_id}/km",
-            json={"km_atual": 50000},
-            headers={"Authorization": f"Bearer {admin_token}"}
-        )
-        # If this returns 404 or 405, the frontend is using wrong endpoint!
-        if response.status_code in [404, 405, 422]:
-            print(f"WARNING: /km endpoint returns {response.status_code} - frontend uses wrong endpoint!")
-        assert response.status_code in [200, 404, 405, 422], f"Got unexpected status: {response.status_code}"
 
 
 class TestPrecosEspeciais:
@@ -258,7 +243,7 @@ class TestPrecosEspeciais:
     @pytest.fixture(scope="class")
     def plano_id(self, admin_token):
         """Get a plano ID"""
-        response = requests.get(f"{BASE_URL}/api/gestao/planos",
+        response = requests.get(f"{BASE_URL}/api/gestao-planos/planos",
                                headers={"Authorization": f"Bearer {admin_token}"})
         if response.status_code == 200:
             planos = response.json()
@@ -267,8 +252,8 @@ class TestPrecosEspeciais:
         return None
     
     def test_get_planos_endpoint(self, admin_token):
-        """Test GET /api/gestao/planos works"""
-        response = requests.get(f"{BASE_URL}/api/gestao/planos",
+        """Test GET /api/gestao-planos/planos works"""
+        response = requests.get(f"{BASE_URL}/api/gestao-planos/planos",
                                headers={"Authorization": f"Bearer {admin_token}"})
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         data = response.json()
@@ -285,14 +270,14 @@ class TestPrecosEspeciais:
         print(f"Found {len(data)} parceiros")
     
     def test_criar_preco_especial(self, admin_token, plano_id, parceiro_id):
-        """Test POST /api/gestao/planos/{id}/precos-especiais creates special price"""
+        """Test POST /api/gestao-planos/planos/{id}/precos-especiais creates special price"""
         if not plano_id:
             pytest.skip("No plano available")
         if not parceiro_id:
             pytest.skip("No parceiro available")
         
         response = requests.post(
-            f"{BASE_URL}/api/gestao/planos/{plano_id}/precos-especiais",
+            f"{BASE_URL}/api/gestao-planos/planos/{plano_id}/precos-especiais",
             json={
                 "parceiro_id": parceiro_id,
                 "tipo_desconto": "percentagem",
@@ -313,7 +298,7 @@ class TestPrecosEspeciais:
             pytest.skip("No parceiro available")
         
         response = requests.post(
-            f"{BASE_URL}/api/gestao/planos/{plano_id}/precos-especiais",
+            f"{BASE_URL}/api/gestao-planos/planos/{plano_id}/precos-especiais",
             json={
                 "parceiro_id": parceiro_id,
                 "tipo_desconto": "valor_fixo",
@@ -332,7 +317,7 @@ class TestPrecosEspeciais:
             pytest.skip("No plano available")
         
         response = requests.post(
-            f"{BASE_URL}/api/gestao/planos/{plano_id}/precos-especiais",
+            f"{BASE_URL}/api/gestao-planos/planos/{plano_id}/precos-especiais",
             json={
                 "tipo_desconto": "percentagem",
                 "valor_desconto": 10
@@ -347,7 +332,7 @@ class TestPrecosEspeciais:
             pytest.skip("No parceiro available")
         
         response = requests.post(
-            f"{BASE_URL}/api/gestao/planos/invalid-plano-id/precos-especiais",
+            f"{BASE_URL}/api/gestao-planos/planos/invalid-plano-id/precos-especiais",
             json={
                 "parceiro_id": parceiro_id,
                 "tipo_desconto": "percentagem",
@@ -365,7 +350,3 @@ class TestPrecosEspeciais:
         print(f"GET /api/admin/precos-especiais returned {response.status_code}")
         # Either 200 (exists) or 404 (fallback will be used)
         assert response.status_code in [200, 404], f"Unexpected status: {response.status_code}"
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--tb=short"])
