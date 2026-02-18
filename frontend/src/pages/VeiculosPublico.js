@@ -182,11 +182,16 @@ const VeiculosPublico = () => {
               <Card key={veiculo.id} className="hover:shadow-xl transition">
                 {veiculo.fotos_veiculo && veiculo.fotos_veiculo.length > 0 ? (
                   <img
-                    src={veiculo.fotos_veiculo[0]}
+                    src={getPhotoUrl(veiculo.fotos_veiculo[0])}
                     alt={`${veiculo.marca} ${veiculo.modelo}`}
                     className="w-full h-48 object-cover rounded-t-lg"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                    }}
                   />
-                ) : (
+                ) : null}
+                {(!veiculo.fotos_veiculo || veiculo.fotos_veiculo.length === 0) && (
                   <div className="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 rounded-t-lg flex items-center justify-center">
                     <Car className="w-20 h-20 text-slate-400" />
                   </div>
