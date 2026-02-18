@@ -46,6 +46,10 @@ TICKET_CATEGORIES = [
     "contrato",
     "acidente",
     "avaria",
+    "revisao",
+    "multas",
+    "seguro",
+    "manutencao",
     "outro"
 ]
 
@@ -66,7 +70,10 @@ class TicketCreate(BaseModel):
     categoria: str
     descricao: str
     prioridade: Optional[str] = "normal"  # baixa, normal, alta, urgente
-    destinatario_tipo: Optional[str] = "admin"  # admin, gestor, parceiro
+    destinatario_tipo: Optional[str] = "admin"  # admin, gestor, parceiro, motorista
+    destinatario_id: Optional[str] = None  # ID específico do destinatário
+    veiculo_id: Optional[str] = None  # ID do veículo afetado
+    motorista_id: Optional[str] = None  # ID do motorista afetado
     fotos: Optional[List[FotoBase64]] = []
 
 
