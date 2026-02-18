@@ -4,11 +4,14 @@ Permite exportar e importar TODOS os dados do sistema
 """
 
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 from pydantic import BaseModel
+from bson import ObjectId
 import logging
 import uuid
+import json
 
 from utils.database import get_database
 from utils.auth import get_current_user
@@ -16,6 +19,21 @@ from utils.auth import get_current_user
 router = APIRouter(prefix="/backup", tags=["Backup"])
 logger = logging.getLogger(__name__)
 db = get_database()
+
+
+def convert_objectid(obj):
+    """Converter ObjectId e outros tipos não serializáveis para JSON"""
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {k: convert_objectid(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_objectid(item) for item in obj]
+    elif isinstance(obj, bytes):
+        return obj.decode('utf-8', errors='ignore')
+    return obj
 
 
 # Lista de todas as coleções importantes para backup
