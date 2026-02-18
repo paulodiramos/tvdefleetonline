@@ -79,6 +79,49 @@ async def get_all_users(current_user: Dict = Depends(get_current_user)):
     return users
 
 
+@router.get("/users/{user_id}")
+async def get_user_by_id(user_id: str, current_user: Dict = Depends(get_current_user)):
+    """Obter dados de um utilizador específico"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    user = await db.users.find_one(
+        {"id": user_id},
+        {"_id": 0, "password": 0}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    # Enrich with additional data
+    if user.get("role") == "parceiro":
+        parceiro = await db.parceiros.find_one(
+            {"$or": [{"id": user["id"]}, {"email": user.get("email")}]},
+            {"_id": 0, "nome_empresa": 1}
+        )
+        if parceiro:
+            user["parceiro_name"] = parceiro.get("nome_empresa")
+    
+    if user.get("role") == "motorista":
+        motorista = await db.motoristas.find_one(
+            {"$or": [{"id": user["id"]}, {"email": user.get("email")}]},
+            {"_id": 0, "parceiro_id": 1}
+        )
+        if motorista:
+            user["parceiro_id"] = motorista.get("parceiro_id")
+            # Get partner name
+            if motorista.get("parceiro_id"):
+                parceiro = await db.parceiros.find_one(
+                    {"id": motorista["parceiro_id"]},
+                    {"_id": 0, "nome_empresa": 1, "name": 1}
+                )
+                if parceiro:
+                    user["parceiro_name"] = parceiro.get("nome_empresa") or parceiro.get("name")
+    
+    return user
+
+
+
 @router.put("/users/{user_id}/approve")
 async def approve_user(
     user_id: str,
