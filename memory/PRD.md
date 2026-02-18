@@ -749,27 +749,24 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
 
 ## Changelog - 2026-02-18 (Sessão Actual)
 
+### Novas Funcionalidades
+1. **Popup Seleção Empresa de Faturação** (PagamentosParceiro.js)
+   - Ao confirmar pagamento, se existirem múltiplas empresas ativas, abre popup
+   - Permite associar o valor a uma empresa específica
+   - Se só uma empresa, usa automaticamente
+
 ### Corrigido
-1. **Bug Preços Especiais** - Endpoints faltavam prefixo `/api/`:
-   - `/gestao-planos/planos` → `/api/gestao-planos/planos`
-   - `/uber/admin/parceiros` → `/api/uber/admin/parceiros`
-   - Parceiros e planos agora carregam correctamente no formulário
+1. **Bug Preços Especiais** - Endpoints faltavam prefixo `/api/`
+2. **Novos Tipos de Preço Especial**: Percentagem, Fixo Total, Fixo/Veículo, Fixo/Motorista, Fixo/Motorista+Veículo
+3. **Persistência de Sessão RPA Prio**: Sessão guardada em ficheiro
 
-2. **Novos Tipos de Preço Especial**:
-   - Percentagem de Desconto
-   - Preço Fixo Total
-   - Preço Fixo por Veículo
-   - Preço Fixo por Motorista
-   - Preço Fixo por Motorista + Veículo
-
-3. **Persistência de Sessão RPA Prio**:
-   - Adicionada funcionalidade `guardar_sessao()` e `verificar_login()`
-   - Sessão agora é guardada em `/tmp/prio_sessao_{parceiro_id}.json`
-   - Reduz necessidade de re-autenticação entre sincronizações
+### App Mobile Android
+- **Localização**: `/app/mobile/tvdefleet-drivers/`
+- **Funcionalidades**: Login, Relógio de Ponto (GPS), Check-in/Check-out
+- **API configurada para**: `https://tvdefleet.com/api`
+- **Guias criados**:
+  - `GUIA_INSTALACAO.md` - Como testar com Expo Go
+  - `GUIA_PLAYSTORE.md` - Como gerar APK e publicar na Play Store
 
 ### Refatoração Iniciada
-- **FichaVeiculo.js** - Criados componentes extraídos:
-  - `components/veiculo/VeiculoSeguro.js`
-  - `components/veiculo/VeiculoInspecao.js`
-  - `components/veiculo/VeiculoExtintor.js`
-  - Faltam ~10 componentes para completar refatoração
+- **FichaVeiculo.js** - 3 componentes extraídos para `/components/veiculo/`
