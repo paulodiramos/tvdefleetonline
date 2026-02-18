@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   FileText, Download, Upload, Calendar, User, Euro, 
   Filter, ChevronLeft, ChevronRight, CheckCircle, Clock, 
-  CreditCard, Eye, Loader2, Wallet, BanknoteIcon
+  CreditCard, Eye, Loader2, Wallet, BanknoteIcon, Building2
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -25,6 +26,11 @@ const PagamentosParceiro = ({ user, onLogout }) => {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showConfirmLiquidar, setShowConfirmLiquidar] = useState(null);
+  
+  // Estado para empresas de faturação
+  const [empresasFaturacao, setEmpresasFaturacao] = useState([]);
+  const [showEmpresaModal, setShowEmpresaModal] = useState(null);
+  const [selectedEmpresa, setSelectedEmpresa] = useState('');
 
   useEffect(() => {
     const now = new Date();
