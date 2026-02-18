@@ -23,7 +23,7 @@ class TestAuthentication:
             "password": "Admin123!"
         })
         assert response.status_code == 200, f"Admin login failed: {response.text}"
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     @pytest.fixture(scope="class")
     def parceiro_token(self):
@@ -33,7 +33,7 @@ class TestAuthentication:
             "password": "Admin123!"
         })
         assert response.status_code == 200, f"Parceiro login failed: {response.text}"
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_admin_login(self, admin_token):
         """Verify admin login works"""
