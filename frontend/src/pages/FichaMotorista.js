@@ -2822,6 +2822,246 @@ const FichaMotorista = ({ user }) => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Tab Histórico */}
+          <TabsContent value="historico" className="space-y-4">
+            {historicoLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              </div>
+            ) : (
+              <>
+                {/* Estado Atual */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Estado Atual
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4">
+                      <Badge 
+                        className={motorista?.ativo !== false ? 'bg-green-500' : 'bg-red-500'}
+                        data-testid="badge-estado-ativo"
+                      >
+                        {motorista?.ativo !== false ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                      {motorista?.bloqueado && (
+                        <Badge variant="destructive" data-testid="badge-estado-bloqueado">
+                          Bloqueado
+                        </Badge>
+                      )}
+                      {motorista?.data_ativacao && (
+                        <span className="text-sm text-gray-500">
+                          Ativado em: {motorista.data_ativacao}
+                        </span>
+                      )}
+                      {motorista?.data_desativacao && (
+                        <span className="text-sm text-gray-500">
+                          Desativado em: {motorista.data_desativacao}
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Histórico de Atividade */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <History className="w-5 h-5" />
+                      Histórico de Atividade
+                    </CardTitle>
+                    <CardDescription>
+                      Registo de ativações, desativações e bloqueios
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {historicoAtividade.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">
+                        Sem registos de atividade
+                      </p>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Tipo</TableHead>
+                            <TableHead>Motivo</TableHead>
+                            <TableHead>Registado por</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {historicoAtividade.map((entrada, index) => (
+                            <TableRow key={entrada.id || index}>
+                              <TableCell>
+                                {entrada.data ? new Date(entrada.data).toLocaleDateString('pt-PT', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                }) : '-'}
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={
+                                    entrada.tipo === 'ativado' || entrada.tipo === 'desbloqueado' 
+                                      ? 'default' 
+                                      : 'destructive'
+                                  }
+                                  className={
+                                    entrada.tipo === 'ativado' || entrada.tipo === 'desbloqueado'
+                                      ? 'bg-green-500'
+                                      : ''
+                                  }
+                                >
+                                  {entrada.tipo?.charAt(0).toUpperCase() + entrada.tipo?.slice(1)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate">
+                                {entrada.motivo || '-'}
+                              </TableCell>
+                              <TableCell>{entrada.registado_por_nome || '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Histórico de Rendimentos */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5" />
+                          Histórico de Rendimentos
+                        </CardTitle>
+                        <CardDescription>
+                          Resumo semanal de ganhos e pagamentos
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setHistoricoAno(prev => prev - 1)}
+                          data-testid="btn-ano-anterior"
+                        >
+                          &lt;
+                        </Button>
+                        <span className="font-semibold px-2">{historicoAno}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setHistoricoAno(prev => prev + 1)}
+                          disabled={historicoAno >= new Date().getFullYear()}
+                          data-testid="btn-ano-seguinte"
+                        >
+                          &gt;
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Resumo */}
+                    {historicoRendimentos?.resumo && (
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="bg-blue-50 p-4 rounded-lg text-center">
+                          <p className="text-sm text-blue-600">Semanas</p>
+                          <p className="text-2xl font-bold text-blue-700">
+                            {historicoRendimentos.resumo.total_semanas || 0}
+                          </p>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-lg text-center">
+                          <p className="text-sm text-green-600">Total Líquido</p>
+                          <p className="text-2xl font-bold text-green-700">
+                            {(historicoRendimentos.resumo.total_liquido || 0).toLocaleString('pt-PT', {
+                              style: 'currency',
+                              currency: 'EUR'
+                            })}
+                          </p>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg text-center">
+                          <p className="text-sm text-purple-600">Média Semanal</p>
+                          <p className="text-2xl font-bold text-purple-700">
+                            {(historicoRendimentos.resumo.media_semanal || 0).toLocaleString('pt-PT', {
+                              style: 'currency',
+                              currency: 'EUR'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tabela de rendimentos */}
+                    {(!historicoRendimentos?.rendimentos || historicoRendimentos.rendimentos.length === 0) ? (
+                      <p className="text-gray-500 text-center py-4">
+                        Sem registos de rendimentos para {historicoAno}
+                      </p>
+                    ) : (
+                      <div className="max-h-[400px] overflow-y-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Semana</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">Uber</TableHead>
+                              <TableHead className="text-right">Bolt</TableHead>
+                              <TableHead className="text-right">Aluguer</TableHead>
+                              <TableHead className="text-right">Líquido</TableHead>
+                              <TableHead>Empresa</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {historicoRendimentos.rendimentos.map((r, index) => (
+                              <TableRow key={`${r.ano}-${r.semana}-${index}`}>
+                                <TableCell className="font-medium">
+                                  S{r.semana}/{r.ano}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge 
+                                    variant="outline"
+                                    className={
+                                      r.status === 'pago' ? 'border-green-500 text-green-600' :
+                                      r.status === 'a_pagamento' ? 'border-blue-500 text-blue-600' :
+                                      r.status === 'aprovado' ? 'border-yellow-500 text-yellow-600' :
+                                      'border-gray-400 text-gray-500'
+                                    }
+                                  >
+                                    {r.status || 'pendente'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {(r.uber || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {(r.bolt || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €
+                                </TableCell>
+                                <TableCell className="text-right text-red-600">
+                                  -{(r.aluguer || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €
+                                </TableCell>
+                                <TableCell className="text-right font-semibold">
+                                  {(r.valor_liquido || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €
+                                </TableCell>
+                                <TableCell className="text-xs text-gray-500">
+                                  {r.empresa_faturacao?.nome || '-'}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>
