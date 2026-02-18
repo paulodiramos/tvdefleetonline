@@ -5066,6 +5066,7 @@ async def upload_recibo_motorista(
     motorista_id: str,
     semana: int,
     ano: int,
+    empresa_faturacao_id: Optional[str] = None,
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
@@ -5083,6 +5084,17 @@ async def upload_recibo_motorista(
     if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
         if motorista.get("parceiro_id") != current_user["id"] and motorista.get("parceiro_atribuido") != current_user["id"]:
             raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Verificar empresa de faturação se fornecida
+    empresa_faturacao_info = None
+    if empresa_faturacao_id:
+        empresa = await db.empresas_faturacao.find_one({"id": empresa_faturacao_id}, {"_id": 0})
+        if empresa:
+            empresa_faturacao_info = {
+                "id": empresa.get("id"),
+                "nome": empresa.get("nome"),
+                "nipc": empresa.get("nipc")
+            }
     
     # Salvar arquivo
     upload_dir = Path("/app/uploads/recibos")
@@ -5105,6 +5117,8 @@ async def upload_recibo_motorista(
         "status_aprovacao": "a_pagamento",
         "recibo_path": str(file_path),
         "recibo_filename": file.filename,
+        "empresa_faturacao_id": empresa_faturacao_id,
+        "empresa_faturacao_info": empresa_faturacao_info,
         "data_recibo_uploaded": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "updated_by": current_user["id"]
@@ -5116,12 +5130,13 @@ async def upload_recibo_motorista(
         upsert=True
     )
     
-    logger.info(f"Recibo uploaded para {motorista.get('name')} S{semana}/{ano}")
+    logger.info(f"Recibo uploaded para {motorista.get('name')} S{semana}/{ano} - Empresa: {empresa_faturacao_info.get('nome') if empresa_faturacao_info else 'N/A'}")
     
     return {
         "message": "Recibo uploaded com sucesso",
         "filename": filename,
-        "status": "a_pagamento"
+        "status": "a_pagamento",
+        "empresa_faturacao": empresa_faturacao_info
     }
 
 
