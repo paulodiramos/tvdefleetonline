@@ -485,6 +485,19 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                       {getRoleBadge(usuario.role)}
                     </td>
                     <td className="p-4">
+                      {usuario.role === 'motorista' && (usuario.associated_partner_id || usuario.parceiro_id) ? (
+                        <span className="text-sm text-slate-600">
+                          {parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.nome_empresa || 
+                           parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.name || 
+                           'Parceiro'}
+                        </span>
+                      ) : usuario.role === 'motorista' ? (
+                        <span className="text-sm text-amber-600">Sem parceiro</span>
+                      ) : (
+                        <span className="text-sm text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="p-4">
                       {getStatusBadge(usuario)}
                     </td>
                     <td className="p-4">
