@@ -404,8 +404,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
         via_verde_id: vehicle.via_verde_id || null,
         cartao_frota_id: vehicle.cartao_frota_id || null,
         cartao_frota_eletric_id: vehicle.cartao_frota_eletric_id || null,
-        // Múltiplos cartões elétricos
+        // Múltiplos cartões elétricos (6 fornecedores)
         cartao_prio_eletric: vehicle.cartao_prio_eletric || null,
+        cartao_prio_online: vehicle.cartao_prio_online || null,
         cartao_mio: vehicle.cartao_mio || null,
         cartao_galp: vehicle.cartao_galp || null,
         cartao_atlante: vehicle.cartao_atlante || null,
