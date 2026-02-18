@@ -38,6 +38,25 @@ const PagamentosParceiro = ({ user, onLogout }) => {
     const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
     const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
     setSemana(currentWeek);
+    
+    // Carregar empresas de faturação
+    fetchEmpresasFaturacao();
+  }, []);
+  
+  // Carregar empresas de faturação ativas
+  const fetchEmpresasFaturacao = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/api/empresas-faturacao/`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Filtrar apenas empresas ativas
+      const ativas = (response.data || []).filter(e => e.ativa !== false);
+      setEmpresasFaturacao(ativas);
+    } catch (error) {
+      console.error('Erro ao carregar empresas de faturação:', error);
+    }
   }, []);
 
   useEffect(() => {
