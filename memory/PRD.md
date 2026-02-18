@@ -577,3 +577,41 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
   - `POST /api/admin/corrigir-caminhos-fotos` - Corrige paths sem `/` inicial
   - `POST /api/admin/reindexar-fotos-veiculos` - Reindexa fotos válidas do filesystem
 
+
+
+#### 27. Sistema de Empresas de Faturação ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Permite que parceiros definam múltiplas entidades para emissão de recibos
+- **Backend CRUD completo:**
+  - `GET /api/empresas-faturacao/` - Listar empresas (parceiro vê as suas, admin vê todas)
+  - `POST /api/empresas-faturacao/` - Criar nova empresa com validação NIPC (9 dígitos)
+  - `GET /api/empresas-faturacao/{id}` - Obter detalhes de uma empresa
+  - `PUT /api/empresas-faturacao/{id}` - Atualizar empresa, definir como principal
+  - `DELETE /api/empresas-faturacao/{id}` - Eliminar empresa (só se sem recibos associados)
+  - `GET /api/empresas-faturacao/dashboard/totais-ano` - Dashboard de totais anuais por empresa
+- **Frontend:**
+  - Nova página `/empresas-faturacao` com tabela, modal de criar/editar/eliminar
+  - Badge "Principal" para empresa por defeito
+  - Menu acessível: User Menu → Empresas de Faturação
+- **Integração com Upload de Recibos:**
+  - No Resumo Semanal, ao mudar status para "Aguardar Recibo", abre dialog com seletor de empresa
+  - Upload de recibo guarda `empresa_faturacao_id` e `empresa_faturacao_info` em `status_relatorios`
+- **Schema MongoDB (empresas_faturacao):**
+  ```json
+  {
+    "id": "uuid",
+    "parceiro_id": "uuid",
+    "nome": "Nome da Empresa Lda",
+    "nipc": "123456789",
+    "morada": "string",
+    "codigo_postal": "0000-000",
+    "cidade": "string",
+    "email": "string",
+    "telefone": "string",
+    "iban": "string",
+    "ativa": true,
+    "principal": false,
+    "created_at": "datetime",
+    "created_by": "uuid"
+  }
+  ```
