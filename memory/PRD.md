@@ -630,3 +630,28 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
 - **Biblioteca de gráficos:** Recharts (instalado)
 - **Menu acessível:** User Menu → Dashboard Faturação (ícone TrendingUp)
 
+#### 29. Histórico do Motorista ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Secção na ficha do motorista mostrando histórico de ativações e rendimentos
+- **Novos endpoints backend:**
+  - `GET /api/motoristas/{id}/historico-atividade` - Histórico de bloqueios/ativações com estado_atual
+  - `GET /api/motoristas/{id}/historico-rendimentos?ano=X&limite=Y` - Rendimentos semanais com resumo
+  - `POST /api/motoristas/{id}/registar-atividade` - Registo manual de atividade
+- **Nova colecção MongoDB:** `historico_atividade_motoristas`
+- **Frontend - Nova tab "Histórico":**
+  - Card "Estado Atual" com badges Ativo/Inativo/Bloqueado
+  - Tabela "Histórico de Atividade" (Data, Tipo, Motivo, Registado por)
+  - "Histórico de Rendimentos" com seletor de ano, cards de resumo (Semanas, Total Líquido, Média) e tabela de rendimentos semanais
+- **Integração automática:** Bloqueio/Desbloqueio e Ativação/Desativação registam automaticamente no histórico
+
+#### 30. Filtro de Motoristas por Atividade no Resumo Semanal ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** O resumo semanal agora filtra motoristas com base no estado de atividade durante a semana selecionada
+- **Lógica implementada (relatorios.py linhas 845-893):**
+  - Motorista ativo → sempre incluído
+  - Motorista ativado DEPOIS do fim da semana → excluído
+  - Motorista desativado DURANTE ou DEPOIS da semana → incluído (trabalhou naquela semana)
+  - Motorista desativado ANTES do início da semana → excluído
+  - Motorista inativo sem data mas com dados na semana → incluído
+
+
