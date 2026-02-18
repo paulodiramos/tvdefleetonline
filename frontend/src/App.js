@@ -1089,6 +1089,16 @@ function App() {
             }
           />
           <Route
+            path="/empresas-faturacao"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin') ? (
+                <EmpresasFaturacao user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/terabox"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
