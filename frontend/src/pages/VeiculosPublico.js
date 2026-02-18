@@ -6,46 +6,119 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Car, ArrowLeft, Filter, Euro, Calendar, Fuel, Users, Mail, Phone } from 'lucide-react';
+import { Car, ArrowLeft, Filter, Euro, Calendar, Fuel, Users, Mail, Phone, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Helper para construir URL de fotos
 const getPhotoUrl = (photoPath) => {
   if (!photoPath) return null;
-  // Se já é uma URL completa
   if (photoPath.startsWith('http')) return photoPath;
-  // Converter /uploads/ para /api/uploads/ para routing correcto
   if (photoPath.startsWith('/uploads/')) {
     return `${API.replace('/api', '')}/api${photoPath}`;
   }
-  // Se começa com /api já está correcto
   if (photoPath.startsWith('/api/')) {
     return `${API.replace('/api', '')}${photoPath}`;
   }
-  // Senão, adiciona /api/uploads/
   if (photoPath.startsWith('uploads/')) {
     return `${API.replace('/api', '')}/api/${photoPath}`;
   }
   return `${API.replace('/api', '')}/api/uploads/${photoPath}`;
 };
 
-// Helper para obter primeira foto válida (imagem, não PDF)
-const getFirstValidPhoto = (fotos) => {
-  if (!fotos || fotos.length === 0) return null;
+// Helper para obter todas as fotos válidas (imagens, não PDF)
+const getValidPhotos = (fotos) => {
+  if (!fotos || fotos.length === 0) return [];
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  const validPhotos = [];
+  
   for (const foto of fotos) {
     const lowerFoto = foto.toLowerCase();
     if (imageExtensions.some(ext => lowerFoto.endsWith(ext))) {
-      return getPhotoUrl(foto);
+      validPhotos.push(getPhotoUrl(foto));
     }
   }
-  // Se não houver imagem, verifica se há _original antes do .pdf
-  for (const foto of fotos) {
-    if (foto.includes('_original')) {
-      return getPhotoUrl(foto);
-    }
+  
+  return validPhotos;
+};
+
+// Componente de Carrossel de Fotos
+const PhotoCarousel = ({ photos, altText }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  if (!photos || photos.length === 0) {
+    return (
+      <div className="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 rounded-t-lg flex items-center justify-center">
+        <Car className="w-20 h-20 text-slate-400" />
+      </div>
+    );
   }
-  return null;
+  
+  const goToNext = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % photos.length);
+  };
+  
+  const goToPrev = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length);
+  };
+  
+  return (
+    <div className="relative w-full h-48 group">
+      <img
+        src={photos[currentIndex]}
+        alt={`${altText} - Foto ${currentIndex + 1}`}
+        className="w-full h-48 object-cover rounded-t-lg"
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = '';
+          e.target.parentElement.innerHTML = '<div class="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 rounded-t-lg flex items-center justify-center"><svg class="w-20 h-20 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/></svg></div>';
+        }}
+      />
+      
+      {/* Controlos do carrossel - só mostrar se houver mais de 1 foto */}
+      {photos.length > 1 && (
+        <>
+          <button
+            onClick={goToPrev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+            data-testid="carousel-prev"
+          >
+            <ChevronLeft className="w-5 h-5 text-slate-700" />
+          </button>
+          
+          <button
+            onClick={goToNext}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+            data-testid="carousel-next"
+          >
+            <ChevronRight className="w-5 h-5 text-slate-700" />
+          </button>
+          
+          {/* Indicadores de posição */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1.5">
+            {photos.map((_, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(index);
+                }}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentIndex ? 'bg-white' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+          
+          {/* Contador */}
+          <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+            {currentIndex + 1}/{photos.length}
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
 
 const VeiculosPublico = () => {
