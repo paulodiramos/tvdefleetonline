@@ -1822,7 +1822,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 <GestaoKmVeiculo 
                   veiculoId={vehicleId}
                   veiculo={vehicle}
-                  onUpdate={fetchVehicle}
+                  onUpdate={fetchVehicleData}
                   canEdit={canEdit}
                 />
               </div>
