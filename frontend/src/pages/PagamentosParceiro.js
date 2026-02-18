@@ -458,7 +458,7 @@ const PagamentosParceiro = ({ user, onLogout }) => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => setShowConfirmLiquidar(pagamento)}
+                                  onClick={() => handleIniciarLiquidacao(pagamento)}
                                   className="border-green-500 text-green-700 hover:bg-green-50"
                                   data-testid={`confirmar-pagamento-${pagamento.motorista_id}`}
                                 >
@@ -469,7 +469,7 @@ const PagamentosParceiro = ({ user, onLogout }) => {
                             ) : (
                               <Button
                                 size="sm"
-                                onClick={() => setShowConfirmLiquidar(pagamento)}
+                                onClick={() => handleIniciarLiquidacao(pagamento)}
                                 className="bg-green-600 hover:bg-green-700"
                                 data-testid={`liquidar-${pagamento.motorista_id}`}
                               >
