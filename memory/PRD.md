@@ -654,4 +654,34 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
   - Motorista desativado ANTES do início da semana → excluído
   - Motorista inativo sem data mas com dados na semana → incluído
 
+#### 31. Gestão de Quilometragem dos Veículos ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Componente dedicado para gestão de KM na ficha do veículo
+- **Novo componente:** `GestaoKmVeiculo.js` integrado em `FichaVeiculo.js`
+- **Funcionalidades:**
+  - Exibição de KM Inicial, KM Atual, KM Percorrido
+  - Botão "Atualizar KM" com modal (novo KM, fonte, notas)
+  - Fontes disponíveis: Manual, GPS/Tracking, Inspeção, Revisão, Manutenção, Vistoria
+  - Botão "Histórico" abre modal com tabela de atualizações
+  - Alertas de proximidade de revisão
+- **Endpoints backend:**
+  - `GET /api/vehicles/{id}/historico-km` - Lista histórico de KM
+  - `PUT /api/vehicles/{id}/atualizar-km` - Atualiza KM e regista no histórico
+- **Colecção MongoDB:** `historico_km`
+
+#### 32. Página de Preços Especiais para Admin ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Página para o admin configurar descontos e preços especiais para parceiros
+- **Nova página:** `/admin/precos-especiais` (`PrecosEspeciais.js`)
+- **Funcionalidades:**
+  - Lista de preços especiais existentes com filtro de pesquisa
+  - Modal para criar novo preço especial
+  - Seleção de parceiro e plano
+  - Tipos de desconto: Percentagem ou Valor Fixo
+  - Configuração de validade (início/fim)
+  - Toggle de ativo/inativo
+- **Endpoint backend:** `POST /api/gestao-planos/planos/{id}/precos-especiais`
+- **Menu acessível:** Admin Menu → Preços Especiais
+
+
 
