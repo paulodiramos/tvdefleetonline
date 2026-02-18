@@ -656,8 +656,9 @@ const FichaMotorista = ({ user }) => {
       fetchDadosPonto();
       fetchTurnos();
       fetchVeiculosDisponiveis();
+      fetchParceiros();
     }
-  }, [motoristaId, fetchMotorista, fetchHistoricoViaVerde, fetchExtras, fetchConfigApp, fetchDadosPonto, fetchTurnos, fetchVeiculosDisponiveis]);
+  }, [motoristaId, fetchMotorista, fetchHistoricoViaVerde, fetchExtras, fetchConfigApp, fetchDadosPonto, fetchTurnos, fetchVeiculosDisponiveis, fetchParceiros]);
 
   const handleSaveDadosMotorista = async () => {
     setSaving(true);
