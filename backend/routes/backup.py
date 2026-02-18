@@ -286,8 +286,13 @@ async def exportar_backup_completo(
             count = await db[colecao].count_documents({})
             if count > 0:
                 # Exportar todos os documentos (excluindo _id do MongoDB)
-                docs = await db[colecao].find({}, {"_id": 0}).to_list(None)
-                backup_data["dados"][colecao] = docs
+                docs = await db[colecao].find({}).to_list(None)
+                # Converter ObjectId e outros tipos
+                docs_clean = []
+                for doc in docs:
+                    doc.pop('_id', None)  # Remover _id
+                    docs_clean.append(convert_objectid(doc))
+                backup_data["dados"][colecao] = docs_clean
                 backup_data["metadados"]["colecoes_exportadas"].append({
                     "nome": colecao,
                     "documentos": count
