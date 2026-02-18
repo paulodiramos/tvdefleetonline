@@ -806,10 +806,7 @@ const Usuarios = ({ user, onLogout }) => {
                   key={regUser.id}
                   data-testid={`user-row-${regUser.id}`}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    setViewingUser(regUser);
-                    setShowDetailsDialog(true);
-                  }}
+                  onClick={() => navigate(`/usuarios/${regUser.id}`)}
                 >
                   {/* Left: Avatar + Info */}
                   <div className="flex items-center space-x-3 flex-1 min-w-0">
