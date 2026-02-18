@@ -383,6 +383,34 @@ const FichaMotorista = ({ user }) => {
     }
   }, [motoristaId]);
 
+  // Funções para histórico de atividade e rendimentos
+  const fetchHistoricoMotorista = useCallback(async (ano = historicoAno) => {
+    setHistoricoLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Buscar histórico de atividade
+      const atividadeResponse = await axios.get(
+        `${API}/api/motoristas/${motoristaId}/historico-atividade`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHistoricoAtividade(atividadeResponse.data?.historico || []);
+      
+      // Buscar histórico de rendimentos
+      const rendimentosResponse = await axios.get(
+        `${API}/api/motoristas/${motoristaId}/historico-rendimentos?ano=${ano}&limite=52`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHistoricoRendimentos(rendimentosResponse.data || { rendimentos: [], resumo: {} });
+      
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+      toast.error('Erro ao carregar histórico do motorista');
+    } finally {
+      setHistoricoLoading(false);
+    }
+  }, [motoristaId, historicoAno]);
+
   // Funções para App Config, Ponto e Turnos
   const fetchConfigApp = useCallback(async () => {
     try {
