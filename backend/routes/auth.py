@@ -387,3 +387,41 @@ async def forgot_password(email_data: Dict):
             "email_sent": False,
             "instructions": "Use esta senha temporária para fazer login."
         }
+
+
+
+@router.post("/admin/users/{user_id}/change-password")
+async def admin_change_user_password(
+    user_id: str,
+    password_data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin changes password for any user"""
+    
+    # Check if current user is admin
+    if current_user.get("role") not in [UserRole.ADMIN, "admin"]:
+        raise HTTPException(status_code=403, detail="Apenas administradores podem alterar senhas de outros utilizadores")
+    
+    new_password = password_data.get("new_password")
+    if not new_password:
+        raise HTTPException(status_code=400, detail="Nova senha é obrigatória")
+    
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Senha deve ter pelo menos 6 caracteres")
+    
+    # Find the user
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    # Hash and update password
+    hashed_password = hash_password(new_password)
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"password": hashed_password, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {
+        "message": f"Senha do utilizador {user.get('name', user.get('email'))} alterada com sucesso",
+        "user_id": user_id
+    }
