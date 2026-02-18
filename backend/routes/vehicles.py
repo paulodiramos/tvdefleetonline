@@ -548,6 +548,37 @@ async def atualizar_km_veiculo(
     }
 
 
+@router.get("/{vehicle_id}/historico-km")
+async def get_historico_km(
+    vehicle_id: str,
+    limite: int = 50,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter histórico de quilometragem do veículo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Veículo não encontrado")
+    
+    # Verificar permissão do parceiro
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        if vehicle.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Veículo pertence a outro parceiro")
+    
+    historico = await db.historico_km.find(
+        {"veiculo_id": vehicle_id}
+    ).sort("data", -1).to_list(limite)
+    
+    # Remover _id do MongoDB
+    for entry in historico:
+        if "_id" in entry:
+            del entry["_id"]
+    
+    return historico
+
+
 @router.post("/{vehicle_id}/upload-foto")
 async def upload_vehicle_photo_alt(
     vehicle_id: str,
