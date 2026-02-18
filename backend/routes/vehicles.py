@@ -182,7 +182,8 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depen
     
     vehicle_dict["manutencoes"] = []
     vehicle_dict["inspecoes"] = []
-    vehicle_dict["km_atual"] = 0
+    vehicle_dict["km_inicial"] = vehicle_dict.get("km_inicial", 0)  # KM inicial para gestão própria
+    vehicle_dict["km_atual"] = vehicle_dict.get("km_atual", vehicle_dict.get("km_inicial", 0))
     vehicle_dict["km_aviso_manutencao"] = 5000
     vehicle_dict["alertas_manutencao"] = []
     vehicle_dict["disponibilidade"] = {
