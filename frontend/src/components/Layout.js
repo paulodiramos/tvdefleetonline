@@ -488,11 +488,6 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>💰 Comissões</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/empresas-faturacao" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-empresas-faturacao">
-                          <span>🏢 Empresas de Faturação</span>
-                        </Link>
-                      </DropdownMenuItem>
                       {itemPermitido('📱 WhatsApp') && (
                         <DropdownMenuItem asChild>
                           <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
