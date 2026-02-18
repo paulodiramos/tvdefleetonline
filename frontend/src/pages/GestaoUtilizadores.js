@@ -471,8 +471,9 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                 {filteredUsers.map((usuario) => (
                   <div 
                     key={usuario.id} 
-                    className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
+                    className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer"
                     data-testid={`user-row-${usuario.id}`}
+                    onClick={() => navigate(`/usuarios/${usuario.id}`)}
                   >
                     {/* Left: Avatar + Name + Email */}
                     <div className="flex items-center space-x-3 min-w-0 flex-1">
