@@ -2034,23 +2034,58 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           <DialogHeader>
             <DialogTitle>Upload de Recibo Verde / Autofaturação</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-slate-600 mb-4">
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-slate-600">
               Envie o recibo verde ou documento de autofaturação para o motorista{' '}
               {motoristas.find(m => m.motorista_id === showUploadRecibo)?.motorista_nome}.
             </p>
-            <Input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file && showUploadRecibo) {
-                  handleUploadRecibo(showUploadRecibo, file);
-                }
-              }}
-              data-testid="upload-recibo-input"
-            />
-            <p className="text-xs text-slate-500 mt-2">Formatos aceites: PDF, JPG, PNG</p>
+            
+            {/* Seleção de Empresa de Faturação */}
+            {empresasFaturacao.length > 0 && (
+              <div className="space-y-2">
+                <Label>Empresa de Faturação</Label>
+                <select
+                  value={empresaSelecionada || ''}
+                  onChange={(e) => setEmpresaSelecionada(e.target.value)}
+                  className="w-full p-2 border rounded text-sm"
+                  data-testid="select-empresa-faturacao"
+                >
+                  {empresasFaturacao.map((empresa) => (
+                    <option key={empresa.id} value={empresa.id}>
+                      {empresa.nome} {empresa.principal && '(Principal)'} - {empresa.nipc}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500">
+                  O recibo será emitido em nome desta empresa
+                </p>
+              </div>
+            )}
+            
+            {empresasFaturacao.length === 0 && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-700">
+                <strong>Aviso:</strong> Não tem empresas de faturação configuradas.{' '}
+                <a href="/empresas-faturacao" className="underline hover:text-amber-900">
+                  Adicionar empresa
+                </a>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label>Ficheiro do Recibo</Label>
+              <Input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file && showUploadRecibo) {
+                    handleUploadRecibo(showUploadRecibo, file);
+                  }
+                }}
+                data-testid="upload-recibo-input"
+              />
+              <p className="text-xs text-slate-500">Formatos aceites: PDF, JPG, PNG</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowUploadRecibo(null)}>
