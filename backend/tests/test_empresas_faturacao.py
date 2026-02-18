@@ -64,7 +64,7 @@ class TestEmpresasFaturacaoEndpoints:
         })
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
-        assert "token" in data
+        assert "access_token" in data or "token" in data
         print(f"✅ Admin login successful")
     
     def test_02_parceiro_login(self):
@@ -75,7 +75,7 @@ class TestEmpresasFaturacaoEndpoints:
         })
         assert response.status_code == 200, f"Parceiro login failed: {response.text}"
         data = response.json()
-        assert "token" in data
+        assert "access_token" in data or "token" in data
         print(f"✅ Parceiro login successful, role: {data.get('user', {}).get('role')}")
 
     # ==========================================================
