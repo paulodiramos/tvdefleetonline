@@ -744,3 +744,32 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
 ### Bloqueador Crítico
 - **Base de dados de produção** (`tvdefleet.com`) está dessincronizada
 - Solução: Utilizador deve fazer **Deploy** com opção **"Use new database"**
+
+---
+
+## Changelog - 2026-02-18 (Sessão Actual)
+
+### Corrigido
+1. **Bug Preços Especiais** - Endpoints faltavam prefixo `/api/`:
+   - `/gestao-planos/planos` → `/api/gestao-planos/planos`
+   - `/uber/admin/parceiros` → `/api/uber/admin/parceiros`
+   - Parceiros e planos agora carregam correctamente no formulário
+
+2. **Novos Tipos de Preço Especial**:
+   - Percentagem de Desconto
+   - Preço Fixo Total
+   - Preço Fixo por Veículo
+   - Preço Fixo por Motorista
+   - Preço Fixo por Motorista + Veículo
+
+3. **Persistência de Sessão RPA Prio**:
+   - Adicionada funcionalidade `guardar_sessao()` e `verificar_login()`
+   - Sessão agora é guardada em `/tmp/prio_sessao_{parceiro_id}.json`
+   - Reduz necessidade de re-autenticação entre sincronizações
+
+### Refatoração Iniciada
+- **FichaVeiculo.js** - Criados componentes extraídos:
+  - `components/veiculo/VeiculoSeguro.js`
+  - `components/veiculo/VeiculoInspecao.js`
+  - `components/veiculo/VeiculoExtintor.js`
+  - Faltam ~10 componentes para completar refatoração
