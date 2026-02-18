@@ -58,10 +58,12 @@ async def process_uploaded_file(file: UploadFile, destination_dir: Path, file_id
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
+    # Use path with leading slash for URL access
+    relative_path = "/" + str(file_path.relative_to(ROOT_DIR))
     result = {
-        "original_path": str(file_path.relative_to(ROOT_DIR)),
+        "original_path": relative_path,
         "pdf_path": None,
-        "saved_path": str(file_path.relative_to(ROOT_DIR))
+        "saved_path": relative_path
     }
     
     # Check if file is an image - convert to PDF
@@ -89,7 +91,7 @@ async def process_uploaded_file(file: UploadFile, destination_dir: Path, file_id
             c.drawImage(str(file_path), x, y, width=new_width, height=new_height)
             c.save()
             
-            result["pdf_path"] = str(pdf_path.relative_to(ROOT_DIR))
+            result["pdf_path"] = "/" + str(pdf_path.relative_to(ROOT_DIR))
             result["saved_path"] = result["pdf_path"]
         except Exception as e:
             logger.error(f"Error converting image to PDF: {e}")
