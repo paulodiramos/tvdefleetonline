@@ -997,13 +997,76 @@ const FichaMotorista = ({ user }) => {
                   {getAniversarioBadge(dadosMotorista.data_nascimento)}
                 </div>
                 <p className="text-slate-500">{motorista.email}</p>
+                {/* Mostrar parceiro atual */}
+                {(motorista.parceiro_atribuido || motorista.parceiro_id) && (
+                  <p className="text-sm text-blue-600 flex items-center gap-1">
+                    <Building className="w-3 h-3" />
+                    Parceiro: {parceirosDisponiveis.find(p => p.id === (motorista.parceiro_atribuido || motorista.parceiro_id))?.nome_empresa || 'Atribuído'}
+                  </p>
+                )}
+                {!motorista.parceiro_atribuido && !motorista.parceiro_id && (
+                  <p className="text-sm text-amber-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Sem parceiro atribuído
+                  </p>
+                )}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {getStatusBadge(motorista.status_motorista || motorista.status)}
+            
+            {/* Botão para atribuir parceiro (Admin only) */}
+            {user?.role === 'admin' && (
+              <Dialog>
+                <Button variant="outline" size="sm" asChild>
+                  <label className="cursor-pointer" htmlFor="atribuir-parceiro-trigger">
+                    <Building className="w-4 h-4 mr-1" />
+                    {motorista.parceiro_atribuido ? 'Alterar Parceiro' : 'Atribuir Parceiro'}
+                  </label>
+                </Button>
+              </Dialog>
+            )}
           </div>
         </div>
+
+        {/* Card para atribuir parceiro (Admin only) */}
+        {user?.role === 'admin' && !motorista.parceiro_atribuido && !motorista.parceiro_id && (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-amber-700">
+                  <AlertCircle className="w-5 h-5" />
+                  <span className="font-medium">Este motorista não tem parceiro atribuído</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select value={parceiroSelecionado} onValueChange={setParceiroSelecionado}>
+                    <SelectTrigger className="w-[250px]">
+                      <SelectValue placeholder="Selecionar parceiro..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {parceirosDisponiveis.map(p => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.nome_empresa || p.name || p.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={handleAtribuirParceiro} 
+                    disabled={atribuindoParceiro || !parceiroSelecionado}
+                  >
+                    {atribuindoParceiro ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> A atribuir...</>
+                    ) : (
+                      <><CheckCircle className="w-4 h-4 mr-2" /> Atribuir</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
