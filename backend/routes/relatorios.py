@@ -921,9 +921,11 @@ async def get_resumo_semanal_parceiro(
                     # Calcular aluguer com base na época alta/baixa
                     aluguer_semanal = calcular_aluguer_semanal(veiculo, semana, ano)
                 
-                # Recolher todos os cartões elétricos (5 fornecedores)
+                # Recolher todos os cartões elétricos (6 fornecedores)
                 if veiculo.get("cartao_prio_eletric"):
                     cartoes_eletricos.append({"fornecedor": "Prio Electric", "cartao": veiculo.get("cartao_prio_eletric")})
+                if veiculo.get("cartao_prio_online"):
+                    cartoes_eletricos.append({"fornecedor": "Prio Online", "cartao": veiculo.get("cartao_prio_online")})
                 if veiculo.get("cartao_mio"):
                     cartoes_eletricos.append({"fornecedor": "Mio", "cartao": veiculo.get("cartao_mio")})
                 if veiculo.get("cartao_galp"):
