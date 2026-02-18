@@ -398,4 +398,10 @@ export default function BackupAdmin({ user, onLogout }) {
       )}
     </div>
   );
+
+  return (
+    <Layout user={user} onLogout={onLogout}>
+      {content}
+    </Layout>
+  );
 }
