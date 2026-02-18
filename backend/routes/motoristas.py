@@ -790,6 +790,76 @@ async def delete_motorista(
     return {"message": "Motorista deleted successfully"}
 
 
+@router.put("/motoristas/{motorista_id}/bloquear")
+async def bloquear_motorista(
+    motorista_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Bloquear ou desbloquear um motorista
+    
+    Permissões:
+    - Admin: pode bloquear qualquer motorista
+    - Gestor: pode bloquear motoristas dos parceiros atribuídos
+    - Parceiro: pode bloquear os seus próprios motoristas
+    
+    Campos:
+    - bloqueado: bool (True para bloquear, False para desbloquear)
+    - motivo: string (razão do bloqueio)
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Verificar permissões
+    parceiro_motorista = motorista.get("parceiro_atribuido") or motorista.get("parceiro_id")
+    
+    if current_user["role"] == UserRole.PARCEIRO:
+        if parceiro_motorista != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Motorista não pertence a si")
+    elif current_user["role"] == UserRole.GESTAO:
+        parceiros_atribuidos = current_user.get("parceiros_atribuidos", [])
+        if parceiro_motorista and parceiro_motorista not in parceiros_atribuidos:
+            raise HTTPException(status_code=403, detail="Motorista não pertence aos parceiros atribuídos")
+    
+    bloqueado = data.get("bloqueado", True)
+    motivo = data.get("motivo", "")
+    
+    update_data = {
+        "bloqueado": bloqueado,
+        "bloqueado_em": datetime.now(timezone.utc).isoformat() if bloqueado else None,
+        "bloqueado_por": current_user["id"] if bloqueado else None,
+        "motivo_bloqueio": motivo if bloqueado else None,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Se bloquear, também desativar
+    if bloqueado:
+        update_data["ativo"] = False
+    
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": update_data}
+    )
+    
+    # Atualizar também na tabela users
+    await db.users.update_one(
+        {"id": motorista_id},
+        {"$set": {"bloqueado": bloqueado}}
+    )
+    
+    acao = "bloqueado" if bloqueado else "desbloqueado"
+    logger.info(f"Motorista {motorista.get('name')} {acao} por {current_user['id']}")
+    
+    return {
+        "message": f"Motorista {acao} com sucesso",
+        "bloqueado": bloqueado
+    }
+
+
 @router.put("/motoristas/{motorista_id}/aprovar-todos-documentos")
 async def aprovar_todos_documentos(
     motorista_id: str,
