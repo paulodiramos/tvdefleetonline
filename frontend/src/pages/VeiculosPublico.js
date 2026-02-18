@@ -20,6 +20,25 @@ const getPhotoUrl = (photoPath) => {
   return `${API.replace('/api', '')}/${photoPath}`;
 };
 
+// Helper para obter primeira foto válida (imagem, não PDF)
+const getFirstValidPhoto = (fotos) => {
+  if (!fotos || fotos.length === 0) return null;
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  for (const foto of fotos) {
+    const lowerFoto = foto.toLowerCase();
+    if (imageExtensions.some(ext => lowerFoto.endsWith(ext))) {
+      return getPhotoUrl(foto);
+    }
+  }
+  // Se não houver imagem, verifica se há _original antes do .pdf
+  for (const foto of fotos) {
+    if (foto.includes('_original')) {
+      return getPhotoUrl(foto);
+    }
+  }
+  return null;
+};
+
 const VeiculosPublico = () => {
   const navigate = useNavigate();
   const [veiculos, setVeiculos] = useState([]);
