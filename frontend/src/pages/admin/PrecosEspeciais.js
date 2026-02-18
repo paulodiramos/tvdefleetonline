@@ -417,7 +417,11 @@ export default function PrecosEspeciais({ user }) {
                       <TableCell className="font-semibold">
                         {preco.tipo_desconto === 'percentagem' 
                           ? `${preco.valor_desconto}%` 
-                          : `${preco.preco_fixo?.toFixed(2)} €`}
+                          : `${(preco.preco_fixo || 0).toFixed(2)} €${
+                              preco.tipo_desconto === 'valor_fixo_veiculo' ? '/veículo' :
+                              preco.tipo_desconto === 'valor_fixo_motorista' ? '/motorista' :
+                              preco.tipo_desconto === 'valor_fixo_motorista_veiculo' ? '/m+v' : ''
+                            }`}
                       </TableCell>
                       <TableCell className="text-sm text-gray-500">
                         {preco.validade_inicio && preco.validade_fim ? (
