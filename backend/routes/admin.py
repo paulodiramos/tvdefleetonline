@@ -211,3 +211,74 @@ async def corrigir_caminhos_fotos(current_user: dict = Depends(get_current_user)
             corrigidos += 1
     
     return {"message": f"Corrigidos {corrigidos} veículos", "total_corrigidos": corrigidos}
+
+
+@router.post("/reindexar-fotos-veiculos")
+async def reindexar_fotos_veiculos(current_user: dict = Depends(get_current_user)):
+    """Reindexa fotos dos veículos baseado nos ficheiros existentes"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas admin")
+    
+    import os
+    from pathlib import Path
+    
+    upload_dir = Path("/app/backend/uploads/vehicle_photos_info")
+    
+    if not upload_dir.exists():
+        return {"message": "Directório de uploads não existe", "total_atualizados": 0}
+    
+    # Mapear ficheiros por vehicle_id
+    files_by_vehicle = {}
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+    
+    for file in os.listdir(upload_dir):
+        file_path = upload_dir / file
+        if not file_path.is_file():
+            continue
+        
+        # Extrair vehicle_id do nome: photo_{vehicle_id}_{uuid}...
+        parts = file.split('_')
+        if len(parts) >= 3 and parts[0] == 'photo':
+            vehicle_id = parts[1]
+            file_lower = file.lower()
+            
+            # Preferir originais e imagens sobre PDFs
+            is_original = '_original' in file_lower
+            is_image = any(file_lower.endswith(ext) for ext in image_extensions)
+            
+            if vehicle_id not in files_by_vehicle:
+                files_by_vehicle[vehicle_id] = []
+            
+            # Adicionar apenas imagens, não PDFs
+            if is_image:
+                files_by_vehicle[vehicle_id].append({
+                    'path': f"/uploads/vehicle_photos_info/{file}",
+                    'is_original': is_original,
+                    'size': file_path.stat().st_size
+                })
+    
+    # Atualizar veículos
+    atualizados = 0
+    
+    for vehicle_id, photos in files_by_vehicle.items():
+        # Filtrar fotos muito pequenas (menos de 1KB provavelmente corrompidas)
+        valid_photos = [p for p in photos if p['size'] > 1024]
+        
+        # Ordenar: originais primeiro, depois por tamanho
+        valid_photos.sort(key=lambda x: (not x['is_original'], -x['size']))
+        
+        photo_paths = [p['path'] for p in valid_photos[:3]]  # Máximo 3 fotos
+        
+        if photo_paths:
+            result = await db.vehicles.update_one(
+                {"id": vehicle_id},
+                {"$set": {"fotos_veiculo": photo_paths}}
+            )
+            if result.modified_count > 0:
+                atualizados += 1
+    
+    return {
+        "message": f"Reindexadas fotos de {atualizados} veículos",
+        "total_atualizados": atualizados,
+        "veiculos_com_fotos": list(files_by_vehicle.keys())
+    }
