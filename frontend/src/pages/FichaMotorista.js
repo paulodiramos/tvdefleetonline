@@ -182,6 +182,12 @@ const FichaMotorista = ({ user }) => {
   const [atribuindoParceiro, setAtribuindoParceiro] = useState(false);
   const [parceiroSelecionado, setParceiroSelecionado] = useState('');
 
+  // Histórico do motorista
+  const [historicoAtividade, setHistoricoAtividade] = useState([]);
+  const [historicoRendimentos, setHistoricoRendimentos] = useState([]);
+  const [historicoLoading, setHistoricoLoading] = useState(false);
+  const [historicoAno, setHistoricoAno] = useState(new Date().getFullYear());
+
   const handleFotoUpload = async (file) => {
     if (!file) return;
     
