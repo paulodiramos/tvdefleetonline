@@ -15,6 +15,16 @@ const ConfiguracaoRelatorios = ({ user, onLogout }) => {
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [gerando, setGerando] = useState(false);
+
+  // Estado para gerar PDF
+  const [semana, setSemana] = useState(() => {
+    const hoje = new Date();
+    const primeiroDia = new Date(hoje.getFullYear(), 0, 1);
+    const dias = Math.floor((hoje - primeiroDia) / (24 * 60 * 60 * 1000));
+    return Math.ceil((dias + primeiroDia.getDay() + 1) / 7);
+  });
+  const [ano, setAno] = useState(() => new Date().getFullYear());
 
   useEffect(() => {
     fetchConfig();
