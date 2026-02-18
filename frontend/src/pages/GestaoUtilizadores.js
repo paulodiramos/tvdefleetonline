@@ -340,7 +340,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     }
   };
 
-  const getRoleBadge = (role) => {
+  const getRoleBadge = (role, compact = false) => {
     const roleConfig = {
       admin: { label: 'Admin', icon: Shield, color: 'bg-red-100 text-red-800' },
       gestao: { label: 'Gestão', icon: Briefcase, color: 'bg-blue-100 text-blue-800' },
@@ -350,6 +350,15 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
 
     const config = roleConfig[role] || { label: role, icon: User, color: 'bg-gray-100 text-gray-800' };
     const Icon = config.icon;
+
+    if (compact) {
+      return (
+        <Badge className={`${config.color} px-2 py-0.5`}>
+          <Icon className="w-3 h-3 mr-1" />
+          {config.label}
+        </Badge>
+      );
+    }
 
     return (
       <Badge className={config.color}>
