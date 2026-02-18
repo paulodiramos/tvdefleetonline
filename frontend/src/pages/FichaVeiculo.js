@@ -1820,7 +1820,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
               {/* Card de Gestão de KM */}
               <div className="mt-4">
                 <GestaoKmVeiculo 
-                  veiculoId={id}
+                  veiculoId={vehicleId}
                   veiculo={vehicle}
                   onUpdate={fetchVehicle}
                   canEdit={canEdit}
