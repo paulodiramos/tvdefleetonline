@@ -537,3 +537,43 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
 2. Criar Frontend para Exportação/Importação de configurações RPA individuais
 3. Integração com WhatsApp (P2)
 
+#### 22. Melhorias na Página de Anúncios de Veículos ✅
+**Data: 2026-02-18**
+- **Carrossel de Fotos:** Até 3 fotos por veículo com navegação por setas e indicadores
+- **Transmissão:** Mostra se é Manual ou Automático (campo `caixa`)
+- **Versão:** Mostra a versão do veículo quando disponível
+- **UI melhorada:** Cards mais informativos e compactos
+
+#### 23. Sistema de Gestão de Km dos Veículos ✅
+**Data: 2026-02-18**
+- **Novo campo:** `km_inicial` para gestão própria do parceiro
+- **Novo endpoint:** `PUT /api/vehicles/{id}/atualizar-km`
+  - Fontes: manual, gps, inspecao, revisao, manutencao, vistoria
+  - Regista histórico na coleção `historico_km`
+  - Sincroniza com manutenção quando fonte é revisão/manutenção
+  - Cria alertas quando km ultrapassa próxima revisão
+
+#### 24. Permissões de Dashboard Melhoradas ✅
+**Data: 2026-02-18**
+- **Parceiro:** Vê apenas os seus dados (veículos, motoristas, receitas)
+- **Gestor:** Vê apenas parceiros atribuídos, pode filtrar individualmente
+- **Admin:** Vê tudo, pode filtrar por parceiro
+- Endpoint atualizado: `GET /api/reports/dashboard?parceiro_id=xxx`
+
+#### 25. Bloquear Motoristas ✅
+**Data: 2026-02-18**
+- **Novo endpoint:** `PUT /api/motoristas/{id}/bloquear`
+- **Permissões:**
+  - Admin: pode bloquear qualquer motorista
+  - Gestor: pode bloquear motoristas dos parceiros atribuídos
+  - Parceiro: pode bloquear os seus próprios motoristas
+- Campos: `bloqueado`, `bloqueado_em`, `bloqueado_por`, `motivo_bloqueio`
+
+#### 26. Correção de Fotos de Veículos ✅
+**Data: 2026-02-18**
+- **Problema:** Fotos não apareciam porque `/uploads/` não era encaminhado para o backend
+- **Solução:** Adicionado mount `/api/uploads` no backend
+- **Endpoints de manutenção:**
+  - `POST /api/admin/corrigir-caminhos-fotos` - Corrige paths sem `/` inicial
+  - `POST /api/admin/reindexar-fotos-veiculos` - Reindexa fotos válidas do filesystem
+
