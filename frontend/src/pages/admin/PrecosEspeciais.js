@@ -10,11 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { 
   DollarSign, Plus, Pencil, Trash2, Search, Filter,
   Building2, User, Calendar, Percent, Euro, Check,
-  Loader2, AlertTriangle, Tag, Star
+  Loader2, AlertTriangle, Tag, Star, Info, Clock
 } from 'lucide-react';
 import axios from 'axios';
 
