@@ -440,9 +440,36 @@ async def approve_motorista(
     motorista_id: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Approve motorista account and assign base plan"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    """Approve motorista account and assign base plan
+    
+    Permissões:
+    - Admin: pode aprovar qualquer motorista
+    - Gestão: pode aprovar motoristas dos parceiros atribuídos
+    - Parceiro: pode aprovar os seus próprios motoristas
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar permissões para parceiro/gestor
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.GESTAO]:
+        motorista = await db.motoristas.find_one({"id": motorista_id})
+        if not motorista:
+            # Verificar na tabela users
+            user_motorista = await db.users.find_one({"id": motorista_id})
+            if user_motorista:
+                parceiro_do_motorista = user_motorista.get("associated_partner_id") or user_motorista.get("parceiro_id")
+            else:
+                raise HTTPException(status_code=404, detail="Motorista não encontrado")
+        else:
+            parceiro_do_motorista = motorista.get("parceiro_atribuido") or motorista.get("parceiro_id")
+        
+        if current_user["role"] == UserRole.PARCEIRO:
+            if parceiro_do_motorista != current_user["id"]:
+                raise HTTPException(status_code=403, detail="Este motorista não pertence a si")
+        elif current_user["role"] == UserRole.GESTAO:
+            parceiros_atribuidos = current_user.get("parceiros_atribuidos", [])
+            if parceiro_do_motorista and parceiro_do_motorista not in parceiros_atribuidos:
+                raise HTTPException(status_code=403, detail="Este motorista não pertence aos seus parceiros")
     
     # Find or create default free plan in the new unified system
     plano_base = await db.planos_sistema.find_one({
