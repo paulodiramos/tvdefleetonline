@@ -860,6 +860,99 @@ async def bloquear_motorista(
     }
 
 
+@router.put("/motoristas/{motorista_id}/atribuir-parceiro")
+async def atribuir_parceiro_motorista(
+    motorista_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atribuir ou alterar parceiro de um motorista (Admin only)
+    
+    Também cria o utilizador se não existir.
+    
+    Campos:
+    - parceiro_id: ID do parceiro a atribuir (obrigatório)
+    - criar_utilizador: bool - Se deve criar utilizador caso não exista (default: True)
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin pode atribuir parceiros")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    parceiro_id = data.get("parceiro_id")
+    if not parceiro_id:
+        raise HTTPException(status_code=400, detail="parceiro_id é obrigatório")
+    
+    # Verificar se o parceiro existe
+    parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"})
+    if not parceiro:
+        parceiro = await db.parceiros.find_one({"id": parceiro_id})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    criar_utilizador = data.get("criar_utilizador", True)
+    
+    # Atualizar motorista com o parceiro
+    update_data = {
+        "parceiro_id": parceiro_id,
+        "parceiro_atribuido": parceiro_id,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": update_data}
+    )
+    
+    # Verificar se o utilizador existe
+    user_exists = await db.users.find_one({"id": motorista_id})
+    
+    if not user_exists and criar_utilizador:
+        # Criar utilizador para o motorista
+        import secrets
+        temp_password = secrets.token_urlsafe(12)
+        
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        hashed_password = pwd_context.hash(temp_password)
+        
+        new_user = {
+            "id": motorista_id,
+            "email": motorista.get("email"),
+            "name": motorista.get("name"),
+            "phone": motorista.get("phone"),
+            "password": hashed_password,
+            "role": "motorista",
+            "approved": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "associated_partner_id": parceiro_id
+        }
+        
+        await db.users.insert_one(new_user)
+        
+        logger.info(f"Utilizador criado para motorista {motorista.get('name')} com parceiro {parceiro_id}")
+        
+        return {
+            "message": "Parceiro atribuído e utilizador criado com sucesso",
+            "motorista_id": motorista_id,
+            "parceiro_id": parceiro_id,
+            "utilizador_criado": True,
+            "password_temporaria": temp_password,
+            "nota": "Guarde a password temporária e forneça ao motorista para fazer login"
+        }
+    
+    logger.info(f"Parceiro {parceiro_id} atribuído ao motorista {motorista.get('name')} por {current_user['id']}")
+    
+    return {
+        "message": "Parceiro atribuído com sucesso",
+        "motorista_id": motorista_id,
+        "parceiro_id": parceiro_id,
+        "utilizador_criado": False
+    }
+
+
 @router.put("/motoristas/{motorista_id}/aprovar-todos-documentos")
 async def aprovar_todos_documentos(
     motorista_id: str,
