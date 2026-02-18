@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { 
   DollarSign, Plus, Pencil, Trash2, Search, Filter,
   Building2, User, Calendar, Percent, Euro, Check,
-  Loader2, AlertTriangle, Tag, Star, Info, Clock
+  Loader2, AlertTriangle, Tag, Star, Info, Clock, Car, Users
 } from 'lucide-react';
 import axios from 'axios';
 
