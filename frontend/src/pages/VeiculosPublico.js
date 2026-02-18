@@ -14,10 +14,19 @@ const getPhotoUrl = (photoPath) => {
   if (!photoPath) return null;
   // Se já é uma URL completa
   if (photoPath.startsWith('http')) return photoPath;
-  // Se começa com / usa API base
-  if (photoPath.startsWith('/')) return `${API.replace('/api', '')}${photoPath}`;
-  // Senão, adiciona / e usa API base
-  return `${API.replace('/api', '')}/${photoPath}`;
+  // Converter /uploads/ para /api/uploads/ para routing correcto
+  if (photoPath.startsWith('/uploads/')) {
+    return `${API.replace('/api', '')}/api${photoPath}`;
+  }
+  // Se começa com /api já está correcto
+  if (photoPath.startsWith('/api/')) {
+    return `${API.replace('/api', '')}${photoPath}`;
+  }
+  // Senão, adiciona /api/uploads/
+  if (photoPath.startsWith('uploads/')) {
+    return `${API.replace('/api', '')}/api/${photoPath}`;
+  }
+  return `${API.replace('/api', '')}/api/uploads/${photoPath}`;
 };
 
 // Helper para obter primeira foto válida (imagem, não PDF)
