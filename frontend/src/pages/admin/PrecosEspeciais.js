@@ -403,17 +403,16 @@ export default function PrecosEspeciais({ user }) {
                         <Badge variant="outline">{preco.plano_nome}</Badge>
                       </TableCell>
                       <TableCell>
-                        {preco.tipo_desconto === 'percentagem' ? (
-                          <Badge className="bg-blue-100 text-blue-700">
-                            <Percent className="w-3 h-3 mr-1" />
-                            Percentagem
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-green-100 text-green-700">
-                            <Euro className="w-3 h-3 mr-1" />
-                            Valor Fixo
-                          </Badge>
-                        )}
+                        {(() => {
+                          const tipo = tiposPreco[preco.tipo_desconto] || tiposPreco.percentagem;
+                          const Icon = tipo.icon;
+                          return (
+                            <Badge className={tipo.color}>
+                              <Icon className="w-3 h-3 mr-1" />
+                              {tipo.label.replace('Preço Fixo ', '').replace(' de Desconto', '')}
+                            </Badge>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell className="font-semibold">
                         {preco.tipo_desconto === 'percentagem' 
