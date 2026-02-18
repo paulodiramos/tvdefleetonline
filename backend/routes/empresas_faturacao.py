@@ -88,6 +88,8 @@ async def criar_empresa_faturacao(
     await db.empresas_faturacao.insert_one(empresa)
     logger.info(f"Empresa de faturação criada: {empresa['nome']} por {current_user['id']}")
     
+    # Remove MongoDB _id before returning
+    empresa.pop("_id", None)
     return {"message": "Empresa criada com sucesso", "empresa": empresa}
 
 
