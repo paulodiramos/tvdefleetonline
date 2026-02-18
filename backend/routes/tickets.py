@@ -290,11 +290,24 @@ async def criar_ticket(
         "destinatario_tipo": data.destinatario_tipo,
         "destinatario_id": data.destinatario_id or destinatario_id,
         "destinatario_nome": destinatario_nome,
-        # Novo: Associação com veículo e motorista
+        # Associação com veículo e motorista
         "veiculo_id": data.veiculo_id,
         "veiculo_info": veiculo_info,
         "motorista_id": data.motorista_id,
         "motorista_info": motorista_info,
+        # Intervenientes (quem pode ver este ticket)
+        "intervenientes": [current_user["id"]],
+        # Estado de leitura
+        "lido_por": [{
+            "user_id": current_user["id"],
+            "data_leitura": datetime.now(timezone.utc).isoformat()
+        }],
+        "ultima_comunicacao": {
+            "data": datetime.now(timezone.utc).isoformat(),
+            "por_id": current_user["id"],
+            "por_nome": current_user.get("name"),
+            "tipo": "criacao"
+        },
         "mensagens": [{
             "id": str(uuid.uuid4()),
             "autor_id": current_user["id"],
@@ -308,8 +321,15 @@ async def criar_ticket(
         "ultima_resposta": datetime.now(timezone.utc).isoformat(),
         "data_auto_fecho": (datetime.now(timezone.utc) + timedelta(days=AUTO_CLOSE_DAYS)).isoformat(),
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        # Arquivo (após fechado)
+        "arquivado": False,
+        "data_arquivo": None
     }
+    
+    # Adicionar destinatário aos intervenientes
+    if data.destinatario_id or destinatario_id:
+        ticket["intervenientes"].append(data.destinatario_id or destinatario_id)
     
     await db.tickets.insert_one(ticket)
     logger.info(f"Ticket {ticket['numero']} criado por {current_user['id']} com {len(fotos_salvas)} fotos")
