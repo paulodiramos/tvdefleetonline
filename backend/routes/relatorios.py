@@ -902,6 +902,8 @@ async def get_resumo_semanal_parceiro(
         obu = None
         cartao_combustivel = None
         cartao_eletrico = None
+        # Múltiplos cartões elétricos
+        cartoes_eletricos = []
         aluguer_semanal = motorista.get("valor_aluguer_semanal") or 0
         km_atribuidos = None
         valor_km_extra = None
@@ -918,6 +920,21 @@ async def get_resumo_semanal_parceiro(
                 if aluguer_semanal == 0:
                     # Calcular aluguer com base na época alta/baixa
                     aluguer_semanal = calcular_aluguer_semanal(veiculo, semana, ano)
+                
+                # Recolher todos os cartões elétricos (5 fornecedores)
+                if veiculo.get("cartao_prio_eletric"):
+                    cartoes_eletricos.append({"fornecedor": "Prio Electric", "cartao": veiculo.get("cartao_prio_eletric")})
+                if veiculo.get("cartao_mio"):
+                    cartoes_eletricos.append({"fornecedor": "Mio", "cartao": veiculo.get("cartao_mio")})
+                if veiculo.get("cartao_galp"):
+                    cartoes_eletricos.append({"fornecedor": "Galp", "cartao": veiculo.get("cartao_galp")})
+                if veiculo.get("cartao_atlante"):
+                    cartoes_eletricos.append({"fornecedor": "Atlante", "cartao": veiculo.get("cartao_atlante")})
+                if veiculo.get("cartao_eletrico_outro"):
+                    cartoes_eletricos.append({"fornecedor": veiculo.get("cartao_eletrico_outro_nome", "Outro"), "cartao": veiculo.get("cartao_eletrico_outro")})
+                # Legacy - cartao_frota_eletric_id (Prio)
+                if cartao_eletrico and not any(c["cartao"] == cartao_eletrico for c in cartoes_eletricos):
+                    cartoes_eletricos.append({"fornecedor": "Prio Electric (legacy)", "cartao": cartao_eletrico})
         
         # ============ GANHOS UBER ============
         # Buscar por UUID ou email
