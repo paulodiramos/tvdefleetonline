@@ -258,8 +258,9 @@ class Vehicle(BaseModel):
     cartao_frota_disponivel: bool = False
     cartao_frota_id: Optional[str] = None  # Cartão Frota Combustível ID
     cartao_frota_eletric_id: Optional[str] = None  # Cartão Frota Elétrico ID (legacy - Prio)
-    # Múltiplos Cartões Elétricos (5 fornecedores)
+    # Múltiplos Cartões Elétricos (6 fornecedores)
     cartao_prio_eletric: Optional[str] = None  # Prio Electric
+    cartao_prio_online: Optional[str] = None  # Prio Online
     cartao_mio: Optional[str] = None  # Mio
     cartao_galp: Optional[str] = None  # Galp
     cartao_atlante: Optional[str] = None  # Atlante
