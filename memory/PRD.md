@@ -683,5 +683,64 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
 - **Endpoint backend:** `POST /api/gestao-planos/planos/{id}/precos-especiais`
 - **Menu acessível:** Admin Menu → Preços Especiais
 
+#### 33. UI Melhorada - Lista de Utilizadores Compacta ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Lista de utilizadores mais compacta na página de gestão de utilizadores
+- **Melhorias aplicadas:**
+  - Layout em linha única por utilizador (em vez de tabela expandida)
+  - Avatar com iniciais + nome/email à esquerda
+  - Badge de role (Admin/Gestão/Parceiro/Motorista)
+  - Nome do parceiro associado (para motoristas)
+  - Badge de estado (Aprovado/Pendente)
+  - Badge de plano (Grátis/Sem plano)
+  - **Ícones de ação com Tooltips**: Chave (Acesso), Lápis (Plano), Lixeira (Eliminar)
+- **Ficheiro:** `frontend/src/pages/GestaoUtilizadores.js`
 
+#### 34. Dashboard de Faturação - Totais por Motorista ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Nova secção no Dashboard de Faturação com totais por motorista
+- **Melhorias aplicadas:**
+  - Nova tabela "Faturação por Motorista" abaixo da tabela de empresas
+  - Colunas: Motorista, Total Faturado, Recibos, % do Total, Empresas Utilizadas
+  - Percentagem calculada com base no total geral faturado
+  - Lista de empresas por motorista com valores
+- **Endpoint atualizado:** `GET /api/empresas-faturacao/dashboard/totais-ano` - agora inclui array `motoristas`
+- **Ficheiros:** 
+  - `backend/routes/empresas_faturacao.py` - endpoint modificado
+  - `frontend/src/pages/DashboardFaturacao.js` - tabela adicionada
 
+#### 35. Preços Especiais - Info Box Explicativo ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Info box "Como funciona?" na página de Preços Especiais
+- **Melhorias aplicadas:**
+  - Alert box azul com explicações de: Percentagem, Preço Fixo, Validade, Sem limite
+  - 3 Cards estatísticos: Total Preços Especiais, Ativos, Com Validade
+  - Descrição melhorada da página
+- **Ficheiro:** `frontend/src/pages/admin/PrecosEspeciais.js`
+
+#### 36. Ficha do Motorista - Recibos por Empresa de Faturação ✅
+**Data: 2026-02-18**
+- **Funcionalidade:** Exibir valores de recibos agrupados por empresa de faturação
+- **Nova secção:** "Recibos por Empresa de Faturação" na tab "Histórico" da ficha do motorista
+- **Informação exibida:**
+  - Card por cada empresa de faturação
+  - Total faturado por empresa
+  - Percentagem em relação ao total
+  - Número de semanas/recibos
+- **Ficheiro:** `frontend/src/pages/FichaMotorista.js`
+
+---
+
+## Tarefas Futuras (Backlog)
+
+### P2 - Melhorias Futuras
+- Integração com WhatsApp Business API
+- Refatoração de componentes grandes (`FichaVeiculo.js`)
+- Sistema de alertas e comissões avançados
+- Arquivar dados antigos da base de dados
+- Correção da fragilidade da automação RPA "Prio Elétrico"
+- Persistência da sessão Prio entre sincronizações
+
+### Bloqueador Crítico
+- **Base de dados de produção** (`tvdefleet.com`) está dessincronizada
+- Solução: Utilizador deve fazer **Deploy** com opção **"Use new database"**
