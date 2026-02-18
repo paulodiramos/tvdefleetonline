@@ -4,8 +4,9 @@ import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { Download, Upload, Database, RefreshCw, FileJson, History, HardDrive } from 'lucide-react';
 import { API } from '../App';
+import Layout from '../components/Layout';
 
-export default function BackupAdmin() {
+export default function BackupAdmin({ user, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [colecoes, setColecoes] = useState(null);
   const [historico, setHistorico] = useState([]);
