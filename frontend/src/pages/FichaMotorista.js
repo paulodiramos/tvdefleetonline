@@ -694,6 +694,13 @@ const FichaMotorista = ({ user }) => {
     }
   }, [motoristaId, fetchMotorista, fetchHistoricoViaVerde, fetchExtras, fetchConfigApp, fetchDadosPonto, fetchTurnos, fetchVeiculosDisponiveis, fetchParceiros]);
 
+  // Carregar histórico quando a tab é selecionada
+  useEffect(() => {
+    if (activeTab === 'historico' && motoristaId) {
+      fetchHistoricoMotorista(historicoAno);
+    }
+  }, [activeTab, motoristaId, historicoAno, fetchHistoricoMotorista]);
+
   const handleSaveDadosMotorista = async () => {
     setSaving(true);
     try {
