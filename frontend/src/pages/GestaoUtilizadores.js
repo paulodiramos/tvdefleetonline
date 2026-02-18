@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 const GestaoUtilizadores = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [utilizadores, setUtilizadores] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [parceiros, setParceiros] = useState([]);
