@@ -306,6 +306,39 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     });
   };
 
+  const handleEliminarUser = async (usuario) => {
+    // Não permitir eliminar a si próprio
+    if (usuario.id === user?.id) {
+      toast.error('Não pode eliminar a sua própria conta');
+      return;
+    }
+
+    // Não permitir eliminar admin
+    if (usuario.role === 'admin' && user?.role !== 'admin') {
+      toast.error('Apenas admin pode eliminar outros admins');
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `Tem certeza que deseja eliminar o utilizador "${usuario.name}"?\n\nEsta ação é irreversível e também eliminará:\n- Dados de motorista (se aplicável)\n- Dados de parceiro (se aplicável)`
+    );
+
+    if (!confirmar) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/users/${usuario.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Utilizador eliminado com sucesso');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      const msg = error.response?.data?.detail || 'Erro ao eliminar utilizador';
+      toast.error(msg);
+    }
+  };
+
   const getRoleBadge = (role) => {
     const roleConfig = {
       admin: { label: 'Admin', icon: Shield, color: 'bg-red-100 text-red-800' },
