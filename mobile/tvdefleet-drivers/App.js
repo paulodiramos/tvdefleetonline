@@ -12,9 +12,45 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
-import axios from 'axios';
 
 const API_URL = 'https://tvdefleet.com/api';
+
+// Helper function for API calls (replacing axios)
+const api = {
+  post: async (url, data, config = {}) => {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config.headers
+      },
+      body: JSON.stringify(data)
+    });
+    const json = await response.json();
+    if (!response.ok) {
+      const error = new Error(json.detail || 'Request failed');
+      error.response = { data: json };
+      throw error;
+    }
+    return { data: json };
+  },
+  get: async (url, config = {}) => {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config.headers
+      }
+    });
+    const json = await response.json();
+    if (!response.ok) {
+      const error = new Error(json.detail || 'Request failed');
+      error.response = { data: json };
+      throw error;
+    }
+    return { data: json };
+  }
+};
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -58,7 +94,7 @@ export default function App() {
     
     setLoading(true);
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const response = await api.post(`${API_URL}/auth/login`, { email, password });
       if (response.data.access_token) {
         setToken(response.data.access_token);
         setUser(response.data.user);
@@ -75,7 +111,7 @@ export default function App() {
 
   const checkPontoStatus = async (authToken) => {
     try {
-      const response = await axios.get(`${API_URL}/ponto/estado-atual`, {
+      const response = await api.get(`${API_URL}/ponto/estado-atual`, {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       if (response.data.ativo) {
@@ -97,7 +133,7 @@ export default function App() {
         location = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
       }
       
-      const response = await axios.post(`${API_URL}/ponto/check-in`, {
+      const response = await api.post(`${API_URL}/ponto/check-in`, {
         latitude: location?.latitude,
         longitude: location?.longitude,
         hora: new Date().toISOString()
@@ -120,7 +156,7 @@ export default function App() {
       { text: 'Sim', onPress: async () => {
         setLoading(true);
         try {
-          await axios.post(`${API_URL}/ponto/check-out`, {
+          await api.post(`${API_URL}/ponto/check-out`, {
             hora: new Date().toISOString()
           }, {
             headers: { Authorization: `Bearer ${token}` }
