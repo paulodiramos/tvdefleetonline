@@ -199,6 +199,7 @@ const Layout = ({ children, user, onLogout }) => {
         icon: DollarSign,
         submenu: [
           { path: '/resumo-semanal', label: '📊 Resumo Semanal' },
+          { path: '/dashboard-faturacao', label: '📈 Dashboard Faturação' },
           { path: '/gestao-extras', label: '💰 Extras/Dívidas' },
           { path: '/verificar-recibos', label: '✅ Verificar Recibos' },
           { path: '/pagamentos', label: '💳 Pagamentos a Motoristas' },
