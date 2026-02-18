@@ -156,3 +156,58 @@ async def get_credenciais_parceiros(current_user: dict = Depends(get_current_use
         cred["parceiro_info"] = parceiro
     
     return credenciais
+
+
+@router.post("/corrigir-caminhos-fotos")
+async def corrigir_caminhos_fotos(current_user: dict = Depends(get_current_user)):
+    """Corrige caminhos de fotos nos veículos - adiciona / inicial se necessário"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas admin")
+    
+    corrigidos = 0
+    
+    # Corrigir veículos
+    vehicles = await db.vehicles.find({"fotos_veiculo": {"$exists": True, "$ne": []}}).to_list(None)
+    
+    for vehicle in vehicles:
+        fotos = vehicle.get("fotos_veiculo", [])
+        fotos_corrigidas = []
+        alterado = False
+        
+        for foto in fotos:
+            if foto and not foto.startswith("/") and not foto.startswith("http"):
+                fotos_corrigidas.append("/" + foto)
+                alterado = True
+            else:
+                fotos_corrigidas.append(foto)
+        
+        if alterado:
+            await db.vehicles.update_one(
+                {"id": vehicle["id"]},
+                {"$set": {"fotos_veiculo": fotos_corrigidas}}
+            )
+            corrigidos += 1
+    
+    # Corrigir campo fotos também (legacy)
+    vehicles_fotos = await db.vehicles.find({"fotos": {"$exists": True, "$ne": []}}).to_list(None)
+    
+    for vehicle in vehicles_fotos:
+        fotos = vehicle.get("fotos", [])
+        fotos_corrigidas = []
+        alterado = False
+        
+        for foto in fotos:
+            if foto and not foto.startswith("/") and not foto.startswith("http"):
+                fotos_corrigidas.append("/" + foto)
+                alterado = True
+            else:
+                fotos_corrigidas.append(foto)
+        
+        if alterado:
+            await db.vehicles.update_one(
+                {"id": vehicle["id"]},
+                {"$set": {"fotos": fotos_corrigidas}}
+            )
+            corrigidos += 1
+    
+    return {"message": f"Corrigidos {corrigidos} veículos", "total_corrigidos": corrigidos}
