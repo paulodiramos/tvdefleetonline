@@ -461,103 +461,118 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
-        {/* Users Table */}
+        {/* Users List - Compact Design */}
         <Card>
           <CardContent className="p-0">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b">
-                <tr>
-                  <th className="text-left p-4 font-medium text-slate-600">Usuário</th>
-                  <th className="text-left p-4 font-medium text-slate-600">Tipo</th>
-                  <th className="text-left p-4 font-medium text-slate-600">Parceiro</th>
-                  <th className="text-left p-4 font-medium text-slate-600">Estado</th>
-                  <th className="text-left p-4 font-medium text-slate-600">Plano</th>
-                  <th className="text-right p-4 font-medium text-slate-600">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <TooltipProvider>
+              <div className="divide-y divide-slate-100">
                 {filteredUsers.map((usuario) => (
-                  <tr key={usuario.id} className="border-b last:border-0 hover:bg-slate-50">
-                    <td className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="w-9 h-9">
-                          <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">
-                            {getInitials(usuario.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-slate-800">{usuario.name}</p>
-                          <p className="text-sm text-slate-500">{usuario.email}</p>
-                        </div>
+                  <div 
+                    key={usuario.id} 
+                    className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
+                    data-testid={`user-row-${usuario.id}`}
+                  >
+                    {/* Left: Avatar + Name + Email */}
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <Avatar className="w-9 h-9 flex-shrink-0">
+                        <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">
+                          {getInitials(usuario.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-800 truncate">{usuario.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{usuario.email}</p>
                       </div>
-                    </td>
-                    <td className="p-4">
-                      {getRoleBadge(usuario.role)}
-                    </td>
-                    <td className="p-4">
+                    </div>
+
+                    {/* Center: Role Badge */}
+                    <div className="flex-shrink-0 mx-2">
+                      {getRoleBadge(usuario.role, true)}
+                    </div>
+
+                    {/* Center: Partner Name (for motoristas) */}
+                    <div className="flex-shrink-0 w-32 text-sm text-slate-600 truncate hidden md:block">
                       {usuario.role === 'motorista' && (usuario.associated_partner_id || usuario.parceiro_id) ? (
-                        <span className="text-sm text-slate-600">
-                          {parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.nome_empresa || 
-                           parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.name || 
-                           'Parceiro'}
-                        </span>
-                      ) : usuario.role === 'motorista' ? (
-                        <span className="text-sm text-amber-600">Sem parceiro</span>
+                        parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.nome_empresa || 
+                        parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.name || 
+                        '-'
                       ) : (
-                        <span className="text-sm text-slate-400">-</span>
+                        <span className="text-slate-400">-</span>
                       )}
-                    </td>
-                    <td className="p-4">
+                    </div>
+
+                    {/* Center: Status */}
+                    <div className="flex-shrink-0 mx-2">
                       {getStatusBadge(usuario)}
-                    </td>
-                    <td className="p-4">
+                    </div>
+
+                    {/* Center: Plan */}
+                    <div className="flex-shrink-0 w-20 hidden lg:block">
                       {usuario.plano_ativo ? (
-                        <Badge className="bg-purple-100 text-purple-800">
-                          <Package className="w-3 h-3 mr-1" />
-                          {usuario.plano_ativo.nome}
+                        <Badge className="bg-purple-100 text-purple-800 text-xs px-1.5">
+                          {usuario.plano_ativo.nome?.substring(0, 10)}
                         </Badge>
                       ) : usuario.acesso_gratis ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          <Calendar className="w-3 h-3 mr-1" />
+                        <Badge className="bg-green-100 text-green-800 text-xs px-1.5">
+                          <Gift className="w-3 h-3 mr-0.5" />
                           Grátis
                         </Badge>
                       ) : (
-                        <span className="text-sm text-slate-400">Sem plano</span>
+                        <span className="text-xs text-slate-400">Sem plano</span>
                       )}
-                    </td>
-                    <td className="p-4 text-right space-x-2">
-                      <Button
-                        onClick={() => handleOpenAcessoDialog(usuario)}
-                        variant="outline"
-                        size="sm"
-                        className="text-green-600 border-green-200 hover:bg-green-50"
-                      >
-                        <Key className="w-3 h-3 mr-1" />
-                        Acesso
-                      </Button>
-                      <Button
-                        onClick={() => handleOpenPlanoDialog(usuario)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Edit className="w-3 h-3 mr-1" />
-                        Plano
-                      </Button>
-                      <Button
-                        onClick={() => handleEliminarUser(usuario)}
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                        data-testid={`eliminar-user-${usuario.id}`}
-                      >
-                        <Trash2 className="w-3 h-3 mr-1" />
-                        Eliminar
-                      </Button>
-                    </td>
-                  </tr>
+                    </div>
+
+                    {/* Right: Action Icons */}
+                    <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => handleOpenAcessoDialog(usuario)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
+                            data-testid={`btn-acesso-${usuario.id}`}
+                          >
+                            <Key className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Acesso</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => handleOpenPlanoDialog(usuario)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                            data-testid={`btn-plano-${usuario.id}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Plano</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => handleEliminarUser(usuario)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            data-testid={`btn-eliminar-${usuario.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Eliminar</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </TooltipProvider>
             {filteredUsers.length === 0 && (
               <div className="py-12 text-center text-slate-500">
                 Nenhum usuário encontrado
