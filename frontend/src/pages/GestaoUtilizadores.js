@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Users, Search, Edit, Package, CheckCircle, XCircle, 
-  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar, Trash2
+  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar, Trash2, Gift
 } from 'lucide-react';
 
 const GestaoUtilizadores = ({ user, onLogout }) => {
