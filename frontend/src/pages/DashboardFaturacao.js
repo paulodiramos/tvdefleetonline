@@ -339,7 +339,7 @@ export default function DashboardFaturacao() {
 
       {/* Tabela Detalhada */}
       {dashboardData?.empresas?.length > 0 && (
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Detalhes por Empresa</CardTitle>
             <CardDescription>Resumo detalhado de cada empresa de faturação em {ano}</CardDescription>
@@ -432,6 +432,79 @@ export default function DashboardFaturacao() {
                     </td>
                   </tr>
                 </tfoot>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tabela por Motorista */}
+      {dashboardData?.motoristas?.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-purple-600" />
+              Faturação por Motorista
+            </CardTitle>
+            <CardDescription>Valor acumulado anual por cada motorista em {ano}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full" data-testid="tabela-motoristas">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Motorista</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-600">Total Faturado</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-600">Recibos</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-600">% do Total</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Empresas Utilizadas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dashboardData.motoristas.map((motorista, index) => (
+                    <tr 
+                      key={motorista.motorista_id} 
+                      className="border-b hover:bg-gray-50 transition-colors"
+                      data-testid={`row-motorista-${motorista.motorista_id}`}
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-semibold">
+                            {motorista.motorista_nome?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                          </div>
+                          <span className="font-medium">{motorista.motorista_nome}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right font-semibold text-green-600">
+                        {formatCurrency(motorista.total_valor)}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        {motorista.total_recibos}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <Badge 
+                          variant="outline" 
+                          className={`
+                            ${motorista.percentagem >= 30 ? 'border-green-500 text-green-700 bg-green-50' : ''}
+                            ${motorista.percentagem >= 15 && motorista.percentagem < 30 ? 'border-blue-500 text-blue-700 bg-blue-50' : ''}
+                            ${motorista.percentagem < 15 ? 'border-gray-500 text-gray-700 bg-gray-50' : ''}
+                          `}
+                        >
+                          {motorista.percentagem}%
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {motorista.empresas?.map((emp, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">
+                              {emp.empresa_nome?.substring(0, 15)}: {formatCurrency(emp.total_valor)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           </CardContent>
