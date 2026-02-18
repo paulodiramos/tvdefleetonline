@@ -190,7 +190,7 @@ export default function PrecosEspeciais({ user }) {
         parceiro_id: formData.parceiro_id,
         tipo_desconto: formData.tipo_desconto,
         valor_desconto: formData.tipo_desconto === 'percentagem' ? parseFloat(formData.valor_desconto) : null,
-        preco_fixo: formData.tipo_desconto === 'valor_fixo' ? parseFloat(formData.preco_fixo) : null,
+        preco_fixo: formData.tipo_desconto !== 'percentagem' ? parseFloat(formData.preco_fixo) : null,
         validade_inicio: formData.validade_inicio || null,
         validade_fim: formData.validade_fim || null,
         motivo: formData.motivo,
