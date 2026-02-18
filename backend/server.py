@@ -83,6 +83,7 @@ from routes.users import router as users_router
 from routes.storage import router as storage_router
 from routes.modulos import router as modulos_router
 from routes.recibos import router as recibos_router
+from routes.empresas_faturacao import router as empresas_faturacao_router
 from routes.dashboard import router as dashboard_router
 from routes.fornecedores import router as fornecedores_router
 from routes.terabox import router as terabox_router
