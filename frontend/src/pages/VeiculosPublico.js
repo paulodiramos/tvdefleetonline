@@ -302,7 +302,8 @@ const VeiculosPublico = () => {
                   </Button>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
