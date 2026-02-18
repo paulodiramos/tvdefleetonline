@@ -1444,10 +1444,86 @@ class GPSScraper(BaseScraper):
 class PrioScraper(BaseScraper):
     """Scraper para Prio Energy - Portal MyPRIO"""
     
-    def __init__(self, headless: bool = True):
+    def __init__(self, headless: bool = True, parceiro_id: str = None):
         super().__init__(headless)
         self.platform_name = "Prio"
         self.login_url = "https://www.myprio.com/MyPrioReactiveTheme/Login"
+        self.parceiro_id = parceiro_id
+        self.session_path = f"/tmp/prio_sessao_{parceiro_id}.json" if parceiro_id else None
+    
+    async def initialize(self):
+        """Inicializar browser, opcionalmente com sessão guardada"""
+        await super().initialize()
+        
+        # Se temos sessão guardada, carregar cookies
+        if self.session_path and os.path.exists(self.session_path):
+            try:
+                import json
+                with open(self.session_path, 'r') as f:
+                    storage_state = json.load(f)
+                
+                # Aplicar cookies
+                if 'cookies' in storage_state:
+                    await self.context.add_cookies(storage_state['cookies'])
+                    logger.info(f"✅ Sessão Prio carregada de {self.session_path}")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao carregar sessão Prio: {e}")
+    
+    async def guardar_sessao(self):
+        """Guardar cookies da sessão actual"""
+        if self.session_path:
+            try:
+                import json
+                cookies = await self.context.cookies()
+                storage_state = {
+                    'cookies': cookies,
+                    'timestamp': datetime.now().isoformat()
+                }
+                with open(self.session_path, 'w') as f:
+                    json.dump(storage_state, f)
+                logger.info(f"✅ Sessão Prio guardada em {self.session_path}")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao guardar sessão Prio: {e}")
+    
+    async def verificar_login(self) -> bool:
+        """Verificar se já está logado na Prio"""
+        try:
+            await self.page.goto("https://www.myprio.com/MyPrioReactiveTheme/Home", wait_until="networkidle", timeout=30000)
+            await asyncio.sleep(3)
+            
+            url = self.page.url
+            
+            # Se redirecionou para Login, não está logado
+            if 'Login' in url:
+                logger.info("❌ Sessão Prio expirada - necessário novo login")
+                return False
+            
+            # Se ficou na Home ou Dashboard, está logado
+            if 'Home' in url or 'Dashboard' in url or 'Transactions' in url:
+                logger.info("✅ Sessão Prio activa - já está logado")
+                return True
+            
+            # Verificar elementos da área logada
+            logged_indicators = [
+                'text=Bem-vindo',
+                'text=Logout',
+                'text=Sair',
+                '[class*="user-menu"]',
+                '[class*="profile"]'
+            ]
+            
+            for indicator in logged_indicators:
+                try:
+                    if await self.page.locator(indicator).count() > 0:
+                        logger.info(f"✅ Sessão Prio activa - encontrado: {indicator}")
+                        return True
+                except Exception:
+                    continue
+            
+            return False
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao verificar sessão Prio: {e}")
+            return False
     
     async def login(self, username: str, password: str, **kwargs) -> Dict:
         """Login no portal MyPRIO"""
