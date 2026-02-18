@@ -3013,6 +3013,53 @@ const FichaMotorista = ({ user }) => {
                       </div>
                     )}
 
+                    {/* Resumo por Empresa de Faturação */}
+                    {historicoRendimentos?.rendimentos?.length > 0 && (
+                      <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100">
+                        <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                          <Receipt className="w-4 h-4" />
+                          Recibos por Empresa de Faturação ({historicoAno})
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {(() => {
+                            // Agrupar rendimentos por empresa de faturação
+                            const porEmpresa = {};
+                            historicoRendimentos.rendimentos.forEach(r => {
+                              const empresaNome = r.empresa_faturacao?.nome || 'Sem empresa';
+                              if (!porEmpresa[empresaNome]) {
+                                porEmpresa[empresaNome] = { total: 0, recibos: 0 };
+                              }
+                              porEmpresa[empresaNome].total += (r.valor_liquido || 0);
+                              porEmpresa[empresaNome].recibos += 1;
+                            });
+                            const totalGeral = Object.values(porEmpresa).reduce((sum, e) => sum + e.total, 0) || 1;
+                            
+                            return Object.entries(porEmpresa).map(([nome, dados], index) => (
+                              <div 
+                                key={nome} 
+                                className="bg-white rounded-lg p-3 border shadow-sm"
+                                data-testid={`empresa-card-${index}`}
+                              >
+                                <p className="font-medium text-gray-800 truncate" title={nome}>{nome}</p>
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="text-lg font-bold text-green-600">
+                                    {dados.total.toLocaleString('pt-PT', {
+                                      style: 'currency',
+                                      currency: 'EUR'
+                                    })}
+                                  </span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {((dados.total / totalGeral) * 100).toFixed(1)}%
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">{dados.recibos} semana(s)</p>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Tabela de rendimentos */}
                     {(!historicoRendimentos?.rendimentos || historicoRendimentos.rendimentos.length === 0) ? (
                       <p className="text-gray-500 text-center py-4">
