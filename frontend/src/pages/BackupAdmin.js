@@ -186,7 +186,7 @@ export default function BackupAdmin({ user, onLogout }) {
     { id: 'planos', nome: 'Planos', icon: '📋', desc: 'Planos e subscriçoes' }
   ];
 
-  return (
+  const content = (
     <div className="p-6 space-y-6" data-testid="backup-admin-page">
       <div className="flex justify-between items-center">
         <div>
