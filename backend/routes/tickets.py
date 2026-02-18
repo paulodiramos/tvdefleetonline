@@ -648,6 +648,11 @@ async def adicionar_mensagem(
         # Suporte respondeu - aguardar resposta do utilizador
         novo_status = "aguardar_resposta"
     
+    # Atualizar intervenientes (adicionar quem responde se não estiver)
+    intervenientes = ticket.get("intervenientes", [])
+    if current_user["id"] not in intervenientes:
+        intervenientes.append(current_user["id"])
+    
     # Atualizar ticket
     await db.tickets.update_one(
         {"id": ticket_id},
@@ -657,7 +662,14 @@ async def adicionar_mensagem(
                 "status": novo_status,
                 "ultima_resposta": datetime.now(timezone.utc).isoformat(),
                 "data_auto_fecho": (datetime.now(timezone.utc) + timedelta(days=AUTO_CLOSE_DAYS)).isoformat(),
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "intervenientes": intervenientes,
+                "ultima_comunicacao": {
+                    "data": datetime.now(timezone.utc).isoformat(),
+                    "por_id": current_user["id"],
+                    "por_nome": current_user.get("name"),
+                    "tipo": "mensagem"
+                }
             }
         }
     )
