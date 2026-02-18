@@ -1100,6 +1100,16 @@ function App() {
             }
           />
           <Route
+            path="/dashboard-faturacao"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin') ? (
+                <DashboardFaturacao user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/terabox"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
