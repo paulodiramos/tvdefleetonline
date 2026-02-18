@@ -309,6 +309,56 @@ const FichaMotorista = ({ user }) => {
     }
   };
 
+  // Carregar parceiros disponíveis (para admin)
+  const fetchParceiros = useCallback(async () => {
+    if (user?.role !== 'admin') return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const parceiros = response.data?.parceiros || response.data || [];
+      setParceirosDisponiveis(parceiros);
+    } catch (error) {
+      console.error('Erro ao carregar parceiros:', error);
+    }
+  }, [user?.role]);
+
+  // Atribuir parceiro ao motorista
+  const handleAtribuirParceiro = async () => {
+    if (!parceiroSelecionado) {
+      toast.error('Selecione um parceiro');
+      return;
+    }
+    
+    setAtribuindoParceiro(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `${API}/api/motoristas/${motoristaId}/atribuir-parceiro`,
+        { parceiro_id: parceiroSelecionado },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.utilizador_criado) {
+        toast.success(
+          `Parceiro atribuído! Password temporária: ${response.data.password_temporaria}`,
+          { duration: 10000 }
+        );
+      } else {
+        toast.success('Parceiro atribuído com sucesso');
+      }
+      
+      // Recarregar dados do motorista
+      fetchMotorista();
+    } catch (error) {
+      console.error('Erro ao atribuir parceiro:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao atribuir parceiro');
+    } finally {
+      setAtribuindoParceiro(false);
+    }
+  };
+
   const fetchHistoricoViaVerde = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
