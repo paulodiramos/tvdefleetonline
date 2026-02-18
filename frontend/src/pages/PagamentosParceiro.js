@@ -134,23 +134,59 @@ const PagamentosParceiro = ({ user, onLogout }) => {
     }
   };
 
-  const handleMarcarLiquidado = async (motoristaId) => {
+  const handleMarcarLiquidado = async (motoristaId, empresaFaturacaoId = null) => {
     try {
       const token = localStorage.getItem('token');
       
+      const payload = { 
+        status: 'liquidado', 
+        semana, 
+        ano 
+      };
+      
+      // Se foi selecionada uma empresa de faturação, incluir no payload
+      if (empresaFaturacaoId) {
+        payload.empresa_faturacao_id = empresaFaturacaoId;
+      }
+      
       await axios.put(
         `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/status`,
-        { status: 'liquidado', semana, ano },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
       setShowConfirmLiquidar(null);
+      setShowEmpresaModal(null);
+      setSelectedEmpresa('');
       fetchPagamentos();
       toast.success('Pagamento marcado como liquidado! Relatório arquivado.');
     } catch (error) {
       console.error('Erro ao marcar como liquidado:', error);
       toast.error('Erro ao marcar como liquidado');
     }
+  };
+  
+  // Função para iniciar o fluxo de liquidação
+  const handleIniciarLiquidacao = (pagamento) => {
+    // Se há mais de uma empresa ativa, mostrar popup de seleção
+    if (empresasFaturacao.length > 1) {
+      setShowEmpresaModal(pagamento);
+    } else if (empresasFaturacao.length === 1) {
+      // Se só há uma empresa, usar essa diretamente
+      handleMarcarLiquidado(pagamento.motorista_id, empresasFaturacao[0].id);
+    } else {
+      // Se não há empresas configuradas, continuar sem associar
+      setShowConfirmLiquidar(pagamento);
+    }
+  };
+  
+  // Confirmar liquidação com empresa selecionada
+  const handleConfirmarComEmpresa = () => {
+    if (!selectedEmpresa) {
+      toast.error('Selecione uma empresa de faturação');
+      return;
+    }
+    handleMarcarLiquidado(showEmpresaModal.motorista_id, selectedEmpresa);
   };
 
   const handleDownloadRelatorio = async (motoristaId, motoristaNome) => {
