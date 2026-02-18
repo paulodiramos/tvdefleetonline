@@ -340,4 +340,3 @@ async def dashboard_totais_empresa(
             "empresas": len(resultado)
         }
     }
-    }
