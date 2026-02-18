@@ -864,8 +864,7 @@ const Usuarios = ({ user, onLogout }) => {
                     data-testid={`view-user-${regUser.id}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setViewingUser(regUser);
-                      setShowDetailsDialog(true);
+                      navigate(`/usuarios/${regUser.id}`);
                     }}
                   >
                     <Eye className="w-4 h-4" />
