@@ -49,7 +49,7 @@ export default function GestaoKmVeiculo({ veiculoId, veiculo, onUpdate, canEdit 
     setHistoricoLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/veiculos/${veiculoId}/historico-km`, {
+      const response = await axios.get(`${API}/vehicles/${veiculoId}/historico-km`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHistorico(response.data || []);
@@ -84,7 +84,7 @@ export default function GestaoKmVeiculo({ veiculoId, veiculo, onUpdate, canEdit 
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/api/veiculos/${veiculoId}/km`,
+        `${API}/vehicles/${veiculoId}/atualizar-km`,
         {
           km_atual: novoKm,
           fonte: formData.fonte,
@@ -110,7 +110,7 @@ export default function GestaoKmVeiculo({ veiculoId, veiculo, onUpdate, canEdit 
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/api/veiculos/${veiculoId}`,
+        `${API}/vehicles/${veiculoId}`,
         { km_inicial: parseFloat(kmInicial) || 0 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
