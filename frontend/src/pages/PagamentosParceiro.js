@@ -618,6 +618,72 @@ const PagamentosParceiro = ({ user, onLogout }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Seleção de Empresa de Faturação */}
+      <Dialog open={showEmpresaModal !== null} onOpenChange={() => { setShowEmpresaModal(null); setSelectedEmpresa(''); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-blue-600" />
+              Associar a Empresa de Faturação
+            </DialogTitle>
+            <DialogDescription>
+              Selecione a empresa de faturação para associar este pagamento
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <p className="text-sm text-slate-600">Motorista:</p>
+              <p className="font-semibold">{showEmpresaModal?.motorista_nome}</p>
+              <p className="text-sm text-slate-500 mt-1">Semana {semana}/{ano}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Empresa de Faturação *</Label>
+              <Select value={selectedEmpresa} onValueChange={setSelectedEmpresa}>
+                <SelectTrigger data-testid="select-empresa-faturacao">
+                  <SelectValue placeholder="Selecione uma empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {empresasFaturacao.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id}>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-blue-500" />
+                        <span>{empresa.nome}</span>
+                        <span className="text-xs text-slate-500">({empresa.nipc})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">
+                O valor será registado como faturado por esta empresa
+              </p>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800">
+                <Building2 className="w-4 h-4 inline mr-1" />
+                Tem <strong>{empresasFaturacao.length}</strong> empresa(s) de faturação ativa(s).
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowEmpresaModal(null); setSelectedEmpresa(''); }}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleConfirmarComEmpresa}
+              disabled={!selectedEmpresa}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid="confirm-empresa-btn"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Confirmar Liquidação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
