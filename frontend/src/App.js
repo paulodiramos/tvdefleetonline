@@ -1091,6 +1091,16 @@ function App() {
             }
           />
           <Route
+            path="/admin/precos-especiais"
+            element={
+              user && user.role === 'admin' ? (
+                <PrecosEspeciais user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/empresas-faturacao"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin') ? (
