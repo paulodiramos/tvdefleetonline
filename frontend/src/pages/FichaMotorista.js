@@ -913,8 +913,23 @@ const FichaMotorista = ({ user }) => {
 
   const calcularIdade = (dataNascimento) => {
     if (!dataNascimento) return null;
+    
+    let nascimento;
+    // Suportar múltiplos formatos de data
+    if (dataNascimento.includes('/')) {
+      // Formato DD/MM/YYYY
+      const [dia, mes, ano] = dataNascimento.split('/');
+      nascimento = new Date(ano, mes - 1, dia);
+    } else if (dataNascimento.includes('-')) {
+      // Formato YYYY-MM-DD
+      nascimento = new Date(dataNascimento);
+    } else {
+      return null;
+    }
+    
+    if (isNaN(nascimento.getTime())) return null;
+    
     const hoje = new Date();
-    const nascimento = new Date(dataNascimento);
     let idade = hoje.getFullYear() - nascimento.getFullYear();
     const m = hoje.getMonth() - nascimento.getMonth();
     if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
