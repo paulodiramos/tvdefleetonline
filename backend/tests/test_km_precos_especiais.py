@@ -57,7 +57,7 @@ class TestKmHistorico:
             "email": "admin@tvdefleet.com",
             "password": "Admin123!"
         })
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     @pytest.fixture(scope="class")
     def parceiro_token(self):
@@ -65,7 +65,7 @@ class TestKmHistorico:
             "email": "geral@zmbusines.com",
             "password": "Admin123!"
         })
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     @pytest.fixture(scope="class")
     def test_vehicle_id(self, admin_token):
@@ -124,7 +124,7 @@ class TestAtualizarKm:
             "email": "admin@tvdefleet.com",
             "password": "Admin123!"
         })
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     @pytest.fixture(scope="class")
     def parceiro_token(self):
@@ -132,7 +132,7 @@ class TestAtualizarKm:
             "email": "geral@zmbusines.com",
             "password": "Admin123!"
         })
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     @pytest.fixture(scope="class")
     def test_vehicle_id(self, admin_token):
@@ -242,7 +242,7 @@ class TestPrecosEspeciais:
             "email": "admin@tvdefleet.com",
             "password": "Admin123!"
         })
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     @pytest.fixture(scope="class")
     def parceiro_id(self, admin_token):
