@@ -151,6 +151,41 @@ async def listar_parceiros_com_credenciais(
 
 # ==================== CRUD PLATAFORMAS (ADMIN) ====================
 
+@router.get("/exportar-todos")
+async def exportar_todas_plataformas(
+    current_user: dict = Depends(get_current_user)
+):
+    """Exportar todas as plataformas e RPAs (Admin only) - Para backup completo"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Admin pode exportar")
+    
+    # Buscar todas as plataformas
+    plataformas = await db.plataformas.find({}, {"_id": 0}).to_list(100)
+    
+    # Buscar todos os RPAs
+    rascunhos = await db.rpa_rascunhos.find({}, {"_id": 0}).to_list(500)
+    designs = await db.rpa_designs.find({}, {"_id": 0}).to_list(500)
+    
+    export_data = {
+        "versao": "1.0",
+        "tipo": "backup_completo",
+        "exportado_em": datetime.now(timezone.utc).isoformat(),
+        "exportado_por": current_user["id"],
+        "plataformas": plataformas,
+        "rpa": {
+            "rascunhos": rascunhos,
+            "designs": designs
+        },
+        "metadados": {
+            "total_plataformas": len(plataformas),
+            "total_rascunhos": len(rascunhos),
+            "total_designs": len(designs)
+        }
+    }
+    
+    return export_data
+
+
 @router.get("")
 async def listar_plataformas(
     categoria: Optional[str] = None,
