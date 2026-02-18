@@ -176,6 +176,11 @@ const FichaMotorista = ({ user }) => {
   // Foto do motorista
   const [fotoMotorista, setFotoMotorista] = useState(null);
   const [uploadingFoto, setUploadingFoto] = useState(false);
+  
+  // Parceiros disponíveis (para admin atribuir)
+  const [parceirosDisponiveis, setParceirosDisponiveis] = useState([]);
+  const [atribuindoParceiro, setAtribuindoParceiro] = useState(false);
+  const [parceiroSelecionado, setParceiroSelecionado] = useState('');
 
   const handleFotoUpload = async (file) => {
     if (!file) return;
