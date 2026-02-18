@@ -360,8 +360,11 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       const formData = new FormData();
       formData.append('file', file);
       
+      // Adicionar empresa de faturação se selecionada
+      const empresaParam = empresaSelecionada ? `&empresa_faturacao_id=${empresaSelecionada}` : '';
+      
       await axios.post(
-        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/upload-recibo?semana=${semana}&ano=${ano}`,
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/upload-recibo?semana=${semana}&ano=${ano}${empresaParam}`,
         formData,
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       );
