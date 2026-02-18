@@ -1631,11 +1631,15 @@ class PrioScraper(BaseScraper):
                 
                 await self.page.screenshot(path='/tmp/prio_03b_after_dashboard_click.png')
                 logger.info(f"📍 URL após tentar entrar: {self.page.url}")
+                # Guardar sessão após login bem-sucedido
+                await self.guardar_sessao()
                 return {"success": True}
             
             # Verificar se saiu da página de login
             if "Login" not in current_url or "Dashboard" in current_url or "Home" in current_url:
                 logger.info("✅ Login Prio bem sucedido!")
+                # Guardar sessão após login bem-sucedido
+                await self.guardar_sessao()
                 return {"success": True}
             
             # Verificar elementos típicos de área logada
@@ -1653,6 +1657,8 @@ class PrioScraper(BaseScraper):
                 try:
                     if await self.page.locator(indicator).count() > 0:
                         logger.info(f"✅ Login confirmado - encontrado: {indicator}")
+                        # Guardar sessão após login bem-sucedido
+                        await self.guardar_sessao()
                         return {"success": True}
                 except Exception:
                     continue
