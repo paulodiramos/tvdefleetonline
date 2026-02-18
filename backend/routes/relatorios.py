@@ -1360,6 +1360,8 @@ async def get_resumo_semanal_parceiro(
             # Despesas Operacionais
             "combustivel": round(combustivel_total, 2),
             "carregamento_eletrico": round(eletrico_total, 2),
+            "carregamentos_discriminacao": eletrico_discriminacao,  # Discriminação por fornecedor
+            "cartoes_eletricos": cartoes_eletricos,  # Lista de cartões elétricos do veículo
             "via_verde": round(via_verde_a_descontar, 2),  # Valor a descontar (0 se acumular)
             "via_verde_total_importado": round(via_verde_total, 2),  # Valor total importado
             "via_verde_semana_referencia": f"Semana {semana}/{ano}",
