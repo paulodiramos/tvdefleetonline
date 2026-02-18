@@ -135,8 +135,6 @@ const Layout = ({ children, user, onLogout }) => {
       
       const financeiroSubmenu = filtrarSubmenu([
         { path: '/resumo-semanal', label: '📊 Resumo Semanal' },
-        { path: '/dashboard-faturacao', label: '📈 Dashboard Faturação' },
-        { path: '/empresas-faturacao', label: '🏢 Empresas Faturação' },
         { path: '/gestao-extras', label: '💰 Extras/Dívidas' },
         { path: '/verificar-recibos', label: '✅ Verificar Recibos' },
         { path: '/pagamentos-parceiro', label: '💳 Pagamentos' },
