@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API } from '@/App';
 import Layout from '@/components/Layout';
 import VeiculoTurnos from '@/components/VeiculoTurnos';
+import GestaoKmVeiculo from '@/components/GestaoKmVeiculo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
