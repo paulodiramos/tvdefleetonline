@@ -198,7 +198,7 @@ export default function PrecosEspeciais({ user }) {
       };
 
       await axios.post(
-        `${API}/gestao-planos/planos/${formData.plano_id}/precos-especiais`,
+        `${API}/api/gestao-planos/planos/${formData.plano_id}/precos-especiais`,
         precoData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
