@@ -747,7 +747,33 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
 
 ---
 
-## Changelog - 2026-02-18 (Sessão Actual)
+## Changelog - 2026-02-18 (Continuação)
+
+### Novas Funcionalidades Implementadas Nesta Sessão
+
+#### 37. Reorganização do Menu de Navegação ✅
+**Data: 2026-02-18**
+- **Requisito:** Mover "Dashboard Faturação" e "Empresas Faturação" do menu "Financeiro" para o dropdown do "Perfil"
+- **Alterações:**
+  1. `Layout.js` - Removidos os 2 links do array `financeiroSubmenu` do parceiro (linhas 136-144)
+  2. Os links já existiam no dropdown do Perfil (linhas 462-472), confirmado funcionamento
+- **Menu Financeiro actual:** Resumo Semanal, Extras/Dívidas, Verificar Recibos, Pagamentos, Arquivo de Recibos, Alertas de Custos
+- **Menu Perfil:** Meu Plano, Loja de Planos, Terabox, Gestão de Documentos, Empresas de Faturação, Dashboard Faturação, Configurações...
+
+#### 38. Botão de Geração de PDF no ConfiguracaoRelatorios ✅
+**Data: 2026-02-18**
+- **Requisito:** Adicionar botão para gerar relatório PDF semanal na página `/configuracao-relatorios`
+- **Implementação:**
+  1. Nova secção "Gerar Relatório Semanal em PDF" com card azul destacado
+  2. Inputs para Semana e Ano
+  3. Botão "Gerar PDF" que chama `/api/relatorios/parceiro/resumo-semanal/pdf`
+  4. Download automático do ficheiro `resumo_semanal_S{semana}_{ano}.pdf`
+- **Ficheiro:** `frontend/src/pages/ConfiguracaoRelatorios.js`
+- **data-testid:** `btn-gerar-pdf`
+
+---
+
+## Changelog - 2026-02-18 (Sessão Anterior)
 
 ### Novas Funcionalidades
 1. **Popup Seleção Empresa de Faturação** (PagamentosParceiro.js)
