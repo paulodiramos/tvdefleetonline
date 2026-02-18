@@ -16117,3 +16117,15 @@ async def download_backup_completo():
             media_type="application/octet-stream"
         )
     raise HTTPException(status_code=404, detail="Backup not found")
+
+# Endpoint para download do backup v2 (mais recente)
+@app.get("/api/download-backup-v2")
+async def download_backup_v2():
+    backup_path = ROOT_DIR / "static" / "tvdefleet_backup_v2.archive"
+    if backup_path.exists():
+        return FileResponse(
+            path=str(backup_path),
+            filename="tvdefleet_backup_v2.archive",
+            media_type="application/octet-stream"
+        )
+    raise HTTPException(status_code=404, detail="Backup not found")
