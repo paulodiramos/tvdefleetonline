@@ -14720,12 +14720,17 @@ async def get_mobile_app_code():
 
 
 # Mount static files for uploads (PDFs, documents, etc.)
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+# Note: Using /api/uploads prefix so it routes through Kubernetes ingress properly
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
+# Also keep /uploads for backward compatibility (local testing)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads_legacy")
 
 # Mount static files for mobile app code
 STATIC_DIR = ROOT_DIR / "static"
 STATIC_DIR.mkdir(exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/api/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static_legacy")
 
 app.add_middleware(
     CORSMiddleware,
