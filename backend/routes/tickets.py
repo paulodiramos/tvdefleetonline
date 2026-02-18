@@ -899,41 +899,6 @@ async def atualizar_status(
     return {"success": True, "message": "Ticket atualizado"}
 
 
-@router.post("/{ticket_id}/fechar")
-async def fechar_ticket(
-    ticket_id: str,
-    current_user: dict = Depends(get_current_user)
-):
-    """Fechar ticket"""
-    
-    ticket = await db.tickets.find_one({"id": ticket_id}, {"_id": 0})
-    
-    if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket não encontrado")
-    
-    # Quem pode fechar: criador, destinatário, admin, gestor, parceiro
-    pode_fechar = (
-        ticket["criado_por_id"] == current_user["id"] or
-        ticket.get("destinatario_id") == current_user["id"] or
-        current_user["role"] in ["admin", "gestao", "parceiro"]
-    )
-    
-    if not pode_fechar:
-        raise HTTPException(status_code=403, detail="Não autorizado")
-    
-    await db.tickets.update_one(
-        {"id": ticket_id},
-        {"$set": {
-            "status": "fechado",
-            "fechado_por": current_user["id"],
-            "fechado_em": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
-    
-    return {"success": True, "message": f"Ticket #{ticket['numero']} fechado"}
-
-
 @router.get("/estatisticas/resumo")
 async def estatisticas_tickets(
     current_user: dict = Depends(get_current_user)
