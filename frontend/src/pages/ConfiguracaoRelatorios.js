@@ -67,6 +67,37 @@ const ConfiguracaoRelatorios = ({ user, onLogout }) => {
     setConfig({ ...config, [field]: !config[field] });
   };
 
+  const handleGerarPDF = async () => {
+    setGerando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_URL}/api/relatorios/parceiro/resumo-semanal/pdf?semana=${semana}&ano=${ano}`,
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      // Criar URL do blob e fazer download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `resumo_semanal_S${semana}_${ano}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF. Verifique se existem dados para a semana selecionada.');
+    } finally {
+      setGerando(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 p-6">
