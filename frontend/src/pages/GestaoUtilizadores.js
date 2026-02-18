@@ -519,6 +519,16 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                         <Edit className="w-3 h-3 mr-1" />
                         Plano
                       </Button>
+                      <Button
+                        onClick={() => handleEliminarUser(usuario)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                        data-testid={`eliminar-user-${usuario.id}`}
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Eliminar
+                      </Button>
                     </td>
                   </tr>
                 ))}
