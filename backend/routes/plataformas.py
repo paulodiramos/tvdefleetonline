@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
+from bson import ObjectId
 import logging
 import uuid
 
@@ -23,6 +24,21 @@ from utils.auth import get_current_user
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/plataformas", tags=["Plataformas"])
 db = get_database()
+
+
+def convert_objectid(obj):
+    """Converter ObjectId e outros tipos não serializáveis para JSON"""
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {k: convert_objectid(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_objectid(item) for item in obj]
+    elif isinstance(obj, bytes):
+        return obj.decode('utf-8', errors='ignore')
+    return obj
 
 
 # ==================== CATEGORIAS E METADADOS ====================
