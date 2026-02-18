@@ -1200,6 +1200,163 @@ async def get_motorista_historico_atribuicoes(
     }
 
 
+@router.get("/motoristas/{motorista_id}/historico-atividade")
+async def get_motorista_historico_atividade(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Retorna o histórico de ativações/desativações/bloqueios do motorista.
+    """
+    # Verificar permissões
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se motorista existe
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Buscar histórico de atividade
+    historico = await db.historico_atividade_motoristas.find(
+        {"motorista_id": motorista_id}
+    ).sort("data", -1).to_list(100)
+    
+    for entry in historico:
+        if "_id" in entry:
+            del entry["_id"]
+    
+    # Estado atual
+    estado_atual = {
+        "ativo": motorista.get("ativo", True),
+        "bloqueado": motorista.get("bloqueado", False),
+        "bloqueado_em": motorista.get("bloqueado_em"),
+        "motivo_bloqueio": motorista.get("motivo_bloqueio"),
+        "data_desativacao": motorista.get("data_desativacao"),
+        "data_ativacao": motorista.get("data_ativacao") or motorista.get("created_at")
+    }
+    
+    return {
+        "motorista_id": motorista_id,
+        "motorista_nome": motorista.get("name"),
+        "estado_atual": estado_atual,
+        "historico": historico,
+        "total_registos": len(historico)
+    }
+
+
+@router.get("/motoristas/{motorista_id}/historico-rendimentos")
+async def get_motorista_historico_rendimentos(
+    motorista_id: str,
+    ano: Optional[int] = None,
+    limite: int = 52,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Retorna o histórico de rendimentos semanais do motorista.
+    """
+    # Verificar permissões
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se motorista existe
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Filtro por ano se especificado
+    filtro = {"motorista_id": motorista_id}
+    if ano:
+        filtro["ano"] = ano
+    
+    # Buscar histórico de status_relatorios (onde ficam os rendimentos semanais)
+    rendimentos = await db.status_relatorios.find(
+        filtro,
+        {"_id": 0}
+    ).sort([("ano", -1), ("semana", -1)]).to_list(limite)
+    
+    # Buscar dados dos recibos/relatórios para cada semana
+    resultado = []
+    total_liquido = 0
+    total_semanas = 0
+    
+    for r in rendimentos:
+        semana = r.get("semana")
+        ano_r = r.get("ano")
+        
+        # Buscar dados do relatório semanal se existirem
+        dados_semana = {
+            "semana": semana,
+            "ano": ano_r,
+            "status": r.get("status_aprovacao", "pendente"),
+            "valor_liquido": r.get("valor_liquido", 0),
+            "valor_bruto": r.get("valor_bruto", 0),
+            "uber": r.get("uber", 0),
+            "bolt": r.get("bolt", 0),
+            "aluguer": r.get("aluguer", 0),
+            "extras": r.get("extras", 0),
+            "empresa_faturacao": r.get("empresa_faturacao_info"),
+            "data_aprovacao": r.get("data_aprovado"),
+            "data_recibo": r.get("data_recibo_uploaded")
+        }
+        
+        if dados_semana["valor_liquido"]:
+            total_liquido += float(dados_semana["valor_liquido"])
+            total_semanas += 1
+        
+        resultado.append(dados_semana)
+    
+    return {
+        "motorista_id": motorista_id,
+        "motorista_nome": motorista.get("name"),
+        "ano_filtro": ano,
+        "rendimentos": resultado,
+        "resumo": {
+            "total_semanas": total_semanas,
+            "total_liquido": round(total_liquido, 2),
+            "media_semanal": round(total_liquido / total_semanas, 2) if total_semanas > 0 else 0
+        }
+    }
+
+
+@router.post("/motoristas/{motorista_id}/registar-atividade")
+async def registar_atividade_motorista(
+    motorista_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Regista uma entrada no histórico de atividade do motorista.
+    Tipos: ativado, desativado, bloqueado, desbloqueado, atribuido_parceiro
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    tipo = data.get("tipo")  # ativado, desativado, bloqueado, desbloqueado
+    motivo = data.get("motivo", "")
+    
+    if tipo not in ["ativado", "desativado", "bloqueado", "desbloqueado", "atribuido_parceiro"]:
+        raise HTTPException(status_code=400, detail="Tipo de atividade inválido")
+    
+    entrada = {
+        "id": str(uuid.uuid4()),
+        "motorista_id": motorista_id,
+        "tipo": tipo,
+        "motivo": motivo,
+        "data": datetime.now(timezone.utc).isoformat(),
+        "registado_por": current_user["id"],
+        "registado_por_nome": current_user.get("name", ""),
+        "dados_adicionais": data.get("dados_adicionais", {})
+    }
+    
+    await db.historico_atividade_motoristas.insert_one(entrada)
+    
+    return {"message": "Atividade registada com sucesso", "id": entrada["id"]}
+
 
 # ==================== CONFIGURAÇÕES FINANCEIRAS ====================
 
