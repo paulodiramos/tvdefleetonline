@@ -243,6 +243,54 @@ async def _gerar_numero_ticket():
     return f"{ano}{str(count + 1).zfill(5)}"
 
 
+@router.get("/por-veiculo/{veiculo_id}")
+async def listar_tickets_por_veiculo(
+    veiculo_id: str,
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar tickets associados a um veículo"""
+    
+    query = {"veiculo_id": veiculo_id}
+    
+    if status:
+        query["status"] = status
+    
+    tickets = await db.tickets.find(query, {"_id": 0}).sort("updated_at", -1).to_list(100)
+    
+    return tickets
+
+
+@router.get("/por-motorista/{motorista_id}")
+async def listar_tickets_por_motorista(
+    motorista_id: str,
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar tickets associados a um motorista"""
+    
+    query = {"$or": [
+        {"motorista_id": motorista_id},
+        {"criado_por_id": motorista_id}
+    ]}
+    
+    if status:
+        query["status"] = status
+    
+    tickets = await db.tickets.find(query, {"_id": 0}).sort("updated_at", -1).to_list(100)
+    
+    return tickets
+
+
+@router.get("/categorias")
+async def listar_categorias():
+    """Listar categorias disponíveis para tickets"""
+    return {
+        "categorias": TICKET_CATEGORIES,
+        "categorias_com_fotos_obrigatorias": CATEGORIAS_COM_FOTOS
+    }
+
+
 @router.get("/meus")
 async def listar_meus_tickets(
     status: Optional[str] = None,
