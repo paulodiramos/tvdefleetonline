@@ -34,7 +34,7 @@ export default function PrecosEspeciais({ user }) {
   const [formData, setFormData] = useState({
     plano_id: '',
     parceiro_id: '',
-    tipo_desconto: 'percentagem', // percentagem ou valor_fixo
+    tipo_desconto: 'percentagem', // percentagem, valor_fixo, valor_fixo_veiculo, valor_fixo_motorista, valor_fixo_motorista_veiculo
     valor_desconto: '',
     preco_fixo: '',
     validade_inicio: '',
@@ -42,6 +42,40 @@ export default function PrecosEspeciais({ user }) {
     motivo: '',
     ativo: true
   });
+
+  // Labels e descrições para cada tipo de preço
+  const tiposPreco = {
+    percentagem: {
+      label: 'Percentagem de Desconto',
+      descricao: 'Aplica um desconto % sobre o preço base do plano',
+      icon: Percent,
+      color: 'bg-blue-100 text-blue-700'
+    },
+    valor_fixo: {
+      label: 'Preço Fixo Total',
+      descricao: 'Define um valor fixo mensal total para o parceiro',
+      icon: Euro,
+      color: 'bg-green-100 text-green-700'
+    },
+    valor_fixo_veiculo: {
+      label: 'Preço Fixo por Veículo',
+      descricao: 'Define um valor fixo mensal por cada veículo',
+      icon: Car,
+      color: 'bg-purple-100 text-purple-700'
+    },
+    valor_fixo_motorista: {
+      label: 'Preço Fixo por Motorista',
+      descricao: 'Define um valor fixo mensal por cada motorista',
+      icon: User,
+      color: 'bg-amber-100 text-amber-700'
+    },
+    valor_fixo_motorista_veiculo: {
+      label: 'Preço Fixo por Motorista + Veículo',
+      descricao: 'Define um valor fixo mensal por cada combinação motorista/veículo',
+      icon: Users,
+      color: 'bg-rose-100 text-rose-700'
+    }
+  };
 
   const fetchPlanos = useCallback(async () => {
     try {
