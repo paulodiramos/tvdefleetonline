@@ -3,6 +3,38 @@
 ## Visão Geral
 Sistema de gestão de frotas TVDE (Uber/Bolt) com sincronização automática de dados financeiros.
 
+## Changelog - 2026-02-18 (Sessão Actual)
+
+### Novas Funcionalidades Implementadas
+
+#### 39. Refatoração Menu de Navegação ✅
+**Data: 2026-02-18**
+- Links "Dashboard Faturação" e "Empresas Faturação" movidos do menu "Financeiro" para o dropdown do "Perfil"
+- Menu Financeiro simplificado: Resumo Semanal, Extras/Dívidas, Verificar Recibos, Pagamentos, Arquivo de Recibos, Alertas de Custos
+
+#### 40. Botão Gerar PDF no ConfiguracaoRelatorios ✅
+**Data: 2026-02-18**
+- Adicionada secção "Gerar Relatório Semanal em PDF" com card azul destacado
+- Inputs para seleccionar Semana e Ano
+- Botão "Gerar PDF" que chama `/api/relatorios/parceiro/resumo-semanal/pdf`
+- Download automático do ficheiro `resumo_semanal_S{semana}_{ano}.pdf`
+
+#### 41. Correcção Preços Especiais ✅
+**Data: 2026-02-18**
+- Dropdown de seleção de parceiros confirmado funcional (problema anterior era do Playwright)
+- Corrigido bug: `preco_fixo` agora é enviado para TODOS os tipos de preço fixo (não só para `valor_fixo`)
+
+#### 42. Refatoração FichaVeiculo.js - Fase 1 ✅
+**Data: 2026-02-18**
+- Extraídas 3 tabs para componentes reutilizáveis:
+  - `VeiculoSeguroTab.js` - Gestão de seguro e documentos
+  - `VeiculoInspecaoTab.js` - Gestão de inspeção e ficha de vistoria
+  - `VeiculoExtintorTab.js` - Gestão de extintor e certificado
+- Ficheiro principal reduzido de 6152 para 5780 linhas (-372 linhas, -6%)
+- Componentes em `/app/frontend/src/components/ficha-veiculo/`
+
+---
+
 ## Requisitos Principais
 
 ### Funcionalidades Implementadas
