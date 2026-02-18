@@ -1,0 +1,101 @@
+{
+  "summary": "Iteration 44 - Tested KM Management (GestaoKmVeiculo) and Preços Especiais features. Found and fixed 4 critical bugs in frontend. All 15 backend tests passed. Frontend features now working correctly after fixes.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/gestao-planos/planos/{invalid-id}/precos-especiais",
+        "issue": "Returns 200 instead of 404 for invalid plano_id - creates orphan record",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "bugs_fixed_by_testing_agent": [
+    {
+      "file": "/app/frontend/src/components/GestaoKmVeiculo.js",
+      "issue": "Wrong API endpoint paths - used /api/veiculos/ instead of /vehicles/ (double /api prefix)",
+      "fix": "Changed ${API}/api/veiculos/ to ${API}/vehicles/"
+    },
+    {
+      "file": "/app/frontend/src/components/GestaoKmVeiculo.js",
+      "issue": "Wrong endpoint for KM update - used /km instead of /atualizar-km",
+      "fix": "Changed /api/veiculos/${veiculoId}/km to /vehicles/${veiculoId}/atualizar-km"
+    },
+    {
+      "file": "/app/frontend/src/pages/admin/PrecosEspeciais.js",
+      "issue": "Wrong API endpoint paths - double /api prefix and wrong route names",
+      "fixes": [
+        "Changed /api/gestao/planos to /gestao-planos/planos",
+        "Changed /api/usuarios/parceiros to /uber/admin/parceiros",
+        "Changed /api/admin/precos-especiais to /admin/precos-especiais"
+      ]
+    },
+    {
+      "file": "/app/frontend/src/pages/FichaVeiculo.js",
+      "issue": "ReferenceError: id is not defined - used 'id' instead of 'vehicleId' from useParams",
+      "fix": "Changed veiculoId={id} to veiculoId={vehicleId}"
+    },
+    {
+      "file": "/app/frontend/src/pages/FichaVeiculo.js",
+      "issue": "ReferenceError: fetchVehicle is not defined - function name mismatch",
+      "fix": "Changed onUpdate={fetchVehicle} to onUpdate={fetchVehicleData}"
+    }
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_km_precos_especiais.py",
+    "/app/test_reports/pytest/pytest_km_precos.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Backend KM endpoints working correctly: GET /api/vehicles/{id}/historico-km returns history, PUT /api/vehicles/{id}/atualizar-km updates KM and creates history entry",
+    "Preços Especiais backend: POST /api/gestao-planos/planos/{id}/precos-especiais creates special prices for partners",
+    "GestaoKmVeiculo component properly integrated in FichaVeiculo.js after fixes",
+    "PrecosEspeciais page properly renders with form modal for creating discounts"
+  ],
+  "updated_files": [
+    "/app/frontend/src/components/GestaoKmVeiculo.js",
+    "/app/frontend/src/pages/admin/PrecosEspeciais.js",
+    "/app/frontend/src/pages/FichaVeiculo.js",
+    "/app/backend/tests/test_km_precos_especiais.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "100% (after fixes)"
+  },
+  "test_credentials": {
+    "admin": {"email": "admin@tvdefleet.com", "password": "Admin123!"},
+    "parceiro": {"email": "geral@zmbusines.com", "password": "Admin123!"}
+  },
+  "seed_data_creation": "TEST_preco_especial and TEST_preco_fixo entries created during backend tests",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "KM Management feature fully working. GestaoKmVeiculo component shows KM Inicial, KM Atual, KM Percorrido. Historico button opens modal with KM history (from historico_km collection). Atualizar KM button opens form to update KM with fonte (manual/gps/inspecao/etc) and notas. Preços Especiais page at /admin/precos-especiais allows admin to create special prices for partners with percentage or fixed value discounts.",
+  "passed_tests": [
+    "Backend: Admin login works",
+    "Backend: Parceiro login works",
+    "Backend: GET /api/vehicles/{id}/historico-km returns list",
+    "Backend: historico-km with invalid vehicle returns 404",
+    "Backend: historico-km doesn't return MongoDB _id",
+    "Backend: PUT /api/vehicles/{id}/atualizar-km updates KM",
+    "Backend: atualizar-km creates history entry",
+    "Backend: atualizar-km without km_atual returns 400",
+    "Backend: GET /api/gestao-planos/planos returns planos list",
+    "Backend: GET /api/uber/admin/parceiros returns parceiros list",
+    "Backend: POST precos-especiais creates percentage discount",
+    "Backend: POST precos-especiais creates fixed value discount",
+    "Backend: POST precos-especiais without parceiro_id returns 400",
+    "Backend: POST precos-especiais for invalid plano returns 200 (edge case)",
+    "Backend: GET /api/admin/precos-especiais returns 404 (frontend fallback)",
+    "Frontend: Vehicle detail page loads without errors",
+    "Frontend: GestaoKmVeiculo card displays KM values",
+    "Frontend: Historico button opens modal",
+    "Frontend: Atualizar KM button opens form modal",
+    "Frontend: Preços Especiais page loads for admin",
+    "Frontend: Novo Preço Especial modal opens with all form fields"
+  ]
+}
