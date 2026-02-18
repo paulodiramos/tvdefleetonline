@@ -504,21 +504,27 @@ async def exportar_rpa_plataforma(
         raise HTTPException(status_code=403, detail="Apenas Admin pode exportar RPA")
     
     # Buscar plataforma
-    plataforma = await db.plataformas.find_one({"id": plataforma_id}, {"_id": 0})
+    plataforma = await db.plataformas.find_one({"id": plataforma_id})
     if not plataforma:
         raise HTTPException(status_code=404, detail="Plataforma não encontrada")
     
+    # Remover _id e converter ObjectIds
+    plataforma.pop('_id', None)
+    plataforma = convert_objectid(plataforma)
+    
     # Buscar rascunhos RPA
-    rascunhos = await db.rpa_rascunhos.find({"plataforma_id": plataforma_id}, {"_id": 0}).to_list(100)
+    rascunhos_raw = await db.rpa_rascunhos.find({"plataforma_id": plataforma_id}).to_list(100)
+    rascunhos = [convert_objectid({k: v for k, v in r.items() if k != '_id'}) for r in rascunhos_raw]
     
     # Buscar designs RPA
-    designs = await db.rpa_designs.find({"plataforma_id": plataforma_id}, {"_id": 0}).to_list(100)
+    designs_raw = await db.rpa_designs.find({"plataforma_id": plataforma_id}).to_list(100)
+    designs = [convert_objectid({k: v for k, v in d.items() if k != '_id'}) for d in designs_raw]
     
     # Buscar execuções (últimas 10 para referência)
-    execucoes = await db.rpa_execucoes.find(
-        {"plataforma_id": plataforma_id},
-        {"_id": 0}
+    execucoes_raw = await db.rpa_execucoes.find(
+        {"plataforma_id": plataforma_id}
     ).sort("created_at", -1).limit(10).to_list(10)
+    execucoes = [convert_objectid({k: v for k, v in e.items() if k != '_id'}) for e in execucoes_raw]
     
     # Criar pacote de exportação
     export_data = {
