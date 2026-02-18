@@ -191,8 +191,29 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       fetchHistorico();
       fetchStatusAprovacao();
       fetchTotaisEmpresa();
+      fetchEmpresasFaturacao();
     }
   }, [semana, ano, refreshKey]);
+
+  // Carregar empresas de faturação
+  const fetchEmpresasFaturacao = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/empresas-faturacao/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEmpresasFaturacao(response.data);
+      // Definir a empresa principal como selecionada por defeito
+      const empresaPrincipal = response.data.find(e => e.principal);
+      if (empresaPrincipal) {
+        setEmpresaSelecionada(empresaPrincipal.id);
+      } else if (response.data.length > 0) {
+        setEmpresaSelecionada(response.data[0].id);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar empresas de faturação:', error);
+    }
+  };
 
   const fetchResumo = async (forceRefresh = false) => {
     if (!semana || !ano) return;
