@@ -841,7 +841,11 @@ async def get_resumo_semanal_parceiro(
          "ativo": 1, "data_desativacao": 1, "parceiro_id": 1, "parceiro_atribuido": 1}
     ).to_list(1000)
     
-    # Filtrar motoristas desativados antes do início da semana (dupla verificação)
+    # Filtrar motoristas que estavam activos durante a semana selecionada
+    # Um motorista deve aparecer se:
+    # 1. Está atualmente ativo
+    # 2. OU foi desativado DEPOIS do início da semana (trabalhou durante a semana)
+    # 3. E não foi ativado DEPOIS do fim da semana (não era motorista ainda)
     motoristas_filtrados = []
     for m in motoristas:
         nome = m.get("name", "Sem nome")
@@ -852,15 +856,40 @@ async def get_resumo_semanal_parceiro(
             logger.debug(f"  {nome}: Excluído - parceiro diferente ({motorista_parceiro} != {parceiro_id_query})")
             continue
         
+        # Obter datas de ativação e desativação
+        data_ativacao = m.get("data_ativacao") or m.get("created_at", "")
+        if isinstance(data_ativacao, str) and len(data_ativacao) > 10:
+            data_ativacao = data_ativacao[:10]  # Apenas YYYY-MM-DD
+        
+        data_desativacao = m.get("data_desativacao")
+        
+        # Se motorista foi criado/ativado DEPOIS do fim da semana, excluir
+        if data_ativacao and data_ativacao > data_fim:
+            logger.debug(f"  {nome}: Excluído - ativado em {data_ativacao} (depois de {data_fim})")
+            continue
+        
         # Se motorista está ativo, incluir sempre
-        if m.get("ativo") == True:
+        if m.get("ativo") == True or m.get("ativo") is None:
             motoristas_filtrados.append(m)
-        # Se motorista está inativo, verificar data_desativacao
-        elif m.get("ativo") == False and m.get("data_desativacao"):
-            data_desativ = m.get("data_desativacao")
-            if isinstance(data_desativ, str) and data_desativ >= data_inicio:
+            logger.debug(f"  {nome}: Incluído - ativo")
+        # Se motorista está inativo mas foi desativado DURANTE ou DEPOIS da semana
+        elif m.get("ativo") == False and data_desativacao:
+            if isinstance(data_desativacao, str) and data_desativacao >= data_inicio:
                 motoristas_filtrados.append(m)
-                logger.info(f"  {nome}: Desativado em {data_desativ}, incluído para semana {data_inicio}")
+                logger.info(f"  {nome}: Incluído - desativado em {data_desativacao}, trabalhou na semana {data_inicio}")
+            else:
+                logger.debug(f"  {nome}: Excluído - desativado em {data_desativacao} (antes de {data_inicio})")
+        # Se está inativo mas não tem data de desativação, verificar se tem dados na semana
+        elif m.get("ativo") == False and not data_desativacao:
+            # Verificar se tem status_relatorio para esta semana (indica que trabalhou)
+            status_semana = await db.status_relatorios.find_one({
+                "motorista_id": m["id"],
+                "semana": semana,
+                "ano": ano
+            })
+            if status_semana:
+                motoristas_filtrados.append(m)
+                logger.info(f"  {nome}: Incluído - inativo mas tem dados para semana {semana}/{ano}")
     
     motoristas = motoristas_filtrados
     logger.info(f"📊 Encontrados {len(motoristas)} motoristas activos para parceiro {parceiro_id_query}")
