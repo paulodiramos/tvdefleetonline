@@ -514,7 +514,26 @@ ln -sf /pw-browsers/chromium_headless_shell-1208 /pw-browsers/chromium_headless_
 - `/api/download-backup-completo` - Backup MongoDB (2.3 MB, 127 coleções)
 - `/api/download-backup-v2` - Backup com novas funcionalidades
 
+#### 21. Interface de Backup Completo para Admin ✅
+**Data: 2026-02-18**
+- **Nova página:** `/admin/backup` (`BackupAdmin.js`)
+- **Funcionalidades implementadas:**
+  1. **Backup Completo:** Exporta todas as 125+ coleções da base de dados num único ficheiro JSON
+  2. **Backup Parcial por Categoria:** 11 categorias disponíveis (Utilizadores, Veículos, Contratos, RPA, Financeiro, Via Verde, Uber/Bolt, Relatórios, Configurações, Tickets, Planos)
+  3. **Estatísticas da Base de Dados:** Mostra total de coleções e documentos
+  4. **Tabela de Coleções:** Lista detalhada de cada coleção com número de documentos
+  5. **Histórico de Backups:** Registo de todos os backups realizados
+  6. **Importação de Backup:** Permite restaurar dados com opção de adicionar ou substituir
+- **Acesso:** Menu Admin → Sistema → 💾 Backup Completo
+- **Endpoints utilizados:**
+  - `GET /api/backup/completo` - Exporta backup completo
+  - `GET /api/backup/parcial/{categoria}` - Exporta por categoria
+  - `GET /api/backup/colecoes` - Lista estatísticas das coleções
+  - `GET /api/backup/historico` - Lista histórico de backups
+  - `POST /api/backup/importar` - Importa backup
+
 ### Próximos Passos
 1. Importar backup para deploy de produção (tvdefleet.com)
-2. Configurar SSL/HTTPS
-3. Testar todas as funcionalidades no deploy
+2. Criar Frontend para Exportação/Importação de configurações RPA individuais
+3. Integração com WhatsApp (P2)
+
