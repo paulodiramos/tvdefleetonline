@@ -404,6 +404,13 @@ const FichaVeiculo = ({ user, onLogout }) => {
         via_verde_id: vehicle.via_verde_id || null,
         cartao_frota_id: vehicle.cartao_frota_id || null,
         cartao_frota_eletric_id: vehicle.cartao_frota_eletric_id || null,
+        // Múltiplos cartões elétricos
+        cartao_prio_eletric: vehicle.cartao_prio_eletric || null,
+        cartao_mio: vehicle.cartao_mio || null,
+        cartao_galp: vehicle.cartao_galp || null,
+        cartao_atlante: vehicle.cartao_atlante || null,
+        cartao_eletrico_outro: vehicle.cartao_eletrico_outro || null,
+        cartao_eletrico_outro_nome: vehicle.cartao_eletrico_outro_nome || null,
         tipo_contrato: {
           tipo: infoForm?.tipo || 'aluguer_sem_caucao',
           periodicidade: infoForm?.periodicidade || 'semanal',
