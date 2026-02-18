@@ -122,6 +122,7 @@ import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 import CopiaSeguranca from "@/pages/CopiaSeguranca";
 import BackupAdmin from "@/pages/BackupAdmin";
 import EmpresasFaturacao from "@/pages/EmpresasFaturacao";
+import DashboardFaturacao from "@/pages/DashboardFaturacao";
 // RPA - Apenas Designer e Automação activos
 import RPAAutomacao from "@/pages/RPAAutomacao";
 import RPADesigner from "@/pages/RPADesigner";
