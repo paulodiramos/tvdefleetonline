@@ -228,13 +228,68 @@ export default function PrecosEspeciais({ user }) {
               Preços Especiais
             </h1>
             <p className="text-gray-500 mt-1">
-              Configurar preços e descontos especiais para parceiros
+              Configure descontos e preços especiais para parceiros específicos
             </p>
           </div>
           <Button onClick={() => handleOpenModal()} data-testid="btn-novo-preco">
             <Plus className="w-4 h-4 mr-2" />
             Novo Preço Especial
           </Button>
+        </div>
+
+        {/* Info Alert */}
+        <Alert className="mb-6 border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-800">Como funciona?</AlertTitle>
+          <AlertDescription className="text-blue-700">
+            <ul className="list-disc ml-4 mt-2 space-y-1 text-sm">
+              <li><strong>Percentagem:</strong> Aplica um desconto percentual sobre o preço base do plano</li>
+              <li><strong>Preço Fixo:</strong> Define um valor fixo mensal para o parceiro, ignorando o preço original</li>
+              <li><strong>Validade:</strong> Defina datas de início e fim para descontos temporários (promoções, testes)</li>
+              <li><strong>Sem limite:</strong> Deixe as datas vazias para descontos permanentes</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-600">Total Preços Especiais</p>
+                  <p className="text-2xl font-bold text-purple-700">{todosPrecosEspeciais.length}</p>
+                </div>
+                <Tag className="w-8 h-8 text-purple-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-600">Ativos</p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {todosPrecosEspeciais.filter(p => p.ativo !== false).length}
+                  </p>
+                </div>
+                <Check className="w-8 h-8 text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-amber-600">Com Validade</p>
+                  <p className="text-2xl font-bold text-amber-700">
+                    {todosPrecosEspeciais.filter(p => p.validade_fim).length}
+                  </p>
+                </div>
+                <Clock className="w-8 h-8 text-amber-400" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filtros */}
@@ -254,7 +309,7 @@ export default function PrecosEspeciais({ user }) {
                 </div>
               </div>
               <Badge variant="outline" className="px-4 py-2">
-                {precosFiltrados.length} preços especiais
+                {precosFiltrados.length} resultado(s)
               </Badge>
             </div>
           </CardContent>
