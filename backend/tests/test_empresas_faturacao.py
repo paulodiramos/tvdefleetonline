@@ -363,7 +363,8 @@ class TestExistingEmpresaZenyMacaia:
             "password": "Admin123!"
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            data = response.json()
+            return data.get("access_token") or data.get("token")
         pytest.skip(f"Parceiro authentication failed: {response.status_code}")
     
     @pytest.fixture
