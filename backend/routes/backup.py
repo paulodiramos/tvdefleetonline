@@ -13,6 +13,15 @@ import uuid
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/backup", tags=["backup"])
 
+# Importar db e get_current_user do módulo pai
+db = None
+get_current_user = None
+
+def init_backup_router(database, auth_func):
+    global db, get_current_user
+    db = database
+    get_current_user = auth_func
+
 
 # Lista de todas as coleções importantes para backup
 COLECOES_BACKUP = [
