@@ -520,7 +520,7 @@ export default function PrecosEspeciais({ user }) {
 
             {/* Tipo de Desconto */}
             <div className="space-y-2">
-              <Label>Tipo de Desconto</Label>
+              <Label>Tipo de Preço Especial</Label>
               <Select
                 value={formData.tipo_desconto}
                 onValueChange={(value) => setFormData({ ...formData, tipo_desconto: value })}
@@ -529,18 +529,20 @@ export default function PrecosEspeciais({ user }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="percentagem">
-                    <div className="flex items-center gap-2">
-                      <Percent className="w-4 h-4" />
-                      Percentagem de Desconto
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="valor_fixo">
-                    <div className="flex items-center gap-2">
-                      <Euro className="w-4 h-4" />
-                      Preço Fixo
-                    </div>
-                  </SelectItem>
+                  {Object.entries(tiposPreco).map(([key, tipo]) => {
+                    const Icon = tipo.icon;
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="w-4 h-4" />
+                          <div>
+                            <span className="font-medium">{tipo.label}</span>
+                            <p className="text-xs text-gray-500">{tipo.descricao}</p>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -561,7 +563,12 @@ export default function PrecosEspeciais({ user }) {
               </div>
             ) : (
               <div className="space-y-2">
-                <Label>Preço Fixo (€)</Label>
+                <Label>
+                  {formData.tipo_desconto === 'valor_fixo' && 'Preço Fixo Mensal (€)'}
+                  {formData.tipo_desconto === 'valor_fixo_veiculo' && 'Preço por Veículo (€/veículo)'}
+                  {formData.tipo_desconto === 'valor_fixo_motorista' && 'Preço por Motorista (€/motorista)'}
+                  {formData.tipo_desconto === 'valor_fixo_motorista_veiculo' && 'Preço por Motorista+Veículo (€)'}
+                </Label>
                 <Input
                   type="number"
                   value={formData.preco_fixo}
@@ -571,6 +578,12 @@ export default function PrecosEspeciais({ user }) {
                   step="0.01"
                   data-testid="input-preco-fixo"
                 />
+                <p className="text-xs text-gray-500">
+                  {formData.tipo_desconto === 'valor_fixo' && 'Valor total fixo mensal, independente do número de veículos ou motoristas'}
+                  {formData.tipo_desconto === 'valor_fixo_veiculo' && 'O valor será multiplicado pelo número de veículos do parceiro'}
+                  {formData.tipo_desconto === 'valor_fixo_motorista' && 'O valor será multiplicado pelo número de motoristas ativos'}
+                  {formData.tipo_desconto === 'valor_fixo_motorista_veiculo' && 'O valor será cobrado por cada combinação motorista-veículo ativa'}
+                </p>
               </div>
             )}
 
