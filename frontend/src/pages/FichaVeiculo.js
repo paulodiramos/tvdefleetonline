@@ -3929,20 +3929,86 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     <p className="text-xs text-gray-400">Cartão para abastecimentos de combustível</p>
                   </div>
 
-                  {/* Cartão Combustível Elétrico */}
-                  <div className="space-y-2">
-                    <Label htmlFor="cartao_eletrico" className="flex items-center gap-2">
+                  {/* Cartões Combustível Elétrico - 5 Fornecedores */}
+                  <div className="space-y-4 mt-6">
+                    <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
                       <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                      Cartão Combustível Elétrico
-                    </Label>
-                    <Input
-                      id="cartao_eletrico"
-                      placeholder="Número do cartão de carregamento"
-                      value={vehicle?.cartao_frota_eletric_id || ''}
-                      onChange={(e) => setVehicle({...vehicle, cartao_frota_eletric_id: e.target.value})}
-                      disabled={!canEdit || !editMode}
-                    />
-                    <p className="text-xs text-gray-400">Cartão para carregamentos elétricos</p>
+                      Cartões de Carregamento Elétrico
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Prio Electric */}
+                      <div className="space-y-1">
+                        <Label htmlFor="cartao_prio" className="text-xs">Prio Electric</Label>
+                        <Input
+                          id="cartao_prio"
+                          placeholder="Nº cartão Prio"
+                          value={vehicle?.cartao_prio_eletric || vehicle?.cartao_frota_eletric_id || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_prio_eletric: e.target.value})}
+                          disabled={!canEdit || !editMode}
+                        />
+                      </div>
+                      
+                      {/* Mio */}
+                      <div className="space-y-1">
+                        <Label htmlFor="cartao_mio" className="text-xs">Mio</Label>
+                        <Input
+                          id="cartao_mio"
+                          placeholder="Nº cartão Mio"
+                          value={vehicle?.cartao_mio || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_mio: e.target.value})}
+                          disabled={!canEdit || !editMode}
+                        />
+                      </div>
+                      
+                      {/* Galp */}
+                      <div className="space-y-1">
+                        <Label htmlFor="cartao_galp" className="text-xs">Galp</Label>
+                        <Input
+                          id="cartao_galp"
+                          placeholder="Nº cartão Galp"
+                          value={vehicle?.cartao_galp || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_galp: e.target.value})}
+                          disabled={!canEdit || !editMode}
+                        />
+                      </div>
+                      
+                      {/* Atlante */}
+                      <div className="space-y-1">
+                        <Label htmlFor="cartao_atlante" className="text-xs">Atlante</Label>
+                        <Input
+                          id="cartao_atlante"
+                          placeholder="Nº cartão Atlante"
+                          value={vehicle?.cartao_atlante || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_atlante: e.target.value})}
+                          disabled={!canEdit || !editMode}
+                        />
+                      </div>
+                      
+                      {/* Outro */}
+                      <div className="space-y-1">
+                        <Label htmlFor="cartao_outro_nome" className="text-xs">Outro Fornecedor (Nome)</Label>
+                        <Input
+                          id="cartao_outro_nome"
+                          placeholder="Nome do fornecedor"
+                          value={vehicle?.cartao_eletrico_outro_nome || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_eletrico_outro_nome: e.target.value})}
+                          disabled={!canEdit || !editMode}
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <Label htmlFor="cartao_outro" className="text-xs">Outro (Nº Cartão)</Label>
+                        <Input
+                          id="cartao_outro"
+                          placeholder="Nº cartão"
+                          value={vehicle?.cartao_eletrico_outro || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_eletrico_outro: e.target.value})}
+                          disabled={!canEdit || !editMode}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400">Os valores de todos os cartões serão somados na coluna de carregamentos elétricos</p>
                   </div>
                 </div>
 
