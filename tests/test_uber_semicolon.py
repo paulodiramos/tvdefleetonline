@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://partner-invoicing-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://driver-analytics-3.preview.emergentagent.com/api"
 
 # Admin credentials from review request
 ADMIN_CREDS = {"email": "admin@tvdefleet.com", "password": "o72ocUHy"}

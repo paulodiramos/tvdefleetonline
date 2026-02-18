@@ -15,7 +15,7 @@ import time
 from datetime import datetime, timedelta
 
 # URL base do backend
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://partner-invoicing-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://driver-analytics-3.preview.emergentagent.com')
 
 # Credenciais de teste
 TEST_USER = {
