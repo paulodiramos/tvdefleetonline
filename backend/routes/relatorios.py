@@ -1191,11 +1191,22 @@ async def get_resumo_semanal_parceiro(
         
         # ============ CARREGAMENTO ELÉTRICO ============
         eletrico_total = 0.0
+        eletrico_discriminacao = []  # Discriminação por fornecedor
         elet_query_conditions = [{"motorista_id": motorista_id}]
-        if cartao_eletrico:
+        
+        # Adicionar todos os cartões elétricos às condições de busca
+        for cartao_info in cartoes_eletricos:
+            cartao_id = cartao_info["cartao"]
+            elet_query_conditions.append({"cartao_frota_id": cartao_id})
+            elet_query_conditions.append({"card_code": cartao_id})
+            elet_query_conditions.append({"cartao": cartao_id})
+        
+        # Legacy - cartao_eletrico único
+        if cartao_eletrico and not cartoes_eletricos:
             elet_query_conditions.append({"cartao_frota_id": cartao_eletrico})
             elet_query_conditions.append({"card_code": cartao_eletrico})
             elet_query_conditions.append({"cartao": cartao_eletrico})
+        
         if veiculo_id:
             elet_query_conditions.append({"vehicle_id": veiculo_id})
             elet_query_conditions.append({"veiculo_id": veiculo_id})
@@ -1219,7 +1230,10 @@ async def get_resumo_semanal_parceiro(
         # Buscar de combustivel_eletrico (carregamentos elétricos)
         elet_records = await db.combustivel_eletrico.find(elet_query, {"_id": 0}).to_list(100)
         for r in elet_records:
-            eletrico_total += float(r.get("valor") or r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
+            valor = float(r.get("valor") or r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
+            eletrico_total += valor
+            fornecedor = r.get("fornecedor") or r.get("provider") or "Desconhecido"
+            eletrico_discriminacao.append({"fornecedor": fornecedor, "valor": valor, "data": r.get("data")})
         
         # Buscar também de despesas_combustivel mas APENAS se tiver kWh > 0 (elétrico)
         elet_despesas_query = {
@@ -1234,12 +1248,18 @@ async def get_resumo_semanal_parceiro(
         }
         elet_despesas_records = await db.despesas_combustivel.find(elet_despesas_query, {"_id": 0}).to_list(100)
         for r in elet_despesas_records:
-            eletrico_total += float(r.get("valor_total") or r.get("valor") or 0)
+            valor = float(r.get("valor_total") or r.get("valor") or 0)
+            eletrico_total += valor
+            fornecedor = r.get("fornecedor") or r.get("provider") or "Desconhecido"
+            eletrico_discriminacao.append({"fornecedor": fornecedor, "valor": valor, "data": r.get("data")})
         
         # Buscar de rpa_carregamento_eletrico
         rpa_elet_records = await db.rpa_carregamento_eletrico.find(elet_query, {"_id": 0}).to_list(100)
         for r in rpa_elet_records:
-            eletrico_total += float(r.get("valor_total") or r.get("valor") or 0)
+            valor = float(r.get("valor_total") or r.get("valor") or 0)
+            eletrico_total += valor
+            fornecedor = r.get("fornecedor") or r.get("provider") or "Prio Electric"
+            eletrico_discriminacao.append({"fornecedor": fornecedor, "valor": valor, "data": r.get("data")})
         
         total_elet_records = len(elet_records) + len(elet_despesas_records) + len(rpa_elet_records)
         logger.info(f"  {motorista.get('name')}: Elétrico query returned {total_elet_records} records (combustivel_eletrico: {len(elet_records)}, despesas_combustivel(kWh): {len(elet_despesas_records)}, rpa: {len(rpa_elet_records)}), total €{eletrico_total:.2f}")
