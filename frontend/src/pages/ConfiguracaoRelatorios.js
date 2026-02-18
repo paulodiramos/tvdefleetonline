@@ -149,6 +149,65 @@ const ConfiguracaoRelatorios = ({ user, onLogout }) => {
           </div>
         </div>
 
+        {/* Gerar Relatório PDF */}
+        <Card className="mb-6 border-blue-200 bg-blue-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="w-5 h-5 text-blue-600" />
+              Gerar Relatório Semanal em PDF
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-600 mb-4">
+              Gere o relatório semanal completo em PDF com todos os motoristas e despesas da semana selecionada.
+            </p>
+            <div className="flex flex-wrap items-end gap-4">
+              <div>
+                <Label htmlFor="semana" className="text-sm">Semana</Label>
+                <Input
+                  id="semana"
+                  type="number"
+                  value={semana}
+                  onChange={(e) => setSemana(parseInt(e.target.value) || 1)}
+                  min="1"
+                  max="53"
+                  className="w-24"
+                />
+              </div>
+              <div>
+                <Label htmlFor="ano" className="text-sm">Ano</Label>
+                <Input
+                  id="ano"
+                  type="number"
+                  value={ano}
+                  onChange={(e) => setAno(parseInt(e.target.value) || 2026)}
+                  min="2020"
+                  max="2030"
+                  className="w-28"
+                />
+              </div>
+              <Button 
+                onClick={handleGerarPDF} 
+                disabled={gerando}
+                className="bg-blue-600 hover:bg-blue-700"
+                data-testid="btn-gerar-pdf"
+              >
+                {gerando ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    A gerar...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Gerar PDF
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Cabeçalho do Relatório */}
         <Card className="mb-6">
           <CardHeader>
