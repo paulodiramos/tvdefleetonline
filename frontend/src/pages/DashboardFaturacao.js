@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { 
   Building2, TrendingUp, TrendingDown, DollarSign, 
   Calendar, ChevronLeft, ChevronRight, Loader2, 
-  BarChart3, PieChart as PieChartIcon, FileText, RefreshCw
+  BarChart3, PieChart as PieChartIcon, FileText, RefreshCw, Users
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
