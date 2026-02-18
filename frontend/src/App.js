@@ -121,6 +121,7 @@ import FichaMotorista from "@/pages/FichaMotorista";
 import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 import CopiaSeguranca from "@/pages/CopiaSeguranca";
 import BackupAdmin from "@/pages/BackupAdmin";
+import PrecosEspeciais from "@/pages/admin/PrecosEspeciais";
 import EmpresasFaturacao from "@/pages/EmpresasFaturacao";
 import DashboardFaturacao from "@/pages/DashboardFaturacao";
 // RPA - Apenas Designer e Automação activos
