@@ -197,16 +197,18 @@ const VeiculosPublico = () => {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {veiculosFiltrados.map((veiculo) => (
+            {veiculosFiltrados.map((veiculo) => {
+              const photoUrl = getFirstValidPhoto(veiculo.fotos_veiculo || veiculo.fotos);
+              return (
               <Card key={veiculo.id} className="hover:shadow-xl transition">
-                {veiculo.fotos_veiculo && veiculo.fotos_veiculo.length > 0 ? (
+                {photoUrl ? (
                   <img
-                    src={getPhotoUrl(veiculo.fotos_veiculo[0])}
+                    src={photoUrl}
                     alt={`${veiculo.marca} ${veiculo.modelo}`}
                     className="w-full h-48 object-cover rounded-t-lg"
                     onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                      e.target.onerror = null;
+                      e.target.parentElement.innerHTML = '<div class="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 rounded-t-lg flex items-center justify-center"><svg class="w-20 h-20 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>';
                     }}
                   />
                 ) : null}
