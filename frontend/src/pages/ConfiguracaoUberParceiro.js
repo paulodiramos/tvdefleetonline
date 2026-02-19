@@ -587,6 +587,34 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                   </Button>
                 </div>
                 
+                {/* Campo para código SMS/Email de 4 dígitos */}
+                <div className="flex gap-2 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <span className="text-yellow-700 text-sm font-medium whitespace-nowrap">📱 Código SMS:</span>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={4}
+                    placeholder="0000"
+                    value={codigoSMS}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      setCodigoSMS(val);
+                    }}
+                    onKeyPress={(e) => e.key === 'Enter' && enviarCodigoSMS()}
+                    className="w-24 text-center text-lg font-mono tracking-widest"
+                  />
+                  <Button 
+                    onClick={enviarCodigoSMS} 
+                    variant="default" 
+                    size="sm"
+                    className="bg-yellow-600 hover:bg-yellow-700"
+                    disabled={codigoSMS.length !== 4 || atualizando}
+                  >
+                    Enviar Código
+                  </Button>
+                </div>
+                
                 <div className="flex flex-wrap gap-2 items-center">
                   <div className="flex-1 flex gap-2">
                     <Input
