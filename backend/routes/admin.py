@@ -406,6 +406,124 @@ async def restart_service(service: str, current_user: dict = Depends(get_current
         raise HTTPException(status_code=500, detail=f"Erro: {str(e)}")
 
 
+@router.get("/sistema/playwright/health-check")
+async def playwright_health_check(current_user: dict = Depends(get_current_user)):
+    """
+    Verificação de saúde do Playwright - testa se consegue iniciar browser e carregar página.
+    Retorna estado detalhado e métricas de performance.
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    import time
+    import asyncio
+    
+    result = {
+        "healthy": False,
+        "browser_launch": {"success": False, "time_ms": None, "error": None},
+        "page_navigation": {"success": False, "time_ms": None, "error": None},
+        "screenshot": {"success": False, "size_bytes": None, "error": None},
+        "browsers_installed": [],
+        "playwright_version": None,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Verificar versão do Playwright
+    try:
+        version_result = subprocess.run(['playwright', '--version'], capture_output=True, text=True, timeout=10)
+        if version_result.returncode == 0:
+            result["playwright_version"] = version_result.stdout.strip()
+    except Exception:
+        pass
+    
+    # Verificar browsers instalados
+    browsers_path = "/pw-browsers"
+    if os.path.exists(browsers_path):
+        result["browsers_installed"] = [d for d in os.listdir(browsers_path) if os.path.isdir(os.path.join(browsers_path, d)) and d.startswith("chromium")]
+    
+    # Teste funcional completo
+    playwright = None
+    browser = None
+    
+    try:
+        os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
+        from playwright.async_api import async_playwright
+        
+        # Teste 1: Lançar browser
+        start_time = time.time()
+        playwright = await async_playwright().start()
+        browser = await playwright.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-dev-shm-usage']
+        )
+        result["browser_launch"]["success"] = True
+        result["browser_launch"]["time_ms"] = round((time.time() - start_time) * 1000)
+        
+        # Teste 2: Navegar para página
+        start_time = time.time()
+        context = await browser.new_context(viewport={"width": 1280, "height": 720})
+        page = await context.new_page()
+        await page.goto("https://www.google.com", timeout=30000, wait_until="domcontentloaded")
+        result["page_navigation"]["success"] = True
+        result["page_navigation"]["time_ms"] = round((time.time() - start_time) * 1000)
+        
+        # Teste 3: Capturar screenshot
+        start_time = time.time()
+        screenshot = await page.screenshot(type="jpeg", quality=50)
+        result["screenshot"]["success"] = True
+        result["screenshot"]["size_bytes"] = len(screenshot)
+        
+        result["healthy"] = True
+        
+    except Exception as e:
+        error_msg = str(e)
+        if not result["browser_launch"]["success"]:
+            result["browser_launch"]["error"] = error_msg
+        elif not result["page_navigation"]["success"]:
+            result["page_navigation"]["error"] = error_msg
+        else:
+            result["screenshot"]["error"] = error_msg
+        
+        logger.error(f"Playwright health check failed: {error_msg}")
+    
+    finally:
+        # Cleanup
+        try:
+            if browser:
+                await browser.close()
+            if playwright:
+                await playwright.stop()
+        except Exception:
+            pass
+    
+    # Guardar resultado na BD para histórico
+    await db.playwright_health_checks.insert_one({
+        **result,
+        "checked_by": current_user["id"]
+    })
+    
+    return result
+
+
+@router.get("/sistema/playwright/health-history")
+async def playwright_health_history(
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Histórico dos últimos health checks do Playwright"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    history = await db.playwright_health_checks.find(
+        {}, {"_id": 0}
+    ).sort("timestamp", -1).limit(limit).to_list(length=limit)
+    
+    return {
+        "history": history,
+        "total": len(history)
+    }
+
+
 # ==================== PREÇOS ESPECIAIS ====================
 
 @router.get("/precos-especiais")
