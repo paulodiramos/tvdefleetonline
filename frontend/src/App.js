@@ -1202,6 +1202,26 @@ function App() {
               user ? <ArquivoRecibos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/fornecedores/:parceiroId"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
+                <FornecedoresPage user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/fornecedores"
+            element={
+              user && user.role === 'parceiro' ? (
+                <FornecedoresPage user={user} onLogout={handleLogout} parceiroId={user.id} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
