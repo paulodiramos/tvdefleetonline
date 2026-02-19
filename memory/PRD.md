@@ -42,6 +42,18 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - **Verificado:** `/api/admin/sistema/status` retorna Playwright instalado e funcional
   - **Testes:** Sessões de browser virtual iniciam correctamente, screenshots funcionam
 
+- **Health-Check Automático do Playwright - DONE:**
+  - **Novo Endpoint:** `GET /api/admin/sistema/playwright/health-check`
+  - **Funcionalidades:** Testa lançamento do browser, navegação e screenshot com métricas de tempo
+  - **Histórico:** Guarda resultados na BD para análise
+  - **Endpoint Histórico:** `GET /api/admin/sistema/playwright/health-history`
+
+- **Refatoração FichaVeiculo.js - PROGRESSO:**
+  - **Antes:** 5162 linhas
+  - **Depois:** 4902 linhas (-260 linhas)
+  - **Alteração:** Tab Agenda agora usa componente `VeiculoAgendaTab` existente
+  - **Import:** Adicionado `VeiculoAgendaTab` e `VeiculoHistoricoTab` ao import
+
 ### Session 2026-02-19 (Perfil Utilizador Motorista)
 - **Perfil de Utilizador para Motoristas - DONE:**
   - **Nova Tab "Motorista":** Aparece apenas para motoristas quando admin visualiza perfil
