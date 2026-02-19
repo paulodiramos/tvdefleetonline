@@ -35,6 +35,22 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - **Ficheiro:** `frontend/src/pages/RegistoMotorista.js` (linhas 108, 123)
   - **Testes:** Registo funciona, motorista criado na BD com status pendente ✅
 
+- **Bug Fix: Dados e Documentos não guardados na ficha - DONE:**
+  - **Problema:** Campos como morada, data nascimento, NIF não eram guardados na collection `motoristas`
+  - **Causa:** O modelo `UserCreate` não tinha estes campos e o backend não os copiava para o documento motorista
+  - **Solução:** 
+    1. Expandido `UserCreate` em `models/user.py` com campos: whatsapp, data_nascimento, nif, nacionalidade, morada_completa, codigo_postal
+    2. Actualizado `auth.py` para copiar todos os campos para o documento `motoristas`
+    3. Adicionados campos de documentos em falta: carta_conducao, identificacao, comprovativo_morada
+  - **Ficheiros:** `backend/models/user.py`, `backend/routes/auth.py`
+  - **Testes:** Todos os campos e documentos agora são guardados correctamente ✅
+
+- **Bug Fix: Endpoint motoristas-pendentes-sync 404 - DONE:**
+  - **Problema:** Endpoint `/api/users/motoristas-pendentes-sync` dava 404
+  - **Causa:** Rota com `{user_id}` no server.py estava a capturar o path antes
+  - **Solução:** Renomeada rota para `/api/motoristas-pendentes-sync`
+  - **Ficheiros:** `backend/routes/users.py`, `frontend/src/pages/GestaoUtilizadores.js`
+
 - **Correção Upload de Documentos no Registo - DONE:**
   - **Problema:** Documentos carregados durante a inscrição de motoristas não ficavam associados à ficha do motorista
   - **Causa:** Query incorreta no endpoint `/api/documentos/upload` - usava `{"email": {"$exists": True}}` que fazia match com qualquer motorista
