@@ -425,7 +425,7 @@ class TestContabilidadeEndpoints:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip("Admin login failed")
     
     @pytest.fixture(scope="class")
@@ -436,7 +436,7 @@ class TestContabilidadeEndpoints:
             "password": PARCEIRO_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip("Parceiro login failed")
     
     def test_admin_faturas_fornecedores(self, admin_token):
@@ -501,7 +501,7 @@ class TestGestorParceiroSelectorForContabilista:
         if login_response.status_code != 200:
             pytest.skip("Test contabilista not available")
         
-        token = login_response.json().get("token")
+        token = login_response.json().get("access_token")
         user_id = login_response.json().get("user", {}).get("id")
         
         response = requests.get(
@@ -525,7 +525,7 @@ class TestGestorParceiroSelectorForContabilista:
         if login_response.status_code != 200:
             pytest.skip("Test contabilista not available")
         
-        token = login_response.json().get("token")
+        token = login_response.json().get("access_token")
         user_id = login_response.json().get("user", {}).get("id")
         
         response = requests.get(
@@ -549,7 +549,7 @@ class TestGestorParceiroSelectorForContabilista:
         if login_response.status_code != 200:
             pytest.skip("Test contabilista not available")
         
-        token = login_response.json().get("token")
+        token = login_response.json().get("access_token")
         user_id = login_response.json().get("user", {}).get("id")
         
         # Get parceiros first
