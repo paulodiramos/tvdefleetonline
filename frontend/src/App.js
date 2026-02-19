@@ -922,6 +922,16 @@ function App() {
             }
           />
           <Route
+            path="/contabilidade"
+            element={
+              user && ['admin', 'contabilista', 'parceiro', 'gestao'].includes(user.role) ? (
+                <ContabilidadePage user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/importar-dados"
             element={
               user ? (
