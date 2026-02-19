@@ -498,6 +498,12 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Dashboard Faturação</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/fornecedores" className="flex items-center space-x-2 cursor-pointer" data-testid="link-fornecedores">
+                          <Building className="w-4 h-4" />
+                          <span>Fornecedores</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
