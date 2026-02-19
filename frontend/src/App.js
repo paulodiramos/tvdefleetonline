@@ -145,6 +145,7 @@ import ExecutarRPA from "@/pages/ExecutarRPA";
 import UploadFicheiros from "@/pages/UploadFicheiros";
 import SistemaAdmin from "@/pages/SistemaAdmin";
 import ContabilidadePage from "@/pages/ContabilidadePage";
+import FornecedoresPage from "@/pages/FornecedoresPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
