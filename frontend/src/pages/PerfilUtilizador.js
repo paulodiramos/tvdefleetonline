@@ -11,9 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ArrowLeft, User, Mail, Phone, Calendar, Building, Shield, Key, 
-  Eye, EyeOff, RefreshCw, Save, Lock, Unlock, Trash2, Edit, CheckCircle, XCircle
+  Eye, EyeOff, RefreshCw, Save, Lock, Unlock, Trash2, Edit, CheckCircle, XCircle,
+  Building2, Plus, X, Users
 } from 'lucide-react';
 
 const PerfilUtilizador = ({ user, onLogout }) => {
@@ -41,6 +43,12 @@ const PerfilUtilizador = ({ user, onLogout }) => {
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  
+  // Parceiros states (para gestores)
+  const [parceirosDisponiveis, setParceirosDisponiveis] = useState([]);
+  const [parceirosAtribuidos, setParceirosAtribuidos] = useState([]);
+  const [loadingParceiros, setLoadingParceiros] = useState(false);
+  const [savingParceiros, setSavingParceiros] = useState(false);
 
   useEffect(() => {
     fetchUserData();
