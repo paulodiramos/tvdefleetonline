@@ -26,7 +26,25 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Contabilista System Complete)
+### Session 2026-02-19 (Latest - Preços Especiais Complete)
+- **Lógica de Preços Especiais (Backend) - DONE e Testado 100%:**
+  - Suporte completo para 5 tipos de cálculo:
+    - `percentagem`: Desconto percentual sobre o preço base
+    - `valor_fixo`: Preço fixo mensal total (ignora veículos/motoristas)
+    - `valor_fixo_veiculo`: Preço fixo × número de veículos
+    - `valor_fixo_motorista`: Preço fixo × número de motoristas
+    - `valor_fixo_motorista_veiculo`: Preço fixo × min(veículos, motoristas)
+  - Novos endpoints:
+    - `GET /api/admin/precos-especiais` - Listar todos os preços especiais
+    - `GET /api/gestao-planos/precos-especiais` - Listar via gestão de planos
+    - `GET /api/gestao-planos/precos-especiais/calcular` - Calcular preço com especial
+    - `PUT /api/gestao-planos/planos/{id}/precos-especiais/{preco_id}` - Atualizar
+    - `DELETE /api/gestao-planos/planos/{id}/precos-especiais/{preco_id}` - Remover
+  - Serviço: `planos_modulos_service.py` - Métodos calcular_preco_com_especial, listar_precos_especiais
+  - Testes: 18/18 passaram (100% success rate)
+  - Ficheiro de teste: `/app/backend/tests/test_precos_especiais.py`
+
+### Session 2026-02-19 (Contabilista System Complete)
 - **Sistema Completo de Contabilistas (Testado 95% Backend / 100% Frontend):**
   - Parceiros podem criar contabilistas via página `/contabilistas`
   - Contabilistas ficam auto-atribuídos ao parceiro que os cria
