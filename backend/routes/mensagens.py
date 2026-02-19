@@ -261,3 +261,164 @@ async def delete_conversa(
         )
     
     return {"message": "Conversation deleted successfully"}
+
+
+@router.get("/mensagens/destinatarios")
+async def get_destinatarios_disponiveis(current_user: Dict = Depends(get_current_user)):
+    """
+    Get available recipients for messaging based on user role hierarchy:
+    - Admin: all users
+    - Parceiro: drivers in their fleet + managers + admin
+    - Gestor: partners assigned to them + admin + drivers from their fleets
+    - Motorista: partner of their fleet + manager of their fleet + admin (support)
+    """
+    user_role = current_user["role"]
+    user_id = current_user["id"]
+    destinatarios = []
+    
+    # Base projection for users
+    projection = {"_id": 0, "id": 1, "name": 1, "role": 1, "email": 1, "phone": 1}
+    
+    if user_role == UserRole.ADMIN or user_role == "admin":
+        # Admin can message anyone
+        users = await db.users.find(
+            {"id": {"$ne": user_id}, "approved": True},
+            projection
+        ).to_list(length=None)
+        destinatarios = users
+        
+    elif user_role == UserRole.PARCEIRO or user_role == "parceiro":
+        # Parceiro can message:
+        # 1. Motoristas da sua frota
+        # 2. Gestores atribuídos a este parceiro
+        # 3. Admin (suporte)
+        
+        # Get motoristas from their fleet
+        motoristas = await db.motoristas.find(
+            {"parceiro_id": user_id},
+            {"_id": 0, "id": 1}
+        ).to_list(length=None)
+        motorista_ids = [m["id"] for m in motoristas]
+        
+        # Get gestor info for this parceiro
+        parceiro = await db.parceiros.find_one(
+            {"id": user_id},
+            {"_id": 0, "gestores_ids": 1}
+        )
+        gestor_ids = parceiro.get("gestores_ids", []) if parceiro else []
+        
+        # Get all relevant users
+        all_ids = motorista_ids + gestor_ids
+        
+        # Get users with motorista, gestor or admin role
+        query = {
+            "id": {"$ne": user_id},
+            "approved": True,
+            "$or": [
+                {"id": {"$in": all_ids}},
+                {"role": {"$in": [UserRole.ADMIN, "admin", UserRole.GESTAO, "gestao"]}}
+            ]
+        }
+        users = await db.users.find(query, projection).to_list(length=None)
+        
+        # Filter to only include:
+        # - Motoristas from their fleet
+        # - Gestores from gestores_ids
+        # - Admin
+        for user in users:
+            if user["role"] in [UserRole.ADMIN, "admin"]:
+                destinatarios.append(user)
+            elif user["role"] in [UserRole.GESTAO, "gestao"] and user["id"] in gestor_ids:
+                destinatarios.append(user)
+            elif user["id"] in motorista_ids:
+                destinatarios.append(user)
+                
+    elif user_role == UserRole.GESTAO or user_role == "gestao":
+        # Gestor can message:
+        # 1. Parceiros associados a sua conta
+        # 2. Admin
+        # 3. Motoristas das frotas dos parceiros atribuídos
+        
+        # Get parceiros atribuídos to this gestor
+        parceiros_atribuidos = current_user.get("parceiros_atribuidos", [])
+        
+        # Get all motoristas from the assigned parceiros
+        motoristas = await db.motoristas.find(
+            {"parceiro_id": {"$in": parceiros_atribuidos}},
+            {"_id": 0, "id": 1}
+        ).to_list(length=None)
+        motorista_ids = [m["id"] for m in motoristas]
+        
+        all_ids = parceiros_atribuidos + motorista_ids
+        
+        # Get all relevant users
+        query = {
+            "id": {"$ne": user_id},
+            "approved": True,
+            "$or": [
+                {"id": {"$in": all_ids}},
+                {"role": {"$in": [UserRole.ADMIN, "admin"]}}
+            ]
+        }
+        users = await db.users.find(query, projection).to_list(length=None)
+        
+        # Filter appropriately
+        for user in users:
+            if user["role"] in [UserRole.ADMIN, "admin"]:
+                destinatarios.append(user)
+            elif user["id"] in parceiros_atribuidos or user["id"] in motorista_ids:
+                destinatarios.append(user)
+                
+    elif user_role == UserRole.MOTORISTA or user_role == "motorista":
+        # Motorista can message:
+        # 1. Parceiro da sua frota
+        # 2. Gestor da sua frota
+        # 3. Admin (suporte)
+        
+        # Get motorista info to find parceiro_id
+        motorista = await db.motoristas.find_one(
+            {"id": user_id},
+            {"_id": 0, "parceiro_id": 1}
+        )
+        parceiro_id = motorista.get("parceiro_id") if motorista else None
+        
+        gestor_ids = []
+        if parceiro_id:
+            # Get gestor for this parceiro
+            parceiro = await db.parceiros.find_one(
+                {"id": parceiro_id},
+                {"_id": 0, "gestores_ids": 1}
+            )
+            gestor_ids = parceiro.get("gestores_ids", []) if parceiro else []
+        
+        # Build list of allowed IDs
+        allowed_ids = []
+        if parceiro_id:
+            allowed_ids.append(parceiro_id)
+        allowed_ids.extend(gestor_ids)
+        
+        # Get all relevant users
+        query = {
+            "id": {"$ne": user_id},
+            "approved": True,
+            "$or": [
+                {"id": {"$in": allowed_ids}},
+                {"role": {"$in": [UserRole.ADMIN, "admin"]}}
+            ]
+        }
+        users = await db.users.find(query, projection).to_list(length=None)
+        
+        for user in users:
+            if user["role"] in [UserRole.ADMIN, "admin"]:
+                destinatarios.append(user)
+            elif user["id"] in allowed_ids:
+                destinatarios.append(user)
+    else:
+        # Other roles (operacional, inspetor, contabilista) - only admin
+        users = await db.users.find(
+            {"role": {"$in": [UserRole.ADMIN, "admin"]}, "id": {"$ne": user_id}, "approved": True},
+            projection
+        ).to_list(length=None)
+        destinatarios = users
+    
+    return destinatarios
