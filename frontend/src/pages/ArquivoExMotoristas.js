@@ -483,6 +483,21 @@ const ArquivoExMotoristas = ({ user, onLogout }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* MotoristaDetailDialog - Igual aos motoristas activos */}
+      <MotoristaDetailDialog
+        open={showDetailDialog && selectedMotorista !== null}
+        onOpenChange={(open) => {
+          setShowDetailDialog(open);
+          if (!open) {
+            setSelectedMotorista(null);
+          }
+        }}
+        motorista={selectedMotorista}
+        user={user}
+        onUpdate={() => fetchExMotoristas()}
+        isArchived={true}
+      />
     </Layout>
   );
 };
