@@ -140,11 +140,56 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
         setModulos([]);
       }
 
+      // Check for pending motoristas sync
+      checkMotoristasPendentes();
+
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkMotoristasPendentes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/motoristas-pendentes-sync`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMotoristasPendentes(response.data?.total_pendentes || 0);
+    } catch (error) {
+      console.error('Error checking pending motoristas:', error);
+    }
+  };
+
+  const handleSyncMotoristas = async () => {
+    setSyncingMotoristas(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/users/sync-motoristas`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const { synced, already_exists, errors } = response.data;
+      
+      if (synced > 0) {
+        toast.success(`${synced} motorista(s) sincronizado(s) com sucesso!`);
+      } else if (already_exists > 0) {
+        toast.info('Todos os motoristas já estão sincronizados.');
+      }
+      
+      if (errors && errors.length > 0) {
+        toast.error(`Erros: ${errors.length}`);
+      }
+      
+      setMotoristasPendentes(0);
+      fetchData();
+    } catch (error) {
+      console.error('Error syncing motoristas:', error);
+      toast.error('Erro ao sincronizar motoristas');
+    } finally {
+      setSyncingMotoristas(false);
     }
   };
 
