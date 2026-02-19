@@ -54,6 +54,71 @@ const PerfilUtilizador = ({ user, onLogout }) => {
     fetchUserData();
   }, [userId]);
 
+  // Carregar parceiros quando o utilizador é um gestor
+  useEffect(() => {
+    if (userData?.role === 'gestao' && user?.role === 'admin') {
+      fetchParceirosDisponiveis();
+      fetchParceirosAtribuidos();
+    }
+  }, [userData?.role, user?.role]);
+
+  const fetchParceirosDisponiveis = async () => {
+    try {
+      setLoadingParceiros(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setParceirosDisponiveis(response.data || []);
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    } finally {
+      setLoadingParceiros(false);
+    }
+  };
+
+  const fetchParceirosAtribuidos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/gestores/${userId}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const atribuidos = response.data.parceiros || [];
+      setParceirosAtribuidos(atribuidos.map(p => p.id));
+    } catch (error) {
+      console.error('Error fetching parceiros atribuidos:', error);
+      setParceirosAtribuidos([]);
+    }
+  };
+
+  const handleToggleParceiro = (parceiroId) => {
+    setParceirosAtribuidos(prev => {
+      if (prev.includes(parceiroId)) {
+        return prev.filter(id => id !== parceiroId);
+      } else {
+        return [...prev, parceiroId];
+      }
+    });
+  };
+
+  const handleSaveParceiros = async () => {
+    try {
+      setSavingParceiros(true);
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/gestores/${userId}/atribuir-parceiros`,
+        { parceiros_ids: parceirosAtribuidos },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Parceiros atribuídos com sucesso!');
+    } catch (error) {
+      console.error('Error saving parceiros:', error);
+      toast.error('Erro ao atribuir parceiros');
+    } finally {
+      setSavingParceiros(false);
+    }
+  };
+
   const fetchUserData = async () => {
     try {
       setLoading(true);
