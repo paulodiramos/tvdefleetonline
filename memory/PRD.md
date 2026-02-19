@@ -26,21 +26,22 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Admin Dashboard Pendentes)
-- **Dashboard Admin - Cards de Ações Pendentes - DONE:**
-  - Secção "Ações Pendentes" no dashboard do admin
-  - Card **"Pendentes de Aprovação"** - clicável, navega para `/usuarios?filter=pendentes`
-  - Card **"Sem Parceiro Atribuído"** - clicável, navega para `/motoristas?filter=sem_parceiro`
-  - Card **"Resumo do Sistema"** - mostra totais de parceiros, motoristas, veículos e utilizadores
-  - Backend: Atualizado `/dashboard/resumo-geral` para incluir motoristas sem parceiro
-  - Ficheiros: `frontend/src/pages/Dashboard.js`, `backend/routes/dashboard.py`
+### Session 2026-02-19 (Latest - Database Check + Vehicle Refactoring)
+- **Verificação de Base de Dados - OK:**
+  - MongoDB conectado com 131 collections
+  - users: 39, motoristas: 18, vehicles: 34, parceiros: 8
+  - 2 utilizadores pendentes, 1 motorista sem parceiro
+  - Índices verificados
 
-- **Filtros nas Páginas de Gestão - DONE:**
-  - Página Utilizadores: Filtro por status (Pendentes/Aprovados)
-  - Página Motoristas: Filtro "Sem Parceiro (Aprovados)"
-  - Ficheiros: `frontend/src/pages/GestaoUtilizadores.js`, `frontend/src/pages/Motoristas.js`
+- **Refatoração FichaVeiculo.js - EM PROGRESSO:**
+  - Ficheiro original: 5871 linhas (muito grande)
+  - Componentes já existentes: VeiculoSeguroTab, VeiculoInspecaoTab, VeiculoExtintorTab, VeiculoAgendaTab, VeiculoHistoricoTab
+  - **NOVOS componentes criados:**
+    - `VeiculoInfoTab.js` - Informações básicas, motorista associado, documentação
+    - `VeiculoRevisaoTab.js` - Próxima revisão, plano de manutenção, alertas, histórico
+  - **Faltam extrair:** Turnos (já usa VeiculoTurnos), Dispositivos, Relatório
 
-### Session 2026-02-19 (Approve + Assign Partner Feature)
+### Session 2026-02-19 (Admin Dashboard Pendentes)
 - **Lógica de Preços Especiais (Backend) - DONE e Testado 100%:**
   - Suporte completo para 5 tipos de cálculo:
     - `percentagem`: Desconto percentual sobre o preço base
