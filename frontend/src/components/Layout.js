@@ -9,6 +9,7 @@ import axios from 'axios';
 import { API } from '@/App';
 import Notificacoes from './Notificacoes';
 import CriarTemplateModal from './CriarTemplateModal';
+import GestorParceiroSelector from './GestorParceiroSelector';
 import {
   DropdownMenu,
   DropdownMenuContent,
