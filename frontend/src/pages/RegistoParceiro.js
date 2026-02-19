@@ -96,7 +96,7 @@ const RegistoParceiro = () => {
         approved: false
       };
 
-      const registerResponse = await axios.post(`${API}/auth/register`, userData);
+      const registerResponse = await axios.post(`${API}/api/auth/register`, userData);
       const userId = registerResponse.data.user_id || registerResponse.data.id;
 
       // Validate codigo_certidao_comercial format
