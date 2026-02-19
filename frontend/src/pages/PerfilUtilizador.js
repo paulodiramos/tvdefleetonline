@@ -250,6 +250,61 @@ const PerfilUtilizador = ({ user, onLogout }) => {
     }
   };
 
+  // Atribuir parceiro ao motorista
+  const handleAtribuirParceiro = async () => {
+    if (!parceiroSelecionado) {
+      toast.error('Selecione um parceiro');
+      return;
+    }
+    
+    setSavingParceiro(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/motoristas/${userId}/atribuir-parceiro`,
+        { parceiro_id: parceiroSelecionado },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Parceiro atribuído com sucesso!');
+      fetchUserData();
+    } catch (error) {
+      console.error('Error assigning partner:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao atribuir parceiro');
+    } finally {
+      setSavingParceiro(false);
+    }
+  };
+
+  // Atribuir plano ao utilizador
+  const handleAtribuirPlano = async () => {
+    if (!planoSelecionado) {
+      toast.error('Selecione um plano');
+      return;
+    }
+    
+    setSavingPlano(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/users/${userId}/plano`,
+        { plano_id: planoSelecionado },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Plano atribuído com sucesso!');
+      fetchUserData();
+    } catch (error) {
+      console.error('Error assigning plan:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao atribuir plano');
+    } finally {
+      setSavingPlano(false);
+    }
+  };
+
+  // Ver documentos do motorista
+  const handleVerDocumentos = () => {
+    navigate(`/motoristas/${userId}`);
+  };
+
   const getRoleLabel = (role) => {
     const labels = {
       admin: 'Administrador',
