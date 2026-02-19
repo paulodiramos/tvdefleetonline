@@ -65,12 +65,21 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ### P0 - Critical
 - [x] Página de Contabilidade - **DONE**
-- [ ] **Build AAB para Play Store** - Utilizador precisa executar o build
+- [x] **Build AAB para Play Store** - **DONE** - App em avaliação na Play Store
 
 ### P1 - High Priority
 - [x] Seletor de parceiro ativo para gestores - **DONE**
-- [ ] UI para atribuir gestores na página de Parceiros
-- [ ] UI para adicionar campos de fatura em manutenção/seguro de veículos
+- [x] UI para atribuir gestores na página de Parceiros - **DONE** (2026-02-19)
+  - Tab "Parceiros Atribuídos" no perfil do gestor
+  - Lista com badges "Atribuído"/"Não atribuído"
+  - Botão "Guardar Alterações"
+- [x] Papel Contabilista com acesso restrito - **DONE** (2026-02-19)
+  - Menu limitado: Início, Contabilidade, Documentos
+  - User de teste: contabilista@tvdefleet.com / Contabilista123!
+- [x] Gestão de Fornecedores por Parceiro - **DONE** (2026-02-19)
+  - Página /fornecedores com CRUD completo
+  - Tipos: Geral, Oficina, Seguradora, Combustível, Via Verde, Pneus, Lavagem, Outros
+- [x] Anexar documentos a seguros/inspeções/extintores - **DONE** (já existia)
 - [ ] Continuar refatoração do FichaVeiculo.js
 - [ ] Preços Especiais - completar lógica de backend
 
