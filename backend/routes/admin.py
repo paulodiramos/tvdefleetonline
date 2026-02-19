@@ -4,6 +4,9 @@ from fastapi import APIRouter, HTTPException, Depends, Body
 from typing import Dict, Any, List
 from datetime import datetime, timezone
 import logging
+import subprocess
+import shutil
+import os
 
 from utils.database import get_database
 from utils.auth import get_current_user
