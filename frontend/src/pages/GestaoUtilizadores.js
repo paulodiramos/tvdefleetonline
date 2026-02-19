@@ -1124,6 +1124,62 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                 Tem a certeza que deseja aprovar o utilizador <strong>{selectedUser?.name}</strong>?
               </p>
               
+              {/* Seleção de Plano (para parceiros) */}
+              {selectedUser?.role === 'parceiro' && (
+                <div className="space-y-4 border-t pt-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Package className="w-4 h-4 text-purple-600" />
+                      Atribuir Plano (opcional)
+                    </Label>
+                    <Select value={aprovarPlanoId} onValueChange={handlePlanoChangeAprovacao}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar plano..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhum (configurar depois)</SelectItem>
+                        {planosDisponiveis.map(p => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.nome} - €{p.preco}/{p.periodicidade || 'mensal'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500">
+                      Se não selecionar agora, pode atribuir depois na página do utilizador.
+                    </p>
+                  </div>
+
+                  {/* Preços Especiais (aparecem quando um plano é selecionado) */}
+                  {aprovarPlanoId && aprovarPlanoId !== 'none' && precosEspeciaisDisponiveis.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Gift className="w-4 h-4 text-green-600" />
+                        Preço Especial (opcional)
+                      </Label>
+                      <Select value={aprovarPrecoEspecialId} onValueChange={setAprovarPrecoEspecialId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar preço especial..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Usar preço base do plano</SelectItem>
+                          {precosEspeciaisDisponiveis.map(pe => (
+                            <SelectItem key={pe.id} value={pe.id}>
+                              {pe.nome} - {pe.tipo_calculo === 'percentagem' 
+                                ? `${pe.valor}% desconto` 
+                                : `€${pe.valor}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-slate-500">
+                        Aplica condições de preço especiais para este parceiro.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               {selectedUser?.role === 'motorista' && (
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Atribuir a Parceiro (opcional)</Label>
