@@ -367,6 +367,56 @@ async def update_user_status(
     return {"message": f"Utilizador {status_str}"}
 
 
+class PlanoAssignment(BaseModel):
+    plano_id: str
+
+
+@router.put("/users/{user_id}/plano")
+async def assign_plano_to_user(
+    user_id: str,
+    plano_data: PlanoAssignment,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atribuir plano a um utilizador (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin pode atribuir planos")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    # Verificar se o plano existe
+    plano = await db.planos_sistema.find_one({"id": plano_data.plano_id, "ativo": True})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano não encontrado ou inativo")
+    
+    update_data = {
+        "plano_id": plano_data.plano_id,
+        "plano_nome": plano.get("nome")
+    }
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_data}
+    )
+    
+    # Se for motorista, atualizar também na coleção motoristas
+    if user.get("role") == "motorista":
+        await db.motoristas.update_one(
+            {"$or": [{"id": user_id}, {"email": user.get("email")}]},
+            {"$set": update_data}
+        )
+    # Se for parceiro, atualizar também na coleção parceiros
+    elif user.get("role") == "parceiro":
+        await db.parceiros.update_one(
+            {"$or": [{"id": user_id}, {"email": user.get("email")}]},
+            {"$set": update_data}
+        )
+    
+    logger.info(f"Plano {plano.get('nome')} atribuído ao utilizador {user_id} por {current_user['id']}")
+    return {"message": f"Plano {plano.get('nome')} atribuído com sucesso"}
+
+
 @router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
