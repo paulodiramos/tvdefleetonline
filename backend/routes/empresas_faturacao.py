@@ -187,6 +187,9 @@ async def dashboard_totais_empresa(
     
     empresas = await db.empresas_faturacao.find(parceiro_filter, {"_id": 0}).to_list(100)
     
+    # Criar set de IDs de empresas válidas para este utilizador
+    empresas_ids_validas = {e["id"] for e in empresas}
+    
     resultado = []
     motoristas_data = {}  # Acumulador por motorista
     matriz_data = {}  # Matriz motorista -> empresa -> valor
@@ -195,6 +198,13 @@ async def dashboard_totais_empresa(
     dados_query = {"ano": ano}
     if current_user["role"] == UserRole.PARCEIRO:
         dados_query["parceiro_id"] = current_user["id"]
+        # Filtrar apenas por empresa_faturacao_id válidas do parceiro
+        if empresas_ids_validas:
+            dados_query["$or"] = [
+                {"empresa_faturacao_id": {"$in": list(empresas_ids_validas)}},
+                {"empresa_faturacao_id": {"$exists": False}},
+                {"empresa_faturacao_id": None}
+            ]
     
     dados_semanais = await db.dados_semanais.find(dados_query, {"_id": 0}).to_list(5000)
     
@@ -206,6 +216,10 @@ async def dashboard_totais_empresa(
         valor_liquido = dado.get("valor_liquido", 0) or 0
         
         if not motorista_id:
+            continue
+        
+        # Para parceiros, ignorar dados com empresa_faturacao_id inválida
+        if current_user["role"] == UserRole.PARCEIRO and empresa_id and empresa_id not in empresas_ids_validas:
             continue
         
         # Inicializar motorista se não existir
