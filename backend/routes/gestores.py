@@ -218,19 +218,121 @@ async def remover_parceiro_do_gestor(
         }}
     )
     
-    # Update parceiro
-    await db.parceiros.update_one(
-        {"id": parceiro_id},
-        {"$set": {
-            "gestor_associado_id": None,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
+    # Update parceiro - remove gestor from gestores_ids list
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if parceiro:
+        gestores_ids = parceiro.get("gestores_ids", [])
+        if gestor_id in gestores_ids:
+            gestores_ids.remove(gestor_id)
+        
+        # Update gestor_associado_id to first remaining gestor or None
+        new_gestor_principal = gestores_ids[0] if gestores_ids else None
+        
+        await db.parceiros.update_one(
+            {"id": parceiro_id},
+            {"$set": {
+                "gestores_ids": gestores_ids,
+                "gestor_associado_id": new_gestor_principal,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
     
     return {
         "message": "Parceiro removido do gestor",
         "gestor_id": gestor_id,
         "parceiro_id": parceiro_id
+    }
+
+
+@router.post("/{gestor_id}/selecionar-parceiro")
+async def selecionar_parceiro_ativo(
+    gestor_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Gestor seleciona qual parceiro quer gerir ativamente"""
+    if current_user["role"] != UserRole.GESTAO:
+        raise HTTPException(status_code=403, detail="Only gestores can select active parceiro")
+    
+    if current_user["id"] != gestor_id:
+        raise HTTPException(status_code=403, detail="Gestor can only select for themselves")
+    
+    parceiro_id = data.get("parceiro_id")
+    
+    if not parceiro_id:
+        # Clear active parceiro
+        await db.users.update_one(
+            {"id": gestor_id},
+            {"$set": {
+                "parceiro_ativo_id": None,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        return {"message": "Parceiro ativo removido", "parceiro_ativo_id": None}
+    
+    # Verify gestor has access to this parceiro
+    gestor = await db.users.find_one({"id": gestor_id, "role": UserRole.GESTAO}, {"_id": 0})
+    if not gestor:
+        raise HTTPException(status_code=404, detail="Gestor not found")
+    
+    parceiros_atribuidos = gestor.get("parceiros_atribuidos", [])
+    if parceiro_id not in parceiros_atribuidos:
+        raise HTTPException(status_code=403, detail="Parceiro not assigned to this gestor")
+    
+    # Get parceiro details
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0, "nome_empresa": 1, "name": 1, "email": 1})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    # Update gestor with active parceiro
+    await db.users.update_one(
+        {"id": gestor_id},
+        {"$set": {
+            "parceiro_ativo_id": parceiro_id,
+            "parceiro_ativo_nome": parceiro.get("nome_empresa") or parceiro.get("name"),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": f"Parceiro {parceiro.get('nome_empresa') or parceiro.get('name')} selecionado",
+        "parceiro_ativo_id": parceiro_id,
+        "parceiro_ativo_nome": parceiro.get("nome_empresa") or parceiro.get("name")
+    }
+
+
+@router.get("/{gestor_id}/parceiro-ativo")
+async def get_parceiro_ativo(
+    gestor_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get current active parceiro for gestor"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if current_user["role"] == UserRole.GESTAO and current_user["id"] != gestor_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    gestor = await db.users.find_one({"id": gestor_id, "role": UserRole.GESTAO}, {"_id": 0})
+    if not gestor:
+        raise HTTPException(status_code=404, detail="Gestor not found")
+    
+    parceiro_ativo_id = gestor.get("parceiro_ativo_id")
+    
+    if not parceiro_ativo_id:
+        return {
+            "parceiro_ativo_id": None,
+            "parceiro_ativo_nome": None,
+            "parceiro": None
+        }
+    
+    # Get full parceiro data
+    parceiro = await db.parceiros.find_one({"id": parceiro_ativo_id}, {"_id": 0})
+    
+    return {
+        "parceiro_ativo_id": parceiro_ativo_id,
+        "parceiro_ativo_nome": gestor.get("parceiro_ativo_nome"),
+        "parceiro": parceiro
     }
 
 
