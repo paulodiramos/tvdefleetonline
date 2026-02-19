@@ -26,7 +26,18 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Fork)
+### Session 2026-02-19 (Latest - Contabilista System Complete)
+- **Sistema Completo de Contabilistas (Testado 95% Backend / 100% Frontend):**
+  - Parceiros podem criar contabilistas via página `/contabilistas`
+  - Contabilistas ficam auto-atribuídos ao parceiro que os cria
+  - Admin pode atribuir mais parceiros via tab "Parceiros Atribuídos" no perfil
+  - Seletor de parceiro ativo no header (igual ao gestor)
+  - Menu restrito: Início, Contabilidade, Documentos
+  - Página de Contabilidade filtra dados por parceiro ativo
+  - APIs: `/api/contabilistas/*` (criar, lista, atribuir-parceiros, selecionar-parceiro, parceiro-ativo, parceiros)
+  - Frontend: `GestaoContabilistas.js`, `GestorParceiroSelector.js` (suporta gestor e contabilista)
+  - User de teste: maria.contabilista@test.com / Test123!
+
 - **Funcionalidades de Gestão de Acessos (Testadas com Sucesso):**
   - Atribuição de parceiros a gestores via tab "Parceiros Atribuídos" no perfil
   - API: `PUT /api/gestores/{id}/atribuir-parceiros`
