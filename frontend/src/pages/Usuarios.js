@@ -936,6 +936,31 @@ const Usuarios = ({ user, onLogout }) => {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {/* Mostrar seletor de parceiro se role for motorista */}
+                  {(selectedRole === 'motorista' || selectedUser?.role === 'motorista') && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Atribuir a Parceiro (opcional):
+                      </label>
+                      <Select value={selectedParceiroAtribuir} onValueChange={setSelectedParceiroAtribuir}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar parceiro..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Nenhum (atribuir depois)</SelectItem>
+                          {parceiros.map(p => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.nome || p.name || p.empresa || 'Parceiro sem nome'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Se não selecionar agora, pode atribuir depois na página de Motoristas.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
               {actionType === 'changeRole' && (
