@@ -416,9 +416,16 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       await axios.put(`${API}/parceiros/${editingParceiro.id}`, editingParceiro, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Também atribuir gestores se o utilizador é admin
+      if (user.role === 'admin') {
+        await handleAtribuirGestores();
+      }
+      
       toast.success('Parceiro atualizado com sucesso!');
       setShowEditDialog(false);
       setEditingParceiro(null);
+      setGestoresSelecionados([]);
       fetchParceiros();
     } catch (error) {
       console.error('Error updating parceiro:', error);
