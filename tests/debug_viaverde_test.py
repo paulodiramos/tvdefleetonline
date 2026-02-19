@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://billing-matrix.preview.emergentagent.com/api"
+BACKEND_URL = "https://mobile-app-deploy-7.preview.emergentagent.com/api"
 
 # Test credentials
 TEST_CREDENTIALS = {

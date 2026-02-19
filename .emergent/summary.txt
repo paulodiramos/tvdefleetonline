@@ -1,94 +1,86 @@
 <analysis>**original_problem_statement:**
-O utilizador iniciou com um pedido para um **Sistema de Integrações Configurável**, que evoluiu para um sistema de gestão de frotas completo. Os requisitos mais recentes do utilizador, das suas últimas mensagens, são:
+O utilizador iniciou com um pedido para um **Sistema de Integrações Configurável**, que evoluiu para um sistema de gestão de frotas completo. Os requisitos mais recentes do utilizador, das suas últimas mensagens e do trabalho realizado nesta sessão, são:
 
-1.  **Dashboard de Faturação:** A matriz de Motorista x Empresa precisa de ser dinâmica e suportar até 5 empresas, garantindo que os rendimentos de cada motorista em cada empresa são exibidos corretamente.
-2.  **Geração de Relatórios:** A página de configuração de relatórios () não parece ter uma opção visível para gerar o relatório semanal em PDF, embora o endpoint de backend funcione.
-3.  **Refatoração da UI:** Mover os links do menu Dashboard Faturação e Empresas Faturação da categoria Financeiro para o menu dropdown do Perfil do utilizador.
-4.  **Preços Especiais:** A funcionalidade de Preços Especiais tem um bug que impede a seleção de um parceiro. Além disso, necessita de suportar mais tipos de preços: preço fixo, preço por veículo, por motorista, por motorista+veículo, e percentagem.
-5.  **Refatoração de Código:** Continuar a refatoração do God Component .
-6.  **App Móvel:** Gerar o ficheiro APK da aplicação móvel para submissão na Play Store.
-7.  **Visibilidade do Menu:** Garantir que as categorias principais do menu superior estejam sempre visíveis em todas as páginas da aplicação.
+1.  **Geração de APK/AAB para a Play Store:** Gerar o ficheiro da aplicação móvel () para submissão na Play Store, resolvendo todos os erros de build do Expo (EAS). Esta é a tarefa mais crítica e bloqueadora atualmente.
+2.  **Dashboard de Faturação:** A matriz de Motorista x Empresa precisa de ser dinâmica e suportar até 5 empresas. (CONCLUÍDO na sessão anterior).
+3.  **Geração de Relatórios PDF:** Adicionar uma opção visível na UI para gerar o relatório semanal em PDF. (CONCLUÍDO).
+4.  **Refatoração da UI do Menu:** Mover os links Dashboard Faturação e Empresas Faturação para o menu do Perfil. (CONCLUÍDO).
+5.  **Preços Especiais:** A funcionalidade tem um bug que impede a seleção de um parceiro (verificado que funciona) e precisa de suportar mais tipos de preços (lógica de backend pendente).
+6.  **Refatoração de Código:** Continuar a refatoração do God Component . (EM PROGRESSO).
+7.  **Visibilidade do Menu:** Garantir que as categorias principais do menu superior estejam sempre visíveis.
+8.  **Alteração de Senha pelo Admin:** O admin deve poder alterar a senha de qualquer utilizador através de uma página de perfil dedicada. (CONCLUÍDO).
+9.  **Gestão de Sistema pelo Admin:** Criar uma página onde o admin possa reinstalar o Playwright e reiniciar os serviços do backend/frontend manualmente. (CONCLUÍDO).
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-A aplicação é um sistema de gestão de frotas full-stack (FastAPI, React, MongoDB). Na sessão atual, o agente implementou várias melhorias significativas de UI/UX baseadas no feedback do utilizador. Foi criada uma lista de utilizadores mais compacta, um dashboard de faturação com uma matriz detalhada de Motorista x Empresa, e adicionada informação de faturação à ficha do motorista. Foi também implementada a persistência de sessão para o scraper RPA da Prio e iniciado um grande trabalho de refatoração do componente , extraindo várias das suas secções para componentes mais pequenos. A base de dados de desenvolvimento () foi populada com dados de teste para permitir o desenvolvimento e a verificação das funcionalidades do dashboard.
+A aplicação é um sistema de gestão de frotas full-stack (FastAPI, React, MongoDB). Nesta sessão, foram concluídas várias tarefas importantes:
+- A navegação foi reorganizada conforme solicitado, movendo itens do menu Financeiro para o Perfil.
+- Foi adicionada uma UI na página  para gerar relatórios semanais em PDF.
+- Foi criada uma nova página de perfil de utilizador (), permitindo ao admin ver detalhes e alterar a senha de outros utilizadores.
+- Foi implementada uma nova página de Gestão do Sistema para o admin, com controlos para reinstalar o Playwright e reiniciar os serviços.
+- A instalação do Playwright foi automatizada no arranque do backend.
+- A refatoração do componente  continuou, com mais 3 tabs a serem extraídas para componentes separados.
+A maior parte da sessão foi dedicada a uma longa e infrutífera tentativa de gerar o build da aplicação móvel Android (.aab) para a Play Store, com o utilizador a executar os comandos localmente.
 
 **Last working item**:
--   Last item agent was working: O agente estava a trabalhar no pedido do utilizador para reorganizar o menu de navegação. Especificamente, estava a mover os links Dashboard Faturação e Empresas Faturação do menu Financeiro para o menu dropdown do Perfil.
--   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? frontend testing agent
--   User Testing Done: N
+- Last item agent was working: O agente estava a tentar resolver os erros de build da aplicação móvel Android () no ambiente local do utilizador. O objetivo era gerar um build compatível com a Play Store, especificamente que segmentasse a  (Android 15) e resolvesse erros de Gradle.
+- Status: BLOCKED
+- Agent Testing Done: N
+- Which testing method agent to use? O agente deve tentar reproduzir o build no seu próprio ambiente primeiro, usando as credenciais Expo do utilizador, para obter feedback mais rápido. Se continuar a falhar, usar o  pode ser útil para diagnosticar o problema de dependências complexo.
+- User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Reorganizar menus de navegação (P0)
--   Issue 2: Funcionalidade de Preços Especiais com bugs e incompleta (P1)
--   Issue 3: UI para gerar relatório PDF semanal em falta (P1)
--   Issue 4: Base de dados de produção desatualizada (P1 - Bloqueador Crítico)
--   Issue 5: Fragilidade da extração de dados RPA Prio Elétrico (P2)
+-   Issue 1: Falha na geração do build da aplicação móvel para a Play Store (P0)
+-   Issue 2: Funcionalidade de Preços Especiais incompleta (P1)
+-   Issue 3: Base de dados de produção desatualizada (P1 - Bloqueador Crítico)
 
 **Issues Detail:**
--   **Issue 1: Reorganizar menus de navegação (P0)**
-    -   **Description:** O utilizador solicitou que os links Dashboard Faturação e Empresas Faturação fossem movidos do menu Financeiro para o menu do Perfil.
-    -   **Attempted fixes:** O agente identificou o ficheiro  como o local para a alteração, mas foi interrompido antes de implementar a mudança.
+-   **Issue 1: Falha na geração do build da aplicação móvel para a Play Store (P0)**
+    -   **Description:** O processo de build do Expo (EAS) está a falhar consistentemente no computador do utilizador. Os erros evoluíram de problemas com dependências (axios, crypto) para erros de Gradle e incompatibilidades de versões do Expo SDK ao tentar forçar a .
+    -   **Attempted fixes:** O agente tentou:
+        1.  Remover  e usar .
+        2.  Limpar o  e .
+        3.  Alternar entre Expo SDK 51, 52 e 54.
+        4.  Adicionar o plugin  para forçar a versão do SDK.
+        5.  Ajustar o  e  no .
+        A última tentativa foi com o Expo SDK 52 e o plugin , que ainda resultou em erro de Gradle.
     -   **Next debug checklist:**
-        1.  Editar o ficheiro .
-        2.  Localizar os menus (para admin e parceiro).
-        3.  Remover os links da secção Financeiro.
-        4.  Adicionar os links ao menu dropdown do Perfil (UserNav).
-    -   **Why fix this issue and what will be achieved with the fix?** Atende a um pedido direto do utilizador para melhorar a organização e a lógica da navegação.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend.
+        1.  Verificar os logs do último build falhado para identificar o erro exato de Gradle.
+        2.  Usar  no diretório do projeto para diagnosticar problemas de dependência.
+        3.  Criar um projeto Expo SDK 52 limpo e tentar fazer o build com  para isolar o problema e confirmar se é uma incompatibilidade fundamental ou um problema no projeto atual.
+        4.  Tentar fazer o build no ambiente do agente (em vez de depender do utilizador) para um ciclo de depuração mais rápido.
+    -   **Why fix this issue and what will be achieved with the fix?** É um requisito crítico do utilizador para poder publicar a aplicação na Google Play Store. A aplicação móvel não pode ser distribuída sem isto.
+    -   **Status:** BLOCKED
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Mobile App Build.
     -   **Blocked on other issue:** Não.
 
--   **Issue 2: Funcionalidade de Preços Especiais com bugs e incompleta (P1)**
-    -   **Description:** A página de Preços Especiais não permite selecionar um parceiro no modal de criação (o dropdown não abre) e precisa de suportar tipos de preço adicionais (fixo, por veículo, por motorista, etc.).
-    -   **Attempted fixes:** O agente adicionou os novos tipos de preço à UI e ao modelo de dados, mas o bug do dropdown de seleção de parceiro persistiu durante os testes com Playwright. O agente considerou um problema do Playwright com o Radix UI e não investigou mais a fundo.
+-   **Issue 2: Funcionalidade de Preços Especiais incompleta (P1)**
+    -   **Description:** Embora o bug do dropdown de seleção de parceiro tenha sido confirmado como um falso positivo do Playwright, a funcionalidade ainda não suporta os novos tipos de preço (preço por veículo, por motorista, etc.) no backend. A UI foi adicionada, mas a lógica de negócio não está implementada.
     -   **Next debug checklist:**
-        1.  Verificar no browser real se o dropdown de parceiros funciona. Se não funcionar, investigar o componente  de Shadcn/Radix em .
-        2.  Implementar a lógica de backend para os novos tipos de preço no endpoint correspondente.
-        3.  Garantir que a UI se adapta para pedir os dados necessários para cada tipo de preço (ex: selecionar veículo ou motorista).
+        1.  Analisar o ficheiro  (ou similar).
+        2.  Implementar a lógica no endpoint  para lidar com os diferentes  de preço.
+        3.  Atualizar o frontend em  para mostrar campos condicionais com base no tipo de preço selecionado (ex: um seletor de veículo se o tipo for por_veiculo).
     -   **Why fix this issue and what will be achieved with the fix?** Tornará a funcionalidade de preços especiais, que é crítica para o negócio, completamente funcional.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on other issue:** Não.
 
--   **Issue 3: UI para gerar relatório PDF semanal em falta (P1)**
-    -   **Description:** O utilizador reportou que a geração do relatório PDF não está a funcionar a partir da UI em . O agente confirmou que o endpoint da API () funciona, sugerindo que falta um botão ou um trigger na interface.
-    -   **Attempted fixes:** Nenhuma alteração na UI foi feita. Apenas foi testado o endpoint de backend.
-    -   **Next debug checklist:**
-        1.  Analisar o ficheiro  (ou o ficheiro da página de relatórios relevante).
-        2.  Adicionar um botão Gerar PDF que chame o endpoint da API.
-        3.  Garantir que o ficheiro PDF gerado é descarregado pelo browser.
-    -   **Why fix this issue and what will be achieved with the fix?** Permitirá aos utilizadores descarregar relatórios importantes diretamente da aplicação.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend.
-    -   **Blocked on other issue:** Não.
-
--   **Issue 4: Base de dados de produção desatualizada (P1 - Bloqueador Crítico)**
-    -   **Description:** O ambiente de produção () está a usar uma base de dados antiga, o que causa bugs e inconsistências com o código mais recente.
-    -   **Attempted fixes:** O agente anterior instruiu o utilizador a fazer deploy com a opção **Use new database**. Esta ação continua pendente.
-    -   **Next debug checklist:** A resolução depende da ação do utilizador. O próximo agente deve reforçar esta instrução.
-    -   **Why fix this issue and what will be achieved with the fix?** Sincronizará a produção com o desenvolvimento, tornando a aplicação estável e funcional para o utilizador.
+-   **Issue 3: Base de dados de produção desatualizada (P1 - Bloqueador Crítico)**
+    -   **Description:** O ambiente de produção () está a usar uma base de dados antiga, causando bugs. O utilizador foi instruído a fazer deploy com a opção **Use new database**, mas não está claro se o fez. O erro do Playwright após o deploy sugere que um deploy foi feito.
+    -   **Next debug checklist:** Confirmar com o utilizador se o último deploy foi feito com a nova base de dados. Reforçar a importância desta ação.
+    -   **Why fix this issue and what will be achieved with the fix?** Sincronizará a produção com o desenvolvimento, tornando a aplicação estável.
     -   **Status:** BLOCKED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on other issue:** Não.
 
--   **Issue 5: Fragilidade da extração de dados RPA Prio Elétrico (P2)**
-    -   **Description:** A automação Playwright para este fornecedor é instável.
-    -   **Attempted fixes:** O agente adicionou persistência de sessão para evitar logins repetidos, mas a instabilidade fundamental da extração (devido ao site alvo ser OutSystems) não foi resolvida.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-
 **In progress Task List**:
 -   **Task 1: Refatorar  (P1)**
-    -   **Where to resume:** O agente já criou 7 componentes separados (, , , , , , ) na pasta . O próximo passo é modificar  para importar e utilizar estes novos componentes, removendo o código correspondente do ficheiro principal.
-    -   **What will be achieved with this?** Reduzirá a complexidade de um ficheiro com mais de 6000 linhas, melhorando a manutenibilidade e a performance.
+    -   **Where to resume:** O agente extraiu as tabs Seguro, Inspeção e Extintor para os seus próprios componentes (, , ) e integrou-os em , reduzindo o ficheiro em ~372 linhas. O próximo passo é continuar a extrair as restantes tabs (Informações, Turnos, Dispositivos, Histórico, etc.) para novos componentes.
+    -   **What will be achieved with this?** Reduzirá a complexidade de um ficheiro com mais de 5700 linhas, melhorando a manutenibilidade e a performance.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** Frontend.
     -   **Blocked on something:** Não.
@@ -96,99 +88,140 @@ A aplicação é um sistema de gestão de frotas full-stack (FastAPI, React, Mon
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
     *   (P2) Implementar integração com WhatsApp.
-    *   (P2) Gerar o APK da aplicação móvel (bloqueado, aguarda credenciais Expo do utilizador).
 *   **Future Tasks:**
     *   Implementar funcionalidades de Alertas Avançados e Comissões Avançadas.
     *   Criar um sistema para arquivar dados antigos da base de dados.
 
 **Completed work in this session**
--   **Dashboard de Faturação**: Implementada uma matriz Motorista x Empresa que mostra os ganhos de cada motorista por empresa de faturação, com totais e percentagens anuais. O backend foi atualizado para fazer a agregação de dados complexa.
--   **UI da Lista de Utilizadores**: A página de gestão de utilizadores do admin foi completamente redesenhada para uma vista mais compacta com ícones de ação, conforme a imagem fornecida pelo utilizador.
--   **Melhorias na Ficha do Motorista**: Adicionado um card na ficha do motorista para mostrar os valores totais de recibos associados a cada empresa de faturação.
--   **Pagamentos de Parceiros**: Implementado um popup na página de pagamentos do parceiro que permite associar um pagamento a uma empresa de faturação específica se existirem várias.
--   **Correção do RPA da Prio**: Adicionada persistência de sessão ao scraper da Prio para evitar a necessidade de fazer login a cada sincronização.
--   **Guia de Build da App Móvel**: Foi criado o ficheiro  com as instruções para o utilizador gerar o APK da app Android.
--   **Criação de Dados de Teste**: Corrigido um problema crítico em que o dashboard não mostrava dados, ao identificar que o backend usava a base de dados  e não . Foram criados endpoints e scripts para popular a BD correta com dados de teste.
+-   **Reorganização do Menu:** Links Dashboard Faturação e Empresas Faturação movidos com sucesso do menu Financeiro para o menu do Perfil.
+-   **Geração de Relatório PDF:** Adicionada uma secção com um botão na página  para gerar e descarregar o PDF do resumo semanal.
+-   **Página de Perfil do Utilizador:** Criada a página dedicada  acessível a partir da lista de utilizadores, com separadores para dados pessoais e segurança.
+-   **Funcionalidade de Alterar Senha:** Implementada a funcionalidade completa (frontend e backend) para o admin alterar a senha de um utilizador na nova página de perfil.
+-   **Página de Gestão do Sistema:** Criada a página  para o admin, permitindo reinstalar o Playwright e reiniciar os serviços de frontend/backend.
+-   **Instalação Automática do Playwright:** O backend foi modificado para executar Downloading Chromium 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-linux-arm64.zip
+|                                                                                |   0% of 175.9 MiB
+|■■■■■■■■                                                                        |  10% of 175.9 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 175.9 MiB
+Chromium 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium-1194
+Downloading Chromium Headless Shell 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-headless-shell-linux-arm64.zip
+|                                                                                |   0% of 106.1 MiB
+|■■■■■■■■                                                                        |  10% of 106.1 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 106.1 MiB
+Chromium Headless Shell 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium_headless_shell-1194
+Downloading Firefox 142.0.1 (playwright build v1495) from https://cdn.playwright.dev/dbazure/download/playwright/builds/firefox/1495/firefox-debian-12-arm64.zip
+|                                                                                |   0% of 88 MiB
+|■■■■■■■■                                                                        |  10% of 88 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
+Firefox 142.0.1 (playwright build v1495) downloaded to /pw-browsers/firefox-1495
+Downloading Webkit 26.0 (playwright build v2215) from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2215/webkit-debian-12-arm64.zip
+|                                                                                |   0% of 88 MiB
+|■■■■■■■■                                                                        |  10% of 88 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
+Webkit 26.0 (playwright build v2215) downloaded to /pw-browsers/webkit-2215 automaticamente no arranque.
+-   **Refatoração Parcial de :** As tabs de Seguro, Inspeção e Extintor foram extraídas para componentes dedicados e integradas no componente principal.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, Pydantic, MongoDB (com agregações complexas).
--   **Frontend:** React, Shadcn UI, Recharts, Lucide React.
+-   **Backend:** FastAPI, Pydantic, MongoDB.
+-   **Frontend:** React, Shadcn UI, Recharts.
 -   **RPA:** Playwright para scraping web.
--   **Mobile:** React Native (Expo).
--   **Debugging:** Identificação e correção de problemas relacionados com o âmbito da base de dados e a criação de dados de teste para desenvolvimento.
+-   **Mobile:** React Native, **Expo EAS Build System**. A depuração de builds do EAS através de um utilizador local provou ser um desafio significativo.
 
 **key DB schema**
--   **relatorios_semanais**: Confirmada como a coleção de origem para os rendimentos dos motoristas, utilizada pelo Dashboard de Faturação. Contém , , .
--   **empresas_faturacao**: Armazena as empresas de faturação, ligadas a um .
--   **precos_especiais**: O modelo de dados foi atualizado para incluir um campo , mas a lógica de backend para os diferentes tipos ainda precisa de ser implementada.
+-   Nenhuma alteração de esquema nesta sessão. As alterações focaram-se na lógica de aplicação e na UI.
 
 **All files of reference**
 -   **Created:**
-    -   : 7 novos componentes extraídos de .
-    -   : Guia para gerar o APK da app móvel.
+    -   : Página de detalhes do utilizador para o admin.
+    -   : Página de gestão de sistema para o admin.
+    -   : Endpoints para as funções da página de gestão do sistema.
+    -   , , : Componentes refatorados.
 -   **Updated:**
-    -   : Endpoint  reescrito para criar a matriz Motorista x Empresa.
-    -   : Adicionada persistência de sessão.
-    -   : UI completamente redesenhada.
-    -   : UI e lógica atualizadas para a nova matriz de dados.
-    -   : Adicionado modal de seleção de empresa de faturação.
-    -   : Adicionados novos tipos de preço na UI.
-    -   : Modificado para ajustar a visibilidade dos menus.
-
-**Areas that need refactoring**:
--   ****: A refatoração foi iniciada, mas o ficheiro principal ainda não foi atualizado para usar os novos componentes. Esta tarefa deve ser continuada.
--   ****: A lógica para os novos tipos de preço precisa de ser implementada tanto no frontend (para mostrar os campos corretos) como no backend. O bug do dropdown de seleção de parceiro precisa de uma solução definitiva.
-
-**key api endpoints**
--   : Endpoint principal do Dashboard de Faturação, agora retorna uma estrutura de dados complexa para a matriz.
--   : Endpoint para gerar o PDF do resumo semanal, confirmado que funciona.
--   , : Endpoints temporários criados pelo agente para popular a base de dados de desenvolvimento.
+    -   : Múltiplas tentativas de configuração para o build, incluindo , , e SDK do Expo.
+    -   : Múltiplas tentativas de configuração, incluindo  para gerar AAB.
+    -   : Integrados os novos componentes das tabs.
+    -   : Modificado para navegar para a nova página de perfil.
+    -   : Adicionadas as novas rotas.
+    -   : Adicionada a instalação automática do Playwright.
+    -   : Adicionado o endpoint .
+    -   : Reorganizados os links do menu.
 
 **Critical Info for New Agent**
--   **Prioridades do Utilizador:** A prioridade máxima é resolver os pedidos das últimas mensagens do utilizador: mover os itens de menu, corrigir a UI de geração de PDF e resolver os bugs/requisitos pendentes da página de Preços Especiais.
--   **Base de Dados de Desenvolvimento:** Esteja ciente de que a base de dados  está a ser populada com dados de teste. Pode ser necessário criar mais dados para testar funcionalidades específicas.
--   **Bloqueador de Produção:** O problema de dessincronização da base de dados de produção é crítico e está pendente de uma ação do utilizador (Deploy com Use new database). Relembre o utilizador disto.
--   **Refatoração Incompleta:** A refatoração de  está a meio. Continue o trabalho importando e usando os componentes já criados antes de extrair mais.
--   **Bug do Dropdown:** O bug do dropdown na página Preços Especiais pode não ser um problema do Playwright. Teste manualmente no browser e, se persistir, investigue uma solução (ex: verificar colisões de z-index do modal, ou problemas com o  do Radix).
+-   **Mobile Build é o Bloqueador Principal:** A prioridade máxima é resolver o problema do build da aplicação móvel. O utilizador está a executar os comandos no seu PC Windows e a partilhar screenshots, o que torna a depuração lenta. Considere tentar fazer o build no ambiente do agente usando as credenciais do utilizador para um feedback mais rápido.
+-   **Credenciais Expo Fornecidas:** O utilizador forneceu o seu email () e password () do Expo, que podem ser usados para depurar o build.
+-   **Git é Necessário para Build Local:** O utilizador teve de instalar o Git localmente, pois o EAS CLI depende dele. Qualquer nova instrução de build local deve assumir que o Git está presente.
+-   **O utilizador quer fazer deploy:** O utilizador mencionou várias vezes que quer fazer o deploy. É crucial resolver o problema do AAB antes de prosseguir com outro deploy, para evitar mais frustração.
 
 **documents and test reports created in this job**
--   
--   
--    (Atualizado)
+-    (Testes de UI/PDF passaram)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **** (): Pede para mover os links do menu para a secção do Perfil. (PENDENTE)
-2.  **** (): Reporta o problema da geração de PDF e pede para o dashboard suportar mais empresas. (PENDENTE/EM PROGRESSO)
-3.  **** (): Reporta que o dashboard não mostrava os dados corretos e que o menu superior devia estar sempre visível. (PARCIALMENTE RESOLVIDO, dados corrigidos)
-4.  **** (): Define um conjunto de tarefas, incluindo gerar o APK, continuar a refatoração e melhorar o dashboard. (EM PROGRESSO)
-5.  **** (): Pede a funcionalidade de associar um recibo a uma empresa na página de pagamentos do parceiro. (CONCLUÍDO)
-6.  **** (): Confirma a ordem de prioridade: 1. Preços Especiais, 2. Refatoração FichaVeiculo, 3. Correção RPA Prio. (EM PROGRESSO)
-7.  **** (): Reporta o bug principal e os novos requisitos para os Preços Especiais. (PENDENTE/EM PROGRESSO)
+1.  ** (Message 476):** User reports another mobile build failure. (PENDING)
+2.  ** (Message 474):** User asks for confirmation that Playwright installation is automatic. (RESOLVED)
+3.  ** (Message 434):** User requests a manual way for admin to manage Playwright. (RESOLVED)
+4.  ** (Message 418):** User asks how to manage Playwright after deployment. (RESOLVED)
+5.  ** (Message 412):** User reports Playwright error after deploying. (RESOLVED)
+6.  ** (Message 410):** User reports error in  due to copy-paste issue. (RESOLVED)
+7.  ** (Message 408):** User reports build error because  already exists. (RESOLVED)
+8.  ** (Message 402):** User shares screenshot of Play Store error requiring API level 35. (PENDING)
+9.  ** (Message 394):** User informs that Play Store requires  files, not . (RESOLVED)
+10. ** (Message 228):** User asks if they should input 'Y' to generate a new Android Keystore. (RESOLVED)
 
 **Project Health Check:**
--   **Broken:** O ambiente de produção () está instável e dessincronizado devido a uma base de dados desatualizada. A resolução está bloqueada, aguardando uma ação de deploy por parte do utilizador.
--   **Mocked:** O desenvolvimento está a depender de dados de teste criados através de endpoints temporários, pois a base de dados de desenvolvimento está vazia.
+-   **Broken:**
+    -   O processo de build da aplicação móvel está completamente quebrado, impedindo a publicação na Play Store.
+    -   O ambiente de produção () está potencialmente instável devido à dessincronização da base de dados (estado pendente de confirmação do utilizador).
+-   **Mocked:** N/A
 
 **3rd Party Integrations**
--   **Playwright:** Usado para automação RPA (Prio Elétrico).
--   **Recharts:** Usado para gráficos no Dashboard de Faturação.
--   **Expo (React Native):** Utilizado para a aplicação móvel .
+-   **Playwright:** Usado para automação RPA.
+-   **Recharts:** Usado para gráficos.
+-   **Expo (React Native) / EAS:** Utilizado para a aplicação móvel . É a principal fonte de problemas atual.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES
+-   **Testing agent used after significant changes:** YES, para as funcionalidades web iniciais.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None. Foram criados dados de teste via API.
--   **Known regressions:** A instabilidade do scraper da Prio continua a ser um risco.
+-   **Test files created:** None.
+-   **Known regressions:** A instabilidade do scraper da Prio (mencionada na handoff anterior) não foi abordada nesta sessão.
 
 **Credentials to test flow:**
 -   **App Admin User:**  / 
 -   **App Partner User (Zeny):**  / 
+-   **Expo Account:**  / 
 
 **What agent forgot to execute**
--   O agente não concluiu a movimentação dos itens de menu, que era a última tarefa solicitada pelo utilizador.
--   O agente não abordou a falta de um botão na UI para gerar o relatório PDF, apesar de ter identificado o problema.
--   O agente não resolveu definitivamente o bug de seleção do parceiro na página de Preços Especiais, marcando-o como um problema de ferramenta de teste sem confirmação.
--   O agente não integrou os novos componentes de  no componente principal, deixando a tarefa de refatoração incompleta.</analysis>
+- O agente não conseguiu concluir a tarefa principal de gerar o ficheiro  para a aplicação móvel, apesar de múltiplas tentativas. A complexidade do ambiente de build local do utilizador e as dependências do Expo provaram ser um bloqueio intransponível na sessão atual.</analysis>
