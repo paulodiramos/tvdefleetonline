@@ -34,7 +34,7 @@ class TestContabilistasSystem:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip("Admin login failed - cannot proceed")
     
     @pytest.fixture(scope="class")
@@ -45,7 +45,7 @@ class TestContabilistasSystem:
             "password": PARCEIRO_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip("Parceiro login failed - cannot proceed")
     
     @pytest.fixture(scope="class")
@@ -70,7 +70,7 @@ class TestContabilistasSystem:
         })
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
-        assert "token" in data
+        assert "access_token" in data
         assert data.get("user", {}).get("role") == "admin"
         print(f"SUCCESS: Admin login - role={data.get('user', {}).get('role')}")
     
@@ -82,7 +82,7 @@ class TestContabilistasSystem:
         })
         assert response.status_code == 200, f"Parceiro login failed: {response.text}"
         data = response.json()
-        assert "token" in data
+        assert "access_token" in data
         assert data.get("user", {}).get("role") == "parceiro"
         print(f"SUCCESS: Parceiro login - name={data.get('user', {}).get('name')}")
     
@@ -252,7 +252,7 @@ class TestContabilistasSystem:
         
         data = login_response.json()
         assert data.get("user", {}).get("role") == "contabilista"
-        token = data.get("token")
+        token = data.get("access_token")
         user_id = data.get("user", {}).get("id")
         
         print(f"SUCCESS: Contabilista logged in - id={user_id}")
@@ -295,7 +295,7 @@ class TestContabilistasSystem:
         if login_response.status_code != 200:
             pytest.skip("Test contabilista does not exist")
         
-        token = login_response.json().get("token")
+        token = login_response.json().get("access_token")
         
         response = requests.get(
             f"{BASE_URL}/api/contabilidade/faturas-fornecedores",
@@ -317,7 +317,7 @@ class TestContabilistasSystem:
         if login_response.status_code != 200:
             pytest.skip("Test contabilista does not exist")
         
-        token = login_response.json().get("token")
+        token = login_response.json().get("access_token")
         
         response = requests.get(
             f"{BASE_URL}/api/contabilidade/recibos-motoristas",
@@ -339,7 +339,7 @@ class TestContabilistasSystem:
         if login_response.status_code != 200:
             pytest.skip("Test contabilista does not exist")
         
-        token = login_response.json().get("token")
+        token = login_response.json().get("access_token")
         
         response = requests.get(
             f"{BASE_URL}/api/contabilidade/resumo",
