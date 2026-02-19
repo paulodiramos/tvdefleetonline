@@ -1994,6 +1994,58 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                 </div>
               </div>
 
+              {/* Gestores Associados - Apenas para Admin */}
+              {user.role === 'admin' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Gestores Associados
+                  </h3>
+                  <p className="text-sm text-slate-500 mb-3">
+                    Selecione os gestores que podem gerir este parceiro
+                  </p>
+                  {loadingGestores ? (
+                    <p className="text-sm text-slate-400">A carregar gestores...</p>
+                  ) : gestoresDisponiveis.length === 0 ? (
+                    <p className="text-sm text-slate-400">Nenhum gestor disponível no sistema</p>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                      {gestoresDisponiveis.map((gestor) => (
+                        <div 
+                          key={gestor.id}
+                          className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
+                            gestoresSelecionados.includes(gestor.id) 
+                              ? 'bg-blue-50 border-2 border-blue-300' 
+                              : 'bg-slate-50 hover:bg-slate-100 border border-transparent'
+                          }`}
+                          onClick={() => toggleGestorSelection(gestor.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              gestoresSelecionados.includes(gestor.id) ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-600'
+                            }`}>
+                              {gestor.name?.charAt(0)?.toUpperCase() || 'G'}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{gestor.name}</p>
+                              <p className="text-xs text-slate-500">{gestor.email}</p>
+                            </div>
+                          </div>
+                          {gestoresSelecionados.includes(gestor.id) && (
+                            <Check className="w-5 h-5 text-blue-600" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {gestoresSelecionados.length > 0 && (
+                    <p className="text-sm text-blue-600 mt-2">
+                      {gestoresSelecionados.length} gestor(es) selecionado(s)
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Minuta removed - now using Contrato e Tipos in EditParceiro page */}
 
               {/* Cláusulas removed - now using Contrato e Tipos in EditParceiro page */}
