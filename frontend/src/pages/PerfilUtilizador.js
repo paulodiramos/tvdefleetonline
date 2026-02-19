@@ -429,6 +429,8 @@ const PerfilUtilizador = ({ user, onLogout }) => {
                         <SelectItem value="gestao">Gestão</SelectItem>
                         <SelectItem value="parceiro">Parceiro</SelectItem>
                         <SelectItem value="operacional">Operacional</SelectItem>
+                        <SelectItem value="contabilista">Contabilista</SelectItem>
+                        <SelectItem value="inspetor">Inspetor</SelectItem>
                         <SelectItem value="motorista">Motorista</SelectItem>
                       </SelectContent>
                     </Select>
