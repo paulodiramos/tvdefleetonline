@@ -45,6 +45,9 @@ async def atribuir_parceiros_a_gestor(
     if not gestor:
         raise HTTPException(status_code=404, detail="Gestor not found")
     
+    # Get current parceiros assigned to this gestor
+    parceiros_anteriores = gestor.get("parceiros_atribuidos", [])
+    
     # Verify all parceiros exist
     for parceiro_id in parceiros_ids:
         parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
@@ -60,15 +63,42 @@ async def atribuir_parceiros_a_gestor(
         }}
     )
     
-    # Update each parceiro with gestor reference
+    # Remove gestor from parceiros that are no longer assigned
+    parceiros_removidos = set(parceiros_anteriores) - set(parceiros_ids)
+    for parceiro_id in parceiros_removidos:
+        parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+        if parceiro:
+            gestores_ids = parceiro.get("gestores_ids", [])
+            if gestor_id in gestores_ids:
+                gestores_ids.remove(gestor_id)
+            # Update gestor_associado_id to first remaining gestor or None
+            new_gestor_principal = gestores_ids[0] if gestores_ids else None
+            await db.parceiros.update_one(
+                {"id": parceiro_id},
+                {"$set": {
+                    "gestores_ids": gestores_ids,
+                    "gestor_associado_id": new_gestor_principal,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+    
+    # Add gestor to each parceiro's gestores_ids list
     for parceiro_id in parceiros_ids:
-        await db.parceiros.update_one(
-            {"id": parceiro_id},
-            {"$set": {
-                "gestor_associado_id": gestor_id,
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }}
-        )
+        parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+        if parceiro:
+            gestores_ids = parceiro.get("gestores_ids", [])
+            if gestor_id not in gestores_ids:
+                gestores_ids.append(gestor_id)
+            # Keep gestor_associado_id as first gestor for backwards compatibility
+            gestor_principal = gestores_ids[0] if gestores_ids else None
+            await db.parceiros.update_one(
+                {"id": parceiro_id},
+                {"$set": {
+                    "gestores_ids": gestores_ids,
+                    "gestor_associado_id": gestor_principal,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
     
     return {
         "message": f"Parceiros atribuídos ao gestor {gestor.get('name')}",
