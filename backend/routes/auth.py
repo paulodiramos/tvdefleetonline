@@ -123,7 +123,14 @@ async def register(user_data: UserCreate):
 async def login(credentials: UserLogin):
     """Login user"""
     user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
-    if not user or not verify_password(credentials.password, user["password"]):
+    print(f"[LOGIN DEBUG] Email: {credentials.email}, User found: {user is not None}")
+    if user:
+        print(f"[LOGIN DEBUG] User role: {user.get('role')}, Has password: {'password' in user}")
+        pwd_ok = verify_password(credentials.password, user["password"])
+        print(f"[LOGIN DEBUG] Password verify: {pwd_ok}")
+        if not pwd_ok:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+    else:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     if user["role"] == UserRole.MOTORISTA and not user.get("approved", False):
