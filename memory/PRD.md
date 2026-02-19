@@ -50,12 +50,17 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 - **Refatoração FichaVeiculo.js - DONE:**
   - **Antes:** 5162 linhas
-  - **Depois:** 4381 linhas (-781 linhas, -15%)
-  - **Componentes extraídos:**
+  - **Depois:** 4080 linhas (-1082 linhas, -21%)
+  - **Componentes de Tab extraídos (10):**
     - `VeiculoHistoricoAtribuicoesTab` (168 linhas)
     - `VeiculoRelatorioFinanceiroTab` (365 linhas)
-    - `VeiculoAgendaTab` (já existia, agora usado - 327 linhas)
-  - **Total de componentes na pasta:** 10 componentes especializados
+    - `VeiculoAgendaTab` (327 linhas)
+    - E mais 7 tabs existentes
+  - **Modais extraídos (3):**
+    - `AgendaEditModal` (85 linhas)
+    - `IntervencaoEditModal` (68 linhas)
+    - `ManutencaoAddModal` (225 linhas)
+  - **Total modularizado:** 2886 linhas em 14 ficheiros
   - **Benefícios:** Código mais modular, manutenção facilitada, componentes reutilizáveis
 
 ### Session 2026-02-19 (Perfil Utilizador Motorista)
