@@ -65,6 +65,7 @@ class ParceiroCreate(BaseModel):
     licenca_tvde: Optional[str] = None
     plano_id: Optional[str] = None  # ID do plano de assinatura
     gestor_associado_id: Optional[str] = None
+    gestores_ids: Optional[List[str]] = None  # Lista de IDs de gestores associados
 
 
 class Parceiro(BaseModel):
