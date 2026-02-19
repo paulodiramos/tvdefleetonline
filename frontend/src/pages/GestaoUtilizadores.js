@@ -370,6 +370,91 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     }
   };
 
+  // Handler para abrir diálogo de atribuir parceiro
+  const handleOpenAtribuirParceiroDialog = (usuario) => {
+    setSelectedUser(usuario);
+    setAtribuirParceiroId(usuario.parceiro_id || usuario.associated_partner_id || '');
+    setShowAtribuirParceiroDialog(true);
+  };
+
+  // Handler para atribuir parceiro a motorista
+  const handleAtribuirParceiro = async () => {
+    if (!selectedUser || !atribuirParceiroId) {
+      toast.error('Selecione um parceiro');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/motoristas/${selectedUser.id}/atribuir-parceiro`,
+        { parceiro_id: atribuirParceiroId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Parceiro atribuído com sucesso!');
+      setShowAtribuirParceiroDialog(false);
+      setSelectedUser(null);
+      setAtribuirParceiroId('');
+      fetchData();
+    } catch (error) {
+      console.error('Error assigning partner:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao atribuir parceiro');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handler para abrir diálogo de alterar role
+  const handleOpenRoleDialog = (usuario) => {
+    setSelectedUser(usuario);
+    setNovoRole(usuario.role);
+    setShowRoleDialog(true);
+  };
+
+  // Handler para alterar role
+  const handleChangeRole = async () => {
+    if (!selectedUser || !novoRole) {
+      toast.error('Selecione um tipo de conta');
+      return;
+    }
+
+    if (novoRole === selectedUser.role) {
+      toast.info('O tipo de conta já é o selecionado');
+      setShowRoleDialog(false);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/users/${selectedUser.id}/set-role`,
+        { role: novoRole },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Tipo de conta alterado para ${novoRole}`);
+      setShowRoleDialog(false);
+      setSelectedUser(null);
+      setNovoRole('');
+      fetchData();
+    } catch (error) {
+      console.error('Error changing role:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao alterar tipo de conta');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handler para ver documentos do motorista
+  const handleVerDocumentos = (usuario) => {
+    if (usuario.role === 'motorista') {
+      navigate(`/motoristas/${usuario.id}`);
+    } else {
+      navigate(`/usuarios/${usuario.id}`);
+    }
+  };
+
   const handleOpenAprovarDialog = async (usuario) => {
     setSelectedUser(usuario);
     setAprovarParceiroId('');
