@@ -27,6 +27,7 @@ const ArquivoExMotoristas = ({ user, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMotorista, setSelectedMotorista] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [motoristaDetails, setMotoristaDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
