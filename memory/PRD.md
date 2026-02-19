@@ -205,18 +205,12 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 - [x] Página de Contabilidade - **DONE**
 - [x] **Build AAB para Play Store** - **DONE** - App em avaliação na Play Store
 - [x] **Sistema Contabilista Completo** - **DONE** (2026-02-19)
-  - Parceiro cria contabilista
-  - Admin atribui parceiros
-  - Seletor de parceiro ativo
-  - Filtros por parceiro na contabilidade
 - [x] **Fluxo de Aprovação com Plano/Preços Especiais** - **DONE** (2026-02-19)
-  - Admin atribui plano e preço especial ao aprovar parceiros
-  - Diálogo dinâmico baseado no tipo de utilizador
 - [x] **Sistema Utilizadores Melhorado** - **DONE** (2026-02-19)
-  - Admin atribui parceiro a motoristas já aprovados
-  - Admin altera tipo de conta (role)
-  - Admin vê documentos dos motoristas
-  - Motorista aprovado cria documento na collection motoristas
+- [x] **Correção Upload Documentos Registo** - **DONE** (2026-02-20)
+  - Documentos carregados no registo agora ficam associados ao motorista
+- [x] **Correção Playwright/RPA** - **DONE** (2026-02-20)
+  - Browsers reinstalados na versão correcta (v1194)
 
 ### P1 - High Priority
 - [x] Seletor de parceiro ativo para gestores - **DONE**
