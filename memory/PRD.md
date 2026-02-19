@@ -28,6 +28,13 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 ## What's Been Implemented
 
 ### Session 2026-02-20 (Latest - Correção Documentos & Playwright)
+- **Bug Fix: Registo de Motoristas "Not Found" - DONE:**
+  - **Problema:** Ao fazer registo, aparecia "Not Found" no toast
+  - **Causa:** URL duplicava `/api` - fazia `POST /api/api/auth/register` em vez de `POST /api/auth/register`
+  - **Solução:** Corrigido em `RegistoMotorista.js` - removido `/api` extra das chamadas
+  - **Ficheiro:** `frontend/src/pages/RegistoMotorista.js` (linhas 108, 123)
+  - **Testes:** Registo funciona, motorista criado na BD com status pendente ✅
+
 - **Correção Upload de Documentos no Registo - DONE:**
   - **Problema:** Documentos carregados durante a inscrição de motoristas não ficavam associados à ficha do motorista
   - **Causa:** Query incorreta no endpoint `/api/documentos/upload` - usava `{"email": {"$exists": True}}` que fazia match com qualquer motorista
