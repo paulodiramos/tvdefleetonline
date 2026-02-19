@@ -21,6 +21,7 @@ import {
 
 const GestaoUtilizadores = ({ user, onLogout }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [utilizadores, setUtilizadores] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [parceiros, setParceiros] = useState([]);
@@ -29,6 +30,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pendentes', 'aprovados'
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPlanoDialog, setShowPlanoDialog] = useState(false);
   const [showNovoUserDialog, setShowNovoUserDialog] = useState(false);
@@ -54,6 +56,15 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     parceiros_associados: []
   });
   const [saving, setSaving] = useState(false);
+
+  // Verificar filtro da URL ao carregar
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const filter = params.get('filter');
+    if (filter === 'pendentes') {
+      setStatusFilter('pendentes');
+    }
+  }, [location.search]);
 
   useEffect(() => {
     fetchData();
