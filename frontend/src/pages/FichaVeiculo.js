@@ -5233,6 +5233,57 @@ const FichaVeiculo = ({ user, onLogout }) => {
               </div>
             </div>
             
+            {/* Secção de Fatura */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-3">
+              <Label className="text-blue-900 font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Dados da Fatura (Opcional)
+              </Label>
+              <p className="text-xs text-blue-700">
+                Adicione os dados da fatura para controlo contabilístico
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nº Fatura</Label>
+                  <Input
+                    value={novaManutencao.fatura_numero}
+                    onChange={(e) => setNovaManutencao({...novaManutencao, fatura_numero: e.target.value})}
+                    placeholder="Ex: FT 2024/0001"
+                  />
+                </div>
+                <div>
+                  <Label>Data da Fatura</Label>
+                  <Input
+                    type="date"
+                    value={novaManutencao.fatura_data}
+                    onChange={(e) => setNovaManutencao({...novaManutencao, fatura_data: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Fornecedor na Fatura</Label>
+                <Input
+                  value={novaManutencao.fatura_fornecedor}
+                  onChange={(e) => setNovaManutencao({...novaManutencao, fatura_fornecedor: e.target.value})}
+                  placeholder="NIF e nome do fornecedor"
+                />
+              </div>
+              <div>
+                <Label>Ficheiro da Fatura (PDF/Imagem)</Label>
+                <Input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={(e) => setFaturaFile(e.target.files[0] || null)}
+                  className="cursor-pointer"
+                />
+                {faturaFile && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Ficheiro selecionado: {faturaFile.name}
+                  </p>
+                )}
+              </div>
+            </div>
+            
             {/* Secção de Responsabilidade */}
             <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 space-y-3">
               <Label className="text-amber-900 font-semibold">Atribuição de Custo</Label>
