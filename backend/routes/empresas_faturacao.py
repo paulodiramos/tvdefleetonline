@@ -297,16 +297,22 @@ async def dashboard_totais_empresa(
     motoristas_list = []
     for m in motoristas_data.values():
         # Percentagem do total anual deste motorista em relação ao total de todas as empresas
-        m["percentagem_total"] = round((m["total_valor"] / total_geral) * 100, 1)
+        m["percentagem_total"] = round((m["total_valor"] / total_geral) * 100, 1) if total_geral > 0 else 0
         
         # Calcular percentagem por empresa - cada empresa tem seu próprio total
         for emp_data in m["por_empresa"].values():
             # Encontrar o total da empresa
             empresa_id = emp_data.get("empresa_id")
             empresa_info = next((e for e in resultado if e["empresa_id"] == empresa_id), None)
-            total_empresa_individual = empresa_info["total_valor"] if empresa_info and empresa_info["total_valor"] > 0 else 1
-            # Percentagem relativa ao total daquela empresa específica
-            emp_data["percentagem"] = round((emp_data["total_valor"] / total_empresa_individual) * 100, 1)
+            
+            if empresa_info and empresa_info["total_valor"] > 0:
+                total_empresa_individual = empresa_info["total_valor"]
+                # Percentagem relativa ao total daquela empresa específica
+                emp_data["percentagem"] = round((emp_data["total_valor"] / total_empresa_individual) * 100, 1)
+            else:
+                # Se a empresa não existe em resultado (dados órfãos), usar o total geral
+                # Isso pode acontecer se houver recibos com empresa_id inválida ou antiga
+                emp_data["percentagem"] = round((emp_data["total_valor"] / total_geral) * 100, 1) if total_geral > 0 else 0
         
         # Converter dict para lista ordenada
         m["por_empresa"] = sorted(m["por_empresa"].values(), key=lambda x: x["total_valor"], reverse=True)
