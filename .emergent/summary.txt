@@ -1,70 +1,79 @@
 <analysis>**original_problem_statement:**
-O utilizador pretende evoluir o seu sistema de gestão de frotas. As solicitações recentes e em andamento incluem:
-1.  **Lógica de Preços Especiais (CONCLUÍDO):** Implementar a lógica de backend para suportar vários tipos de cálculo de preços, incluindo preço por veículo e por motorista.
-2.  **Preparação para Deploy (CONCLUÍDO):** Preparar a aplicação para deploy, garantindo que as dependências como o Playwright estão corretamente instaladas.
-3.  **Correção do Login Uber (CONCLUÍDO):** Adicionar um campo para inserir um código de 4 dígitos (SMS) durante o processo de login manual na Uber, para contornar problemas com a autenticação de dois fatores.
-4.  **Correção do Fluxo de Aprovação de Utilizadores (CONCLUÍDO):** Corrigir um bug onde o admin não conseguia aprovar novos registos de motoristas e atribuir-lhes um parceiro.
-5.  **Melhoria no Dashboard do Admin (CONCLUÍDO):** Adicionar cartões de atalho no dashboard do admin para Pendentes de Aprovação e Motoristas Sem Parceiro, que filtram as listas correspondentes ao serem clicados.
-6.  **Correção no Relatório Via Verde (CONCLUÍDO):** Garantir que o relatório PDF semanal de um motorista apenas mostra as transações Via Verde do seu veículo e não de toda a frota do parceiro.
-7.  **Refatoração do Componente  (EM PROGRESSO):** Refatorar o componente monolítico  (com mais de 5800 linhas) em componentes mais pequenos e geríveis, um para cada tab.
-8.  **Investigar Erro em Produção (PENDENTE):** O utilizador reportou um erro erro a carregar dados após o deploy, que parece ser específico do ambiente de produção e pode estar relacionado com a base de dados.
+O utilizador pretende evoluir o seu sistema de gestão de frotas. As solicitações do utilizador nesta sessão incluíram:
+1.  **Sistema de Mensagens:** Implementar um sistema de mensagens onde os destinatários são filtrados com base na hierarquia de papéis (admin, parceiro, gestor, motorista).
+2.  **Correções de Bugs Críticos em Relatórios:**
+    *   No **Dashboard de Faturação**, corrigir os totais e as percentagens que estavam incorretos. Garantir que os parceiros veem apenas os dados das suas próprias empresas.
+    *   No **Resumo Semanal**, impedir que motoristas desativados e motoristas de outros parceiros apareçam no relatório.
+3.  **Refatoração do Componente :** Continuar a refatoração do componente monolítico, extraindo o código das tabs para componentes individuais.
+4.  **Arquivo de Motoristas:**
+    *   Na página principal de motoristas (), mostrar apenas os motoristas ativos.
+    *   Criar uma página de Arquivo para motoristas desativados, que devem manter todos os seus dados históricos.
+    *   Ao clicar num motorista arquivado, mostrar uma ficha de detalhes **simplificada**, contendo apenas dados pessoais, documentos, plataformas e histórico de rendimentos.
+5.  **Fluxo de Aprovação de Utilizadores:** Modificar o diálogo de aprovação de utilizadores para que o admin possa atribuir um **Plano** e **Preços Especiais** no momento da aprovação.
 
 **PRODUCT REQUIREMENTS:**
--   **Dashboard Admin Funcional:** O dashboard deve apresentar contagens de ações pendentes (aprovações de utilizadores, motoristas sem parceiro) e permitir que o admin navegue para listas filtradas com um clique.
--   **Fluxo de Aprovação Completo:** O admin deve ser capaz de aprovar novos utilizadores (motoristas, gestores) e, no caso de um motorista, atribuir-lhe um parceiro opcionalmente no mesmo passo.
--   **Relatórios Corretos:** Os relatórios individuais gerados pelo sistema (ex: PDF semanal do motorista) devem conter apenas os dados pertinentes a essa entidade (ex: transações Via Verde apenas do veículo do motorista).
--   **Código Manutenível:** Componentes de frontend excessivamente grandes e complexos, como , devem ser divididos em componentes menores e reutilizáveis para facilitar a manutenção e o desenvolvimento futuro.
+-   **Sistema de Mensagens Hierárquico:** O seletor de destinatários nas mensagens deve apresentar apenas os utilizadores permitidos com base no papel do remetente.
+-   **Relatórios Financeiros Precisos:** O Dashboard de Faturação e o Resumo Semanal devem apresentar dados corretos, filtrados por parceiro e excluindo entidades inativas ou irrelevantes.
+-   **Gestão de Motoristas Ativos/Inativos:** A aplicação deve distinguir claramente entre motoristas ativos e inativos (arquivados), com listas e fichas de detalhe apropriadas para cada estado.
+-   **Código Manutenível:** O componente  deve ser progressivamente refatorado para melhorar a manutenibilidade.
+-   **Fluxo de Aprovação Completo:** O admin deve conseguir aprovar novos utilizadores e configurar o seu plano de faturação e preços especiais num único passo.
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-É um sistema de gestão de frotas full-stack (React/FastAPI/MongoDB). Nesta sessão, o agente concluiu um número significativo de tarefas e correções de bugs solicitadas pelo utilizador:
-1.  **Lógica de Preços Especiais:** A lógica de backend para 5 tipos diferentes de preços foi implementada e testada.
-2.  **Correções de UI/UX:** Foi adicionado um campo de código SMS para o login da Uber, e o fluxo de aprovação de utilizadores foi completamente refeito na página de gestão de utilizadores do admin.
-3.  **Melhorias no Dashboard:** O dashboard do admin foi enriquecido com cartões de atalho clicáveis para ações pendentes, melhorando a usabilidade.
-4.  **Correção de Bug Crítico (Backend):** Foi corrigida a lógica de geração de relatórios da Via Verde para garantir a privacidade e correção dos dados.
-5.  **Início da Refatoração:** O agente iniciou a refatoração do massivo ficheiro , criando componentes para as tabs Info e Revisão, e substituindo com sucesso o código da tab Revisão pelo novo componente, reduzindo o tamanho do ficheiro principal.
+É um sistema de gestão de frotas full-stack (React/FastAPI/MongoDB). Nesta sessão, o agente implementou e corrigiu várias funcionalidades críticas solicitadas pelo utilizador:
+1.  **Sistema de Mensagens:** Foi criado um novo endpoint de backend () que implementa a lógica de filtragem de destinatários por hierarquia de papéis. O frontend foi atualizado para usar este endpoint e a funcionalidade foi validada com testes manuais e do testing agent.
+2.  **Correção de Relatórios:** Foram corrigidos múltiplos bugs no backend (, ) que causavam inconsistências de dados no Dashboard de Faturação e no Resumo Semanal. As correções envolveram aprimorar queries MongoDB, corrigir cálculos de percentagens e filtrar dados pertencentes a outros parceiros.
+3.  **Refatoração Parcial de :** A tab Dispositivos foi extraída com sucesso para o seu próprio componente (), reduzindo o tamanho do ficheiro principal.
+4.  **Funcionalidade de Arquivo de Motoristas:** Foi implementada a separação entre motoristas ativos e inativos. A lista principal agora mostra apenas ativos, e foi criada uma página de arquivo para os inativos, com uma ficha de detalhes simplificada e personalizada () conforme solicitado.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a continuar a refatoração do componente . Tinha acabado de substituir com sucesso um bloco de 561 linhas da tab Revisão pelo novo componente  e estava a preparar-se para continuar com as restantes tabs, conforme solicitado pelo utilizador (avancar para 2).
+-   **Last item agent was working:** O agente estava a trabalhar na solicitação para melhorar o fluxo de aprovação de utilizadores na página . O objetivo era adicionar a capacidade de o administrador selecionar um **Plano** e **Preços Especiais** para um novo utilizador diretamente no diálogo de aprovação. O agente já tinha começado a modificar o componente React, adicionando os estados necessários e a lógica para buscar os planos existentes.
 -   **Status:** IN PROGRESS
--   **Agent Testing Done:** Y (O agente confirmou que o frontend compilou sem erros após a substituição do código).
--   **Which testing method agent to use?** frontend testing agent. É crucial executar um teste de regressão completo na página  para garantir que a substituição da tab Revisão não quebrou nenhuma funcionalidade existente e que os dados continuam a ser carregados e exibidos corretamente.
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** both. O backend precisa de testes para garantir que o plano e os preços especiais são corretamente associados ao utilizador. O frontend precisa de testes para validar a UI do diálogo de aprovação.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Refatoração Incompleta de  (P0)
--   Issue 2: Erro ao Carregar Dados em Produção (P1)
--   Issue 3: Instabilidade do scraper da Prio (P2)
+-   Issue 1: Concluir a melhoria do fluxo de aprovação de utilizadores (P0)
+-   Issue 2: Refatoração Incompleta de  (P1)
+-   Issue 3: Erro ao Carregar Dados em Produção (P2)
+-   Issue 4: Instabilidade do scraper da Prio (P3)
 
 **Issues Detail:**
--   **Issue 1: Refatoração Incompleta de  (P0)**
-    -   **Attempted fixes:** O agente criou com sucesso os componentes  e . O conteúdo da tab Revisão (561 linhas) foi substituído pelo componente .
+-   **Issue 1: Concluir a melhoria do fluxo de aprovação de utilizadores (P0)**
+    -   **Attempted fixes:** O agente começou a modificar o componente . Foram adicionados  para , , e , e uma função  foi adicionada para carregar os planos quando o diálogo de aprovação é aberto.
     -   **Next debug checklist:**
-        1.  Continuar a extrair o conteúdo das tabs restantes (, , , ) para os seus próprios ficheiros de componente.
-        2.  A tab info é a maior (mais de 2000 linhas) e deve ser a próxima prioridade.
-        3.  Para cada tab extraída, substituir o código inline em  pela chamada ao novo componente, passando as  necessárias.
-        4.  Após cada substituição, realizar um teste de verificação (compilação e screenshot) para garantir que a página não quebrou.
-    -   **Why fix this issue and what will be achieved with the fix?** O ficheiro tem quase 6000 linhas, tornando-o extremamente difícil de manter. A refatoração irá melhorar drasticamente a legibilidade, manutenção e desempenho do código.
+        1.  Adicionar os elementos de UI (dropdowns/selects) para Planos e Preços Especiais no .
+        2.  Modificar o handler de aprovação no frontend para enviar o  e  selecionados.
+        3.  Atualizar o endpoint de backend  em  para aceitar e processar os novos campos, associando o plano e o preço especial ao utilizador.
+        4.  Testar o fluxo completo.
+    -   **Why fix this issue and what will be achieved with the fix?** Simplifica o trabalho do admin, permitindo configurar um novo utilizador completamente num único passo.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 2: Refatoração Incompleta de  (P1)**
+    -   **Attempted fixes:** A tab Dispositivos foi extraída para o componente . O ficheiro principal foi reduzido em ~175 linhas.
+    -   **Next debug checklist:**
+        1.  Priorizar a extração da tab info (~2200 linhas) para o seu próprio componente (), que já existe mas está incompleto.
+        2.  Extrair a tab agenda (~277 linhas).
+        3.  Verificar e refatorar a tab relatorio, se necessário.
+    -   **Why fix this issue and what will be achieved with the fix?** O ficheiro tem mais de 5000 linhas, sendo extremamente difícil de manter. A refatoração irá melhorar drasticamente a legibilidade e manutenção.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Frontend.
     -   **Blocked on other issue:** Não.
 
--   **Issue 2: Erro ao Carregar Dados em Produção (P1)**
-    -   **Description:** O utilizador reportou apos deploy esta aparecer errro a carregar dados nunca igual parece algum problema com servidor. O agente confirmou que os endpoints funcionam no ambiente de preview, o que sugere um problema específico de produção, provavelmente a base de dados de produção estar desatualizada, um problema já mencionado em handoffs anteriores.
-    -   **Attempted fixes:** Nenhum. O agente focou-se nas outras tarefas solicitadas.
-    -   **Next debug checklist:**
-        1.  Perguntar ao utilizador por mais detalhes sobre o erro: em que página ocorre? Quais dados falham ao carregar?
-        2.  Solicitar acesso (ou logs) do ambiente de produção para diagnosticar o problema.
-        3.  Propor um plano para sincronizar a estrutura da base de dados de produção com a de desenvolvimento, se se confirmar que essa é a causa.
-    -   **Why fix this issue and what will be achieved with the fix?** Resolve um problema crítico que está a afetar a usabilidade da aplicação em produção.
+-   **Issue 3: Erro ao Carregar Dados em Produção (P2)**
+    -   **Description:** Mencionado no handoff inicial. O utilizador reportou apos deploy esta aparecer errro a carregar dados, sugerindo um problema de dessincronização da base de dados de produção. Este problema não foi abordado nesta sessão.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on other issue:** Aguardando mais informações do utilizador.
+    -   **Blocked on other issue:** Aguardando mais informações do utilizador ou acesso a logs de produção.
 
--   **Issue 3: Instabilidade do scraper da Prio (P2)**
+-   **Issue 4: Instabilidade do scraper da Prio (P3)**
     -   **Description:** Mencionado em handoffs anteriores, mas não abordado nesta sessão.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
@@ -72,43 +81,46 @@ O utilizador pretende evoluir o seu sistema de gestão de frotas. As solicitaç�
     -   **Blocked on other issue:** Não.
 
 **In progress Task List**:
--   **Task 1: Concluir refatoração de  (P0)**
-    -   **Where to resume:** Continuar o trabalho em . A próxima grande tab a ser extraída é a tab info.
-    -   **What will be achieved with this?** A conclusão desta tarefa tornará um dos componentes mais complexos da aplicação significativamente mais fácil de gerir.
+-   **Task 1: Melhorar fluxo de aprovação de utilizadores (P0)**
+    -   **Where to resume:** Em , continuar a implementação da adição dos seletores de Plano e Preço Especial ao .
+    -   **What will be achieved with this?** O admin poderá aprovar e configurar totalmente um utilizador numa única ação.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on something:** Não.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) Investigar e resolver o erro de carregamento de dados em produção.
-    *   (P2) Integração com o WhatsApp.
+    *   (P1) Concluir a refatoração de , focando na tab Info.
+    *   (P2) Investigar e resolver o erro de carregamento de dados em produção.
+    *   (P3) Investigar a instabilidade do scraper da Prio.
 *   **Future Tasks:**
+    *   Integração com o WhatsApp.
     *   Implementar funcionalidades de Alertas Avançados e Comissões Avançadas.
     *   Criar um sistema para arquivar dados antigos da base de dados.
     *   Implementar um sistema de relógio de ponto na app móvel.
 
 **Completed work in this session**
--   **Funcionalidade: Lógica de Preços Especiais (DONE)**
-    -   Implementada e testada a lógica de backend para 5 tipos de preços em  e .
--   **Correção: Fluxo de Aprovação de Utilizadores (DONE)**
-    -   Modificado o componente  para permitir a aprovação de utilizadores pendentes e a atribuição de parceiros a motoristas num único diálogo.
--   **Funcionalidade: Dashboard do Admin Melhorado (DONE)**
-    -   Adicionados cartões clicáveis em  que navegam para listas filtradas ( e ). Lógica de backend em .
--   **Correção: Relatório Semanal Via Verde (DONE)**
-    -   Corrigida a query em  para filtrar as transações Via Verde apenas pelo veículo do motorista no relatório PDF individual.
--   **Correção: Login Manual Uber (DONE)**
-    -   Adicionado um campo de input e lógica para submeter o código de 4 dígitos (SMS) em .
--   **Refatoração Parcial de  (DONE)**
-    -   Criados os componentes  e .
-    -   O conteúdo da tab Revisão em  foi substituído com sucesso pelo novo componente.
+-   **Funcionalidade: Sistema de Mensagens por Hierarquia (DONE)**
+    -   Criado endpoint  em  com lógica de filtragem.
+    -   Atualizado  para usar o novo endpoint.
+-   **Correção: Dashboard de Faturação (DONE)**
+    -   Corrigidos cálculos de totais e percentagens em .
+    -   Adicionado filtro para garantir que parceiros vejam dados apenas das suas empresas.
+-   **Correção: Resumo Semanal (DONE)**
+    -   Corrigida a lógica em  para priorizar o campo  e verificar o status de  e , excluindo motoristas inativos ou de outros parceiros.
+-   **Funcionalidade: Arquivo de Motoristas (DONE)**
+    -   Endpoint  em  foi atualizado para retornar apenas motoristas ativos.
+    -   Criado componente  para uma ficha de detalhe simplificada para motoristas arquivados.
+    -   Atualizada a página  para usar o novo componente.
+-   **Refatoração: FichaVeiculo.js - Tab Dispositivos (DONE)**
+    -   Criado e implementado o componente .
 
 **Earlier issues found/mentioned but not fixed**
--   **Erro de dados em Produção:** O utilizador reportou um erro crítico após o deploy que o agente associou a um problema conhecido de dessincronização da base de dados, mas não iniciou a investigação.
+-   **Erro de dados em Produção:** O utilizador reportou um erro crítico em produção (erro a carregar dados) que não foi investigado.
 -   **Instabilidade do scraper da Prio:** Mencionado em handoffs anteriores, continua por abordar.
 
 **Known issue recurrence from previous fork**
--   **Base de Dados de Produção Desatualizada:** Mencionada em handoffs anteriores, e agora manifestou-se como um erro de carregamento de dados reportado pelo utilizador.
+-   **Base de Dados de Produção Desatualizada:** Mencionada em handoffs anteriores, e é a causa provável do erro de carregamento de dados em produção reportado pelo utilizador.
 -   **Recurrence count:** Alta
 -   **Status:** NOT STARTED
 
@@ -116,63 +128,63 @@ O utilizador pretende evoluir o seu sistema de gestão de frotas. As solicitaç�
 
 
 **Key Technical Concepts**
--   **Refatoração de Componentes React:** Extração de lógica e JSX de um componente God Object para componentes filhos menores e focados, passando estado e funções via .
--   **Filtragem por URL State:** Utilização de  para ler parâmetros de query () e  para navegação programática, permitindo que uma página seja pré-filtrada com base no link de origem.
--   **Backend Service Layer:** Separação da lógica de negócio (cálculos de preços, queries complexas) em ficheiros de serviço, mantendo os ficheiros de rota (endpoints) mais limpos.
--   **Testes Manuais (Curl/Screenshot):** Utilização intensiva de  para testar endpoints de backend e screenshots para verificar rapidamente as alterações no frontend.
+-   **Backend Role-Based Filtering:** Implementação de lógica de negócio complexa num endpoint para filtrar dados com base no papel e nas relações do utilizador autenticado.
+-   **Debugging de Inconsistência de Dados:** Identificação e correção de problemas causados por dados inconsistentes na base de dados (e.g., múltiplos campos de ID de parceiro,  vs ).
+-   **Refatoração de Componentes React:** Criação de componentes novos e especializados (, ) e sua integração em páginas existentes.
+-   **Desenvolvimento Iterativo com Feedback do Utilizador:** O agente adaptou-se a múltiplos pedidos de refinamento do utilizador, como a evolução da ficha de detalhes do motorista arquivado de idêntica para simplificada.
 
 **key DB schema**
--   **users:** O campo  é usado para distinguir utilizadores pendentes. O campo  em motoristas é usado para o filtro sem parceiro.
--   **planos:** Contém um array  com objetos que incluem  e .
+-   **users:** Os campos , , , , , e  foram cruciais para a implementação das correções e novas funcionalidades de filtragem.
+-   **planos:** Contém a lista de planos de faturação e os seus .
+-   **dados_semanais:** Contém dados de faturação. A correção passou por filtrar  para corresponder apenas às empresas do parceiro.
 
 **All files of reference**
 -   **Created:**
     -   
     -   
-    -   
-    -    (Ficheiro de backup temporário)
 -   **Updated Heavily:**
-    -    (Refatorado para usar )
-    -    (Implementado fluxo de aprovação)
-    -    (Adicionados cartões de atalho)
-    -    (Implementada lógica de preços especiais)
-    -    (Corrigida query da Via Verde)
+    -    (Correção do Resumo Semanal)
+    -    (Correção do Dashboard de Faturação)
+    -    (Novo endpoint de destinatários)
+    -    (Início da implementação da seleção de planos)
+    -    (Implementação da ficha simplificada)
+    -    (Uso do novo endpoint)
 -   **To be updated:**
     -    (Precisa de mais refatoração)
+    -    (Para processar a atribuição de planos na aprovação)
 
 **Areas that need refactoring**:
--    continua a ser a principal área a necessitar de refatoração. Apesar do progresso, as tabs info, turnos, dispositivos e relatorio ainda estão inline e precisam de ser extraídas para os seus próprios componentes.
+-    continua a ser a prioridade máxima. As tabs info (~2200 linhas) e agenda precisam de ser extraídas para componentes dedicados para tornar o ficheiro gerível.
 
 **key api endpoints**
--   : Endpoint para aprovar um utilizador.
--   : Endpoint que fornece as estatísticas para os novos cartões do dashboard do admin.
--   : Endpoint para calcular o preço final aplicando a lógica de preços especiais.
--   : Geração do PDF, onde a lógica da Via Verde foi corrigida.
+-   : (NOVO) Retorna a lista de utilizadores que podem receber mensagens com base no papel do remetente.
+-   : Endpoint existente que precisa ser atualizado para receber e atribuir  e .
+-   : Atualizado para retornar apenas motoristas com .
+-   : A lógica de dados foi corrigida para excluir motoristas irrelevantes.
+-   : A lógica de dados foi corrigida para filtrar por empresas do parceiro e corrigir cálculos.
 
 **Critical Info for New Agent**
--   A prioridade imediata é continuar a refatoração de , conforme o último pedido do utilizador. Comece pela tab info, que é a mais complexa. Seja metódico: extraia o código para um novo componente, passe as  necessárias e substitua o bloco de código no ficheiro principal.
--   Esteja ciente do problema de erro a carregar dados em produção. Após avançar na refatoração, é crucial abordar este problema com o utilizador. Prepare-se para pedir mais informações para diagnosticar se a causa é a base de dados dessincronizada.
--   O agente anterior foi muito eficaz a usar  para testar o backend e  para validar o frontend. Continue a usar esta abordagem para testes rápidos. Para uma funcionalidade complexa como a refatoração de , use o  no final para garantir que não houve regressões.
+-   A prioridade imediata é concluir a tarefa em andamento: **adicionar a seleção de Plano e Preços Especiais ao diálogo de aprovação de utilizadores**. Isto exigirá trabalho tanto no frontend () como no backend ().
+-   Após concluir a tarefa acima, a próxima prioridade deve ser continuar a **refatoração de **, começando pela massiva tab info.
+-   Esteja ciente de que existem dois problemas de fundo, mencionados mas não resolvidos, que podem exigir atenção futura: um **erro de carregamento de dados em produção** (provavelmente relacionado com a BD) e a **instabilidade do scraper da Prio**. Se o utilizador os mencionar, devem ser priorizados.
+-   Muitos bugs nesta sessão foram causados por **dados inconsistentes na base de dados**. Ao depurar, verifique sempre os dados reais na BD (e.g., com ) para validar as suas suposições sobre a lógica.
 
 **documents and test reports created in this job**
 -   
 -   
+-    (foi atualizado pelo agente anterior)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   : O utilizador pede para prosseguir com a tarefa 2 do plano, que é a refatoração de . (EM PROGRESSO)
--   : O utilizador pede para continuar com as tarefas e reporta o bug do relatório da Via Verde, que mostra dados de toda a frota. (CONCLUÍDO)
--   : O utilizador pede para verificar a BD e refatorar . (EM PROGRESSO)
--   : O utilizador solicita os cartões de atalho no dashboard do admin. (CONCLUÍDO)
--   : O utilizador reporta o bug que impede a aprovação de novos utilizadores. (CONCLUÍDO)
--   : O utilizador reporta o erro de carregamento de dados em produção e o problema no login da Uber. (PARCIALMENTE CONCLUÍDO - Uber corrigido, erro de dados pendente)
--   : Mensagem interna do agente.
--   : O utilizador pede para preparar a aplicação para o deploy. (CONCLUÍDO)
--   : Mensagem interna do agente a finalizar a tarefa anterior.
--   : O utilizador aprova o plano para trabalhar na lógica de preços especiais. (CONCLUÍDO)
+-   : O utilizador reportou um problema com a aprovação e pediu para adicionar a atribuição de planos e preços especiais. O agente estava a trabalhar nisto. (EM PROGRESSO)
+-   : O utilizador pediu para preparar a aplicação para deploy. (CONCLUÍDO)
+-   : O utilizador refinou o pedido da ficha de detalhes do motorista arquivado para ser uma versão simplificada. (CONCLUÍDO)
+-   : Pedido inicial do utilizador para que a ficha do motorista arquivado fosse idêntica à do ativo. (SUBSTITUÍDO PELO PEDIDO SEGUINTE)
+-   : O utilizador pediu a separação de motoristas ativos e arquivados. (CONCLUÍDO)
+-   : O utilizador apontou uma inconsistência no status de um motorista desativado que ainda aparecia nos relatórios. (CONCLUÍDO)
+-   : O utilizador reportou múltiplos bugs no Dashboard de Faturação e no Resumo Semanal com screenshots. (CONCLUÍDO)
 
 **Project Health Check:**
--   **Broken:** Há um erro não diagnosticado de carregamento de dados no ambiente de produção (erro a carregar dados). Suspeita-se que seja causado por uma base de dados dessincronizada.
--   **Mocked:** N/A
+-   **Broken:** Existe um erro não diagnosticado de erro a carregar dados no ambiente de produção, reportado em handoffs anteriores e não abordado nesta sessão. É um risco elevado para a estabilidade da aplicação.
 
 **3rd Party Integrations**
 -   **Playwright:** Usado para automação RPA (scrapers Uber/Prio).
@@ -180,15 +192,14 @@ O utilizador pretende evoluir o seu sistema de gestão de frotas. As solicitaç�
 -   **Expo / EAS:** Utilizado para a aplicação móvel.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (para a funcionalidade de Preços Especiais).
+-   **Testing agent used after significant changes:** YES. O agente usou o  duas vezes para validar as correções dos relatórios e a refatoração.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** A instabilidade do scraper da Prio e o potencial problema com a base de dados de produção.
+-   **Known regressions:** A instabilidade do scraper da Prio e o problema não resolvido da base de dados de produção.
 
 **Credentials to test flow:**
 -   **App Admin User:**  / 
 -   **App Partner User (Zeny):**  / 
--   **App Accountant User:**  / 
 
 **What agent forgot to execute**
--   O agente não formulou um plano para investigar ativamente o erro de carregamento de dados em produção. Embora tenha identificado a causa provável (BD dessincronizada), não recolheu mais informações do utilizador nem propôs passos concretos para a depuração, sendo desviado por outras solicitações. Esta deve ser uma prioridade alta após a tarefa de refatoração atual.</analysis>
+-   O agente não iniciou a investigação sobre o **erro de carregamento de dados em produção**, apesar de este ser um problema recorrente e potencialmente crítico mencionado no handoff inicial. O foco foi direcionado para os novos bugs e funcionalidades reportados pelo utilizador durante a sessão.</analysis>
