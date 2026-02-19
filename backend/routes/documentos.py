@@ -9,7 +9,7 @@ import os
 import base64
 
 from models.user import UserRole
-from utils.auth import get_current_user, get_current_user_optional
+from utils.auth import get_current_user
 from utils.database import get_database
 
 router = APIRouter()
