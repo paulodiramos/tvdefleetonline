@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -8,59 +8,21 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  SafeAreaView,
-  Platform
+  SafeAreaView
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
-import * as SecureStore from 'expo-secure-store';
-import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Get API URL from app config or fallback
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://tvdefleet.com/api';
+const API_URL = 'https://tvdefleet.com/api';
 
-// Secure storage keys
+// Storage keys
 const STORAGE_KEYS = {
   TOKEN: 'tvdefleet_auth_token',
-  USER: 'tvdefleet_user_data',
-  PONTO_STATE: 'tvdefleet_ponto_state'
+  USER: 'tvdefleet_user_data'
 };
 
-// Secure storage helpers
-const secureStorage = {
-  setItem: async (key, value) => {
-    try {
-      await SecureStore.setItemAsync(key, typeof value === 'string' ? value : JSON.stringify(value));
-    } catch (e) {
-      console.log('SecureStore setItem error:', e);
-    }
-  },
-  getItem: async (key) => {
-    try {
-      const value = await SecureStore.getItemAsync(key);
-      if (value) {
-        try {
-          return JSON.parse(value);
-        } catch {
-          return value;
-        }
-      }
-      return null;
-    } catch (e) {
-      console.log('SecureStore getItem error:', e);
-      return null;
-    }
-  },
-  removeItem: async (key) => {
-    try {
-      await SecureStore.deleteItemAsync(key);
-    } catch (e) {
-      console.log('SecureStore removeItem error:', e);
-    }
-  }
-};
-
-// Helper function for API calls (replacing axios)
+// Helper function for API calls
 const api = {
   post: async (url, data, config = {}) => {
     const response = await fetch(url, {
@@ -101,8 +63,7 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true); // Start with loading to check stored token
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   
   // Login states
   const [email, setEmail] = useState('');
@@ -113,39 +74,25 @@ export default function App() {
   const [horaInicio, setHoraInicio] = useState(null);
   const [tempoDecorrido, setTempoDecorrido] = useState('00:00:00');
 
-  // Check for stored token on app start
+  // Check stored token on startup
   useEffect(() => {
-    const initAuth = async () => {
+    const checkAuth = async () => {
       try {
-        const storedToken = await secureStorage.getItem(STORAGE_KEYS.TOKEN);
-        const storedUser = await secureStorage.getItem(STORAGE_KEYS.USER);
+        const storedToken = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
+        const storedUser = await AsyncStorage.getItem(STORAGE_KEYS.USER);
         
         if (storedToken && storedUser) {
-          // Verify token is still valid
-          try {
-            const response = await api.get(`${API_URL}/auth/me`, {
-              headers: { Authorization: `Bearer ${storedToken}` }
-            });
-            if (response.data) {
-              setToken(storedToken);
-              setUser(storedUser);
-              setIsLoggedIn(true);
-              checkPontoStatus(storedToken);
-            }
-          } catch (error) {
-            // Token invalid, clear storage
-            await secureStorage.removeItem(STORAGE_KEYS.TOKEN);
-            await secureStorage.removeItem(STORAGE_KEYS.USER);
-          }
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+          setIsLoggedIn(true);
+          checkPontoStatus(storedToken);
         }
-      } catch (error) {
-        console.log('Auth init error:', error);
+      } catch (e) {
+        console.log('Auth check error:', e);
       }
-      setInitialLoading(false);
       setLoading(false);
     };
-    
-    initAuth();
+    checkAuth();
   }, []);
 
   // Timer
@@ -180,26 +127,13 @@ export default function App() {
         const authToken = response.data.access_token;
         const userData = response.data.user;
         
-        // Store credentials securely
-        await secureStorage.setItem(STORAGE_KEYS.TOKEN, authToken);
-        await secureStorage.setItem(STORAGE_KEYS.USER, userData);
+        await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, authToken);
+        await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
         
         setToken(authToken);
         setUser(userData);
         setIsLoggedIn(true);
-        
-        // Verificar estado do ponto
         checkPontoStatus(authToken);
-      }
-    } catch (error) {
-      Alert.alert('Erro', error.response?.data?.detail || 'Erro ao fazer login');
-    }
-    setLoading(false);
-  };
-        setIsLoggedIn(true);
-        
-        // Verificar estado do ponto
-        checkPontoStatus(response.data.access_token);
       }
     } catch (error) {
       Alert.alert('Erro', error.response?.data?.detail || 'Erro ao fazer login');
@@ -273,11 +207,8 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    // Clear secure storage
-    await secureStorage.removeItem(STORAGE_KEYS.TOKEN);
-    await secureStorage.removeItem(STORAGE_KEYS.USER);
-    await secureStorage.removeItem(STORAGE_KEYS.PONTO_STATE);
-    
+    await AsyncStorage.removeItem(STORAGE_KEYS.TOKEN);
+    await AsyncStorage.removeItem(STORAGE_KEYS.USER);
     setIsLoggedIn(false);
     setToken(null);
     setUser(null);
@@ -286,8 +217,8 @@ export default function App() {
     setPassword('');
   };
 
-  // Show loading screen while checking stored auth
-  if (initialLoading) {
+  // Loading screen
+  if (loading && !isLoggedIn) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar style="light" />
@@ -299,7 +230,7 @@ export default function App() {
     );
   }
 
-  // LOGIN SCREEN
+  // Login screen
   if (!isLoggedIn) {
     return (
       <SafeAreaView style={styles.container}>
@@ -344,66 +275,69 @@ export default function App() {
     );
   }
 
-  // MAIN SCREEN (Ponto)
+  // Main app
   return (
     <SafeAreaView style={styles.containerLight}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.mainContent}>
+      <ScrollView style={styles.mainContent}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Olá, {user?.name?.split(' ')[0] || 'Motorista'}!</Text>
-          <TouchableOpacity onPress={handleLogout}>
+          <View>
+            <Text style={styles.welcomeText}>Olá, {user?.name || 'Motorista'}</Text>
+            <Text style={styles.dateText}>{new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
             <Text style={styles.logoutText}>Sair</Text>
           </TouchableOpacity>
         </View>
-        
-        <View style={[styles.statusCard, pontoAtivo && styles.statusCardActive]}>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusDot, pontoAtivo ? styles.dotActive : styles.dotInactive]} />
-            <Text style={[styles.statusText, pontoAtivo && styles.statusTextActive]}>
-              {pontoAtivo ? 'Em Serviço' : 'Fora de Serviço'}
-            </Text>
+
+        <View style={styles.pontoCard}>
+          <Text style={styles.pontoTitle}>Relógio de Ponto</Text>
+          
+          <View style={styles.timerContainer}>
+            <Text style={styles.timerLabel}>{pontoAtivo ? 'Em serviço' : 'Fora de serviço'}</Text>
+            <Text style={styles.timer}>{tempoDecorrido}</Text>
           </View>
-          <Text style={[styles.timer, pontoAtivo && styles.timerActive]}>{tempoDecorrido}</Text>
-          {horaInicio && (
-            <Text style={[styles.startTime, pontoAtivo && styles.startTimeActive]}>
-              Início: {new Date(horaInicio).toLocaleTimeString('pt-PT', {hour: '2-digit', minute: '2-digit'})}
-            </Text>
+
+          {!pontoAtivo ? (
+            <TouchableOpacity 
+              style={styles.checkInButton} 
+              onPress={handleCheckIn}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Iniciar Turno</Text>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={styles.checkOutButton} 
+              onPress={handleCheckOut}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Terminar Turno</Text>
+              )}
+            </TouchableOpacity>
           )}
         </View>
-        
-        {!pontoAtivo ? (
-          <TouchableOpacity 
-            style={styles.checkInButton}
-            onPress={handleCheckIn}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.buttonIcon}>▶️</Text>
-                <Text style={styles.buttonText}>Iniciar Turno</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity 
-            style={styles.checkOutButton}
-            onPress={handleCheckOut}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.buttonIcon}>⏹️</Text>
-                <Text style={styles.buttonText}>Terminar Turno</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
-        
-        <Text style={styles.footer}>TVDEFleet Drivers v1.0</Text>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>Informações</Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Email:</Text>
+            <Text style={styles.infoValue}>{user?.email}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Parceiro:</Text>
+            <Text style={styles.infoValue}>{user?.parceiro_nome || '-'}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.version}>v1.1.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -482,102 +416,102 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  greeting: {
+  welcomeText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1e293b',
   },
+  dateText: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 4,
+  },
+  logoutButton: {
+    padding: 8,
+  },
   logoutText: {
     color: '#ef4444',
-    fontSize: 16,
     fontWeight: '600',
   },
-  statusCard: {
+  pontoCard: {
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 24,
-    alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 4,
   },
-  statusCardActive: {
-    backgroundColor: '#1e40af',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  dotActive: {
-    backgroundColor: '#22c55e',
-  },
-  dotInactive: {
-    backgroundColor: '#94a3b8',
-  },
-  statusText: {
+  pontoTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1e293b',
+    marginBottom: 16,
   },
-  statusTextActive: {
-    color: '#fff',
+  timerContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  timerLabel: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 8,
   },
   timer: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#1e293b',
-    fontFamily: 'monospace',
-  },
-  timerActive: {
-    color: '#fff',
-  },
-  startTime: {
-    fontSize: 14,
-    color: '#64748b',
-    marginTop: 8,
-  },
-  startTimeActive: {
-    color: '#93c5fd',
+    color: '#1e40af',
+    fontVariant: ['tabular-nums'],
   },
   checkInButton: {
     backgroundColor: '#22c55e',
-    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    borderRadius: 16,
   },
   checkOutButton: {
     backgroundColor: '#ef4444',
-    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    borderRadius: 16,
-  },
-  buttonIcon: {
-    fontSize: 24,
-    marginRight: 12,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
   },
-  footer: {
+  infoCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
+  },
+  infoTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  infoLabel: {
+    color: '#64748b',
+  },
+  infoValue: {
+    color: '#1e293b',
+    fontWeight: '500',
+  },
+  version: {
     textAlign: 'center',
     color: '#94a3b8',
-    marginTop: 32,
-    fontSize: 12,
+    marginTop: 16,
+    marginBottom: 32,
   },
 });
