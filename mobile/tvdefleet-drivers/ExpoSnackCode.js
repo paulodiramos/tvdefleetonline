@@ -1034,7 +1034,7 @@ const VistoriasFrotaScreen = ({ user }) => {
   if (selectedVistoria) {
     const v = selectedVistoria;
     const badge = getStatusBadge(v.status);
-    const API_BASE = 'https://supplier-management-2.preview.emergentagent.com';
+    const API_BASE = 'https://vehicle-rates.preview.emergentagent.com';
     
     return (
       <ScrollView style={styles.screen}>
@@ -1521,7 +1521,7 @@ const TicketsScreen = ({ user }) => {
 
   // Modal de detalhe da vistoria para aceitar
   if (vistoriaSelecionada) {
-    const API_BASE = 'https://supplier-management-2.preview.emergentagent.com';
+    const API_BASE = 'https://vehicle-rates.preview.emergentagent.com';
     
     return (
       <ScrollView style={styles.screen}>
