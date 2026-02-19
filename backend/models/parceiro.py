@@ -100,6 +100,7 @@ class Parceiro(BaseModel):
     plano_valida_ate: Optional[str] = None
     plano_status: str = "pendente"  # "pendente", "ativo", "suspenso"
     gestor_associado_id: Optional[str] = None
+    gestores_ids: List[str] = []  # Lista de IDs de gestores associados
     total_vehicles: int = 0
     approved: Optional[bool] = None
     status: Optional[str] = None
