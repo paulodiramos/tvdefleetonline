@@ -26,7 +26,18 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Database Check + Vehicle Refactoring)
+### Session 2026-02-19 (Latest - Via Verde Fix + Refactoring Progress)
+- **Correção Relatório Via Verde - DONE:**
+  - **Problema:** PDF do relatório semanal mostrava Via Verde de toda a frota em vez de apenas do motorista
+  - **Solução:** Query corrigida para buscar apenas por `vehicle_id`, `matricula` e `motorista_id` (removido `parceiro_id`)
+  - Ficheiro: `backend/routes/relatorios.py`
+
+- **Refatoração FichaVeiculo.js - EM PROGRESSO:**
+  - Componentes criados: `VeiculoInfoTab.js`, `VeiculoRevisaoTab.js`
+  - Import atualizado no FichaVeiculo.js
+  - **Integração pendente:** Tab Info e Tab Revisão ainda usam código inline
+
+### Session 2026-02-19 (Database Check + Vehicle Refactoring)
 - **Verificação de Base de Dados - OK:**
   - MongoDB conectado com 131 collections
   - users: 39, motoristas: 18, vehicles: 34, parceiros: 8
