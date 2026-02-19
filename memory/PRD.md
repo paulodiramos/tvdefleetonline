@@ -27,7 +27,22 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Perfil Utilizador Motorista)
+### Session 2026-02-20 (Latest - Correção Documentos & Playwright)
+- **Correção Upload de Documentos no Registo - DONE:**
+  - **Problema:** Documentos carregados durante a inscrição de motoristas não ficavam associados à ficha do motorista
+  - **Causa:** Query incorreta no endpoint `/api/documentos/upload` - usava `{"email": {"$exists": True}}` que fazia match com qualquer motorista
+  - **Solução:** Corrigida a query para buscar primeiro o email do user, depois atualizar motoristas por `id` OU `email`
+  - **Ficheiro:** `backend/routes/documentos.py` (linhas 69-82)
+  - **Testes:** 12/12 backend 100% (iteration_55.json)
+
+- **Correção Playwright/RPA - DONE:**
+  - **Problema:** Browser virtual não funcionava - browsers Playwright instalados na versão errada
+  - **Causa:** Playwright 1.56.0 requer browsers v1194 mas apenas v1208 estava instalado
+  - **Solução:** Reinstalados browsers na versão correcta (chromium-1194)
+  - **Verificado:** `/api/admin/sistema/status` retorna Playwright instalado e funcional
+  - **Testes:** Sessões de browser virtual iniciam correctamente, screenshots funcionam
+
+### Session 2026-02-19 (Perfil Utilizador Motorista)
 - **Perfil de Utilizador para Motoristas - DONE:**
   - **Nova Tab "Motorista":** Aparece apenas para motoristas quando admin visualiza perfil
   - **Ver Documentos:** Botão navega para ficha completa do motorista (/motoristas/{id})
