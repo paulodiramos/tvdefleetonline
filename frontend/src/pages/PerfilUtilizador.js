@@ -220,7 +220,9 @@ const PerfilUtilizador = ({ user, onLogout }) => {
       gestao: 'Gestão',
       parceiro: 'Parceiro',
       operacional: 'Operacional',
-      motorista: 'Motorista'
+      motorista: 'Motorista',
+      contabilista: 'Contabilista',
+      inspetor: 'Inspetor'
     };
     return labels[role] || role;
   };
@@ -231,7 +233,9 @@ const PerfilUtilizador = ({ user, onLogout }) => {
       gestao: 'bg-purple-100 text-purple-800',
       parceiro: 'bg-blue-100 text-blue-800',
       operacional: 'bg-green-100 text-green-800',
-      motorista: 'bg-slate-100 text-slate-800'
+      motorista: 'bg-slate-100 text-slate-800',
+      contabilista: 'bg-amber-100 text-amber-800',
+      inspetor: 'bg-cyan-100 text-cyan-800'
     };
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
