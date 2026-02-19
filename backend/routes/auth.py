@@ -109,6 +109,49 @@ async def register(user_data: UserCreate):
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
     
+    # Se for motorista, criar documento na collection motoristas IMEDIATAMENTE
+    if user_data.role == UserRole.MOTORISTA:
+        motorista_doc = {
+            "id": user_dict["id"],
+            "email": user_dict.get("email"),
+            "name": user_dict.get("name"),
+            "nome": user_dict.get("name"),
+            "phone": user_dict.get("phone"),
+            "telefone": user_dict.get("phone"),
+            "approved": False,  # Pendente aprovação
+            "ativo": False,  # Só fica ativo após aprovação
+            "status_motorista": "pendente",
+            "created_at": user_dict["created_at"],
+            "id_cartao_frota_combustivel": f"FROTA-{str(uuid.uuid4())[:8].upper()}",
+            "documents": {
+                "license_photo": None,
+                "cv_file": None,
+                "profile_photo": None,
+                "documento_identificacao": None,
+                "licenca_tvde": None,
+                "registo_criminal": None,
+                "contrato": None,
+                "additional_docs": []
+            }
+        }
+        await db.motoristas.insert_one(motorista_doc)
+        logger.info(f"Created motorista document for new user {user_dict['id']}")
+    
+    # Se for parceiro, criar documento na collection parceiros IMEDIATAMENTE
+    elif user_data.role == UserRole.PARCEIRO:
+        parceiro_doc = {
+            "id": user_dict["id"],
+            "email": user_dict.get("email"),
+            "name": user_dict.get("name"),
+            "nome_empresa": user_dict.get("name"),
+            "phone": user_dict.get("phone"),
+            "telefone": user_dict.get("phone"),
+            "approved": False,  # Pendente aprovação
+            "created_at": user_dict["created_at"]
+        }
+        await db.parceiros.insert_one(parceiro_doc)
+        logger.info(f"Created parceiro document for new user {user_dict['id']}")
+    
     # Send welcome email
     await enviar_email_boas_vindas(user_dict)
     
