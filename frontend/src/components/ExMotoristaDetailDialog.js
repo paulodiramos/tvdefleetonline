@@ -31,7 +31,7 @@ const ExMotoristaDetailDialog = ({ open, onClose, motoristaId, onReactivate }) =
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/motoristas/${motoristaId}`, {
+      const response = await axios.get(`${API}/api/motoristas/${motoristaId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMotorista(response.data);
@@ -47,22 +47,14 @@ const ExMotoristaDetailDialog = ({ open, onClose, motoristaId, onReactivate }) =
     setLoadingHistorico(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/relatorios/motorista/${motoristaId}/historico-rendimentos`, {
+      // Buscar dados semanais do motorista
+      const response = await axios.get(`${API}/api/dados-semanais?motorista_id=${motoristaId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setHistoricoRendimentos(response.data?.historico || []);
+      setHistoricoRendimentos(response.data || []);
     } catch (error) {
       console.error('Error fetching historico:', error);
-      // Tentar buscar de dados_semanais
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${API}/dados-semanais/motorista/${motoristaId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setHistoricoRendimentos(response.data || []);
-      } catch (err) {
-        setHistoricoRendimentos([]);
-      }
+      setHistoricoRendimentos([]);
     } finally {
       setLoadingHistorico(false);
     }
