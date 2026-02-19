@@ -43,13 +43,16 @@ const TIPOS_FORNECEDOR = [
 ];
 
 const FornecedoresPage = ({ user, onLogout }) => {
-  const { parceiroId } = useParams();
+  const { parceiroId: urlParceiroId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [parceiro, setParceiro] = useState(null);
   const [fornecedores, setFornecedores] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState('all');
+  
+  // Use parceiroId from URL or user.id if user is a parceiro
+  const parceiroId = urlParceiroId || (user?.role === 'parceiro' ? user.id : null);
   
   // Dialog states
   const [showDialog, setShowDialog] = useState(false);
@@ -68,10 +71,14 @@ const FornecedoresPage = ({ user, onLogout }) => {
   });
 
   useEffect(() => {
-    fetchData();
+    if (parceiroId) {
+      fetchData();
+    }
   }, [parceiroId]);
 
   const fetchData = async () => {
+    if (!parceiroId) return;
+    
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -92,6 +99,7 @@ const FornecedoresPage = ({ user, onLogout }) => {
       setLoading(false);
     }
   };
+
 
   const handleOpenDialog = (fornecedor = null) => {
     if (fornecedor) {
