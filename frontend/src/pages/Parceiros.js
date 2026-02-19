@@ -41,6 +41,10 @@ const Parceiros = ({ user, onLogout }) => {
   const [planos, setPlanos] = useState([]);
   const [selectedParceiroForPlano, setSelectedParceiroForPlano] = useState(null);
   const [planoSelecionadoAdmin, setPlanoSelecionadoAdmin] = useState(null);
+  // Estados para gestores
+  const [gestoresDisponiveis, setGestoresDisponiveis] = useState([]);
+  const [gestoresSelecionados, setGestoresSelecionados] = useState([]);
+  const [loadingGestores, setLoadingGestores] = useState(false);
   const [periodoValidadePlano, setPeriodoValidadePlano] = useState({
     tipo: 'mensal', // mensal, trimestral, semestral, anual, permanente
     data_inicio: new Date().toISOString().split('T')[0],
