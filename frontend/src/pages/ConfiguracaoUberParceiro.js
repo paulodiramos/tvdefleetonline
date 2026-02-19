@@ -277,6 +277,36 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     }
   };
   
+  const enviarCodigoSMS = async () => {
+    if (!codigoSMS || codigoSMS.length !== 4) {
+      toast.error('Introduza um código de 4 dígitos');
+      return;
+    }
+    
+    setAtualizando(true);
+    try {
+      const token = localStorage.getItem('token');
+      // Enviar cada dígito individualmente com pequeno delay
+      const response = await axios.post(`${API}/browser/escrever`, { 
+        texto: codigoSMS 
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.sucesso) {
+        setScreenshot(response.data.screenshot);
+        setCodigoSMS('');
+        toast.success('Código enviado!');
+      } else {
+        toast.error(response.data.erro || 'Erro ao enviar código');
+      }
+    } catch (error) {
+      toast.error('Erro ao enviar código');
+    } finally {
+      setAtualizando(false);
+    }
+  };
+  
   const verificarLogin = async () => {
     setAtualizando(true);
     try {
