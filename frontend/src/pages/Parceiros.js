@@ -2320,6 +2320,11 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                         setEditingParceiro({...profileParceiro});
                         setShowProfileDialog(false);
                         setShowEditDialog(true);
+                        // Carregar gestores quando abrir o diálogo de edição
+                        if (user.role === 'admin') {
+                          fetchGestoresDisponiveis();
+                          fetchGestoresDoParceiro(profileParceiro.id);
+                        }
                       }}
                     >
                       <Edit className="w-4 h-4 mr-2" />
