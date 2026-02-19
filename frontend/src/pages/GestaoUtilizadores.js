@@ -365,7 +365,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
       );
 
       // Se for motorista e tiver parceiro selecionado, atribuir
-      if (selectedUser.role === 'motorista' && aprovarParceiroId) {
+      if (selectedUser.role === 'motorista' && aprovarParceiroId && aprovarParceiroId !== 'none') {
         try {
           await axios.put(
             `${API}/motoristas/${selectedUser.id}/atribuir-parceiro`,
