@@ -6,3 +6,4 @@ export { default as VeiculoAgendaTab } from './VeiculoAgendaTab';
 export { default as VeiculoHistoricoTab } from './VeiculoHistoricoTab';
 export { default as VeiculoInfoTab } from './VeiculoInfoTab';
 export { default as VeiculoRevisaoTab } from './VeiculoRevisaoTab';
+export { default as VeiculoDispositivosTab } from './VeiculoDispositivosTab';
