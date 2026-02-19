@@ -467,6 +467,115 @@ const PerfilUtilizador = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
+          {/* Tab: Parceiros Atribuídos (apenas para gestores) */}
+          {userData?.role === 'gestao' && user?.role === 'admin' && (
+            <TabsContent value="parceiros">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5" />
+                    Parceiros Atribuídos
+                  </CardTitle>
+                  <CardDescription>
+                    Selecione os parceiros que este gestor pode gerir. O gestor terá acesso total aos dados dos parceiros atribuídos.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {loadingParceiros ? (
+                    <div className="text-center py-8 text-slate-500">
+                      A carregar parceiros...
+                    </div>
+                  ) : parceirosDisponiveis.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Nenhum parceiro disponível no sistema</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Resumo */}
+                      <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-5 h-5 text-blue-600" />
+                          <span className="font-medium text-blue-900">
+                            {parceirosAtribuidos.length} de {parceirosDisponiveis.length} parceiros atribuídos
+                          </span>
+                        </div>
+                        <Button 
+                          onClick={handleSaveParceiros} 
+                          disabled={savingParceiros}
+                          data-testid="btn-salvar-parceiros"
+                        >
+                          {savingParceiros ? 'A guardar...' : 'Guardar Alterações'}
+                        </Button>
+                      </div>
+
+                      {/* Lista de parceiros */}
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {parceirosDisponiveis.map((parceiro) => {
+                          const isAtribuido = parceirosAtribuidos.includes(parceiro.id);
+                          return (
+                            <div
+                              key={parceiro.id}
+                              className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${
+                                isAtribuido 
+                                  ? 'bg-green-50 border-green-300 hover:bg-green-100' 
+                                  : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                              }`}
+                              onClick={() => handleToggleParceiro(parceiro.id)}
+                              data-testid={`parceiro-${parceiro.id}`}
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                  isAtribuido ? 'bg-green-500 text-white' : 'bg-slate-300 text-slate-600'
+                                }`}>
+                                  {parceiro.nome_empresa?.charAt(0)?.toUpperCase() || 'P'}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-slate-800">
+                                    {parceiro.nome_empresa || parceiro.name || 'Sem nome'}
+                                  </p>
+                                  <div className="flex items-center gap-4 text-sm text-slate-500">
+                                    <span className="flex items-center gap-1">
+                                      <Mail className="w-3 h-3" />
+                                      {parceiro.email || 'N/A'}
+                                    </span>
+                                    {parceiro.telefone && (
+                                      <span className="flex items-center gap-1">
+                                        <Phone className="w-3 h-3" />
+                                        {parceiro.telefone}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                {parceiro.total_veiculos !== undefined && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {parceiro.total_veiculos || 0} veículos
+                                  </Badge>
+                                )}
+                                {isAtribuido ? (
+                                  <Badge className="bg-green-600">
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Atribuído
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-slate-500">
+                                    Não atribuído
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
           {/* Tab: Segurança */}
           <TabsContent value="seguranca">
             <Card>
