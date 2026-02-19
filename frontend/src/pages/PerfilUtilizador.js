@@ -481,8 +481,8 @@ const PerfilUtilizador = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
-          {/* Tab: Parceiros Atribuídos (apenas para gestores) */}
-          {userData?.role === 'gestao' && user?.role === 'admin' && (
+          {/* Tab: Parceiros Atribuídos (para gestores e contabilistas) */}
+          {(userData?.role === 'gestao' || userData?.role === 'contabilista') && user?.role === 'admin' && (
             <TabsContent value="parceiros">
               <Card>
                 <CardHeader>
@@ -491,7 +491,9 @@ const PerfilUtilizador = ({ user, onLogout }) => {
                     Parceiros Atribuídos
                   </CardTitle>
                   <CardDescription>
-                    Selecione os parceiros que este gestor pode gerir. O gestor terá acesso total aos dados dos parceiros atribuídos.
+                    {userData?.role === 'contabilista' 
+                      ? 'Selecione os parceiros cujos dados este contabilista pode consultar. O contabilista terá acesso às faturas e recibos dos parceiros atribuídos.'
+                      : 'Selecione os parceiros que este gestor pode gerir. O gestor terá acesso total aos dados dos parceiros atribuídos.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
