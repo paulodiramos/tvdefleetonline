@@ -495,11 +495,9 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
 
   // Handler para ver documentos do motorista
   const handleVerDocumentos = (usuario) => {
-    if (usuario.role === 'motorista') {
-      navigate(`/motoristas/${usuario.id}`);
-    } else {
-      navigate(`/usuarios/${usuario.id}`);
-    }
+    // Sempre navega para o perfil do utilizador
+    // A tab "Motorista" no perfil permite ver documentos e gerir dados
+    navigate(`/usuarios/${usuario.id}`);
   };
 
   const handleOpenAprovarDialog = async (usuario) => {
