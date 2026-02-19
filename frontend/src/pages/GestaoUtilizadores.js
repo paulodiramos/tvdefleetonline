@@ -774,6 +774,64 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                         </Tooltip>
                       )}
 
+                      {/* Botão Atribuir Parceiro - para motoristas aprovados sem parceiro */}
+                      {usuario.role === 'motorista' && usuario.approved !== false && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => handleOpenAtribuirParceiroDialog(usuario)}
+                              variant="ghost"
+                              size="icon"
+                              className={`h-8 w-8 ${
+                                (usuario.parceiro_id || usuario.associated_partner_id) 
+                                  ? 'text-green-600 hover:bg-green-50 hover:text-green-700' 
+                                  : 'text-orange-600 hover:bg-orange-50 hover:text-orange-700'
+                              }`}
+                              data-testid={`btn-parceiro-${usuario.id}`}
+                            >
+                              <Building className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {(usuario.parceiro_id || usuario.associated_partner_id) ? 'Alterar Parceiro' : 'Atribuir Parceiro'}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+
+                      {/* Botão Ver Documentos */}
+                      {usuario.role === 'motorista' && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => handleVerDocumentos(usuario)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-purple-600 hover:bg-purple-50 hover:text-purple-700"
+                              data-testid={`btn-docs-${usuario.id}`}
+                            >
+                              <FileText className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Ver Documentos</TooltipContent>
+                        </Tooltip>
+                      )}
+
+                      {/* Botão Alterar Tipo de Conta */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => handleOpenRoleDialog(usuario)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+                            data-testid={`btn-role-${usuario.id}`}
+                          >
+                            <Shield className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Alterar Tipo</TooltipContent>
+                      </Tooltip>
+
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
