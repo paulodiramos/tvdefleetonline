@@ -280,14 +280,21 @@ async def set_user_role(
     if role_data.role not in valid_roles:
         raise HTTPException(status_code=400, detail=f"Role inválido. Valores válidos: {valid_roles}")
     
+    # First check if user exists
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    # Don't update if role is already the same
+    if user.get("role") == role_data.role:
+        return {"message": f"Role já é {role_data.role}"}
+    
     result = await db.users.update_one(
         {"id": user_id},
         {"$set": {"role": role_data.role}}
     )
     
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
-    
+    logger.info(f"Role changed for user {user_id} from {user.get('role')} to {role_data.role}")
     return {"message": f"Role alterado para {role_data.role}"}
 
 
