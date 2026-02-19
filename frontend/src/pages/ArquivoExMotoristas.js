@@ -484,15 +484,15 @@ const ArquivoExMotoristas = ({ user, onLogout }) => {
         </DialogContent>
       </Dialog>
 
-      {/* MotoristaDetailDialog - Igual aos motoristas activos */}
-      <MotoristaDetailDialog
+      {/* ExMotoristaDetailDialog - Ficha simplificada para ex-motoristas */}
+      <ExMotoristaDetailDialog
         open={showDetailDialog && selectedMotorista !== null}
         onClose={() => {
           setShowDetailDialog(false);
           setSelectedMotorista(null);
         }}
         motoristaId={selectedMotorista?.id}
-        userRole={user?.role}
+        onReactivate={() => fetchExMotoristas()}
       />
     </Layout>
   );
