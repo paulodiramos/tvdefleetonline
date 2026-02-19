@@ -16,7 +16,7 @@ import {
   Eye, RotateCcw, FileText, TrendingUp, TrendingDown,
   Loader2, ArrowLeft, Filter, Download
 } from 'lucide-react';
-import MotoristaDetailDialog from '@/components/MotoristaDetailDialog';
+import ExMotoristaDetailDialog from '@/components/ExMotoristaDetailDialog';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
