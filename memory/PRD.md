@@ -22,20 +22,33 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 - RPA para importação de dados (Uber, Bolt, Prio, Via Verde)
 - Geração de relatórios PDF
 - Aplicação móvel para motoristas (Expo/React Native)
-- **NOVO:** Página de Contabilidade com gestão de faturas e recibos
+- Sistema de Mensagens com filtragem por hierarquia de roles
+- Página de Contabilidade com gestão de faturas e recibos
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Via Verde Fix + Refactoring Progress)
+### Session 2026-02-19 (Current - Messages Role Hierarchy + Refactoring)
+- **Sistema de Mensagens - Filtragem por Hierarquia - DONE:**
+  - Novo endpoint `GET /api/mensagens/destinatarios`
+  - Admin vê todos os utilizadores aprovados
+  - Parceiro vê motoristas da sua frota + gestores atribuídos + admin
+  - Gestor vê parceiros atribuídos + motoristas das frotas + admin
+  - Motorista vê parceiro + gestor + admin
+  - Ficheiros: `backend/routes/mensagens.py`, `frontend/src/pages/Mensagens.js`
+  - Testes: 8/8 passaram (100%)
+
+- **Refatoração FichaVeiculo.js - PROGRESSO:**
+  - Novo componente: `VeiculoDispositivosTab.js` (198 linhas)
+  - Tab "Dispositivos" extraída com sucesso
+  - Ficheiro reduzido de 5337 para 5162 linhas (-175 linhas)
+  - Tabs já componentizadas: Seguro, Inspeção, Extintor, Revisão, Histórico, Dispositivos
+  - Tabs ainda inline: Info (~2200 linhas), Agenda (~277 linhas), Relatório
+
+### Session 2026-02-19 (Via Verde Fix + Refactoring Progress)
 - **Correção Relatório Via Verde - DONE:**
   - **Problema:** PDF do relatório semanal mostrava Via Verde de toda a frota em vez de apenas do motorista
   - **Solução:** Query corrigida para buscar apenas por `vehicle_id`, `matricula` e `motorista_id` (removido `parceiro_id`)
   - Ficheiro: `backend/routes/relatorios.py`
-
-- **Refatoração FichaVeiculo.js - EM PROGRESSO:**
-  - Componentes criados: `VeiculoInfoTab.js`, `VeiculoRevisaoTab.js`
-  - Import atualizado no FichaVeiculo.js
-  - **Integração pendente:** Tab Info e Tab Revisão ainda usam código inline
 
 ### Session 2026-02-19 (Database Check + Vehicle Refactoring)
 - **Verificação de Base de Dados - OK:**
