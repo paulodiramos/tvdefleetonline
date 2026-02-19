@@ -849,7 +849,8 @@ async def get_resumo_semanal_parceiro(
     motoristas_filtrados = []
     for m in motoristas:
         nome = m.get("name", "Sem nome")
-        motorista_parceiro = m.get("parceiro_id") or m.get("parceiro_atribuido")
+        # CORRIGIDO: parceiro_atribuido tem prioridade sobre parceiro_id (é o campo mais recente/correcto)
+        motorista_parceiro = m.get("parceiro_atribuido") or m.get("parceiro_id")
         
         # Verificar se pertence ao parceiro correcto
         if parceiro_id_query and motorista_parceiro != parceiro_id_query:
