@@ -80,6 +80,15 @@ const Motoristas = ({ user, onLogout }) => {
     senha_provisoria: true
   });
 
+  // Verificar filtro da URL ao carregar
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const filter = params.get('filter');
+    if (filter === 'sem_parceiro') {
+      setFilters(prev => ({ ...prev, status: 'sem_parceiro' }));
+    }
+  }, [location.search]);
+
   useEffect(() => {
     fetchMotoristas();
     if (user.role === 'admin' || user.role === 'gestao') {
