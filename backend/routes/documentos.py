@@ -67,11 +67,19 @@ async def upload_documento_registo(
         
         # Se for motorista, também atualizar na collection motoristas
         if role == "motorista":
-            await db.motoristas.update_one(
-                {"$or": [{"id": user_id}, {"email": {"$exists": True}}]},
-                {"$set": {update_field: doc_id}},
-                upsert=False
-            )
+            # Buscar o utilizador para obter o email
+            user = await db.users.find_one({"id": user_id}, {"_id": 0, "email": 1})
+            if user and user.get("email"):
+                # Tentar atualizar pelo id OU pelo email (para motoristas recém-criados)
+                result = await db.motoristas.update_one(
+                    {"$or": [{"id": user_id}, {"email": user["email"]}]},
+                    {"$set": {update_field: doc_id}},
+                    upsert=False
+                )
+                if result.matched_count == 0:
+                    logger.warning(f"Motorista não encontrado para associar documento: user_id={user_id}, email={user['email']}")
+            else:
+                logger.warning(f"User não encontrado para associar documento ao motorista: {user_id}")
         
         logger.info(f"Documento {tipo_documento} carregado para utilizador {user_id}")
         
