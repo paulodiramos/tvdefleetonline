@@ -27,6 +27,11 @@ class PasswordReset(BaseModel):
     new_password: str
 
 
+class ApproveUserRequest(BaseModel):
+    plano_id: Optional[str] = None
+    preco_especial_id: Optional[str] = None
+
+
 @router.get("/users/pending")
 async def get_pending_users(current_user: Dict = Depends(get_current_user)):
     """Listar utilizadores pendentes de aprovação"""
@@ -125,9 +130,10 @@ async def get_user_by_id(user_id: str, current_user: Dict = Depends(get_current_
 @router.put("/users/{user_id}/approve")
 async def approve_user(
     user_id: str,
+    request: ApproveUserRequest = None,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Aprovar um utilizador"""
+    """Aprovar um utilizador com atribuição opcional de plano e preço especial"""
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Apenas Admin")
     
@@ -135,15 +141,37 @@ async def approve_user(
     if not user:
         raise HTTPException(status_code=404, detail="Utilizador não encontrado")
     
+    # Prepare update data
+    update_data = {
+        "approved": True,
+        "approved_by": current_user["id"],
+        "approved_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Add plano_id if provided
+    if request and request.plano_id:
+        # Verify the plan exists
+        plano = await db.planos_sistema.find_one({"id": request.plano_id, "ativo": True})
+        if plano:
+            update_data["plano_id"] = request.plano_id
+            update_data["plano_nome"] = plano.get("nome")
+            logger.info(f"Assigning plan {request.plano_id} to user {user_id}")
+            
+            # Add preco_especial_id if provided and valid
+            if request.preco_especial_id:
+                precos_especiais = plano.get("precos_especiais", [])
+                preco_especial = next(
+                    (p for p in precos_especiais if p.get("id") == request.preco_especial_id),
+                    None
+                )
+                if preco_especial:
+                    update_data["preco_especial_id"] = request.preco_especial_id
+                    update_data["preco_especial_nome"] = preco_especial.get("nome")
+                    logger.info(f"Assigning special price {request.preco_especial_id} to user {user_id}")
+    
     await db.users.update_one(
         {"id": user_id},
-        {
-            "$set": {
-                "approved": True,
-                "approved_by": current_user["id"],
-                "approved_at": datetime.now(timezone.utc).isoformat()
-            }
-        }
+        {"$set": update_data}
     )
     
     # Also approve in motoristas/parceiros if applicable
@@ -159,15 +187,20 @@ async def approve_user(
             }
         )
     elif user.get("role") == "parceiro":
+        # For partners, also update parceiros collection with plan data
+        parceiro_update = {
+            "approved": True,
+            "approved_by": current_user["id"],
+            "approved_at": datetime.now(timezone.utc).isoformat()
+        }
+        if request and request.plano_id:
+            parceiro_update["plano_id"] = request.plano_id
+            if request.preco_especial_id:
+                parceiro_update["preco_especial_id"] = request.preco_especial_id
+        
         await db.parceiros.update_one(
             {"$or": [{"id": user_id}, {"email": user.get("email")}]},
-            {
-                "$set": {
-                    "approved": True,
-                    "approved_by": current_user["id"],
-                    "approved_at": datetime.now(timezone.utc).isoformat()
-                }
-            }
+            {"$set": parceiro_update}
         )
     
     logger.info(f"User {user_id} approved by {current_user['id']}")
