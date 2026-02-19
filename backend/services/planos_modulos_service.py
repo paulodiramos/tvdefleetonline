@@ -291,16 +291,42 @@ class PlanosModulosService:
         return promocao
     
     async def adicionar_preco_especial_plano(self, plano_id: str, preco_data: Dict, criado_por: str) -> Dict:
-        """Adicionar preço especial para parceiro específico"""
+        """Adicionar preço especial para parceiro específico
+        
+        Tipos de desconto suportados:
+        - percentagem: Aplica desconto % sobre o preço base do plano
+        - valor_fixo: Preço fixo mensal total para o parceiro
+        - valor_fixo_veiculo: Preço fixo por cada veículo
+        - valor_fixo_motorista: Preço fixo por cada motorista
+        - valor_fixo_motorista_veiculo: Preço fixo por cada combinação motorista/veículo
+        """
+        # Buscar nome do parceiro se não fornecido
+        parceiro_nome = preco_data.get("parceiro_nome")
+        if not parceiro_nome:
+            parceiro = await self.db.users.find_one({"id": preco_data["parceiro_id"]}, {"_id": 0, "name": 1, "empresa": 1})
+            if parceiro:
+                parceiro_nome = parceiro.get("name") or parceiro.get("empresa")
+        
         preco_especial = {
             "id": str(uuid.uuid4()),
             "parceiro_id": preco_data["parceiro_id"],
-            "parceiro_nome": preco_data.get("parceiro_nome"),
-            "desconto_percentagem": preco_data.get("desconto_percentagem"),
+            "parceiro_nome": parceiro_nome,
+            # Novo campo: tipo_desconto
+            "tipo_desconto": preco_data.get("tipo_desconto", "percentagem"),
+            # Campos de valor
+            "valor_desconto": preco_data.get("valor_desconto"),  # Para tipo percentagem
+            "preco_fixo": preco_data.get("preco_fixo"),  # Para todos os tipos fixos
+            # Campos antigos mantidos para compatibilidade
+            "desconto_percentagem": preco_data.get("desconto_percentagem") or preco_data.get("valor_desconto"),
             "preco_fixo_semanal": preco_data.get("preco_fixo_semanal"),
-            "preco_fixo_mensal": preco_data.get("preco_fixo_mensal"),
+            "preco_fixo_mensal": preco_data.get("preco_fixo_mensal") or preco_data.get("preco_fixo"),
             "preco_fixo_anual": preco_data.get("preco_fixo_anual"),
+            # Configurações de validade
+            "validade_inicio": preco_data.get("validade_inicio"),
+            "validade_fim": preco_data.get("validade_fim"),
             "motivo": preco_data.get("motivo"),
+            "ativo": preco_data.get("ativo", True),
+            # Datas
             "data_inicio": preco_data.get("data_inicio", datetime.now(timezone.utc).isoformat()),
             "data_fim": preco_data.get("data_fim"),
             "criado_por": criado_por,
@@ -312,7 +338,164 @@ class PlanosModulosService:
             {"$push": {"precos_especiais": preco_especial}}
         )
         
+        logger.info(f"Preço especial criado para parceiro {parceiro_nome} no plano {plano_id} - tipo: {preco_especial['tipo_desconto']}")
+        
         return preco_especial
+    
+    async def listar_precos_especiais(self) -> List[Dict]:
+        """Listar todos os preços especiais de todos os planos"""
+        precos_especiais = []
+        
+        planos = await self.db.planos_sistema.find({"ativo": True}, {"_id": 0}).to_list(100)
+        
+        for plano in planos:
+            for preco in plano.get("precos_especiais", []):
+                preco_com_plano = {
+                    **preco,
+                    "plano_id": plano.get("id"),
+                    "plano_nome": plano.get("nome")
+                }
+                precos_especiais.append(preco_com_plano)
+        
+        return precos_especiais
+    
+    async def calcular_preco_com_especial(
+        self,
+        parceiro_id: str,
+        plano_id: str,
+        num_veiculos: int = 0,
+        num_motoristas: int = 0,
+        periodicidade: str = "mensal"
+    ) -> Dict:
+        """
+        Calcular preço final aplicando preço especial se existir.
+        
+        Tipos de preço especial:
+        - percentagem: Aplica desconto % sobre o preço calculado
+        - valor_fixo: Retorna preço fixo total, ignorando veículos/motoristas
+        - valor_fixo_veiculo: Multiplica preco_fixo pelo número de veículos
+        - valor_fixo_motorista: Multiplica preco_fixo pelo número de motoristas
+        - valor_fixo_motorista_veiculo: Multiplica preco_fixo pelo número de combinações motorista/veículo
+        """
+        plano = await self.get_plano(plano_id)
+        if not plano:
+            return {"erro": "Plano não encontrado"}
+        
+        # Calcular preço base do plano
+        preco_calculado = await self.calcular_preco_plano(
+            plano_id, periodicidade, parceiro_id, num_veiculos, num_motoristas
+        )
+        
+        if "erro" in preco_calculado:
+            return preco_calculado
+        
+        preco_original = preco_calculado.get("preco_final", 0)
+        preco_final = preco_original
+        preco_especial_aplicado = None
+        
+        # Verificar se há preço especial para este parceiro
+        now = datetime.now(timezone.utc)
+        precos_especiais = plano.get("precos_especiais", [])
+        
+        for pe in precos_especiais:
+            if pe.get("parceiro_id") != parceiro_id:
+                continue
+            
+            # Verificar se está ativo
+            if not pe.get("ativo", True):
+                continue
+            
+            # Verificar validade
+            validade_inicio = pe.get("validade_inicio")
+            validade_fim = pe.get("validade_fim")
+            
+            if validade_inicio:
+                data_inicio = datetime.fromisoformat(validade_inicio.replace('Z', '+00:00')) if isinstance(validade_inicio, str) else validade_inicio
+                if now < data_inicio:
+                    continue
+            
+            if validade_fim:
+                data_fim = datetime.fromisoformat(validade_fim.replace('Z', '+00:00')) if isinstance(validade_fim, str) else validade_fim
+                if now > data_fim:
+                    continue
+            
+            # Encontrou preço especial válido - aplicar lógica
+            tipo_desconto = pe.get("tipo_desconto", "percentagem")
+            
+            if tipo_desconto == "percentagem":
+                # Desconto percentual sobre o preço calculado
+                percentagem = pe.get("valor_desconto") or pe.get("desconto_percentagem") or 0
+                preco_final = preco_original * (1 - percentagem / 100)
+                preco_especial_aplicado = {
+                    "tipo": "percentagem",
+                    "valor": percentagem,
+                    "descricao": f"{percentagem}% de desconto sobre €{preco_original:.2f}"
+                }
+            
+            elif tipo_desconto == "valor_fixo":
+                # Preço fixo total - ignora número de veículos/motoristas
+                preco_fixo = pe.get("preco_fixo") or pe.get("preco_fixo_mensal") or 0
+                preco_final = preco_fixo
+                preco_especial_aplicado = {
+                    "tipo": "valor_fixo",
+                    "valor": preco_fixo,
+                    "descricao": f"Preço fixo mensal: €{preco_fixo:.2f}"
+                }
+            
+            elif tipo_desconto == "valor_fixo_veiculo":
+                # Preço fixo por veículo
+                preco_por_veiculo = pe.get("preco_fixo") or 0
+                preco_final = preco_por_veiculo * num_veiculos
+                preco_especial_aplicado = {
+                    "tipo": "valor_fixo_veiculo",
+                    "valor": preco_por_veiculo,
+                    "num_veiculos": num_veiculos,
+                    "descricao": f"€{preco_por_veiculo:.2f}/veículo × {num_veiculos} = €{preco_final:.2f}"
+                }
+            
+            elif tipo_desconto == "valor_fixo_motorista":
+                # Preço fixo por motorista
+                preco_por_motorista = pe.get("preco_fixo") or 0
+                preco_final = preco_por_motorista * num_motoristas
+                preco_especial_aplicado = {
+                    "tipo": "valor_fixo_motorista",
+                    "valor": preco_por_motorista,
+                    "num_motoristas": num_motoristas,
+                    "descricao": f"€{preco_por_motorista:.2f}/motorista × {num_motoristas} = €{preco_final:.2f}"
+                }
+            
+            elif tipo_desconto == "valor_fixo_motorista_veiculo":
+                # Preço fixo por combinação motorista/veículo
+                # Usa o menor valor entre motoristas e veículos como base
+                preco_unitario = pe.get("preco_fixo") or 0
+                num_combinacoes = min(num_veiculos, num_motoristas) if num_veiculos > 0 and num_motoristas > 0 else max(num_veiculos, num_motoristas)
+                preco_final = preco_unitario * num_combinacoes
+                preco_especial_aplicado = {
+                    "tipo": "valor_fixo_motorista_veiculo",
+                    "valor": preco_unitario,
+                    "num_veiculos": num_veiculos,
+                    "num_motoristas": num_motoristas,
+                    "num_combinacoes": num_combinacoes,
+                    "descricao": f"€{preco_unitario:.2f}/combinação × {num_combinacoes} = €{preco_final:.2f}"
+                }
+            
+            break  # Aplicar apenas o primeiro preço especial encontrado
+        
+        return {
+            "parceiro_id": parceiro_id,
+            "plano_id": plano_id,
+            "plano_nome": plano.get("nome"),
+            "periodicidade": periodicidade,
+            "num_veiculos": num_veiculos,
+            "num_motoristas": num_motoristas,
+            "preco_base_plano": preco_calculado.get("preco_base", 0),
+            "preco_veiculos_plano": preco_calculado.get("preco_veiculos", 0),
+            "preco_motoristas_plano": preco_calculado.get("preco_motoristas", 0),
+            "preco_original": round(preco_original, 2),
+            "preco_especial_aplicado": preco_especial_aplicado,
+            "preco_final": round(preco_final, 2),
+            "economia": round(preco_original - preco_final, 2) if preco_original > preco_final else 0
+        }
     
     # ==================== CÁLCULO DE PREÇOS ====================
     
