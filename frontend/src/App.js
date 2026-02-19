@@ -143,6 +143,7 @@ import AlertasCustos from "@/pages/AlertasCustos";
 import LoginPlataformas from "@/pages/LoginPlataformas";
 import ExecutarRPA from "@/pages/ExecutarRPA";
 import UploadFicheiros from "@/pages/UploadFicheiros";
+import SistemaAdmin from "@/pages/SistemaAdmin";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
