@@ -176,18 +176,62 @@ async def approve_user(
     
     # Also approve in motoristas/parceiros if applicable
     if user.get("role") == "motorista":
-        await db.motoristas.update_one(
-            {"$or": [{"id": user_id}, {"email": user.get("email")}]},
-            {
-                "$set": {
-                    "approved": True,
-                    "approved_by": current_user["id"],
-                    "approved_at": datetime.now(timezone.utc).isoformat()
+        # Check if motorista document exists
+        motorista_exists = await db.motoristas.find_one(
+            {"$or": [{"id": user_id}, {"email": user.get("email")}]}
+        )
+        
+        if motorista_exists:
+            # Update existing motorista
+            await db.motoristas.update_one(
+                {"$or": [{"id": user_id}, {"email": user.get("email")}]},
+                {
+                    "$set": {
+                        "approved": True,
+                        "approved_by": current_user["id"],
+                        "approved_at": datetime.now(timezone.utc).isoformat(),
+                        "ativo": True,
+                        "status_motorista": "ativo"
+                    }
+                }
+            )
+        else:
+            # Create motorista document if it doesn't exist
+            import uuid as uuid_module
+            motorista_doc = {
+                "id": user_id,
+                "email": user.get("email"),
+                "name": user.get("name"),
+                "nome": user.get("name"),
+                "phone": user.get("phone"),
+                "telefone": user.get("phone"),
+                "approved": True,
+                "approved_by": current_user["id"],
+                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "ativo": True,
+                "status_motorista": "ativo",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "id_cartao_frota_combustivel": f"FROTA-{str(uuid_module.uuid4())[:8].upper()}",
+                "documents": {
+                    "license_photo": None,
+                    "cv_file": None,
+                    "profile_photo": None,
+                    "documento_identificacao": None,
+                    "licenca_tvde": None,
+                    "registo_criminal": None,
+                    "contrato": None,
+                    "additional_docs": []
                 }
             }
-        )
+            await db.motoristas.insert_one(motorista_doc)
+            logger.info(f"Created motorista document for user {user_id}")
+            
     elif user.get("role") == "parceiro":
-        # For partners, also update parceiros collection with plan data
+        # Check if parceiro document exists
+        parceiro_exists = await db.parceiros.find_one(
+            {"$or": [{"id": user_id}, {"email": user.get("email")}]}
+        )
+        
         parceiro_update = {
             "approved": True,
             "approved_by": current_user["id"],
@@ -198,10 +242,25 @@ async def approve_user(
             if request.preco_especial_id:
                 parceiro_update["preco_especial_id"] = request.preco_especial_id
         
-        await db.parceiros.update_one(
-            {"$or": [{"id": user_id}, {"email": user.get("email")}]},
-            {"$set": parceiro_update}
-        )
+        if parceiro_exists:
+            await db.parceiros.update_one(
+                {"$or": [{"id": user_id}, {"email": user.get("email")}]},
+                {"$set": parceiro_update}
+            )
+        else:
+            # Create parceiro document if it doesn't exist
+            parceiro_doc = {
+                "id": user_id,
+                "email": user.get("email"),
+                "name": user.get("name"),
+                "nome_empresa": user.get("name"),
+                "phone": user.get("phone"),
+                "telefone": user.get("phone"),
+                **parceiro_update,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.parceiros.insert_one(parceiro_doc)
+            logger.info(f"Created parceiro document for user {user_id}")
     
     logger.info(f"User {user_id} approved by {current_user['id']}")
     return {"message": "Utilizador aprovado com sucesso"}
