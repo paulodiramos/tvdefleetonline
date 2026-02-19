@@ -5,6 +5,7 @@ from typing import Dict
 from datetime import datetime, timezone
 import uuid
 import os
+import logging
 
 from models.user import User, UserCreate, UserLogin, TokenResponse, UserRole
 from utils.auth import (
@@ -17,6 +18,7 @@ from utils.database import get_database
 
 router = APIRouter()
 db = get_database()
+logger = logging.getLogger(__name__)
 
 
 async def enviar_email_boas_vindas(user: Dict):
