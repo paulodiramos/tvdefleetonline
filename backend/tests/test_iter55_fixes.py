@@ -136,25 +136,19 @@ class TestMotoristRegistrationWithDocuments(TestAdminAuth):
         
     def test_04_verify_document_associated_with_motorista(self, admin_headers):
         """Verify the document reference is stored in motoristas collection"""
-        if not hasattr(TestMotoristRegistrationWithDocuments, 'test_email'):
+        if not hasattr(TestMotoristRegistrationWithDocuments, 'test_user_id'):
             pytest.skip("No test user created")
         if not hasattr(TestMotoristRegistrationWithDocuments, 'doc_id'):
             pytest.skip("No document uploaded")
         
-        email = TestMotoristRegistrationWithDocuments.test_email
+        user_id = TestMotoristRegistrationWithDocuments.test_user_id
         doc_id = TestMotoristRegistrationWithDocuments.doc_id
         
-        # Get motoristas and find our test motorista
-        response = requests.get(f"{BASE_URL}/api/motoristas", headers=admin_headers)
-        assert response.status_code == 200, f"Get motoristas failed: {response.text}"
+        # Get motorista by ID (detail endpoint returns raw MongoDB data)
+        response = requests.get(f"{BASE_URL}/api/motoristas/{user_id}", headers=admin_headers)
+        assert response.status_code == 200, f"Get motorista failed: {response.text}"
         
-        motoristas = response.json()
-        test_motorista = None
-        for m in motoristas:
-            if m.get("email") == email:
-                test_motorista = m
-                break
-        
+        test_motorista = response.json()
         assert test_motorista is not None, "Test motorista should exist"
         
         # Check if documents field has the uploaded document reference
