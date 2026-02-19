@@ -48,11 +48,15 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - **Histórico:** Guarda resultados na BD para análise
   - **Endpoint Histórico:** `GET /api/admin/sistema/playwright/health-history`
 
-- **Refatoração FichaVeiculo.js - PROGRESSO:**
+- **Refatoração FichaVeiculo.js - DONE:**
   - **Antes:** 5162 linhas
-  - **Depois:** 4902 linhas (-260 linhas)
-  - **Alteração:** Tab Agenda agora usa componente `VeiculoAgendaTab` existente
-  - **Import:** Adicionado `VeiculoAgendaTab` e `VeiculoHistoricoTab` ao import
+  - **Depois:** 4381 linhas (-781 linhas, -15%)
+  - **Componentes extraídos:**
+    - `VeiculoHistoricoAtribuicoesTab` (168 linhas)
+    - `VeiculoRelatorioFinanceiroTab` (365 linhas)
+    - `VeiculoAgendaTab` (já existia, agora usado - 327 linhas)
+  - **Total de componentes na pasta:** 10 componentes especializados
+  - **Benefícios:** Código mais modular, manutenção facilitada, componentes reutilizáveis
 
 ### Session 2026-02-19 (Perfil Utilizador Motorista)
 - **Perfil de Utilizador para Motoristas - DONE:**
