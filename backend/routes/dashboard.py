@@ -316,6 +316,16 @@ async def get_resumo_geral(current_user: Dict = Depends(get_current_user)):
     users_pendentes = await db.users.count_documents({"approved": False})
     motoristas_pendentes = await db.motoristas.count_documents({"approved": False})
     
+    # Motoristas sem parceiro atribuído (aprovados mas sem parceiro)
+    motoristas_sem_parceiro = await db.motoristas.count_documents({
+        "approved": True,
+        "$or": [
+            {"parceiro_atribuido": None},
+            {"parceiro_atribuido": ""},
+            {"parceiro_atribuido": {"$exists": False}}
+        ]
+    })
+    
     # Active users (logged in last 7 days)
     seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
     users_ativos = await db.users.count_documents({"last_login": {"$gte": seven_days_ago}})
@@ -329,7 +339,8 @@ async def get_resumo_geral(current_user: Dict = Depends(get_current_user)):
         },
         "pendentes": {
             "utilizadores": users_pendentes,
-            "motoristas": motoristas_pendentes
+            "motoristas": motoristas_pendentes,
+            "sem_parceiro": motoristas_sem_parceiro
         },
         "atividade": {
             "users_ativos_7d": users_ativos
