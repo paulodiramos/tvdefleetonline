@@ -684,6 +684,11 @@ const Motoristas = ({ user, onLogout }) => {
         if (filters.status === 'aprovado' && !motorista.approved) return false;
         if (filters.status === 'pendente' && motorista.approved) return false;
         if (filters.status === 'nao_atribuido' && motorista.parceiro_atribuido) return false;
+        // Novo filtro: sem_parceiro - aprovados mas sem parceiro
+        if (filters.status === 'sem_parceiro') {
+          if (!motorista.approved) return false;
+          if (motorista.parceiro_atribuido) return false;
+        }
       }
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
