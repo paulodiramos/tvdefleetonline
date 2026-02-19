@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Users, Search, Edit, Package, CheckCircle, XCircle, 
-  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar, Trash2, Gift
+  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar, Trash2, Gift, Building, FileText
 } from 'lucide-react';
 
 const GestaoUtilizadores = ({ user, onLogout }) => {
@@ -36,6 +36,10 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
   const [showNovoUserDialog, setShowNovoUserDialog] = useState(false);
   const [showAcessoDialog, setShowAcessoDialog] = useState(false);
   const [showAprovarDialog, setShowAprovarDialog] = useState(false);
+  const [showAtribuirParceiroDialog, setShowAtribuirParceiroDialog] = useState(false);
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [atribuirParceiroId, setAtribuirParceiroId] = useState('');
+  const [novoRole, setNovoRole] = useState('');
   const [aprovarParceiroId, setAprovarParceiroId] = useState('');
   const [aprovarPlanoId, setAprovarPlanoId] = useState('');
   const [aprovarPrecoEspecialId, setAprovarPrecoEspecialId] = useState('');
