@@ -123,7 +123,12 @@ const Motoristas = ({ user, onLogout }) => {
 
   const fetchMotoristas = async () => {
     try {
-      const response = await axios.get(`${API}/motoristas`);
+      // Incluir motoristas pendentes se o utilizador for admin
+      const params = new URLSearchParams();
+      if (user?.role === 'admin') {
+        params.append('include_pendentes', 'true');
+      }
+      const response = await axios.get(`${API}/motoristas?${params.toString()}`);
       setMotoristas(response.data);
       // Também carregar os resumos dos motoristas
       fetchResumosMotoristas(response.data);
