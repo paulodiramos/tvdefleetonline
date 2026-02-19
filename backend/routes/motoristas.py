@@ -377,18 +377,24 @@ async def get_meus_motoristas(current_user: Dict = Depends(get_current_user)):
 @router.get("/motoristas", response_model=List[Motorista])
 async def get_motoristas(
     include_inativos: bool = False,
+    include_pendentes: bool = False,
     current_user: Dict = Depends(get_current_user)
 ):
     """Get all motoristas (filtered by role)
     
     Args:
         include_inativos: Se True, inclui motoristas inativos. Default False (apenas activos).
+        include_pendentes: Se True, inclui motoristas pendentes de aprovação. Default False.
     """
     # Base query: exclude deleted motoristas
     query = {"deleted": {"$ne": True}}
     
-    # Filtrar apenas motoristas activos por padrão
-    if not include_inativos:
+    # Para admin, permitir ver pendentes se solicitado
+    if current_user["role"] == UserRole.ADMIN and include_pendentes:
+        # Admin pode ver todos (ativos, inativos, pendentes)
+        pass  # Não adicionar filtro de ativo
+    elif not include_inativos:
+        # Filtrar apenas motoristas activos por padrão
         query["$and"] = [
             {"$or": [
                 {"ativo": True},
