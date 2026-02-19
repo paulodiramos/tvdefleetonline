@@ -105,7 +105,7 @@ const RegistoMotorista = () => {
         approved: false
       };
 
-      const response = await axios.post(`${API}/auth/register`, finalData);
+      const response = await axios.post(`${API}/api/auth/register`, finalData);
       const userId = response.data.user_id || response.data.id;
       
       // 2. Upload de documentos
@@ -119,12 +119,17 @@ const RegistoMotorista = () => {
           formData.append('user_id', userId);
           formData.append('role', 'motorista');
           
-          await axios.post(`${API}/api/documentos/upload`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: token ? `Bearer ${token}` : ''
-            }
-          });
+          try {
+            await axios.post(`${API}/api/documentos/upload`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: token ? `Bearer ${token}` : ''
+              }
+            });
+          } catch (uploadError) {
+            console.warn(`Erro ao carregar documento ${tipoDoc}:`, uploadError);
+            // Continuar com os outros documentos mesmo se um falhar
+          }
         }
       }
       
