@@ -26,22 +26,18 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Deploy Ready + SMS Code Field)
+### Session 2026-02-19 (Latest - Approve + Assign Partner Feature)
+- **Funcionalidade de Aprovar com Atribuição de Parceiro - DONE:**
+  - Botão de aprovar (✓) adicionado para utilizadores pendentes na página de Gestão de Utilizadores
+  - Diálogo de aprovação permite selecionar parceiro para motoristas
+  - Ao aprovar motorista, pode atribuir parceiro diretamente ou deixar para depois
+  - Ficheiro: `frontend/src/pages/GestaoUtilizadores.js`
+
 - **Campo de Código SMS no Login Uber - DONE:**
   - Adicionado campo de 4 dígitos para introduzir código SMS/Email
-  - UI com validação numérica e limite de 4 caracteres
-  - Botão "Enviar Código" ativado apenas com 4 dígitos
   - Ficheiro: `frontend/src/pages/ConfiguracaoUberParceiro.js`
 
-- **Verificação de Deploy - PASS:**
-  - ✅ Backend RUNNING (port 8001)
-  - ✅ Frontend RUNNING (port 3000)
-  - ✅ MongoDB Conectado (131 collections)
-  - ✅ Playwright Chromium instalado
-  - ✅ APIs testadas (login, motoristas, veículos, preços especiais)
-  - ✅ Recursos OK (91GB disco, 14GB RAM)
-
-### Session 2026-02-19 (Preços Especiais Complete)
+### Session 2026-02-19 (Deploy Ready + SMS Code Field)
 - **Lógica de Preços Especiais (Backend) - DONE e Testado 100%:**
   - Suporte completo para 5 tipos de cálculo:
     - `percentagem`: Desconto percentual sobre o preço base
