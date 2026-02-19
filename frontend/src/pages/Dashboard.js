@@ -175,6 +175,18 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
+  const fetchAdminStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/dashboard/admin/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAdminStats(response.data);
+    } catch (error) {
+      console.error('Error fetching admin stats', error);
+    }
+  };
+
   const handleResolverAlerta = async (alertaId) => {
     try {
       const token = localStorage.getItem('token');
