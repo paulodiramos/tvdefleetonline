@@ -27,7 +27,17 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Fluxo de Aprovação com Planos)
+### Session 2026-02-19 (Latest - Sistema Utilizadores Melhorado)
+- **Sistema de Gestão de Utilizadores Melhorado - DONE:**
+  - **Atribuir Parceiro:** Admin pode atribuir/alterar parceiro a motoristas já aprovados
+  - **Alterar Tipo de Conta:** Admin pode alterar role (motorista → gestor/parceiro/admin)
+  - **Ver Documentos:** Botão direto para ver documentos do motorista
+  - **Bug Fix:** Motorista aprovado agora cria documento na collection `motoristas` automaticamente
+  - **Bug Fix:** Endpoint `set-role` não dava erro quando role já era igual
+  - **Ficheiros:** `backend/routes/users.py`, `frontend/src/pages/GestaoUtilizadores.js`
+  - **Testes:** 13/13 backend + frontend 100% (iteration_53.json)
+
+### Session 2026-02-19 (Fluxo de Aprovação com Planos)
 - **Fluxo de Aprovação de Utilizadores Melhorado - DONE:**
   - **Funcionalidade:** Admin pode atribuir Plano e Preço Especial ao aprovar novos parceiros
   - **Backend:** Endpoint `PUT /api/users/{user_id}/approve` atualizado para aceitar `plano_id` e `preco_especial_id`
