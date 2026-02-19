@@ -1043,7 +1043,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                       <SelectValue placeholder="Selecionar parceiro..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum (atribuir depois)</SelectItem>
+                      <SelectItem value="none">Nenhum (atribuir depois)</SelectItem>
                       {parceiros.map(p => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.nome || p.name || p.empresa || 'Parceiro'}
