@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://mobile-app-deploy-7.preview.emergentagent.com/api"
+BACKEND_URL = "https://supplier-management-2.preview.emergentagent.com/api"
 
 # Admin credentials from review request
 ADMIN_CREDS = {"email": "admin@tvdefleet.com", "password": "o72ocUHy"}

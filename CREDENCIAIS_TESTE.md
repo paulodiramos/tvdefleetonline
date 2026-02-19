@@ -58,7 +58,7 @@
 
 ### Login via Frontend
 ```
-1. Acesse: https://mobile-app-deploy-7.preview.emergentagent.com/login
+1. Acesse: https://supplier-management-2.preview.emergentagent.com/login
 2. Use qualquer credencial acima
 3. Navegue conforme as permissões do role
 ```

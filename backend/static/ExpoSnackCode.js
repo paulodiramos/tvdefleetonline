@@ -8,7 +8,7 @@ import {
   Modal, Platform, KeyboardAvoidingView
 } from 'react-native';
 
-const API_URL = 'https://mobile-app-deploy-7.preview.emergentagent.com/api';
+const API_URL = 'https://supplier-management-2.preview.emergentagent.com/api';
 
 // ===== CONTEXT =====
 const AuthContext = React.createContext(null);

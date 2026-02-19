@@ -382,7 +382,7 @@ async def criar_vistoria(
         vistoria_relatorio = {**vistoria, "data": now.strftime("%d/%m/%Y %H:%M")}
         relatorio = await gerar_relatorio_vistoria(vistoria_relatorio, comparacao)
         # Substituir placeholder do link
-        link_confirmacao = f"https://mobile-app-deploy-7.preview.emergentagent.com/confirmar-vistoria/{vistoria_id}?token={token_confirmacao}"
+        link_confirmacao = f"https://supplier-management-2.preview.emergentagent.com/confirmar-vistoria/{vistoria_id}?token={token_confirmacao}"
         relatorio = relatorio.replace("[LINK_CONFIRMACAO]", link_confirmacao)
     except Exception as e:
         logger.warning(f"Erro ao gerar relatório: {e}")
@@ -396,7 +396,7 @@ async def criar_vistoria(
         "analise_ia": analise_ia,
         "comparacao": comparacao,
         "relatorio_whatsapp": relatorio,
-        "link_confirmacao": f"https://mobile-app-deploy-7.preview.emergentagent.com/confirmar-vistoria/{vistoria_id}?token={token_confirmacao}"
+        "link_confirmacao": f"https://supplier-management-2.preview.emergentagent.com/confirmar-vistoria/{vistoria_id}?token={token_confirmacao}"
     }
 
 
