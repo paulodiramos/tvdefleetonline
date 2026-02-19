@@ -447,20 +447,19 @@ async def delete_user(
 async def sync_motoristas_collection(
     current_user: Dict = Depends(get_current_user)
 ):
-    """Sincronizar motoristas aprovados que não existem na collection motoristas.
+    """Sincronizar motoristas (aprovados E pendentes) que não existem na collection motoristas.
     
     Este endpoint cria documentos na collection motoristas para todos os utilizadores
-    com role='motorista' e approved=True que ainda não têm documento na collection motoristas.
+    com role='motorista' que ainda não têm documento na collection motoristas.
     """
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Apenas Admin")
     
     import uuid as uuid_module
     
-    # Buscar todos os utilizadores motoristas aprovados
+    # Buscar TODOS os utilizadores motoristas (aprovados E pendentes)
     motorista_users = await db.users.find({
-        "role": "motorista",
-        "approved": True
+        "role": "motorista"
     }, {"_id": 0}).to_list(length=None)
     
     synced = 0
@@ -481,6 +480,8 @@ async def sync_motoristas_collection(
             continue
         
         try:
+            is_approved = user.get("approved", False)
+            
             # Criar documento na collection motoristas
             motorista_doc = {
                 "id": user_id,
@@ -489,11 +490,11 @@ async def sync_motoristas_collection(
                 "nome": user.get("name"),
                 "phone": user.get("phone"),
                 "telefone": user.get("phone"),
-                "approved": True,
-                "approved_by": user.get("approved_by"),
-                "approved_at": user.get("approved_at") or datetime.now(timezone.utc).isoformat(),
-                "ativo": True,
-                "status_motorista": "ativo",
+                "approved": is_approved,
+                "approved_by": user.get("approved_by") if is_approved else None,
+                "approved_at": user.get("approved_at") if is_approved else None,
+                "ativo": is_approved,  # Só ativo se aprovado
+                "status_motorista": "ativo" if is_approved else "pendente",
                 "created_at": user.get("created_at") or datetime.now(timezone.utc).isoformat(),
                 "id_cartao_frota_combustivel": f"FROTA-{str(uuid_module.uuid4())[:8].upper()}",
                 "parceiro_id": user.get("associated_partner_id"),
@@ -512,7 +513,7 @@ async def sync_motoristas_collection(
             
             await db.motoristas.insert_one(motorista_doc)
             synced += 1
-            logger.info(f"Synced motorista: {user.get('name')} ({email})")
+            logger.info(f"Synced motorista: {user.get('name')} ({email}) - Approved: {is_approved}")
             
         except Exception as e:
             errors.append(f"{email}: {str(e)}")
