@@ -26,6 +26,17 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
+### Session 2026-02-19 (Continuation)
+- **UI para Atribuir Gestores na Página de Parceiros:**
+  - Secção "Gestores Associados" no diálogo de edição
+  - Lista com seleção múltipla e visual checkbox
+- **Campos de Fatura na Manutenção de Veículos:**
+  - Secção "Dados da Fatura (Opcional)" no formulário
+  - Campos: Nº Fatura, Data, Fornecedor, Upload ficheiro
+- **Página de Contabilidade (Full Stack):**
+  - Backend: `/api/contabilidade/*`
+  - Frontend: 3 tabs, filtros, estatísticas, exportação CSV
+
 ### Session 2026-02-19
 - **Sistema Gestor ↔ Parceiro:**
   - Parceiros suportam múltiplos gestores (`gestores_ids[]`)
