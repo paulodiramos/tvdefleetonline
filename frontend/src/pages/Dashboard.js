@@ -36,11 +36,13 @@ const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
 
 const Dashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState(null);
+  const [adminStats, setAdminStats] = useState(null);
   const [alertas, setAlertas] = useState([]);
   const [alertasCustos, setAlertasCustos] = useState(null);
   const [proximasDatas, setProximasDatas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [planoAtivo, setPlanoAtivo] = useState(null);
+  const navigate = useNavigate();
   
   // Filtros de data
   const [filtroData, setFiltroData] = useState({ tipo: 'todos', dataInicio: '', dataFim: '' });
@@ -62,6 +64,9 @@ const Dashboard = ({ user, onLogout }) => {
     fetchProximasDatas();
     fetchPlanoAtivo();
     fetchAlertasCustos();
+    if (user.role === 'admin') {
+      fetchAdminStats();
+    }
   }, [filtroData, selectedParceiro]);
 
   const fetchPlanoAtivo = async () => {
