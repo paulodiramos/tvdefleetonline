@@ -240,7 +240,15 @@ async def adicionar_preco_especial(
     preco_data: Dict[str, Any],
     current_user: Dict = Depends(get_current_user)
 ):
-    """Adicionar preço especial para parceiro específico (Admin only)"""
+    """Adicionar preço especial para parceiro específico (Admin only)
+    
+    Tipos de preço especial suportados:
+    - percentagem: Aplica desconto % sobre o preço base do plano
+    - valor_fixo: Preço fixo mensal total para o parceiro
+    - valor_fixo_veiculo: Preço fixo por cada veículo
+    - valor_fixo_motorista: Preço fixo por cada motorista
+    - valor_fixo_motorista_veiculo: Preço fixo por cada combinação motorista/veículo
+    """
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Apenas administradores")
     
@@ -250,6 +258,101 @@ async def adicionar_preco_especial(
     service = get_service()
     preco = await service.adicionar_preco_especial_plano(plano_id, preco_data, current_user["id"])
     return preco
+
+
+# ==================== PREÇOS ESPECIAIS (ADMIN) ====================
+
+@router.get("/precos-especiais")
+async def listar_todos_precos_especiais(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar todos os preços especiais de todos os planos (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    precos = await service.listar_precos_especiais()
+    return precos
+
+
+@router.get("/precos-especiais/calcular")
+async def calcular_preco_especial(
+    parceiro_id: str = Query(..., description="ID do parceiro"),
+    plano_id: str = Query(..., description="ID do plano"),
+    num_veiculos: int = Query(0, description="Número de veículos"),
+    num_motoristas: int = Query(0, description="Número de motoristas"),
+    periodicidade: str = Query("mensal", description="Periodicidade: semanal, mensal, anual"),
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Calcular preço para um parceiro, aplicando preço especial se existir.
+    Útil para simulações e preview de faturação.
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    resultado = await service.calcular_preco_com_especial(
+        parceiro_id, plano_id, num_veiculos, num_motoristas, periodicidade
+    )
+    
+    if "erro" in resultado:
+        raise HTTPException(status_code=400, detail=resultado["erro"])
+    
+    return resultado
+
+
+@router.delete("/planos/{plano_id}/precos-especiais/{preco_id}")
+async def remover_preco_especial(
+    plano_id: str,
+    preco_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Remover preço especial de um plano (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    result = await db.planos_sistema.update_one(
+        {"id": plano_id},
+        {"$pull": {"precos_especiais": {"id": preco_id}}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Preço especial não encontrado")
+    
+    return {"message": "Preço especial removido com sucesso"}
+
+
+@router.put("/planos/{plano_id}/precos-especiais/{preco_id}")
+async def atualizar_preco_especial(
+    plano_id: str,
+    preco_id: str,
+    preco_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar preço especial de um plano (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    # Preparar dados de atualização
+    update_fields = {}
+    for key in ["tipo_desconto", "valor_desconto", "preco_fixo", "validade_inicio", 
+                "validade_fim", "motivo", "ativo"]:
+        if key in preco_data:
+            update_fields[f"precos_especiais.$.{key}"] = preco_data[key]
+    
+    update_fields["precos_especiais.$.updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_fields["precos_especiais.$.updated_by"] = current_user["id"]
+    
+    result = await db.planos_sistema.update_one(
+        {"id": plano_id, "precos_especiais.id": preco_id},
+        {"$set": update_fields}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Preço especial não encontrado")
+    
+    return {"message": "Preço especial atualizado com sucesso"}
 
 
 # ==================== CÁLCULO DE PREÇOS ====================
