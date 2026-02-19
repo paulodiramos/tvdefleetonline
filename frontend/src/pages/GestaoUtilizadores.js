@@ -37,6 +37,10 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
   const [showAcessoDialog, setShowAcessoDialog] = useState(false);
   const [showAprovarDialog, setShowAprovarDialog] = useState(false);
   const [aprovarParceiroId, setAprovarParceiroId] = useState('');
+  const [aprovarPlanoId, setAprovarPlanoId] = useState('');
+  const [aprovarPrecoEspecialId, setAprovarPrecoEspecialId] = useState('');
+  const [planosDisponiveis, setPlanosDisponiveis] = useState([]);
+  const [precosEspeciaisDisponiveis, setPrecosEspeciaisDisponiveis] = useState([]);
   const [planoForm, setPlanoForm] = useState({
     plano_id: '',
     tipo_pagamento: 'mensal',
