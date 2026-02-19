@@ -80,27 +80,23 @@ class TestMotoristRegistrationWithDocuments(TestAdminAuth):
         
     def test_02_verify_motorista_in_collection(self, admin_headers):
         """Verify the motorista document was created in motoristas collection"""
-        if not hasattr(TestMotoristRegistrationWithDocuments, 'test_email'):
+        if not hasattr(TestMotoristRegistrationWithDocuments, 'test_user_id'):
             pytest.skip("No test user created")
         
-        email = TestMotoristRegistrationWithDocuments.test_email
+        user_id = TestMotoristRegistrationWithDocuments.test_user_id
         
-        # Get motoristas list and check if our test motorista exists
-        response = requests.get(f"{BASE_URL}/api/motoristas", headers=admin_headers)
-        assert response.status_code == 200, f"Get motoristas failed: {response.text}"
+        # Get motorista by ID (detail endpoint returns raw MongoDB data)
+        response = requests.get(f"{BASE_URL}/api/motoristas/{user_id}", headers=admin_headers)
+        assert response.status_code == 200, f"Get motorista failed: {response.text}"
         
-        motoristas = response.json()
-        test_motorista = None
-        for m in motoristas:
-            if m.get("email") == email:
-                test_motorista = m
-                break
+        test_motorista = response.json()
         
-        assert test_motorista is not None, f"Motorista with email {email} should exist in motoristas collection"
+        assert test_motorista is not None, f"Motorista with ID {user_id} should exist in motoristas collection"
         print(f"Found motorista in collection: {test_motorista.get('name')}")
         
         # Verify documents structure exists
-        assert "documents" in test_motorista or test_motorista.get("documents") is None, "Documents field should exist"
+        assert "documents" in test_motorista, "Documents field should exist"
+        print(f"Initial documents structure: {test_motorista.get('documents')}")
         
     def test_03_upload_document_during_registration(self, admin_headers):
         """Upload a document and verify it gets associated with motorista"""
