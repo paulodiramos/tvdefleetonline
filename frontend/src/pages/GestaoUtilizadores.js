@@ -671,13 +671,36 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
               Visualizar e gerir planos de todos os usuários
             </p>
           </div>
-          <Button 
-            onClick={handleOpenNovoUserDialog}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <UserPlus className="w-4 h-4 mr-2" />
-            Novo Usuário
-          </Button>
+          <div className="flex gap-2">
+            {motoristasPendentes > 0 && (
+              <Button 
+                onClick={handleSyncMotoristas}
+                disabled={syncingMotoristas}
+                variant="outline"
+                className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                data-testid="btn-sync-motoristas"
+              >
+                {syncingMotoristas ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    A sincronizar...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-4 h-4 mr-2" />
+                    Sincronizar Motoristas ({motoristasPendentes})
+                  </>
+                )}
+              </Button>
+            )}
+            <Button 
+              onClick={handleOpenNovoUserDialog}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Novo Usuário
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
