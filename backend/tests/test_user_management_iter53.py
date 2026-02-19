@@ -185,23 +185,29 @@ class TestAtribuirParceiro:
         
         parceiro_id = parceiros[0]["id"]
         
-        # Create test motorista
+        # Create test motorista via motoristas/register (this creates both user and motorista doc)
         timestamp = int(time.time())
         test_email = f"test_parceiro_assign_{timestamp}@test.com"
         
         create_response = requests.post(
-            f"{BASE_URL}/api/auth/register",
+            f"{BASE_URL}/api/motoristas/register",
             json={
                 "name": f"Test Motorista {timestamp}",
                 "email": test_email,
                 "password": "testpass123",
-                "role": "motorista",
-                "approved": True
+                "phone": "912345678"
             },
             headers={"Authorization": f"Bearer {admin_token}"}
         )
-        assert create_response.status_code == 200
+        assert create_response.status_code == 200, f"Failed to create motorista: {create_response.text}"
         motorista_id = create_response.json()["id"]
+        
+        # Approve the motorista to make sure it's ready
+        requests.put(
+            f"{BASE_URL}/api/users/{motorista_id}/approve",
+            json={},
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
         
         yield {"motorista_id": motorista_id, "parceiro_id": parceiro_id}
         
