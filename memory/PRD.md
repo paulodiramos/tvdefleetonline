@@ -26,6 +26,24 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
+### Session 2026-02-19 (Latest - Fork)
+- **Funcionalidades de Gestão de Acessos (Testadas com Sucesso):**
+  - Atribuição de parceiros a gestores via tab "Parceiros Atribuídos" no perfil
+  - API: `PUT /api/gestores/{id}/atribuir-parceiros`
+  - UI: Lista com badges, contador, botão guardar
+
+- **Papel Contabilista (Testado com Sucesso):**
+  - Novo role com menu restrito (Início, Contabilidade, Documentos)
+  - Acesso apenas a visualização de faturas e recibos
+  - User de teste criado: contabilista@tvdefleet.com
+
+- **Gestão de Fornecedores por Parceiro (Testada com Sucesso):**
+  - Nova página `/fornecedores` acessível pelo parceiro
+  - CRUD completo (criar, editar, eliminar fornecedores)
+  - Filtros por nome, NIF, email, tipo
+  - 8 tipos de fornecedores disponíveis
+  - API: `/api/parceiros/{id}/fornecedores`
+
 ### Session 2026-02-19 (Continuation)
 - **UI para Atribuir Gestores na Página de Parceiros:**
   - Secção "Gestores Associados" no diálogo de edição
