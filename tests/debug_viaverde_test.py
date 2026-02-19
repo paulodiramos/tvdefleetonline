@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://vehicle-rates.preview.emergentagent.com/api"
+BACKEND_URL = "https://fleet-refactor.preview.emergentagent.com/api"
 
 # Test credentials
 TEST_CREDENTIALS = {

@@ -179,7 +179,7 @@ Depois de carregar, vai ver:
 
 ### ❌ Login não funciona
 - Verifique se está a usar credenciais válidas do sistema
-- A app conecta ao servidor: https://vehicle-rates.preview.emergentagent.com/api
+- A app conecta ao servidor: https://fleet-refactor.preview.emergentagent.com/api
 
 ---
 
