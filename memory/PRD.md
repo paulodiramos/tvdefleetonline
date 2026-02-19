@@ -27,7 +27,21 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Current - Messages Role Hierarchy + Refactoring)
+### Session 2026-02-19 (Latest - Bug Fixes Dashboard Faturação + Resumo Semanal)
+- **Correção Dashboard Faturação - DONE:**
+  - **Problema:** Total de 62.969€ mostrado para parceiro quando deveria ser 25.081€
+  - **Causa:** dados_semanais continha empresa_faturacao_id de outros parceiros
+  - **Solução:** Adicionado filtro `empresas_ids_validas` em `empresas_faturacao.py`
+  - **Resultado:** Parceiro Zeny agora vê apenas 2 empresas (11.345€ + 13.736€ = 25.081€)
+  - **Percentagens:** Corrigidas (antes mostravam 200000%, agora valores correctos)
+
+- **Correção Resumo Semanal - DONE:**
+  - **Problema:** Apareciam motoristas de outros parceiros (Motorista Teste Backend, Motorista Teste Novo)
+  - **Causa:** Prioridade errada entre parceiro_id e parceiro_atribuido
+  - **Solução:** Alterada prioridade para `parceiro_atribuido || parceiro_id` em `relatorios.py`
+  - **Resultado:** Parceiro Zeny vê 12 motoristas (antes 14)
+  - Testes: 11/11 passaram (100%)
+
 - **Sistema de Mensagens - Filtragem por Hierarquia - DONE:**
   - Novo endpoint `GET /api/mensagens/destinatarios`
   - Admin vê todos os utilizadores aprovados
@@ -41,8 +55,8 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - Novo componente: `VeiculoDispositivosTab.js` (198 linhas)
   - Tab "Dispositivos" extraída com sucesso
   - Ficheiro reduzido de 5337 para 5162 linhas (-175 linhas)
-  - Tabs já componentizadas: Seguro, Inspeção, Extintor, Revisão, Histórico, Dispositivos
-  - Tabs ainda inline: Info (~2200 linhas), Agenda (~277 linhas), Relatório
+  - Tabs já componentizadas: Seguro, Inspeção, Extintor, Revisão, Histórico, Dispositivos, Relatório
+  - Tabs ainda inline: Info (~2200 linhas), Agenda (~277 linhas)
 
 ### Session 2026-02-19 (Via Verde Fix + Refactoring Progress)
 - **Correção Relatório Via Verde - DONE:**
@@ -56,14 +70,6 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - users: 39, motoristas: 18, vehicles: 34, parceiros: 8
   - 2 utilizadores pendentes, 1 motorista sem parceiro
   - Índices verificados
-
-- **Refatoração FichaVeiculo.js - EM PROGRESSO:**
-  - Ficheiro original: 5871 linhas (muito grande)
-  - Componentes já existentes: VeiculoSeguroTab, VeiculoInspecaoTab, VeiculoExtintorTab, VeiculoAgendaTab, VeiculoHistoricoTab
-  - **NOVOS componentes criados:**
-    - `VeiculoInfoTab.js` - Informações básicas, motorista associado, documentação
-    - `VeiculoRevisaoTab.js` - Próxima revisão, plano de manutenção, alertas, histórico
-  - **Faltam extrair:** Turnos (já usa VeiculoTurnos), Dispositivos, Relatório
 
 ### Session 2026-02-19 (Admin Dashboard Pendentes)
 - **Lógica de Preços Especiais (Backend) - DONE e Testado 100%:**
