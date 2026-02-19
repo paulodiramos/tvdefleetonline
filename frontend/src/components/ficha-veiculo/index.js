@@ -7,3 +7,5 @@ export { default as VeiculoHistoricoTab } from './VeiculoHistoricoTab';
 export { default as VeiculoInfoTab } from './VeiculoInfoTab';
 export { default as VeiculoRevisaoTab } from './VeiculoRevisaoTab';
 export { default as VeiculoDispositivosTab } from './VeiculoDispositivosTab';
+export { default as VeiculoHistoricoAtribuicoesTab } from './VeiculoHistoricoAtribuicoesTab';
+export { default as VeiculoRelatorioFinanceiroTab } from './VeiculoRelatorioFinanceiroTab';
