@@ -49,18 +49,46 @@ const PerfilUtilizador = ({ user, onLogout }) => {
   const [parceirosAtribuidos, setParceirosAtribuidos] = useState([]);
   const [loadingParceiros, setLoadingParceiros] = useState(false);
   const [savingParceiros, setSavingParceiros] = useState(false);
+  
+  // Motorista-specific states
+  const [parceiroSelecionado, setParceiroSelecionado] = useState('');
+  const [savingParceiro, setSavingParceiro] = useState(false);
+  const [planos, setPlanos] = useState([]);
+  const [planoSelecionado, setPlanoSelecionado] = useState('');
+  const [savingPlano, setSavingPlano] = useState(false);
 
   useEffect(() => {
     fetchUserData();
   }, [userId]);
 
-  // Carregar parceiros quando o utilizador é um gestor ou contabilista
+  // Carregar parceiros quando o utilizador é um gestor, contabilista ou motorista
   useEffect(() => {
-    if ((userData?.role === 'gestao' || userData?.role === 'contabilista') && user?.role === 'admin') {
-      fetchParceirosDisponiveis();
-      fetchParceirosAtribuidos();
+    if (user?.role === 'admin') {
+      if (userData?.role === 'gestao' || userData?.role === 'contabilista') {
+        fetchParceirosDisponiveis();
+        fetchParceirosAtribuidos();
+      } else if (userData?.role === 'motorista') {
+        fetchParceirosDisponiveis();
+        setParceiroSelecionado(userData?.associated_partner_id || userData?.parceiro_id || '');
+      }
+      fetchPlanos();
     }
   }, [userData?.role, user?.role]);
+
+  const fetchPlanos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/planos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPlanos(response.data || []);
+      if (userData?.plano_id) {
+        setPlanoSelecionado(userData.plano_id);
+      }
+    } catch (error) {
+      console.error('Error fetching planos:', error);
+    }
+  };
 
   const fetchParceirosDisponiveis = async () => {
     try {
