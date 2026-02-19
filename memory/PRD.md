@@ -186,6 +186,11 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 - [x] **Fluxo de Aprovação com Plano/Preços Especiais** - **DONE** (2026-02-19)
   - Admin atribui plano e preço especial ao aprovar parceiros
   - Diálogo dinâmico baseado no tipo de utilizador
+- [x] **Sistema Utilizadores Melhorado** - **DONE** (2026-02-19)
+  - Admin atribui parceiro a motoristas já aprovados
+  - Admin altera tipo de conta (role)
+  - Admin vê documentos dos motoristas
+  - Motorista aprovado cria documento na collection motoristas
 
 ### P1 - High Priority
 - [x] Seletor de parceiro ativo para gestores - **DONE**
