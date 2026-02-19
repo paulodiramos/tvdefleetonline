@@ -152,6 +152,15 @@ async def iniciar_login_uber(
         # Verificar se precisa de SMS ou CAPTCHA
         page_content = await rpa.page.content()
         
+        # Verificar rate limiting
+        if "demasiados pedidos" in page_content or "too many requests" in page_content.lower():
+            await rpa.fechar_browser(guardar=False)
+            return {
+                "sucesso": False, 
+                "rate_limited": True,
+                "erro": "A Uber bloqueou temporariamente por excesso de tentativas. Aguarde algumas horas e tente novamente."
+            }
+        
         if "4 dígitos" in page_content or "Mais opções" in page_content:
             # Guardar referência para continuar depois
             await rpa.fechar_browser(guardar=False)
