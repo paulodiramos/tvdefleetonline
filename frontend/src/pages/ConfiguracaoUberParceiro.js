@@ -25,6 +25,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
   const [screenshot, setScreenshot] = useState(null);
   const [atualizando, setAtualizando] = useState(false);
   const [textoInput, setTextoInput] = useState('');
+  const [codigoSMS, setCodigoSMS] = useState('');
   
   // Estado de extração
   const [semanaSelecionada, setSemanaSelecionada] = useState('0');
