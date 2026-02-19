@@ -450,6 +450,9 @@ const PerfilUtilizador = ({ user, onLogout }) => {
             {(userData?.role === 'gestao' || userData?.role === 'contabilista') && user?.role === 'admin' && (
               <TabsTrigger value="parceiros">Parceiros Atribuídos</TabsTrigger>
             )}
+            {userData?.role === 'motorista' && user?.role === 'admin' && (
+              <TabsTrigger value="motorista">Motorista</TabsTrigger>
+            )}
             <TabsTrigger value="seguranca">Segurança</TabsTrigger>
             <TabsTrigger value="acoes">Ações</TabsTrigger>
           </TabsList>
