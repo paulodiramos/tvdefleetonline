@@ -143,6 +143,7 @@ from routes.inspetores import router as inspetores_router
 from routes.backup import router as backup_router
 from routes.plataformas import router as plataformas_router
 from routes.browser_virtual_admin import router as browser_virtual_admin_router
+from routes.contabilidade import router as contabilidade_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
