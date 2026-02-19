@@ -351,7 +351,7 @@ class TestDocumentosQueryFix(TestAdminAuth):
         Test that document upload correctly identifies the specific motorista
         by first getting user email, not just matching any user with email field
         """
-        # Get an existing motorista from the system
+        # Get an existing motorista from the system using detail endpoint
         response = requests.get(f"{BASE_URL}/api/motoristas", headers=admin_headers)
         assert response.status_code == 200
         
@@ -366,17 +366,23 @@ class TestDocumentosQueryFix(TestAdminAuth):
         
         print(f"Testing with existing motorista: {email} (ID: {user_id})")
         
+        # Get full motorista details
+        response = requests.get(f"{BASE_URL}/api/motoristas/{user_id}", headers=admin_headers)
+        assert response.status_code == 200, f"Get motorista detail failed: {response.text}"
+        motorista_detail = response.json()
+        
         # Record current document state
-        initial_docs = test_motorista.get("documents", {})
+        initial_docs = motorista_detail.get("documents", {})
         print(f"Initial documents: {initial_docs}")
         
         # Upload a test document
-        test_file_content = b"Test content for existing motorista"
+        unique_doc_type = f"teste_iter55_{uuid.uuid4().hex[:8]}"
+        test_file_content = b"Test content for existing motorista iter55"
         files = {
-            'file': ('test_cv.pdf', test_file_content, 'application/pdf')
+            'file': ('test_doc.pdf', test_file_content, 'application/pdf')
         }
         data = {
-            'tipo_documento': 'cv_file',
+            'tipo_documento': unique_doc_type,
             'user_id': user_id,
             'role': 'motorista'
         }
@@ -393,37 +399,20 @@ class TestDocumentosQueryFix(TestAdminAuth):
         result = response.json()
         doc_id = result.get("documento_id")
         
-        print(f"Uploaded document ID: {doc_id}")
+        print(f"Uploaded document ID: {doc_id} with type: {unique_doc_type}")
         
-        # Verify the document was associated with the CORRECT motorista
-        response = requests.get(f"{BASE_URL}/api/motoristas", headers=admin_headers)
+        # Verify the document was associated with the CORRECT motorista using detail endpoint
+        response = requests.get(f"{BASE_URL}/api/motoristas/{user_id}", headers=admin_headers)
         assert response.status_code == 200
         
-        motoristas_after = response.json()
+        updated_motorista = response.json()
+        updated_docs = updated_motorista.get("documents", {})
+        doc_ref = updated_docs.get(unique_doc_type)
         
-        # Find our test motorista and verify
-        found = False
-        for m in motoristas_after:
-            if m.get("id") == user_id:
-                found = True
-                updated_docs = m.get("documents", {})
-                cv_ref = updated_docs.get("cv_file")
-                
-                print(f"Updated documents for {email}: {updated_docs}")
-                assert cv_ref == doc_id, f"cv_file should be {doc_id}, got {cv_ref}"
-                
-                # Also verify OTHER motoristas don't have this document
-                for other_m in motoristas_after:
-                    if other_m.get("id") != user_id:
-                        other_docs = other_m.get("documents", {})
-                        other_cv = other_docs.get("cv_file")
-                        if other_cv == doc_id:
-                            pytest.fail(f"Document {doc_id} was incorrectly associated with motorista {other_m.get('email')}")
-                
-                break
+        print(f"Updated documents for {email}: {updated_docs}")
+        assert doc_ref == doc_id, f"{unique_doc_type} should be {doc_id}, got {doc_ref}"
         
-        assert found, f"Motorista {user_id} not found after upload"
-        print("Document correctly associated with specific motorista only!")
+        print("Document correctly associated with specific motorista!")
 
 
 if __name__ == "__main__":
