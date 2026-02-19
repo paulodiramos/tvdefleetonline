@@ -249,8 +249,14 @@ const FichaVeiculo = ({ user, onLogout }) => {
     valor: '',
     fornecedor: '',
     responsavel: 'parceiro', // 'motorista' ou 'parceiro'
-    atribuir_motorista: false // se true, deduz do motorista atribuído
+    atribuir_motorista: false, // se true, deduz do motorista atribuído
+    // Campos de fatura
+    fatura_numero: '',
+    fatura_data: '',
+    fatura_fornecedor: ''
   });
+  const [faturaFile, setFaturaFile] = useState(null);
+  const [uploadingFatura, setUploadingFatura] = useState(false);
 
   const [relatorioGanhos, setRelatorioGanhos] = useState({
     ganhos_total: 0,
