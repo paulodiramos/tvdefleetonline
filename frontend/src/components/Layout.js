@@ -306,8 +306,8 @@ const Layout = ({ children, user, onLogout }) => {
             </nav>
 
             <div className="flex items-center space-x-4">
-              {/* Gestor Parceiro Selector */}
-              {user?.role === 'gestao' && (
+              {/* Gestor/Contabilista Parceiro Selector */}
+              {(user?.role === 'gestao' || user?.role === 'contabilista') && (
                 <GestorParceiroSelector user={user} />
               )}
 
