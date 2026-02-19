@@ -79,7 +79,7 @@ const ExMotoristaDetailDialog = ({ open, onClose, motoristaId, onReactivate }) =
   const handleReactivate = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/motoristas/${motoristaId}/ativar`, {}, {
+      await axios.put(`${API}/api/motoristas/${motoristaId}/ativar`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Motorista reativado com sucesso');
