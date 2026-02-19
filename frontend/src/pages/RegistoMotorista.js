@@ -80,7 +80,7 @@ const RegistoMotorista = () => {
     }
     
     // Validar documentos obrigatórios
-    const docsObrigatorios = ['carta_conducao', 'licenca_tvde', 'registo_criminal', 'comprovativo_morada'];
+    const docsObrigatorios = ['carta_conducao_frente', 'licenca_tvde', 'registo_criminal', 'comprovativo_morada'];
     const docsFaltando = docsObrigatorios.filter(doc => !documentos[doc]);
     
     if (docsFaltando.length > 0) {
@@ -89,7 +89,7 @@ const RegistoMotorista = () => {
     }
     
     // Validar pelo menos 1 documento de identificação
-    if (!documentos.identificacao) {
+    if (!documentos.cc_frente) {
       toast.error('Por favor, carregue um documento de identificação (CC, Passaporte ou Título de Residência)');
       return;
     }
