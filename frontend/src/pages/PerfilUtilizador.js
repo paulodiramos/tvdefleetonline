@@ -352,6 +352,9 @@ const PerfilUtilizador = ({ user, onLogout }) => {
         <Tabs defaultValue="dados" className="space-y-4">
           <TabsList>
             <TabsTrigger value="dados">Dados Pessoais</TabsTrigger>
+            {userData?.role === 'gestao' && user?.role === 'admin' && (
+              <TabsTrigger value="parceiros">Parceiros Atribuídos</TabsTrigger>
+            )}
             <TabsTrigger value="seguranca">Segurança</TabsTrigger>
             <TabsTrigger value="acoes">Ações</TabsTrigger>
           </TabsList>
