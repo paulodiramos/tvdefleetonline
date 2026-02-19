@@ -101,8 +101,11 @@ const Usuarios = ({ user, onLogout }) => {
       const users = Array.isArray(response.data) ? response.data : [];
       
       // Separate users by approval status
+      // Use strict comparison: approved === false (not null, not undefined, not missing)
       const pending = users.filter(u => u.approved === false);
-      const registered = users.filter(u => u.approved !== false);
+      const registered = users.filter(u => u.approved === true || u.approved === undefined || u.approved === null);
+      
+      console.log('Pending users:', pending.length, pending.map(u => u.name));
       
       setPendingUsers(pending);
       setRegisteredUsers(registered);
