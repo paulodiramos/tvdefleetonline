@@ -28,8 +28,8 @@ const RegistoMotorista = () => {
   });
   
   const [documentos, setDocumentos] = useState({
-    carta_conducao: null,
-    identificacao: null,
+    carta_conducao_frente: null,
+    cc_frente: null,
     licenca_tvde: null,
     registo_criminal: null,
     comprovativo_morada: null
