@@ -154,7 +154,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
   const checkMotoristasPendentes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/users/motoristas-pendentes-sync`, {
+      const response = await axios.get(`${API}/motoristas-pendentes-sync`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMotoristasPendentes(response.data?.total_pendentes || 0);
