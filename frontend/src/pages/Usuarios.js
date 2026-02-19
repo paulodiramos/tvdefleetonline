@@ -476,6 +476,7 @@ const Usuarios = ({ user, onLogout }) => {
   const openApproveDialog = (userToApprove) => {
     setSelectedUser(userToApprove);
     setSelectedRole(userToApprove.role || 'motorista');
+    setSelectedParceiroAtribuir(''); // Reset parceiro selection
     setActionType('approve');
     setShowDialog(true);
   };
