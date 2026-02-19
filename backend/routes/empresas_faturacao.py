@@ -288,17 +288,25 @@ async def dashboard_totais_empresa(
             "total_recibos": sum(1 for m in motoristas_data.values() if "sem_empresa" in m["por_empresa"])
         })
     
-    # Calcular total geral
-    total_geral = sum(m["total_valor"] for m in motoristas_data.values()) or 1
+    # Calcular total geral baseado na soma dos totais das empresas (não dos motoristas)
+    # Isto evita duplicação quando um motorista tem dados em múltiplas empresas
+    total_empresas = sum(e["total_valor"] for e in resultado)
+    total_geral = total_empresas if total_empresas > 0 else 1
     
     # Converter motoristas para lista com percentagens
     motoristas_list = []
     for m in motoristas_data.values():
+        # Percentagem do total anual deste motorista em relação ao total de todas as empresas
         m["percentagem_total"] = round((m["total_valor"] / total_geral) * 100, 1)
         
-        # Calcular percentagem por empresa
+        # Calcular percentagem por empresa - cada empresa tem seu próprio total
         for emp_data in m["por_empresa"].values():
-            emp_data["percentagem"] = round((emp_data["total_valor"] / total_geral) * 100, 1)
+            # Encontrar o total da empresa
+            empresa_id = emp_data.get("empresa_id")
+            empresa_info = next((e for e in resultado if e["empresa_id"] == empresa_id), None)
+            total_empresa_individual = empresa_info["total_valor"] if empresa_info and empresa_info["total_valor"] > 0 else 1
+            # Percentagem relativa ao total daquela empresa específica
+            emp_data["percentagem"] = round((emp_data["total_valor"] / total_empresa_individual) * 100, 1)
         
         # Converter dict para lista ordenada
         m["por_empresa"] = sorted(m["por_empresa"].values(), key=lambda x: x["total_valor"], reverse=True)
@@ -324,14 +332,20 @@ async def dashboard_totais_empresa(
         for emp in empresas_colunas:
             emp_id = emp["id"]
             valor = emp_valores.get(emp_id, 0)
+            # Encontrar o total da empresa para calcular percentagem correcta
+            empresa_info = next((e for e in resultado if e["empresa_id"] == emp_id), None)
+            total_empresa_individual = empresa_info["total_valor"] if empresa_info and empresa_info["total_valor"] > 0 else 1
             row["valores_por_empresa"][emp_id] = {
                 "valor": valor,
-                "percentagem": round((valor / total_geral) * 100, 1) if total_geral > 0 else 0
+                "percentagem": round((valor / total_empresa_individual) * 100, 1) if total_empresa_individual > 0 else 0
             }
         matriz_tabela.append(row)
     
     # Ordenar matriz por total anual
     matriz_tabela.sort(key=lambda x: x["total_anual"], reverse=True)
+    
+    # Calcular total de recibos (número de semanas com dados)
+    total_recibos = sum(e["total_recibos"] for e in resultado)
     
     return {
         "ano": ano,
@@ -340,7 +354,8 @@ async def dashboard_totais_empresa(
         "motoristas": motoristas_list,
         "matriz": matriz_tabela,
         "totais": {
-            "valor": total_geral if total_geral > 1 else 0,
+            "valor": total_empresas,
+            "recibos": total_recibos,
             "motoristas": len(motoristas_list),
             "empresas": len(resultado)
         }
