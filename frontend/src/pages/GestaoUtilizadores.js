@@ -1020,6 +1020,70 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Diálogo de Aprovação */}
+        <Dialog open={showAprovarDialog} onOpenChange={setShowAprovarDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-amber-600" />
+                Aprovar Utilizador
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-slate-600">
+                Tem a certeza que deseja aprovar o utilizador <strong>{selectedUser?.name}</strong>?
+              </p>
+              
+              {selectedUser?.role === 'motorista' && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Atribuir a Parceiro (opcional)</Label>
+                  <Select value={aprovarParceiroId} onValueChange={setAprovarParceiroId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar parceiro..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhum (atribuir depois)</SelectItem>
+                      {parceiros.map(p => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.nome || p.name || p.empresa || 'Parceiro'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500">
+                    Se não selecionar agora, pode atribuir depois na página de Motoristas.
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAprovarDialog(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleAprovarUser}
+                disabled={saving}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    A aprovar...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Aprovar
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
