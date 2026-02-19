@@ -373,6 +373,8 @@ const Usuarios = ({ user, onLogout }) => {
   const handleApproveUser = async (userId, role) => {
     try {
       const token = localStorage.getItem('token');
+      
+      // Primeiro aprovar o utilizador
       await axios.put(
         `${API}/users/${userId}/approve`,
         { role: role },
@@ -381,11 +383,30 @@ const Usuarios = ({ user, onLogout }) => {
         }
       );
 
-      toast.success('Utilizador aprovado com sucesso!');
+      // Se for motorista e tiver parceiro selecionado, atribuir o parceiro
+      if ((role === 'motorista' || selectedUser?.role === 'motorista') && selectedParceiroAtribuir) {
+        try {
+          await axios.put(
+            `${API}/motoristas/${userId}/atribuir-parceiro`,
+            { parceiro_id: selectedParceiroAtribuir },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          toast.success('Utilizador aprovado e parceiro atribuído!');
+        } catch (atribuirError) {
+          console.error('Erro ao atribuir parceiro:', atribuirError);
+          toast.warning('Utilizador aprovado, mas erro ao atribuir parceiro. Atribua manualmente na página de Motoristas.');
+        }
+      } else {
+        toast.success('Utilizador aprovado com sucesso!');
+      }
+
       fetchUsers();
       setShowDialog(false);
       setSelectedUser(null);
       setSelectedRole('');
+      setSelectedParceiroAtribuir('');
     } catch (error) {
       console.error('Error approving user:', error);
       toast.error('Erro ao aprovar utilizador');
