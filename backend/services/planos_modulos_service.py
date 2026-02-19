@@ -422,9 +422,13 @@ class PlanosModulosService:
             # Encontrou preço especial válido - aplicar lógica
             tipo_desconto = pe.get("tipo_desconto", "percentagem")
             
+            # Ignorar preços especiais antigos sem tipo definido e sem valor útil
             if tipo_desconto == "percentagem":
-                # Desconto percentual sobre o preço calculado
                 percentagem = pe.get("valor_desconto") or pe.get("desconto_percentagem") or 0
+                # Se é tipo percentagem e o valor é 0 ou None, ignorar este preço especial
+                if not percentagem or percentagem == 0:
+                    continue
+                # Desconto percentual sobre o preço calculado
                 preco_final = preco_original * (1 - percentagem / 100)
                 preco_especial_aplicado = {
                     "tipo": "percentagem",
