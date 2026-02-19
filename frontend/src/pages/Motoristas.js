@@ -730,7 +730,8 @@ const Motoristas = ({ user, onLogout }) => {
       items: [
         { value: 'aprovado', label: 'Aprovado' },
         { value: 'pendente', label: 'Pendente Aprovação' },
-        { value: 'nao_atribuido', label: 'Não Atribuído' }
+        { value: 'nao_atribuido', label: 'Não Atribuído' },
+        { value: 'sem_parceiro', label: 'Sem Parceiro (Aprovados)' }
       ]
     }
   };
