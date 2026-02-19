@@ -38,6 +38,13 @@ class UserCreate(UserBase):
     password: str
     approved: bool = False
     parceiros_associados: Optional[List[str]] = None  # Para gestores
+    # Campos adicionais para motoristas
+    whatsapp: Optional[str] = None
+    data_nascimento: Optional[str] = None
+    nif: Optional[str] = None
+    nacionalidade: Optional[str] = None
+    morada_completa: Optional[str] = None
+    codigo_postal: Optional[str] = None
 
 
 class UserLogin(BaseModel):
