@@ -109,8 +109,12 @@ const PerfilUtilizador = ({ user, onLogout }) => {
     try {
       setSavingParceiros(true);
       const token = localStorage.getItem('token');
+      // Endpoint diferente para gestor e contabilista
+      const endpoint = userData?.role === 'contabilista'
+        ? `${API}/contabilistas/${userId}/atribuir-parceiros`
+        : `${API}/gestores/${userId}/atribuir-parceiros`;
       await axios.put(
-        `${API}/gestores/${userId}/atribuir-parceiros`,
+        endpoint,
         { parceiros_ids: parceirosAtribuidos },
         { headers: { Authorization: `Bearer ${token}` } }
       );
