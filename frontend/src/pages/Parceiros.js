@@ -97,6 +97,66 @@ const Parceiros = ({ user, onLogout }) => {
     }
   };
 
+  // Função para buscar gestores disponíveis
+  const fetchGestoresDisponiveis = async () => {
+    try {
+      setLoadingGestores(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/gestores`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGestoresDisponiveis(response.data || []);
+    } catch (error) {
+      console.error('Error fetching gestores:', error);
+    } finally {
+      setLoadingGestores(false);
+    }
+  };
+
+  // Função para buscar gestores atribuídos a um parceiro
+  const fetchGestoresDoParceiro = async (parceiroId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros/${parceiroId}/gestores`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const gestoresIds = (response.data.gestores || []).map(g => g.id);
+      setGestoresSelecionados(gestoresIds);
+    } catch (error) {
+      console.error('Error fetching gestores do parceiro:', error);
+      setGestoresSelecionados([]);
+    }
+  };
+
+  // Função para atribuir gestores a um parceiro
+  const handleAtribuirGestores = async () => {
+    if (!editingParceiro) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/parceiros/${editingParceiro.id}/atribuir-gestores`,
+        { gestores_ids: gestoresSelecionados },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Gestores atribuídos com sucesso');
+    } catch (error) {
+      console.error('Error assigning gestores:', error);
+      toast.error('Erro ao atribuir gestores');
+    }
+  };
+
+  // Toggle gestor selection
+  const toggleGestorSelection = (gestorId) => {
+    setGestoresSelecionados(prev => {
+      if (prev.includes(gestorId)) {
+        return prev.filter(id => id !== gestorId);
+      } else {
+        return [...prev, gestorId];
+      }
+    });
+  };
+
   const handleAddParceiro = async (e) => {
     e.preventDefault();
     try {
