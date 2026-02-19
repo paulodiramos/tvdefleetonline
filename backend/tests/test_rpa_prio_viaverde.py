@@ -15,7 +15,7 @@ import time
 from datetime import datetime, timedelta
 
 # URL base do backend
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-approve.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://playwright-stable.preview.emergentagent.com')
 
 # Credenciais de teste
 TEST_USER = {
