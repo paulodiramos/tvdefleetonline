@@ -68,7 +68,7 @@ const ContabilidadePage = ({ user, onLogout }) => {
       const params = new URLSearchParams();
       if (dateFrom) params.append('data_inicio', dateFrom);
       if (dateTo) params.append('data_fim', dateTo);
-      if (selectedParceiro) params.append('parceiro_id', selectedParceiro);
+      if (selectedParceiro && selectedParceiro !== 'all') params.append('parceiro_id', selectedParceiro);
       
       // Buscar dados em paralelo
       const [parceirosRes, faturasRes, recibosRes, veiculosRes] = await Promise.all([
