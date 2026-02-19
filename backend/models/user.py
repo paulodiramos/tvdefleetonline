@@ -12,6 +12,7 @@ class UserRole:
     PARCEIRO = "parceiro"
     OPERACIONAL = "operacional"  # Parceiro com gestão de frota própria
     INSPETOR = "inspetor"  # Apenas faz vistorias, associado a parceiro(s)
+    CONTABILISTA = "contabilista"  # Acesso apenas a documentos: faturas fornecedores, recibos motoristas
     MOTORISTA = "motorista"
 
 
