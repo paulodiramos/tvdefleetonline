@@ -84,10 +84,11 @@ const Mensagens = ({ user, onLogout }) => {
   const fetchUsuarios = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/users`, {
+      // Usar novo endpoint que filtra destinatários por hierarquia de roles
+      const response = await axios.get(`${API}/mensagens/destinatarios`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUsuarios(response.data.filter(u => u.id !== user.id));
+      setUsuarios(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
