@@ -154,6 +154,13 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
       filtered = filtered.filter(u => u.role === roleFilter);
     }
 
+    // Filter by status (approved/pending)
+    if (statusFilter === 'pendentes') {
+      filtered = filtered.filter(u => u.approved === false);
+    } else if (statusFilter === 'aprovados') {
+      filtered = filtered.filter(u => u.approved !== false);
+    }
+
     setFilteredUsers(filtered);
   };
 
