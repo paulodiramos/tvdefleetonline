@@ -404,3 +404,30 @@ async def restart_service(service: str, current_user: dict = Depends(get_current
     except Exception as e:
         logger.error(f"Erro ao reiniciar serviço {service}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro: {str(e)}")
+
+
+# ==================== PREÇOS ESPECIAIS ====================
+
+@router.get("/precos-especiais")
+async def listar_precos_especiais(current_user: dict = Depends(get_current_user)):
+    """
+    Listar todos os preços especiais de todos os planos.
+    Redireciona para o endpoint de gestão de planos.
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    # Buscar todos os planos com preços especiais
+    planos = await db.planos_sistema.find({"ativo": True}, {"_id": 0}).to_list(100)
+    
+    precos_especiais = []
+    for plano in planos:
+        for preco in plano.get("precos_especiais", []):
+            preco_com_plano = {
+                **preco,
+                "plano_id": plano.get("id"),
+                "plano_nome": plano.get("nome")
+            }
+            precos_especiais.append(preco_com_plano)
+    
+    return precos_especiais
