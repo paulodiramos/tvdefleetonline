@@ -158,7 +158,16 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
         query["approved"] = True
     
     if current_user["role"] == UserRole.GESTAO:
-        query["gestor_associado_id"] = current_user["id"]
+        # Gestor vê parceiros onde está na lista de gestores_ids OU é o gestor_associado_id
+        gestor = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "parceiros_atribuidos": 1})
+        parceiros_atribuidos = gestor.get("parceiros_atribuidos", []) if gestor else []
+        
+        # Query para encontrar parceiros atribuídos ao gestor
+        query["$or"] = [
+            {"gestores_ids": current_user["id"]},
+            {"gestor_associado_id": current_user["id"]},
+            {"id": {"$in": parceiros_atribuidos}}
+        ]
     elif current_user["role"] == "parceiro":
         query["id"] = current_user["id"]
     elif current_user["role"] not in [UserRole.ADMIN]:
