@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Building2, ChevronDown, Check } from 'lucide-react';
+import { Building2, ChevronDown, Check, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 
 const GestorParceiroSelector = ({ user, onParceiroChange }) => {
@@ -18,8 +18,12 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
   const [parceiroAtivo, setParceiroAtivo] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Funciona para gestao e contabilista
+  const isGestor = user?.role === 'gestao';
+  const isContabilista = user?.role === 'contabilista';
+
   useEffect(() => {
-    if (user?.role === 'gestao') {
+    if (isGestor || isContabilista) {
       fetchParceirosAtribuidos();
     }
   }, [user]);
@@ -28,8 +32,12 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Buscar parceiros atribuídos ao gestor
-      const response = await axios.get(`${API}/gestores/${user.id}/parceiros`, {
+      // Endpoint diferente para gestor e contabilista
+      const endpoint = isGestor 
+        ? `${API}/gestores/${user.id}/parceiros`
+        : `${API}/contabilistas/${user.id}/parceiros`;
+      
+      const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -38,7 +46,11 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
       
       // Buscar parceiro ativo atual
       try {
-        const ativoRes = await axios.get(`${API}/gestores/${user.id}/parceiro-ativo`, {
+        const ativoEndpoint = isGestor
+          ? `${API}/gestores/${user.id}/parceiro-ativo`
+          : `${API}/contabilistas/${user.id}/parceiro-ativo`;
+          
+        const ativoRes = await axios.get(ativoEndpoint, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -65,8 +77,12 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
     try {
       const token = localStorage.getItem('token');
       
+      const endpoint = isGestor
+        ? `${API}/gestores/${user.id}/selecionar-parceiro`
+        : `${API}/contabilistas/${user.id}/selecionar-parceiro`;
+      
       await axios.post(
-        `${API}/gestores/${user.id}/selecionar-parceiro`,
+        endpoint,
         { parceiro_id: parceiro?.id || null },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -78,7 +94,7 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
       }
       
       if (parceiro) {
-        toast.success(`A gerir: ${parceiro.nome_empresa || parceiro.name}`);
+        toast.success(`${isContabilista ? 'A visualizar' : 'A gerir'}: ${parceiro.nome_empresa || parceiro.name}`);
       } else {
         toast.info('Visualização geral ativada');
       }
@@ -91,15 +107,19 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
     }
   };
 
-  // Só mostrar para gestores
-  if (user?.role !== 'gestao') {
+  // Só mostrar para gestores e contabilistas
+  if (!isGestor && !isContabilista) {
     return null;
   }
 
   if (loading) {
     return (
       <div className="flex items-center space-x-2 px-3 py-1.5 bg-slate-100 rounded-lg">
-        <Building2 className="w-4 h-4 text-slate-400 animate-pulse" />
+        {isContabilista ? (
+          <Calculator className="w-4 h-4 text-slate-400 animate-pulse" />
+        ) : (
+          <Building2 className="w-4 h-4 text-slate-400 animate-pulse" />
+        )}
         <span className="text-sm text-slate-400">A carregar...</span>
       </div>
     );
@@ -108,11 +128,18 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
   if (parceirosAtribuidos.length === 0) {
     return (
       <div className="flex items-center space-x-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <Building2 className="w-4 h-4 text-yellow-600" />
+        {isContabilista ? (
+          <Calculator className="w-4 h-4 text-yellow-600" />
+        ) : (
+          <Building2 className="w-4 h-4 text-yellow-600" />
+        )}
         <span className="text-sm text-yellow-700">Sem parceiros atribuídos</span>
       </div>
     );
   }
+
+  const Icon = isContabilista ? Calculator : Building2;
+  const menuLabel = isContabilista ? 'Visualizar Parceiro' : 'Gerir como Parceiro';
 
   return (
     <DropdownMenu>
@@ -123,7 +150,7 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
           className={`flex items-center space-x-2 ${parceiroAtivo ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}`}
           data-testid="gestor-parceiro-selector"
         >
-          <Building2 className="w-4 h-4" />
+          <Icon className="w-4 h-4" />
           <span className="max-w-[150px] truncate">
             {parceiroAtivo ? (parceiroAtivo.nome_empresa || parceiroAtivo.name) : 'Selecionar Parceiro'}
           </span>
@@ -131,7 +158,7 @@ const GestorParceiroSelector = ({ user, onParceiroChange }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Gerir como Parceiro</DropdownMenuLabel>
+        <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
         {/* Opção para ver todos (sem filtro de parceiro) */}
