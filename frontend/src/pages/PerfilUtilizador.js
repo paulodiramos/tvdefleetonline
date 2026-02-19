@@ -751,6 +751,157 @@ const PerfilUtilizador = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
+          {/* Tab: Motorista (apenas para motoristas) */}
+          {userData?.role === 'motorista' && user?.role === 'admin' && (
+            <TabsContent value="motorista">
+              <div className="space-y-6">
+                {/* Ver Documentos */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Documentos do Motorista
+                    </CardTitle>
+                    <CardDescription>
+                      Visualizar e gerir documentos do motorista
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button onClick={handleVerDocumentos} data-testid="btn-ver-documentos">
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Documentos e Ficha Completa
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Atribuir Parceiro */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5" />
+                      Parceiro Atribuído
+                    </CardTitle>
+                    <CardDescription>
+                      Atribuir ou alterar o parceiro deste motorista
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label htmlFor="parceiro">Selecionar Parceiro</Label>
+                        <Select value={parceiroSelecionado} onValueChange={setParceiroSelecionado}>
+                          <SelectTrigger className="mt-1" data-testid="select-parceiro">
+                            <SelectValue placeholder="Selecionar parceiro..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {parceirosDisponiveis.map(p => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.nome_empresa || p.name || 'Parceiro'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="pt-6">
+                        <Button 
+                          onClick={handleAtribuirParceiro} 
+                          disabled={savingParceiro || !parceiroSelecionado}
+                          data-testid="btn-atribuir-parceiro"
+                        >
+                          {savingParceiro ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              A atribuir...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-4 h-4 mr-2" />
+                              Atribuir
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    {userData?.associated_partner_id || userData?.parceiro_id ? (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-800">
+                          <CheckCircle className="w-4 h-4 inline mr-2" />
+                          Parceiro atual: <strong>{userData?.parceiro_nome || 'Atribuído'}</strong>
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm text-amber-800">
+                          <XCircle className="w-4 h-4 inline mr-2" />
+                          Este motorista ainda não tem parceiro atribuído. O perfil ficará bloqueado até ter um parceiro.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Atribuir Plano */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Plano de Faturação
+                    </CardTitle>
+                    <CardDescription>
+                      Atribuir um plano de faturação a este utilizador
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label htmlFor="plano">Selecionar Plano</Label>
+                        <Select value={planoSelecionado} onValueChange={setPlanoSelecionado}>
+                          <SelectTrigger className="mt-1" data-testid="select-plano">
+                            <SelectValue placeholder="Selecionar plano..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {planos.map(p => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.nome} - €{p.preco || 0}/{p.periodicidade || 'mensal'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="pt-6">
+                        <Button 
+                          onClick={handleAtribuirPlano} 
+                          disabled={savingPlano || !planoSelecionado}
+                          data-testid="btn-atribuir-plano"
+                        >
+                          {savingPlano ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              A atribuir...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-4 h-4 mr-2" />
+                              Atribuir Plano
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    {userData?.plano_id && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <CheckCircle className="w-4 h-4 inline mr-2" />
+                          Plano atual: <strong>{userData?.plano_nome || 'Atribuído'}</strong>
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          )}
+
           {/* Tab: Ações */}
           <TabsContent value="acoes">
             <Card>
