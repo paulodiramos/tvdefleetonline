@@ -3934,7 +3934,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
           {/* Histórico de Atribuições */}
           <TabsContent value="historico">
-            <HistoricoAtribuicoesTab vehicleId={vehicleId} canEdit={canEdit} user={user} />
+            <VeiculoHistoricoAtribuicoesTab vehicleId={vehicleId} canEdit={canEdit} user={user} />
           </TabsContent>
 
           {/* Seguro */}
