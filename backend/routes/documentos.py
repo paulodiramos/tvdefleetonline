@@ -6,9 +6,10 @@ from datetime import datetime, timezone
 import uuid
 import logging
 import os
+import base64
 
 from models.user import UserRole
-from utils.auth import get_current_user
+from utils.auth import get_current_user, get_current_user_optional
 from utils.database import get_database
 
 router = APIRouter()
@@ -17,6 +18,72 @@ logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = "uploads/documentos"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+@router.post("/documentos/upload")
+async def upload_documento_registo(
+    file: UploadFile = File(...),
+    tipo_documento: str = Form(...),
+    user_id: str = Form(...),
+    role: str = Form(default="motorista")
+):
+    """Upload de documento durante o registo (sem autenticação obrigatória)"""
+    try:
+        # Ler conteúdo do arquivo
+        content = await file.read()
+        
+        # Gerar nome único
+        file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'bin'
+        doc_id = str(uuid.uuid4())
+        filename = f"{user_id}_{tipo_documento}_{doc_id}.{file_ext}"
+        file_path = os.path.join(UPLOAD_DIR, filename)
+        
+        # Salvar arquivo
+        with open(file_path, 'wb') as f:
+            f.write(content)
+        
+        # Criar registro no banco
+        documento = {
+            "id": doc_id,
+            "user_id": user_id,
+            "tipo_documento": tipo_documento,
+            "filename": filename,
+            "original_filename": file.filename,
+            "file_path": file_path,
+            "content_type": file.content_type,
+            "size": len(content),
+            "status": "pendente",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.documentos.insert_one(documento)
+        
+        # Atualizar o utilizador com referência ao documento
+        update_field = f"documents.{tipo_documento}"
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {update_field: doc_id}}
+        )
+        
+        # Se for motorista, também atualizar na collection motoristas
+        if role == "motorista":
+            await db.motoristas.update_one(
+                {"$or": [{"id": user_id}, {"email": {"$exists": True}}]},
+                {"$set": {update_field: doc_id}},
+                upsert=False
+            )
+        
+        logger.info(f"Documento {tipo_documento} carregado para utilizador {user_id}")
+        
+        return {
+            "sucesso": True,
+            "documento_id": doc_id,
+            "mensagem": f"Documento {tipo_documento} carregado com sucesso"
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao carregar documento: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao carregar documento: {str(e)}")
 
 
 @router.get("/documentos/pendentes")
