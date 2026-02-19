@@ -322,17 +322,12 @@ const ArquivoExMotoristas = ({ user, onLogout }) => {
                             size="sm"
                             onClick={() => {
                               setSelectedMotorista(motorista);
-                              fetchMotoristaDetails(motorista.id);
+                              setShowDetailDialog(true);
                             }}
-                            disabled={loadingDetails}
                             data-testid={`btn-ver-detalhes-${motorista.id}`}
                           >
-                            {loadingDetails && selectedMotorista?.id === motorista.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Eye className="w-4 h-4 mr-1" />
-                            )}
-                            Detalhes
+                            <Eye className="w-4 h-4 mr-1" />
+                            Ver Ficha
                           </Button>
                         </div>
                       </TableCell>
