@@ -459,6 +459,10 @@ async def get_motorista(
         if motorista["id"] != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Garantir compatibilidade: copiar 'documents' para 'documentos' se não existir
+    if motorista.get("documents") and not motorista.get("documentos"):
+        motorista["documentos"] = motorista["documents"]
+    
     # Return all fields directly from MongoDB
     return motorista
 
