@@ -366,10 +366,39 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     }
   };
 
-  const handleOpenAprovarDialog = (usuario) => {
+  const handleOpenAprovarDialog = async (usuario) => {
     setSelectedUser(usuario);
     setAprovarParceiroId('');
+    setAprovarPlanoId('');
+    setAprovarPrecoEspecialId('');
+    setPrecosEspeciaisDisponiveis([]);
+    
+    // Fetch available plans for the approval dialog
+    try {
+      const token = localStorage.getItem('token');
+      const planosRes = await axios.get(`${API}/planos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPlanosDisponiveis(planosRes.data || []);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      setPlanosDisponiveis([]);
+    }
+    
     setShowAprovarDialog(true);
+  };
+
+  const handlePlanoChangeAprovacao = (planoId) => {
+    setAprovarPlanoId(planoId);
+    setAprovarPrecoEspecialId('');
+    
+    // Find the selected plan and get its special prices
+    const planoSelecionado = planosDisponiveis.find(p => p.id === planoId);
+    if (planoSelecionado && planoSelecionado.precos_especiais) {
+      setPrecosEspeciaisDisponiveis(planoSelecionado.precos_especiais);
+    } else {
+      setPrecosEspeciaisDisponiveis([]);
+    }
   };
 
   const handleAprovarUser = async () => {
