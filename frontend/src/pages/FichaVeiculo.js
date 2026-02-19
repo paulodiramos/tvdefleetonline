@@ -4031,7 +4031,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
           {/* Relatório Ganhos/Perdas com ROI */}
           <TabsContent value="relatorio">
-            <RelatorioFinanceiroTab 
+            <VeiculoRelatorioFinanceiroTab 
               vehicleId={vehicleId} 
               canEdit={canEdit} 
               user={user}
