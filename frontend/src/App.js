@@ -911,6 +911,16 @@ function App() {
             }
           />
           <Route
+            path="/sistema-admin"
+            element={
+              user && user.role === 'admin' ? (
+                <SistemaAdmin user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/importar-dados"
             element={
               user ? (
