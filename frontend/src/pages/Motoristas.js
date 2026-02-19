@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import Layout from '@/components/Layout';
@@ -19,6 +19,7 @@ import MotoristaDetailDialog from '@/components/MotoristaDetailDialog';
 
 const Motoristas = ({ user, onLogout }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
