@@ -2,7 +2,7 @@
   "expo": {
     "name": "TVDEFleet Drivers",
     "slug": "tvdefleet-drivers",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -24,8 +24,7 @@
         "backgroundColor": "#1e40af"
       },
       "package": "com.tvdefleet.drivers",
-      "versionCode": 3,
-      "targetSdkVersion": 35
+      "versionCode": 4
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,6 +33,18 @@
       "eas": {
         "projectId": "1d78dad4-104f-4f69-b8e5-82640aad8635"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24
+          }
+        }
+      ]
+    ]
   }
 }
