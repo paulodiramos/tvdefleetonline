@@ -375,10 +375,32 @@ async def get_meus_motoristas(current_user: Dict = Depends(get_current_user)):
 
 
 @router.get("/motoristas", response_model=List[Motorista])
-async def get_motoristas(current_user: Dict = Depends(get_current_user)):
-    """Get all motoristas (filtered by role)"""
+async def get_motoristas(
+    include_inativos: bool = False,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get all motoristas (filtered by role)
+    
+    Args:
+        include_inativos: Se True, inclui motoristas inativos. Default False (apenas activos).
+    """
     # Base query: exclude deleted motoristas
     query = {"deleted": {"$ne": True}}
+    
+    # Filtrar apenas motoristas activos por padrão
+    if not include_inativos:
+        query["$and"] = [
+            {"$or": [
+                {"ativo": True},
+                {"ativo": {"$exists": False}},
+                {"ativo": None}
+            ]},
+            {"$or": [
+                {"status": {"$nin": ["inativo", "revoked", "desativado"]}},
+                {"status": {"$exists": False}},
+                {"status": None}
+            ]}
+        ]
     
     if current_user["role"] == UserRole.PARCEIRO:
         query["parceiro_atribuido"] = current_user["id"]
