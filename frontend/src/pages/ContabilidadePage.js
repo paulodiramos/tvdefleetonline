@@ -275,7 +275,7 @@ const ContabilidadePage = ({ user, onLogout }) => {
                     <SelectValue placeholder="Todos os parceiros" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {parceiros.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.nome_empresa || p.name}
