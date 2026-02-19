@@ -4,9 +4,12 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from models.user import UserRole
 from utils.auth import get_current_user
-from utils.database import db
+from utils.database import get_database
 
 router = APIRouter(prefix="/contabilidade", tags=["contabilidade"])
+
+# Get database reference
+db = get_database()
 
 
 @router.get("/faturas-fornecedores")
