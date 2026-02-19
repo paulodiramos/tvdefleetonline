@@ -578,6 +578,24 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
 
                     {/* Right: Action Icons */}
                     <div className="flex items-center space-x-1 flex-shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
+                      {/* Botão Aprovar - só para utilizadores pendentes */}
+                      {usuario.approved === false && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => handleOpenAprovarDialog(usuario)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                              data-testid={`btn-aprovar-${usuario.id}`}
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Aprovar</TooltipContent>
+                        </Tooltip>
+                      )}
+
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
