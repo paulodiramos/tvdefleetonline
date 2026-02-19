@@ -120,6 +120,12 @@ async def register(user_data: UserCreate):
             "nome": user_dict.get("name"),
             "phone": user_dict.get("phone"),
             "telefone": user_dict.get("phone"),
+            "whatsapp": user_dict.get("whatsapp"),
+            "data_nascimento": user_dict.get("data_nascimento"),
+            "nif": user_dict.get("nif"),
+            "nacionalidade": user_dict.get("nacionalidade"),
+            "morada_completa": user_dict.get("morada_completa"),
+            "codigo_postal": user_dict.get("codigo_postal"),
             "approved": False,  # Pendente aprovação
             "ativo": False,  # Só fica ativo após aprovação
             "status_motorista": "pendente",
@@ -130,8 +136,11 @@ async def register(user_data: UserCreate):
                 "cv_file": None,
                 "profile_photo": None,
                 "documento_identificacao": None,
+                "carta_conducao": None,
+                "identificacao": None,
                 "licenca_tvde": None,
                 "registo_criminal": None,
+                "comprovativo_morada": None,
                 "contrato": None,
                 "additional_docs": []
             }
