@@ -29,9 +29,24 @@ import tempfile
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import subprocess
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Install Playwright browsers on startup (for production)
+def install_playwright_browsers():
+    try:
+        result = subprocess.run(['playwright', 'install', 'chromium'], capture_output=True, text=True, timeout=300)
+        if result.returncode == 0:
+            logging.info("Playwright Chromium installed successfully")
+        else:
+            logging.warning(f"Playwright install warning: {result.stderr}")
+    except Exception as e:
+        logging.warning(f"Could not install Playwright browsers: {e}")
+
+# Run Playwright install on module load
+install_playwright_browsers()
 
 # Upload directories
 UPLOAD_DIR = ROOT_DIR / "uploads"
