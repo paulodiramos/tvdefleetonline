@@ -1737,9 +1737,10 @@ async def generate_motorista_pdf(
     via_verde = 0.0
     vv_transacoes = []  # Lista para as transações Via Verde
     
-    # Via Verde - buscar por vehicle_id ou parceiro_id (não existe por motorista_id)
-    parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else motorista.get("parceiro_id")
+    # Via Verde - buscar APENAS por vehicle_id ou matrícula do veículo do motorista
+    # NÃO buscar por parceiro_id pois isso traria todas as transações da frota
     vehicle_id = motorista.get("veiculo_atribuido")
+    parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else motorista.get("parceiro_id")
     
     vv_query_conditions = []
     if vehicle_id:
@@ -1748,9 +1749,12 @@ async def generate_motorista_pdf(
         # Normalizar matrícula para busca (remover hífens)
         matricula_norm = matricula.replace("-", "")
         vv_query_conditions.append({"matricula": matricula})
-        vv_query_conditions.append({"matricula": matricula_norm})
-    if parceiro_id:
-        vv_query_conditions.append({"parceiro_id": parceiro_id})
+        if matricula_norm != matricula:
+            vv_query_conditions.append({"matricula": matricula_norm})
+    # NOTA: NÃO adicionar parceiro_id às condições - isso traria toda a frota
+    # Buscar apenas por motorista_id se disponível
+    if motorista_id:
+        vv_query_conditions.append({"motorista_id": motorista_id})
     
     if vv_query_conditions:
         vv_records = await db.portagens_viaverde.find({
