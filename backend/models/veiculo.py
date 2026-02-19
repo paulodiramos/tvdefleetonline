@@ -127,6 +127,11 @@ class VehicleMaintenance(BaseModel):
     motorista_id: Optional[str] = None
     motorista_nome: Optional[str] = None
     created_at: Optional[str] = None
+    # Campos de fatura
+    fatura_numero: Optional[str] = None  # Número da fatura
+    fatura_url: Optional[str] = None  # URL do ficheiro da fatura
+    fatura_data: Optional[str] = None  # Data da fatura
+    fatura_fornecedor: Optional[str] = None  # Fornecedor na fatura
     
     @property
     def tipo_normalizado(self) -> str:
