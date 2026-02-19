@@ -378,6 +378,66 @@ const Dashboard = ({ user, onLogout }) => {
           </Card>
         )}
 
+        {/* Admin Dashboard - Pendentes de Aprovação */}
+        {user.role === 'admin' && adminStats && (
+          <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-amber-800">
+                <AlertCircle className="w-5 h-5" />
+                <span>Ações Pendentes</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Pendentes de Aprovação */}
+                <ClickableStatCard
+                  title="Pendentes de Aprovação"
+                  value={adminStats?.pendentes?.utilizadores || 0}
+                  icon={UserX}
+                  color="bg-amber-600"
+                  badge={true}
+                  onClick={() => navigate('/usuarios?filter=pendentes')}
+                />
+                
+                {/* Motoristas Sem Parceiro */}
+                <ClickableStatCard
+                  title="Sem Parceiro Atribuído"
+                  value={adminStats?.pendentes?.sem_parceiro || 0}
+                  icon={UserCheck}
+                  color="bg-orange-600"
+                  badge={true}
+                  onClick={() => navigate('/motoristas?filter=sem_parceiro')}
+                />
+                
+                {/* Total de Entidades */}
+                <Card className="bg-white/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-600">Resumo do Sistema</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Parceiros:</span>
+                      <span className="font-semibold">{adminStats?.entidades?.parceiros || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Motoristas:</span>
+                      <span className="font-semibold">{adminStats?.entidades?.motoristas || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Veículos:</span>
+                      <span className="font-semibold">{adminStats?.entidades?.veiculos || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Utilizadores:</span>
+                      <span className="font-semibold">{adminStats?.entidades?.utilizadores || 0}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
