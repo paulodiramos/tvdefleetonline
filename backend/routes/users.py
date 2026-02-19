@@ -443,6 +443,90 @@ async def delete_user(
     return {"message": "Utilizador eliminado"}
 
 
+@router.post("/users/sync-motoristas")
+async def sync_motoristas_collection(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Sincronizar motoristas aprovados que não existem na collection motoristas.
+    
+    Este endpoint cria documentos na collection motoristas para todos os utilizadores
+    com role='motorista' e approved=True que ainda não têm documento na collection motoristas.
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    import uuid as uuid_module
+    
+    # Buscar todos os utilizadores motoristas aprovados
+    motorista_users = await db.users.find({
+        "role": "motorista",
+        "approved": True
+    }, {"_id": 0}).to_list(length=None)
+    
+    synced = 0
+    already_exists = 0
+    errors = []
+    
+    for user in motorista_users:
+        user_id = user.get("id")
+        email = user.get("email")
+        
+        # Verificar se já existe na collection motoristas
+        existing = await db.motoristas.find_one({
+            "$or": [{"id": user_id}, {"email": email}]
+        })
+        
+        if existing:
+            already_exists += 1
+            continue
+        
+        try:
+            # Criar documento na collection motoristas
+            motorista_doc = {
+                "id": user_id,
+                "email": email,
+                "name": user.get("name"),
+                "nome": user.get("name"),
+                "phone": user.get("phone"),
+                "telefone": user.get("phone"),
+                "approved": True,
+                "approved_by": user.get("approved_by"),
+                "approved_at": user.get("approved_at") or datetime.now(timezone.utc).isoformat(),
+                "ativo": True,
+                "status_motorista": "ativo",
+                "created_at": user.get("created_at") or datetime.now(timezone.utc).isoformat(),
+                "id_cartao_frota_combustivel": f"FROTA-{str(uuid_module.uuid4())[:8].upper()}",
+                "parceiro_id": user.get("associated_partner_id"),
+                "parceiro_atribuido": user.get("associated_partner_id"),
+                "documents": {
+                    "license_photo": None,
+                    "cv_file": None,
+                    "profile_photo": None,
+                    "documento_identificacao": None,
+                    "licenca_tvde": None,
+                    "registo_criminal": None,
+                    "contrato": None,
+                    "additional_docs": []
+                }
+            }
+            
+            await db.motoristas.insert_one(motorista_doc)
+            synced += 1
+            logger.info(f"Synced motorista: {user.get('name')} ({email})")
+            
+        except Exception as e:
+            errors.append(f"{email}: {str(e)}")
+            logger.error(f"Error syncing motorista {email}: {e}")
+    
+    return {
+        "message": "Sincronização concluída",
+        "total_motoristas_users": len(motorista_users),
+        "synced": synced,
+        "already_exists": already_exists,
+        "errors": errors
+    }
+
+
 @router.put("/users/{user_id}/reset-password")
 async def reset_user_password(
     user_id: str,
