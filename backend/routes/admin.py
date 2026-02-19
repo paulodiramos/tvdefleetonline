@@ -285,3 +285,122 @@ async def reindexar_fotos_veiculos(current_user: dict = Depends(get_current_user
         "total_atualizados": atualizados,
         "veiculos_com_fotos": list(files_by_vehicle.keys())
     }
+
+
+# ============================================
+# SISTEMA - Gestão do Servidor
+# ============================================
+
+@router.get("/sistema/status")
+async def get_system_status(current_user: dict = Depends(get_current_user)):
+    """Obtém estado do sistema"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    # Verificar Playwright
+    playwright_installed = False
+    playwright_version = None
+    try:
+        result = subprocess.run(['playwright', '--version'], capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            playwright_installed = True
+            playwright_version = result.stdout.strip()
+    except Exception:
+        pass
+    
+    # Verificar browsers instalados
+    browsers_path = "/pw-browsers"
+    browsers_installed = []
+    if os.path.exists(browsers_path):
+        browsers_installed = [d for d in os.listdir(browsers_path) if os.path.isdir(os.path.join(browsers_path, d))]
+    
+    # Espaço em disco
+    disk_usage = shutil.disk_usage("/")
+    
+    return {
+        "playwright": {
+            "installed": playwright_installed,
+            "version": playwright_version,
+            "browsers": browsers_installed
+        },
+        "disk": {
+            "total_gb": round(disk_usage.total / (1024**3), 2),
+            "used_gb": round(disk_usage.used / (1024**3), 2),
+            "free_gb": round(disk_usage.free / (1024**3), 2),
+            "percent_used": round(disk_usage.used / disk_usage.total * 100, 1)
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.post("/sistema/playwright/install")
+async def install_playwright(current_user: dict = Depends(get_current_user)):
+    """Instala/reinstala browsers do Playwright"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    try:
+        logger.info(f"Admin {current_user['email']} iniciou instalação do Playwright")
+        
+        # Instalar Playwright
+        result = subprocess.run(
+            ['playwright', 'install', 'chromium'],
+            capture_output=True,
+            text=True,
+            timeout=300
+        )
+        
+        if result.returncode == 0:
+            logger.info("Playwright Chromium instalado com sucesso")
+            return {
+                "success": True,
+                "message": "Playwright Chromium instalado com sucesso",
+                "output": result.stdout[-500:] if result.stdout else None
+            }
+        else:
+            logger.error(f"Erro ao instalar Playwright: {result.stderr}")
+            return {
+                "success": False,
+                "message": "Erro ao instalar Playwright",
+                "error": result.stderr[-500:] if result.stderr else None
+            }
+    
+    except subprocess.TimeoutExpired:
+        return {
+            "success": False,
+            "message": "Timeout ao instalar Playwright (máximo 5 minutos)"
+        }
+    except Exception as e:
+        logger.error(f"Erro ao instalar Playwright: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro: {str(e)}")
+
+
+@router.post("/sistema/restart-service/{service}")
+async def restart_service(service: str, current_user: dict = Depends(get_current_user)):
+    """Reinicia um serviço do sistema"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    allowed_services = ["backend", "frontend"]
+    if service not in allowed_services:
+        raise HTTPException(status_code=400, detail=f"Serviço inválido. Permitidos: {allowed_services}")
+    
+    try:
+        logger.info(f"Admin {current_user['email']} reiniciou serviço {service}")
+        
+        result = subprocess.run(
+            ['sudo', 'supervisorctl', 'restart', service],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        return {
+            "success": result.returncode == 0,
+            "message": f"Serviço {service} reiniciado" if result.returncode == 0 else f"Erro ao reiniciar {service}",
+            "output": result.stdout or result.stderr
+        }
+    
+    except Exception as e:
+        logger.error(f"Erro ao reiniciar serviço {service}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro: {str(e)}")
