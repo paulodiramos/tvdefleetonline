@@ -366,43 +366,43 @@ const RegistoMotorista = () => {
                 <div className="space-y-4">
                   {/* Carta de Condução */}
                   <div>
-                    <Label htmlFor="carta_conducao" className="flex items-center justify-between">
+                    <Label htmlFor="carta_conducao_frente" className="flex items-center justify-between">
                       <span>Carta de Condução *</span>
-                      {documentos.carta_conducao && (
+                      {documentos.carta_conducao_frente && (
                         <span className="text-xs text-green-600 font-medium">✓ Carregado</span>
                       )}
                     </Label>
                     <Input
-                      id="carta_conducao"
+                      id="carta_conducao_frente"
                       type="file"
                       accept="image/*,.pdf"
-                      onChange={(e) => handleFileChange(e, 'carta_conducao')}
+                      onChange={(e) => handleFileChange(e, 'carta_conducao_frente')}
                       required
                       className="mt-1"
                     />
-                    {documentos.carta_conducao && (
-                      <p className="text-xs text-slate-500 mt-1">{documentos.carta_conducao.name}</p>
+                    {documentos.carta_conducao_frente && (
+                      <p className="text-xs text-slate-500 mt-1">{documentos.carta_conducao_frente.name}</p>
                     )}
                   </div>
 
                   {/* Identificação */}
                   <div>
-                    <Label htmlFor="identificacao" className="flex items-center justify-between">
+                    <Label htmlFor="cc_frente" className="flex items-center justify-between">
                       <span>Cartão de Cidadão / Passaporte / Título de Residência *</span>
-                      {documentos.identificacao && (
+                      {documentos.cc_frente && (
                         <span className="text-xs text-green-600 font-medium">✓ Carregado</span>
                       )}
                     </Label>
                     <Input
-                      id="identificacao"
+                      id="cc_frente"
                       type="file"
                       accept="image/*,.pdf"
-                      onChange={(e) => handleFileChange(e, 'identificacao')}
+                      onChange={(e) => handleFileChange(e, 'cc_frente')}
                       required
                       className="mt-1"
                     />
-                    {documentos.identificacao && (
-                      <p className="text-xs text-slate-500 mt-1">{documentos.identificacao.name}</p>
+                    {documentos.cc_frente && (
+                      <p className="text-xs text-slate-500 mt-1">{documentos.cc_frente.name}</p>
                     )}
                   </div>
 
