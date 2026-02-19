@@ -528,7 +528,7 @@ async def sync_motoristas_collection(
     }
 
 
-@router.get("/users/motoristas-pendentes-sync")
+@router.get("/motoristas-pendentes-sync")
 async def get_motoristas_pendentes_sync(
     current_user: Dict = Depends(get_current_user)
 ):
