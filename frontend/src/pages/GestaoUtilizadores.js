@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Users, Search, Edit, Package, CheckCircle, XCircle, 
-  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar, Trash2, Gift, Building, FileText
+  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar, Trash2, Gift, Building, FileText, RefreshCw, AlertTriangle
 } from 'lucide-react';
 
 const GestaoUtilizadores = ({ user, onLogout }) => {
@@ -28,6 +28,8 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
   const [planos, setPlanos] = useState([]);
   const [modulos, setModulos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncingMotoristas, setSyncingMotoristas] = useState(false);
+  const [motoristasPendentes, setMotoristasPendentes] = useState(0);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pendentes', 'aprovados'
