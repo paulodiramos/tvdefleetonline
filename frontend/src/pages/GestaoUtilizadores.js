@@ -768,19 +768,19 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             <TooltipProvider>
               <div className="divide-y divide-slate-100">
                 {/* Table Header */}
-                <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <div className="hidden md:grid md:grid-cols-12 gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   <div className="col-span-3">Utilizador</div>
                   <div className="col-span-1 text-center">Tipo</div>
-                  <div className="col-span-2">Parceiro</div>
+                  <div className="col-span-3">Parceiro</div>
                   <div className="col-span-1 text-center">Estado</div>
-                  <div className="col-span-2">Plano</div>
+                  <div className="col-span-1">Plano</div>
                   <div className="col-span-3 text-right">Ações</div>
                 </div>
 
                 {filteredUsers.map((usuario) => (
                   <div 
                     key={usuario.id} 
-                    className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-b-0"
+                    className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-b-0"
                     data-testid={`user-row-${usuario.id}`}
                     onClick={() => navigate(`/usuarios/${usuario.id}`)}
                   >
@@ -791,7 +791,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                           {getInitials(usuario.name)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="font-medium text-slate-800 truncate text-sm">{usuario.name}</p>
                         <p className="text-xs text-slate-500 truncate">{usuario.email}</p>
                       </div>
@@ -803,9 +803,9 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                     </div>
 
                     {/* Partner Name */}
-                    <div className="col-span-2 text-sm text-slate-600 truncate hidden md:block">
+                    <div className="col-span-3 text-sm text-slate-600 hidden md:block">
                       {usuario.role === 'motorista' && (usuario.associated_partner_id || usuario.parceiro_id) ? (
-                        <span className="truncate">
+                        <span className="truncate block">
                           {parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.nome_empresa || 
                            parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.name || 
                            '-'}
@@ -821,10 +821,10 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                     </div>
 
                     {/* Plan */}
-                    <div className="col-span-2 hidden lg:block">
+                    <div className="col-span-1 hidden lg:block">
                       {usuario.plano_ativo ? (
                         <Badge className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5">
-                          {usuario.plano_ativo.nome?.substring(0, 15)}
+                          {usuario.plano_ativo.nome?.substring(0, 12)}
                         </Badge>
                       ) : usuario.acesso_gratis ? (
                         <Badge className="bg-green-100 text-green-800 text-xs px-2 py-0.5">
@@ -837,7 +837,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                     </div>
 
                     {/* Actions */}
-                    <div className="col-span-3 flex items-center justify-end space-x-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="col-span-3 flex items-center justify-end space-x-0.5" onClick={(e) => e.stopPropagation()}>
                       {/* Botão Aprovar - só para utilizadores pendentes */}
                       {usuario.approved === false && (
                         <Tooltip>
