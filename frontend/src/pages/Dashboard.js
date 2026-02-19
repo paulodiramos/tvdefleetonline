@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import Layout from '@/components/Layout';
@@ -9,9 +10,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, AlertCircle, Calendar, Car, Users, DollarSign, Wrench, AlertTriangle, CheckCircle, XCircle, Eye, EyeOff, X, Shield, ClipboardCheck, FileText, Settings, Upload, Key, Clock, Bell, Euro, Fuel, Zap, MapPin } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Calendar, Car, Users, DollarSign, Wrench, AlertTriangle, CheckCircle, XCircle, Eye, EyeOff, X, Shield, ClipboardCheck, FileText, Settings, Upload, Key, Clock, Bell, Euro, Fuel, Zap, MapPin, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import ResumoSemanalCard from '@/components/ResumoSemanalCard';
+
+// ClickableStatCard - card clicável para navegação
+const ClickableStatCard = ({ title, value, icon: Icon, color, onClick, badge }) => (
+  <Card 
+    className="card-hover cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02]" 
+    onClick={onClick}
+    data-testid={`clickable-stat-card-${title.toLowerCase().replace(/\s/g, '-')}`}
+  >
+    <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
+      <div className={`p-2 rounded-lg ${color}`}>
+        <Icon className="w-5 h-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="flex items-center justify-between">
+        <div className="text-3xl font-bold text-slate-800">{value}</div>
+        {badge && value > 0 && (
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+            Clique para ver
+          </Badge>
+        )}
+      </div>
+    </CardContent>
+  </Card>
+);
 
 // StatCard component moved outside to avoid re-render issues
 const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
