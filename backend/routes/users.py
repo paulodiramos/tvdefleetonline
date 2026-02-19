@@ -527,6 +527,45 @@ async def sync_motoristas_collection(
     }
 
 
+@router.get("/users/motoristas-pendentes-sync")
+async def get_motoristas_pendentes_sync(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter lista de motoristas aprovados que não existem na collection motoristas."""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    # Buscar todos os utilizadores motoristas aprovados
+    motorista_users = await db.users.find({
+        "role": "motorista",
+        "approved": True
+    }, {"_id": 0}).to_list(length=None)
+    
+    pendentes = []
+    
+    for user in motorista_users:
+        user_id = user.get("id")
+        email = user.get("email")
+        
+        # Verificar se já existe na collection motoristas
+        existing = await db.motoristas.find_one({
+            "$or": [{"id": user_id}, {"email": email}]
+        })
+        
+        if not existing:
+            pendentes.append({
+                "id": user_id,
+                "name": user.get("name"),
+                "email": email,
+                "created_at": user.get("created_at")
+            })
+    
+    return {
+        "total_pendentes": len(pendentes),
+        "motoristas": pendentes
+    }
+
+
 @router.put("/users/{user_id}/reset-password")
 async def reset_user_password(
     user_id: str,
