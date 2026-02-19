@@ -4377,22 +4377,8 @@ const FichaVeiculo = ({ user, onLogout }) => {
   );
 };
 
-// Componente para o tab de Histórico de Atribuições
-const HistoricoAtribuicoesTab = ({ vehicleId, canEdit, user }) => {
-  const [historico, setHistorico] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default FichaVeiculo;
 
-  useEffect(() => {
-    const fetchHistorico = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${API}/vehicles/${vehicleId}/historico-atribuicoes`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setHistorico(response.data.historico || []);
-      } catch (error) {
-        console.error('Erro ao carregar histórico:', error);
-        toast.error('Erro ao carregar histórico de atribuições');
       } finally {
         setLoading(false);
       }
