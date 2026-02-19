@@ -805,13 +805,25 @@ async def get_resumo_semanal_parceiro(
                     {"parceiro_atribuido": parceiro_id_query}
                 ]},
                 # Filtro de status - activos ou sem status definido (legacy)
+                # Verifica tanto o campo "ativo" como o campo "status"
                 {"$or": [
+                    # Motoristas activos (ativo=true OU status=ativo/null)
+                    {"$and": [
+                        {"ativo": {"$ne": False}},
+                        {"status": {"$nin": ["inativo", "revoked", "desativado"]}}
+                    ]},
                     {"ativo": True},
-                    {"ativo": None},  # Legacy - sem status definido
-                    {"ativo": {"$exists": False}},  # Sem campo ativo
+                    # Legacy - sem campos definidos
+                    {"$and": [
+                        {"ativo": {"$exists": False}},
+                        {"status": {"$exists": False}}
+                    ]},
                     # Incluir motoristas desativados se a data_desativacao for depois do início da semana
                     {"$and": [
-                        {"ativo": False},
+                        {"$or": [
+                            {"ativo": False},
+                            {"status": {"$in": ["inativo", "revoked", "desativado"]}}
+                        ]},
                         {"data_desativacao": {"$gte": data_inicio}}
                     ]}
                 ]}
@@ -821,11 +833,23 @@ async def get_resumo_semanal_parceiro(
         # Admin - todos os motoristas activos
         motoristas_query = {
             "$or": [
-                {"ativo": True},
-                {"ativo": None},
-                {"ativo": {"$exists": False}},
+                # Motoristas activos
                 {"$and": [
-                    {"ativo": False},
+                    {"ativo": {"$ne": False}},
+                    {"status": {"$nin": ["inativo", "revoked", "desativado"]}}
+                ]},
+                {"ativo": True},
+                # Legacy
+                {"$and": [
+                    {"ativo": {"$exists": False}},
+                    {"status": {"$exists": False}}
+                ]},
+                # Desativados recentemente
+                {"$and": [
+                    {"$or": [
+                        {"ativo": False},
+                        {"status": {"$in": ["inativo", "revoked", "desativado"]}}
+                    ]},
                     {"data_desativacao": {"$gte": data_inicio}}
                 ]}
             ]
