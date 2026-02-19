@@ -106,6 +106,11 @@ class VehicleInsurance(BaseModel):
     data_validade: Optional[str] = None
     valor_franquia: Optional[float] = None
     coberturas: List[str] = []
+    # Campos de fatura do seguro
+    fatura_numero: Optional[str] = None  # Número da fatura/recibo
+    fatura_url: Optional[str] = None  # URL do ficheiro da fatura
+    fatura_data: Optional[str] = None  # Data da fatura
+    valor_premio: Optional[float] = None  # Valor do prémio do seguro
 
 
 class VehicleMaintenance(BaseModel):
