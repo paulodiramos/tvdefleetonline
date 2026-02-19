@@ -1223,6 +1223,16 @@ function App() {
               )
             }
           />
+          <Route
+            path="/contabilistas"
+            element={
+              user && (user.role === 'admin' || user.role === 'parceiro' || user.role === 'gestao') ? (
+                <GestaoContabilistas user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
