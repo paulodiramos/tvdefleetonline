@@ -282,7 +282,7 @@ async def get_resumo_contabilidade(
 ):
     """Obter resumo de contabilidade"""
     
-    if current_user["role"] not in [UserRole.ADMIN, "contabilista", UserRole.PARCEIRO, UserRole.GESTAO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.CONTABILISTA, UserRole.PARCEIRO, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     # Buscar dados
