@@ -287,6 +287,11 @@ const Layout = ({ children, user, onLogout }) => {
             </nav>
 
             <div className="flex items-center space-x-4">
+              {/* Gestor Parceiro Selector */}
+              {user?.role === 'gestao' && (
+                <GestorParceiroSelector user={user} />
+              )}
+
               {/* Notifications */}
               <Button 
                 variant="ghost" 
