@@ -136,11 +136,14 @@ async def register(user_data: UserCreate):
                 "cv_file": None,
                 "profile_photo": None,
                 "documento_identificacao": None,
-                "carta_conducao": None,
-                "identificacao": None,
+                "cc_frente": None,
+                "cc_verso": None,
+                "carta_conducao_frente": None,
+                "carta_conducao_verso": None,
                 "licenca_tvde": None,
                 "registo_criminal": None,
                 "comprovativo_morada": None,
+                "comprovativo_iban": None,
                 "contrato": None,
                 "additional_docs": []
             }
