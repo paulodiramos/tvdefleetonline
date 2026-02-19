@@ -78,6 +78,8 @@ const Usuarios = ({ user, onLogout }) => {
   const [selectedGestor, setSelectedGestor] = useState(null);
   const [parceiros, setParceiros] = useState([]);
   const [selectedParceiros, setSelectedParceiros] = useState([]);
+  // Estado para atribuir parceiro durante aprovação de motorista
+  const [selectedParceiroAtribuir, setSelectedParceiroAtribuir] = useState('');
   
   // Search state (unified with advanced filters)
   const [searchTerm, setSearchTerm] = useState('');
