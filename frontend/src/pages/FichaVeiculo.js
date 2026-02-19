@@ -6,13 +6,13 @@ import Layout from '@/components/Layout';
 import VeiculoTurnos from '@/components/VeiculoTurnos';
 import GestaoKmVeiculo from '@/components/GestaoKmVeiculo';
 import { VeiculoSeguroTab, VeiculoInspecaoTab, VeiculoExtintorTab, VeiculoInfoTab, VeiculoRevisaoTab, VeiculoDispositivosTab, VeiculoAgendaTab, VeiculoHistoricoTab, VeiculoHistoricoAtribuicoesTab, VeiculoRelatorioFinanceiroTab } from '@/components/ficha-veiculo';
+import { AgendaEditModal, IntervencaoEditModal, ManutencaoAddModal } from '@/components/ficha-veiculo/modals';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
