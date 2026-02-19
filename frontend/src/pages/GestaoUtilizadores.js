@@ -767,56 +767,68 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
           <CardContent className="p-0">
             <TooltipProvider>
               <div className="divide-y divide-slate-100">
+                {/* Table Header */}
+                <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <div className="col-span-3">Utilizador</div>
+                  <div className="col-span-1 text-center">Tipo</div>
+                  <div className="col-span-2">Parceiro</div>
+                  <div className="col-span-1 text-center">Estado</div>
+                  <div className="col-span-2">Plano</div>
+                  <div className="col-span-3 text-right">Ações</div>
+                </div>
+
                 {filteredUsers.map((usuario) => (
                   <div 
                     key={usuario.id} 
-                    className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer"
+                    className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-b-0"
                     data-testid={`user-row-${usuario.id}`}
                     onClick={() => navigate(`/usuarios/${usuario.id}`)}
                   >
-                    {/* Left: Avatar + Name + Email */}
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    {/* User: Avatar + Name + Email */}
+                    <div className="col-span-3 flex items-center space-x-3 min-w-0">
                       <Avatar className="w-9 h-9 flex-shrink-0">
                         <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">
                           {getInitials(usuario.name)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="font-medium text-slate-800 truncate">{usuario.name}</p>
+                        <p className="font-medium text-slate-800 truncate text-sm">{usuario.name}</p>
                         <p className="text-xs text-slate-500 truncate">{usuario.email}</p>
                       </div>
                     </div>
 
-                    {/* Center: Role Badge */}
-                    <div className="flex-shrink-0 mx-2">
+                    {/* Role Badge */}
+                    <div className="col-span-1 flex justify-center">
                       {getRoleBadge(usuario.role, true)}
                     </div>
 
-                    {/* Center: Partner Name (for motoristas) */}
-                    <div className="flex-shrink-0 w-32 text-sm text-slate-600 truncate hidden md:block">
+                    {/* Partner Name */}
+                    <div className="col-span-2 text-sm text-slate-600 truncate hidden md:block">
                       {usuario.role === 'motorista' && (usuario.associated_partner_id || usuario.parceiro_id) ? (
-                        parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.nome_empresa || 
-                        parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.name || 
-                        '-'
+                        <span className="truncate">
+                          {parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.nome_empresa || 
+                           parceiros.find(p => p.id === (usuario.associated_partner_id || usuario.parceiro_id))?.name || 
+                           '-'}
+                        </span>
                       ) : (
                         <span className="text-slate-400">-</span>
                       )}
                     </div>
 
-                    {/* Center: Status */}
-                    <div className="flex-shrink-0 mx-2">
+                    {/* Status */}
+                    <div className="col-span-1 flex justify-center">
                       {getStatusBadge(usuario)}
                     </div>
 
-                    {/* Center: Plan */}
-                    <div className="flex-shrink-0 w-20 hidden lg:block">
+                    {/* Plan */}
+                    <div className="col-span-2 hidden lg:block">
                       {usuario.plano_ativo ? (
-                        <Badge className="bg-purple-100 text-purple-800 text-xs px-1.5">
-                          {usuario.plano_ativo.nome?.substring(0, 10)}
+                        <Badge className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5">
+                          {usuario.plano_ativo.nome?.substring(0, 15)}
                         </Badge>
                       ) : usuario.acesso_gratis ? (
-                        <Badge className="bg-green-100 text-green-800 text-xs px-1.5">
-                          <Gift className="w-3 h-3 mr-0.5" />
+                        <Badge className="bg-green-100 text-green-800 text-xs px-2 py-0.5">
+                          <Gift className="w-3 h-3 mr-1" />
                           Grátis
                         </Badge>
                       ) : (
@@ -824,8 +836,8 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                       )}
                     </div>
 
-                    {/* Right: Action Icons */}
-                    <div className="flex items-center space-x-1 flex-shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
+                    {/* Actions */}
+                    <div className="col-span-3 flex items-center justify-end space-x-1" onClick={(e) => e.stopPropagation()}>
                       {/* Botão Aprovar - só para utilizadores pendentes */}
                       {usuario.approved === false && (
                         <Tooltip>
@@ -844,7 +856,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                         </Tooltip>
                       )}
 
-                      {/* Botão Atribuir Parceiro - para motoristas aprovados sem parceiro */}
+                      {/* Botão Atribuir Parceiro - para motoristas aprovados */}
                       {usuario.role === 'motorista' && usuario.approved !== false && (
                         <Tooltip>
                           <TooltipTrigger asChild>
