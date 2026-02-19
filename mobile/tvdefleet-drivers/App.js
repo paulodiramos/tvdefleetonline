@@ -272,7 +272,12 @@ export default function App() {
     ]);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Clear secure storage
+    await secureStorage.removeItem(STORAGE_KEYS.TOKEN);
+    await secureStorage.removeItem(STORAGE_KEYS.USER);
+    await secureStorage.removeItem(STORAGE_KEYS.PONTO_STATE);
+    
     setIsLoggedIn(false);
     setToken(null);
     setUser(null);
@@ -280,6 +285,19 @@ export default function App() {
     setEmail('');
     setPassword('');
   };
+
+  // Show loading screen while checking stored auth
+  if (initialLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#60a5fa" />
+          <Text style={styles.loadingText}>A carregar...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // LOGIN SCREEN
   if (!isLoggedIn) {
