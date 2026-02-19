@@ -517,7 +517,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
 
               {/* Role Filter */}
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Filtrar por role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -528,6 +528,32 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                   <SelectItem value="motorista">Motorista</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={(val) => {
+                setStatusFilter(val);
+                // Atualizar URL
+                if (val !== 'all') {
+                  navigate(`/usuarios?filter=${val}`, { replace: true });
+                } else {
+                  navigate('/usuarios', { replace: true });
+                }
+              }}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os estados</SelectItem>
+                  <SelectItem value="pendentes">Pendentes de Aprovação</SelectItem>
+                  <SelectItem value="aprovados">Aprovados</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {statusFilter === 'pendentes' && (
+                <Badge className="bg-amber-100 text-amber-800 border-amber-300">
+                  A mostrar apenas pendentes
+                </Badge>
+              )}
             </div>
           </CardContent>
         </Card>
