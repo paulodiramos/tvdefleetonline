@@ -26,7 +26,22 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Preços Especiais Complete)
+### Session 2026-02-19 (Latest - Deploy Ready + SMS Code Field)
+- **Campo de Código SMS no Login Uber - DONE:**
+  - Adicionado campo de 4 dígitos para introduzir código SMS/Email
+  - UI com validação numérica e limite de 4 caracteres
+  - Botão "Enviar Código" ativado apenas com 4 dígitos
+  - Ficheiro: `frontend/src/pages/ConfiguracaoUberParceiro.js`
+
+- **Verificação de Deploy - PASS:**
+  - ✅ Backend RUNNING (port 8001)
+  - ✅ Frontend RUNNING (port 3000)
+  - ✅ MongoDB Conectado (131 collections)
+  - ✅ Playwright Chromium instalado
+  - ✅ APIs testadas (login, motoristas, veículos, preços especiais)
+  - ✅ Recursos OK (91GB disco, 14GB RAM)
+
+### Session 2026-02-19 (Preços Especiais Complete)
 - **Lógica de Preços Especiais (Backend) - DONE e Testado 100%:**
   - Suporte completo para 5 tipos de cálculo:
     - `percentagem`: Desconto percentual sobre o preço base
