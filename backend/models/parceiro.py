@@ -101,6 +101,8 @@ class Parceiro(BaseModel):
     plano_status: str = "pendente"  # "pendente", "ativo", "suspenso"
     gestor_associado_id: Optional[str] = None
     gestores_ids: List[str] = []  # Lista de IDs de gestores associados
+    # Fornecedores do parceiro
+    fornecedores: List[Dict[str, Any]] = []  # Lista de fornecedores: {id, nome, nif, email, telefone, tipo, notas}
     total_vehicles: int = 0
     approved: Optional[bool] = None
     status: Optional[str] = None
