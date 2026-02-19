@@ -33,6 +33,8 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
   const [showPlanoDialog, setShowPlanoDialog] = useState(false);
   const [showNovoUserDialog, setShowNovoUserDialog] = useState(false);
   const [showAcessoDialog, setShowAcessoDialog] = useState(false);
+  const [showAprovarDialog, setShowAprovarDialog] = useState(false);
+  const [aprovarParceiroId, setAprovarParceiroId] = useState('');
   const [planoForm, setPlanoForm] = useState({
     plano_id: '',
     tipo_pagamento: 'mensal',
