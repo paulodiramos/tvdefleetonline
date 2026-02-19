@@ -344,6 +344,55 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     }
   };
 
+  const handleOpenAprovarDialog = (usuario) => {
+    setSelectedUser(usuario);
+    setAprovarParceiroId('');
+    setShowAprovarDialog(true);
+  };
+
+  const handleAprovarUser = async () => {
+    if (!selectedUser) return;
+    
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Aprovar o utilizador
+      await axios.put(
+        `${API}/users/${selectedUser.id}/approve`,
+        { role: selectedUser.role },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Se for motorista e tiver parceiro selecionado, atribuir
+      if (selectedUser.role === 'motorista' && aprovarParceiroId) {
+        try {
+          await axios.put(
+            `${API}/motoristas/${selectedUser.id}/atribuir-parceiro`,
+            { parceiro_id: aprovarParceiroId },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          toast.success('Utilizador aprovado e parceiro atribuído!');
+        } catch (atribuirError) {
+          console.error('Erro ao atribuir parceiro:', atribuirError);
+          toast.warning('Utilizador aprovado, mas erro ao atribuir parceiro. Atribua manualmente.');
+        }
+      } else {
+        toast.success('Utilizador aprovado com sucesso!');
+      }
+
+      setShowAprovarDialog(false);
+      setSelectedUser(null);
+      setAprovarParceiroId('');
+      fetchData();
+    } catch (error) {
+      console.error('Error approving user:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao aprovar utilizador');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getRoleBadge = (role, compact = false) => {
     const roleConfig = {
       admin: { label: 'Admin', icon: Shield, color: 'bg-red-100 text-red-800' },
