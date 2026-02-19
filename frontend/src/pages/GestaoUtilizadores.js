@@ -72,7 +72,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
 
   useEffect(() => {
     filterUsers();
-  }, [search, roleFilter, utilizadores]);
+  }, [search, roleFilter, statusFilter, utilizadores]);
 
   const fetchData = async () => {
     try {
