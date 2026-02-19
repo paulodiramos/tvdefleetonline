@@ -101,7 +101,8 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading to check stored token
+  const [initialLoading, setInitialLoading] = useState(true);
   
   // Login states
   const [email, setEmail] = useState('');
@@ -111,6 +112,41 @@ export default function App() {
   const [pontoAtivo, setPontoAtivo] = useState(false);
   const [horaInicio, setHoraInicio] = useState(null);
   const [tempoDecorrido, setTempoDecorrido] = useState('00:00:00');
+
+  // Check for stored token on app start
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const storedToken = await secureStorage.getItem(STORAGE_KEYS.TOKEN);
+        const storedUser = await secureStorage.getItem(STORAGE_KEYS.USER);
+        
+        if (storedToken && storedUser) {
+          // Verify token is still valid
+          try {
+            const response = await api.get(`${API_URL}/auth/me`, {
+              headers: { Authorization: `Bearer ${storedToken}` }
+            });
+            if (response.data) {
+              setToken(storedToken);
+              setUser(storedUser);
+              setIsLoggedIn(true);
+              checkPontoStatus(storedToken);
+            }
+          } catch (error) {
+            // Token invalid, clear storage
+            await secureStorage.removeItem(STORAGE_KEYS.TOKEN);
+            await secureStorage.removeItem(STORAGE_KEYS.USER);
+          }
+        }
+      } catch (error) {
+        console.log('Auth init error:', error);
+      }
+      setInitialLoading(false);
+      setLoading(false);
+    };
+    
+    initAuth();
+  }, []);
 
   // Timer
   useEffect(() => {
@@ -141,8 +177,25 @@ export default function App() {
     try {
       const response = await api.post(`${API_URL}/auth/login`, { email, password });
       if (response.data.access_token) {
-        setToken(response.data.access_token);
-        setUser(response.data.user);
+        const authToken = response.data.access_token;
+        const userData = response.data.user;
+        
+        // Store credentials securely
+        await secureStorage.setItem(STORAGE_KEYS.TOKEN, authToken);
+        await secureStorage.setItem(STORAGE_KEYS.USER, userData);
+        
+        setToken(authToken);
+        setUser(userData);
+        setIsLoggedIn(true);
+        
+        // Verificar estado do ponto
+        checkPontoStatus(authToken);
+      }
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.detail || 'Erro ao fazer login');
+    }
+    setLoading(false);
+  };
         setIsLoggedIn(true);
         
         // Verificar estado do ponto
