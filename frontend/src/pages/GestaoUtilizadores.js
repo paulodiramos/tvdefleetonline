@@ -1165,9 +1165,13 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                           <SelectItem value="none">Usar preço base do plano</SelectItem>
                           {precosEspeciaisDisponiveis.map(pe => (
                             <SelectItem key={pe.id} value={pe.id}>
-                              {pe.nome} - {pe.tipo_calculo === 'percentagem' 
-                                ? `${pe.valor}% desconto` 
-                                : `€${pe.valor}`}
+                              {pe.parceiro_nome || pe.motivo || 'Preço Especial'} - {pe.desconto_percentagem 
+                                ? `${pe.desconto_percentagem}% desconto` 
+                                : pe.preco_fixo_mensal 
+                                  ? `€${pe.preco_fixo_mensal}/mês`
+                                  : pe.preco_fixo 
+                                    ? `€${pe.preco_fixo}`
+                                    : 'Personalizado'}
                             </SelectItem>
                           ))}
                         </SelectContent>
