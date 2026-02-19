@@ -27,7 +27,17 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Bug Fixes Dashboard Faturação + Resumo Semanal)
+### Session 2026-02-19 (Latest - Fluxo de Aprovação com Planos)
+- **Fluxo de Aprovação de Utilizadores Melhorado - DONE:**
+  - **Funcionalidade:** Admin pode atribuir Plano e Preço Especial ao aprovar novos parceiros
+  - **Backend:** Endpoint `PUT /api/users/{user_id}/approve` atualizado para aceitar `plano_id` e `preco_especial_id`
+  - **Frontend:** Diálogo de aprovação dinâmico:
+    - Para PARCEIROS: mostra dropdown de Plano + dropdown de Preço Especial (quando aplicável)
+    - Para MOTORISTAS: mostra dropdown de Parceiro
+  - **Ficheiros:** `backend/routes/users.py`, `frontend/src/pages/GestaoUtilizadores.js`
+  - **Testes:** 10/10 backend + frontend 100% (iteration_52.json)
+
+### Session 2026-02-19 (Bug Fixes Dashboard Faturação + Resumo Semanal)
 - **Correção Dashboard Faturação - DONE:**
   - **Problema:** Total de 62.969€ mostrado para parceiro quando deveria ser 25.081€
   - **Causa:** dados_semanais continha empresa_faturacao_id de outros parceiros
