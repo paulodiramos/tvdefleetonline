@@ -26,18 +26,21 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-19 (Latest - Approve + Assign Partner Feature)
-- **Funcionalidade de Aprovar com Atribuição de Parceiro - DONE:**
-  - Botão de aprovar (✓) adicionado para utilizadores pendentes na página de Gestão de Utilizadores
-  - Diálogo de aprovação permite selecionar parceiro para motoristas
-  - Ao aprovar motorista, pode atribuir parceiro diretamente ou deixar para depois
-  - Ficheiro: `frontend/src/pages/GestaoUtilizadores.js`
+### Session 2026-02-19 (Latest - Admin Dashboard Pendentes)
+- **Dashboard Admin - Cards de Ações Pendentes - DONE:**
+  - Secção "Ações Pendentes" no dashboard do admin
+  - Card **"Pendentes de Aprovação"** - clicável, navega para `/usuarios?filter=pendentes`
+  - Card **"Sem Parceiro Atribuído"** - clicável, navega para `/motoristas?filter=sem_parceiro`
+  - Card **"Resumo do Sistema"** - mostra totais de parceiros, motoristas, veículos e utilizadores
+  - Backend: Atualizado `/dashboard/resumo-geral` para incluir motoristas sem parceiro
+  - Ficheiros: `frontend/src/pages/Dashboard.js`, `backend/routes/dashboard.py`
 
-- **Campo de Código SMS no Login Uber - DONE:**
-  - Adicionado campo de 4 dígitos para introduzir código SMS/Email
-  - Ficheiro: `frontend/src/pages/ConfiguracaoUberParceiro.js`
+- **Filtros nas Páginas de Gestão - DONE:**
+  - Página Utilizadores: Filtro por status (Pendentes/Aprovados)
+  - Página Motoristas: Filtro "Sem Parceiro (Aprovados)"
+  - Ficheiros: `frontend/src/pages/GestaoUtilizadores.js`, `frontend/src/pages/Motoristas.js`
 
-### Session 2026-02-19 (Deploy Ready + SMS Code Field)
+### Session 2026-02-19 (Approve + Assign Partner Feature)
 - **Lógica de Preços Especiais (Backend) - DONE e Testado 100%:**
   - Suporte completo para 5 tipos de cálculo:
     - `percentagem`: Desconto percentual sobre o preço base
