@@ -1380,6 +1380,155 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Diálogo de Atribuir Parceiro */}
+        <Dialog open={showAtribuirParceiroDialog} onOpenChange={setShowAtribuirParceiroDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Building className="w-5 h-5 text-orange-600" />
+                Atribuir Parceiro
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-slate-600">
+                Atribuir parceiro ao motorista <strong>{selectedUser?.name}</strong>
+              </p>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Selecionar Parceiro *</Label>
+                <Select value={atribuirParceiroId} onValueChange={setAtribuirParceiroId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar parceiro..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {parceiros.map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome_empresa || p.name || p.empresa || 'Parceiro'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">
+                  O motorista ficará associado a este parceiro e aparecerá na lista de motoristas do parceiro.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAtribuirParceiroDialog(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleAtribuirParceiro}
+                disabled={saving || !atribuirParceiroId}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    A atribuir...
+                  </>
+                ) : (
+                  <>
+                    <Building className="w-4 h-4 mr-2" />
+                    Atribuir
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo de Alterar Role */}
+        <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-indigo-600" />
+                Alterar Tipo de Conta
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-slate-600">
+                Alterar tipo de conta de <strong>{selectedUser?.name}</strong>
+              </p>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Novo Tipo de Conta</Label>
+                <Select value={novoRole} onValueChange={setNovoRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar tipo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-red-600" />
+                        Administrador
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="gestao">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-purple-600" />
+                        Gestor
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="parceiro">
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-blue-600" />
+                        Parceiro
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="motorista">
+                      <div className="flex items-center gap-2">
+                        <Car className="w-4 h-4 text-green-600" />
+                        Motorista
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">
+                  Ao alterar o tipo de conta, o utilizador terá acesso a diferentes funcionalidades.
+                </p>
+              </div>
+
+              {selectedUser?.role !== novoRole && novoRole && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-sm text-amber-800">
+                    <strong>Atenção:</strong> Está a alterar de <span className="font-semibold">{selectedUser?.role}</span> para <span className="font-semibold">{novoRole}</span>.
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowRoleDialog(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleChangeRole}
+                disabled={saving || !novoRole || novoRole === selectedUser?.role}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    A alterar...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="w-4 h-4 mr-2" />
+                    Alterar
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
