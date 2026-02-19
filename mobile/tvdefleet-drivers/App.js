@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -8,12 +8,57 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  SafeAreaView
+  SafeAreaView,
+  Platform
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
+import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 
-const API_URL = 'https://tvdefleet.com/api';
+// Get API URL from app config or fallback
+const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://tvdefleet.com/api';
+
+// Secure storage keys
+const STORAGE_KEYS = {
+  TOKEN: 'tvdefleet_auth_token',
+  USER: 'tvdefleet_user_data',
+  PONTO_STATE: 'tvdefleet_ponto_state'
+};
+
+// Secure storage helpers
+const secureStorage = {
+  setItem: async (key, value) => {
+    try {
+      await SecureStore.setItemAsync(key, typeof value === 'string' ? value : JSON.stringify(value));
+    } catch (e) {
+      console.log('SecureStore setItem error:', e);
+    }
+  },
+  getItem: async (key) => {
+    try {
+      const value = await SecureStore.getItemAsync(key);
+      if (value) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+      return null;
+    } catch (e) {
+      console.log('SecureStore getItem error:', e);
+      return null;
+    }
+  },
+  removeItem: async (key) => {
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch (e) {
+      console.log('SecureStore removeItem error:', e);
+    }
+  }
+};
 
 // Helper function for API calls (replacing axios)
 const api = {
