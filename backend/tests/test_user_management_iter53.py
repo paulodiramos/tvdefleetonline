@@ -172,7 +172,7 @@ class TestAtribuirParceiro:
     
     @pytest.fixture
     def test_motorista_and_parceiro(self, admin_token):
-        """Create test motorista and get a parceiro for testing"""
+        """Create test motorista via auth/register, then approve (which creates motorista doc)"""
         # Get existing parceiro
         parceiros_response = requests.get(
             f"{BASE_URL}/api/parceiros",
@@ -185,29 +185,32 @@ class TestAtribuirParceiro:
         
         parceiro_id = parceiros[0]["id"]
         
-        # Create test motorista via motoristas/register (this creates both user and motorista doc)
+        # Create test motorista via auth/register
         timestamp = int(time.time())
         test_email = f"test_parceiro_assign_{timestamp}@test.com"
         
         create_response = requests.post(
-            f"{BASE_URL}/api/motoristas/register",
+            f"{BASE_URL}/api/auth/register",
             json={
                 "name": f"Test Motorista {timestamp}",
                 "email": test_email,
                 "password": "testpass123",
-                "phone": "912345678"
+                "role": "motorista",
+                "phone": "912345678",
+                "approved": False  # Create as unapproved
             },
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert create_response.status_code == 200, f"Failed to create motorista: {create_response.text}"
         motorista_id = create_response.json()["id"]
         
-        # Approve the motorista to make sure it's ready
-        requests.put(
+        # Approve the motorista - this creates the motorista document
+        approve_response = requests.put(
             f"{BASE_URL}/api/users/{motorista_id}/approve",
             json={},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
+        assert approve_response.status_code == 200, f"Failed to approve motorista: {approve_response.text}"
         
         yield {"motorista_id": motorista_id, "parceiro_id": parceiro_id}
         
