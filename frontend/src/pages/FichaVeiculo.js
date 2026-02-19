@@ -1054,6 +1054,31 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
     try {
       const token = localStorage.getItem('token');
+      
+      // Upload de fatura se existir
+      let faturaUrl = '';
+      if (faturaFile) {
+        setUploadingFatura(true);
+        const formData = new FormData();
+        formData.append('file', faturaFile);
+        formData.append('vehicle_id', vehicleId);
+        formData.append('category', 'fatura_manutencao');
+        
+        try {
+          const uploadRes = await axios.post(`${API}/vehicles/${vehicleId}/upload`, formData, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          faturaUrl = uploadRes.data.file_url || uploadRes.data.url || '';
+        } catch (uploadError) {
+          console.error('Error uploading fatura:', uploadError);
+          // Continuar sem o upload
+        }
+        setUploadingFatura(false);
+      }
+      
       const manutencaoData = {
         tipo_manutencao: novaManutencao.tipo_manutencao,
         descricao: novaManutencao.descricao,
@@ -1065,6 +1090,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
         atribuir_motorista: novaManutencao.atribuir_motorista || false,
         motorista_id: novaManutencao.atribuir_motorista ? vehicle.motorista_atribuido : null,
         motorista_nome: novaManutencao.atribuir_motorista ? vehicle.motorista_atribuido_nome : null,
+        // Campos de fatura
+        fatura_numero: novaManutencao.fatura_numero || '',
+        fatura_data: novaManutencao.fatura_data || novaManutencao.data,
+        fatura_fornecedor: novaManutencao.fatura_fornecedor || novaManutencao.fornecedor || '',
+        fatura_url: faturaUrl,
         created_at: new Date().toISOString()
       };
 
@@ -1098,6 +1128,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
       toast.success('Manutenção registada com sucesso!');
       setShowAddManutencao(false);
+      setFaturaFile(null);
       setNovaManutencao({
         tipo_manutencao: '',
         descricao: '',
@@ -1106,7 +1137,10 @@ const FichaVeiculo = ({ user, onLogout }) => {
         valor: '',
         fornecedor: '',
         responsavel: 'parceiro',
-        atribuir_motorista: false
+        atribuir_motorista: false,
+        fatura_numero: '',
+        fatura_data: '',
+        fatura_fornecedor: ''
       });
       fetchVehicleData();
     } catch (error) {
