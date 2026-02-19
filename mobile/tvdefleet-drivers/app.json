@@ -2,7 +2,7 @@
   "expo": {
     "name": "TVDEFleet Drivers",
     "slug": "tvdefleet-drivers",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -24,6 +24,7 @@
         "backgroundColor": "#1e40af"
       },
       "package": "com.tvdefleet.drivers",
+      "versionCode": 3,
       "targetSdkVersion": 35
     },
     "web": {
