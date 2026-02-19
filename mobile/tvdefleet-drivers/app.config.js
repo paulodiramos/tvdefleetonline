@@ -96,7 +96,7 @@ export default {
             enableShrinkResourcesInReleaseBuilds: !IS_DEV
           },
           ios: {
-            deploymentTarget: '13.4'
+            deploymentTarget: '15.1'
           }
         }
       ],
