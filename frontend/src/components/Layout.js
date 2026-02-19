@@ -119,6 +119,24 @@ const Layout = ({ children, user, onLogout }) => {
       ];
     }
 
+    // Contabilista menu - Apenas acesso a contabilidade e documentos financeiros
+    if (user.role === 'contabilista') {
+      return [
+        { path: '/dashboard', icon: Home, label: 'Início' },
+        { path: '/contabilidade', icon: FileText, label: 'Contabilidade' },
+        { 
+          label: 'Documentos', 
+          icon: FileText,
+          submenu: [
+            { path: '/contabilidade', label: '📋 Todas as Faturas' },
+            { path: '/contabilidade?tab=faturas', label: '🧾 Faturas Fornecedores' },
+            { path: '/contabilidade?tab=recibos', label: '📄 Recibos Motoristas' },
+            { path: '/contabilidade?tab=veiculos', label: '🚗 Faturas Veículos' }
+          ]
+        }
+      ];
+    }
+
     // Parceiro menu - filtrado por permissões
     if (user.role === 'parceiro') {
       const motoristasSubmenu = filtrarSubmenu([
