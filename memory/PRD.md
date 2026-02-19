@@ -95,6 +95,11 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 ### P0 - Critical
 - [x] Página de Contabilidade - **DONE**
 - [x] **Build AAB para Play Store** - **DONE** - App em avaliação na Play Store
+- [x] **Sistema Contabilista Completo** - **DONE** (2026-02-19)
+  - Parceiro cria contabilista
+  - Admin atribui parceiros
+  - Seletor de parceiro ativo
+  - Filtros por parceiro na contabilidade
 
 ### P1 - High Priority
 - [x] Seletor de parceiro ativo para gestores - **DONE**
