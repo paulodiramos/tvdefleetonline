@@ -54,9 +54,9 @@ const PerfilUtilizador = ({ user, onLogout }) => {
     fetchUserData();
   }, [userId]);
 
-  // Carregar parceiros quando o utilizador é um gestor
+  // Carregar parceiros quando o utilizador é um gestor ou contabilista
   useEffect(() => {
-    if (userData?.role === 'gestao' && user?.role === 'admin') {
+    if ((userData?.role === 'gestao' || userData?.role === 'contabilista') && user?.role === 'admin') {
       fetchParceirosDisponiveis();
       fetchParceirosAtribuidos();
     }
