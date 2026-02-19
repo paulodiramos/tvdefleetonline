@@ -408,10 +408,19 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
+      // Prepare approval payload with plan and special price
+      const approvalPayload = {};
+      if (aprovarPlanoId && aprovarPlanoId !== 'none') {
+        approvalPayload.plano_id = aprovarPlanoId;
+        if (aprovarPrecoEspecialId && aprovarPrecoEspecialId !== 'none') {
+          approvalPayload.preco_especial_id = aprovarPrecoEspecialId;
+        }
+      }
+      
       // Aprovar o utilizador
       await axios.put(
         `${API}/users/${selectedUser.id}/approve`,
-        { role: selectedUser.role },
+        approvalPayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -435,6 +444,9 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
       setShowAprovarDialog(false);
       setSelectedUser(null);
       setAprovarParceiroId('');
+      setAprovarPlanoId('');
+      setAprovarPrecoEspecialId('');
+      setPrecosEspeciaisDisponiveis([]);
       fetchData();
     } catch (error) {
       console.error('Error approving user:', error);
