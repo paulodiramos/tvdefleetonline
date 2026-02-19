@@ -194,7 +194,7 @@ async def get_faturas_veiculos(
     """Obter todas as faturas relacionadas com veículos (manutenção e seguros)"""
     
     # Verificar permissão
-    if current_user["role"] not in [UserRole.ADMIN, "contabilista", UserRole.PARCEIRO, UserRole.GESTAO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.CONTABILISTA, UserRole.PARCEIRO, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     faturas = []
@@ -210,6 +210,18 @@ async def get_faturas_veiculos(
         parceiros_ids = gestor.get("parceiros_atribuidos", []) if gestor else []
         if parceiros_ids:
             query["parceiro_id"] = {"$in": parceiros_ids}
+    elif current_user["role"] == UserRole.CONTABILISTA:
+        # Contabilista vê faturas dos parceiros associados
+        contabilista = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "parceiros_associados": 1, "parceiro_ativo_id": 1})
+        parceiro_ativo = contabilista.get("parceiro_ativo_id") if contabilista else None
+        if parceiro_ativo:
+            query["parceiro_id"] = parceiro_ativo
+        else:
+            parceiros_ids = contabilista.get("parceiros_associados", []) if contabilista else []
+            if parceiros_ids:
+                query["parceiro_id"] = {"$in": parceiros_ids}
+            else:
+                return []
     
     async for veiculo in db.vehicles.find(query, {"_id": 0}):
         matricula = veiculo.get("plate") or veiculo.get("matricula", "")
