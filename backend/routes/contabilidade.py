@@ -97,7 +97,7 @@ async def get_recibos_motoristas(
     """Obter recibos de motoristas"""
     
     # Verificar permissão
-    if current_user["role"] not in [UserRole.ADMIN, "contabilista", UserRole.PARCEIRO, UserRole.GESTAO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.CONTABILISTA, UserRole.PARCEIRO, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     recibos = []
@@ -113,6 +113,18 @@ async def get_recibos_motoristas(
         parceiros_ids = gestor.get("parceiros_atribuidos", []) if gestor else []
         if parceiros_ids:
             query["parceiro_id"] = {"$in": parceiros_ids}
+    elif current_user["role"] == UserRole.CONTABILISTA:
+        # Contabilista vê recibos dos parceiros associados
+        contabilista = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "parceiros_associados": 1, "parceiro_ativo_id": 1})
+        parceiro_ativo = contabilista.get("parceiro_ativo_id") if contabilista else None
+        if parceiro_ativo:
+            query["parceiro_id"] = parceiro_ativo
+        else:
+            parceiros_ids = contabilista.get("parceiros_associados", []) if contabilista else []
+            if parceiros_ids:
+                query["parceiro_id"] = {"$in": parceiros_ids}
+            else:
+                return []
     
     # Buscar na coleção de recibos (se existir)
     if await db.list_collection_names():
