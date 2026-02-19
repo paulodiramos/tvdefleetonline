@@ -23,7 +23,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1e40af"
       },
-      "package": "com.tvdefleet.drivers"
+      "package": "com.tvdefleet.drivers",
+      "targetSdkVersion": 35
     },
     "web": {
       "favicon": "./assets/favicon.png"
