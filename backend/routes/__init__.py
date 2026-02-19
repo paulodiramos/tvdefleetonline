@@ -27,6 +27,7 @@ from .public import router as public_router
 from .ganhos import router as ganhos_router
 from .manutencao import router as manutencao_router
 from .gestao_planos import router as gestao_planos_router
+from .contabilistas import router as contabilistas_router
 
 __all__ = [
     'auth_router',
@@ -54,5 +55,6 @@ __all__ = [
     'public_router',
     'ganhos_router',
     'manutencao_router',
-    'gestao_planos_router'
+    'gestao_planos_router',
+    'contabilistas_router'
 ]
