@@ -80,7 +80,11 @@ const PerfilUtilizador = ({ user, onLogout }) => {
   const fetchParceirosAtribuidos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/gestores/${userId}/parceiros`, {
+      // Endpoint diferente para gestor e contabilista
+      const endpoint = userData?.role === 'contabilista' 
+        ? `${API}/contabilistas/${userId}/parceiros`
+        : `${API}/gestores/${userId}/parceiros`;
+      const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const atribuidos = response.data.parceiros || [];
