@@ -496,6 +496,165 @@ async def get_gestores_do_parceiro(
     }
 
 
+# ==================== FORNECEDORES ====================
+
+@router.get("/{parceiro_id}/fornecedores")
+async def get_fornecedores_do_parceiro(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter fornecedores de um parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "contabilista"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    return {
+        "parceiro_id": parceiro_id,
+        "fornecedores": parceiro.get("fornecedores", []),
+        "total": len(parceiro.get("fornecedores", []))
+    }
+
+
+@router.post("/{parceiro_id}/fornecedores")
+async def adicionar_fornecedor(
+    parceiro_id: str,
+    fornecedor: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Adicionar fornecedor a um parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    import uuid
+    novo_fornecedor = {
+        "id": str(uuid.uuid4()),
+        "nome": fornecedor.get("nome", ""),
+        "nif": fornecedor.get("nif", ""),
+        "email": fornecedor.get("email", ""),
+        "telefone": fornecedor.get("telefone", ""),
+        "tipo": fornecedor.get("tipo", "geral"),  # geral, oficina, seguro, combustivel, via_verde, outros
+        "morada": fornecedor.get("morada", ""),
+        "notas": fornecedor.get("notas", ""),
+        "ativo": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    fornecedores = parceiro.get("fornecedores", [])
+    fornecedores.append(novo_fornecedor)
+    
+    await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": {
+            "fornecedores": fornecedores,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": "Fornecedor adicionado com sucesso",
+        "fornecedor": novo_fornecedor
+    }
+
+
+@router.put("/{parceiro_id}/fornecedores/{fornecedor_id}")
+async def atualizar_fornecedor(
+    parceiro_id: str,
+    fornecedor_id: str,
+    updates: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar fornecedor de um parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    fornecedores = parceiro.get("fornecedores", [])
+    fornecedor_idx = None
+    
+    for idx, f in enumerate(fornecedores):
+        if f.get("id") == fornecedor_id:
+            fornecedor_idx = idx
+            break
+    
+    if fornecedor_idx is None:
+        raise HTTPException(status_code=404, detail="Fornecedor não encontrado")
+    
+    # Atualizar campos
+    for key, value in updates.items():
+        if key not in ["id", "created_at"]:
+            fornecedores[fornecedor_idx][key] = value
+    
+    fornecedores[fornecedor_idx]["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": {
+            "fornecedores": fornecedores,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": "Fornecedor atualizado com sucesso",
+        "fornecedor": fornecedores[fornecedor_idx]
+    }
+
+
+@router.delete("/{parceiro_id}/fornecedores/{fornecedor_id}")
+async def remover_fornecedor(
+    parceiro_id: str,
+    fornecedor_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Remover fornecedor de um parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    fornecedores = parceiro.get("fornecedores", [])
+    fornecedores_filtrados = [f for f in fornecedores if f.get("id") != fornecedor_id]
+    
+    if len(fornecedores_filtrados) == len(fornecedores):
+        raise HTTPException(status_code=404, detail="Fornecedor não encontrado")
+    
+    await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": {
+            "fornecedores": fornecedores_filtrados,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": "Fornecedor removido com sucesso"
+    }
+
+
 @router.delete("/{parceiro_id}")
 async def delete_parceiro(
     parceiro_id: str,
