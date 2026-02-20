@@ -42,6 +42,7 @@ const SistemaAdmin = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchStatus();
+    fetchEmailsBloqueados();
   }, []);
 
   const fetchStatus = async () => {
@@ -57,6 +58,63 @@ const SistemaAdmin = ({ user, onLogout }) => {
       toast.error('Erro ao carregar estado do sistema');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEmailsBloqueados = async () => {
+    try {
+      setLoadingEmails(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/emails-bloqueados`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEmailsBloqueados(response.data);
+    } catch (error) {
+      console.error('Error fetching blocked emails:', error);
+    } finally {
+      setLoadingEmails(false);
+    }
+  };
+
+  const handleLibertarEmail = async (email) => {
+    if (!confirm(`Tem certeza que deseja libertar o email "${email}"?\n\nTodos os registos associados serão eliminados permanentemente.`)) {
+      return;
+    }
+    
+    try {
+      setLibertandoEmail(email);
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`${API}/admin/libertar-email/${encodeURIComponent(email)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(`Email ${email} libertado com sucesso!`);
+      fetchEmailsBloqueados();
+    } catch (error) {
+      console.error('Error freeing email:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao libertar email');
+    } finally {
+      setLibertandoEmail(null);
+    }
+  };
+
+  const handleLimparTodosEliminados = async () => {
+    try {
+      setLimpandoEmails(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/limpar-eliminados`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const { resultados } = response.data;
+      toast.success(`Limpeza concluída! Removidos: ${resultados.users_removidos} users, ${resultados.motoristas_removidos} motoristas, ${resultados.documentos_removidos} documentos`);
+      setShowConfirmLimpar(false);
+      fetchEmailsBloqueados();
+    } catch (error) {
+      console.error('Error cleaning deleted:', error);
+      toast.error('Erro ao limpar registos eliminados');
+    } finally {
+      setLimpandoEmails(false);
     }
   };
 
