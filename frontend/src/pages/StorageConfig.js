@@ -160,11 +160,23 @@ const StorageConfig = ({ user, onLogout }) => {
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
+      await fetchParceiros();
+      await fetchAllConfigs();
       await Promise.all([fetchConfig(), fetchProviders(), fetchSyncStatus()]);
       setLoading(false);
     };
     loadAll();
   }, []);
+
+  // When partner selection changes
+  const handleParceiroChange = async (parceiroId) => {
+    setSelectedParceiro(parceiroId);
+    setLoading(true);
+    await fetchConfig(parceiroId);
+    await fetchProviders();
+    await fetchSyncStatus();
+    setLoading(false);
+  };
 
   const handleSaveConfig = async () => {
     setSaving(true);
@@ -181,7 +193,8 @@ const StorageConfig = ({ user, onLogout }) => {
       
       if (response.ok) {
         toast.success('Configuração guardada com sucesso');
-        fetchConfig();
+        fetchConfig(selectedParceiro);
+        fetchAllConfigs();
       } else {
         const error = await response.json();
         toast.error(error.detail || 'Erro ao guardar configuração');
