@@ -145,6 +145,11 @@ const Layout = ({ children, user, onLogout }) => {
         { path: '/criar-contrato', label: '➕ Criar Contrato' }
       ]);
       
+      // Adicionar Progressões se módulo de comissões activo
+      if (temModuloComissoes()) {
+        motoristasSubmenu.push({ path: '/progressoes-motoristas', label: '🏆 Progressões' });
+      }
+      
       const veiculosSubmenu = filtrarSubmenu([
         { path: '/vehicles', label: 'Lista de Veículos' },
         { path: '/vistorias', label: 'Vistorias Agendadas' },
