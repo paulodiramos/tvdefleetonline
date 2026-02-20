@@ -66,7 +66,7 @@ class PlanosModulosService:
             "cor": data.cor,
             "ordem": data.ordem,
             "ativo": True,
-            "destaque": False,
+            "destaque": data.destaque if hasattr(data, 'destaque') and data.destaque is not None else False,
             "funcionalidades": data.funcionalidades,
             "requer_modulos": data.requer_modulos,
             "promocoes": [],
