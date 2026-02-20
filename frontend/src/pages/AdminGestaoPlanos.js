@@ -1304,14 +1304,27 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleDeleteCategoria(categoria.id)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {categoria.ativo ? (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDeleteCategoria(categoria.id)}
+                              className="text-amber-500 hover:text-amber-700"
+                              title="Desativar categoria"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDeleteCategoriaPermanente(categoria.id, categoria.nome)}
+                              className="text-red-500 hover:text-red-700"
+                              title="Eliminar permanentemente"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardHeader>
