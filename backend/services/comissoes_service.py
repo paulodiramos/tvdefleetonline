@@ -581,7 +581,7 @@ class ComissoesService:
     
     async def definir_motorista_principal(self, veiculo_id: str, motorista_id: str) -> bool:
         """Definir motorista principal de um veículo"""
-        result = await self.db.turnos_veiculos.update_one(
+        await self.db.turnos_veiculos.update_one(
             {"veiculo_id": veiculo_id},
             {"$set": {"motorista_principal_id": motorista_id}},
             upsert=True
