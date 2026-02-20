@@ -27,7 +27,41 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-20 (Latest - Gestão de Planos e Preços)
+### Session 2026-02-20 (Latest - WhatsApp Web Integration)
+- **Feature: WhatsApp Web com QR Code - DONE:**
+  - **Arquitetura:** Microserviço Node.js (porta 3001) + API FastAPI + UI React
+  - **Funcionalidade:** Cada parceiro tem a sua própria sessão WhatsApp
+  - **QR Code:** Gerado em tempo real, atualiza automaticamente a cada 3 segundos
+  - **Sessão:** Persistente até o utilizador terminar ou expirar
+  - **Endpoints Backend:**
+    - `GET /api/whatsapp-web/health` - Estado do serviço
+    - `GET /api/whatsapp-web/status` - Estado da conexão por parceiro
+    - `GET /api/whatsapp-web/qr` - Obter QR code
+    - `POST /api/whatsapp-web/logout` - Terminar sessão
+    - `POST /api/whatsapp-web/send` - Enviar mensagem individual
+    - `POST /api/whatsapp-web/send-bulk` - Enviar em massa
+    - `POST /api/whatsapp-web/send-to-motorista/{id}` - Enviar a motorista
+    - `POST /api/whatsapp-web/send-to-all-motoristas` - Enviar a todos motoristas
+    - `GET /api/whatsapp-web/templates` - Templates de mensagens
+    - `GET/PUT /api/whatsapp-web/alerts-config` - Configurar alertas automáticos
+  - **UI (página /whatsapp):**
+    - Estado de conexão (conectado/desconectado)
+    - QR Code para escanear
+    - Tab "Enviar": Compor mensagens, selecionar motoristas
+    - Tab "Motoristas": Lista de motoristas com WhatsApp
+    - Tab "Histórico": Mensagens enviadas
+    - Tab "Config": Alertas automáticos (documentos, manutenção, vencimentos, relatórios)
+  - **Templates:** 6 templates pré-definidos (relatório semanal, documento expirando, manutenção, boas-vindas, comunicado, vistoria)
+  - **Testes:** 100% backend (9/9) + 100% frontend - iteration_59.json
+
+- **Feature: UI Gestão de Armazenamento - DONE:**
+  - **Página:** `/sistema-admin` exibe detalhes de armazenamento por pasta
+  - **Visualização:** Usado, Livre, Total, com barra de progresso colorida
+  - **Detalhes por pasta:** tmp, dump, uploads, logs, etc.
+  - **Botão "Limpar Temporários":** Remove ficheiros temporários
+  - **Ficheiros:** `frontend/src/pages/SistemaAdmin.js`, `backend/routes/admin.py`
+
+### Session 2026-02-20 (Gestão de Planos e Preços)
 - **Feature: Campos de Preços com IVA - DONE:**
   - **Funcionalidade:** Todos os campos de preço em planos e módulos indicam "Introduza valores SEM IVA"
   - **Cálculo automático:** Abaixo de cada campo aparece "c/IVA: €X.XX" calculado em verde
