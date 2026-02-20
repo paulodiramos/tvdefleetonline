@@ -1,9 +1,10 @@
 """
 Serviço de Gestão de Comissões e Classificação de Motoristas
+Inclui Sistema de Progressão Automática
 """
 
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 import uuid
 import logging
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -14,6 +15,15 @@ from models.comissoes import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# Pesos para cálculo da pontuação de cuidado com veículo
+PESOS_CUIDADO_VEICULO = {
+    "vistorias": 0.40,       # 40% - Pontuação das vistorias
+    "incidentes": 0.25,      # 25% - Ausência de incidentes/multas
+    "manutencoes": 0.20,     # 20% - Manutenções em dia
+    "avaliacao_parceiro": 0.15  # 15% - Avaliação manual do parceiro
+}
 
 
 # Níveis de classificação padrão
