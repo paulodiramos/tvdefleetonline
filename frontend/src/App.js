@@ -148,6 +148,7 @@ import SistemaAdmin from "@/pages/SistemaAdmin";
 import ContabilidadePage from "@/pages/ContabilidadePage";
 import FornecedoresPage from "@/pages/FornecedoresPage";
 import GestaoContabilistas from "@/pages/GestaoContabilistas";
+import WhatsAppManager from "@/pages/WhatsAppManager";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
