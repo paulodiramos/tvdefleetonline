@@ -1426,24 +1426,60 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
               )}
               
               {selectedUser?.role === 'motorista' && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Atribuir a Parceiro (opcional)</Label>
-                  <Select value={aprovarParceiroId} onValueChange={setAprovarParceiroId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar parceiro..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Nenhum (atribuir depois)</SelectItem>
-                      {parceiros.map(p => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.nome || p.name || p.empresa || 'Parceiro'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-slate-500">
-                    Se não selecionar agora, pode atribuir depois na página de Motoristas.
-                  </p>
+                <div className="space-y-4 border-t pt-4">
+                  {/* Seleção de Parceiro */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Building className="w-4 h-4 text-blue-600" />
+                      Atribuir a Parceiro (opcional)
+                    </Label>
+                    <Select value={aprovarParceiroId} onValueChange={setAprovarParceiroId}>
+                      <SelectTrigger data-testid="select-parceiro-aprovacao">
+                        <SelectValue placeholder="Selecionar parceiro..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhum (atribuir depois)</SelectItem>
+                        {parceiros.map(p => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.nome_empresa || p.nome || p.name || p.empresa || 'Parceiro'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500">
+                      O motorista ficará associado a este parceiro.
+                    </p>
+                  </div>
+
+                  {/* Seleção de Classificação */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Award className="w-4 h-4 text-amber-600" />
+                      Classificação Inicial (opcional)
+                    </Label>
+                    <Select value={aprovarClassificacao} onValueChange={setAprovarClassificacao}>
+                      <SelectTrigger data-testid="select-classificacao-aprovacao">
+                        <SelectValue placeholder="Selecionar classificação..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Automática (Bronze)</SelectItem>
+                        {classificacoesDisponiveis.map(c => (
+                          <SelectItem key={c.id} value={c.nome}>
+                            <div className="flex items-center gap-2">
+                              <span>{c.icone}</span>
+                              <span>{c.nome}</span>
+                              {c.bonus_percentagem > 0 && (
+                                <span className="text-xs text-green-600">(+{c.bonus_percentagem}% bónus)</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500">
+                      A classificação determina o bónus de comissão do motorista.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
