@@ -559,7 +559,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Prepare approval payload with plan and special price
+      // Prepare approval payload with plan, special price, partner and classification
       const approvalPayload = {};
       if (aprovarPlanoId && aprovarPlanoId !== 'none') {
         approvalPayload.plano_id = aprovarPlanoId;
@@ -568,36 +568,33 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
         }
       }
       
-      // Aprovar o utilizador
+      // Add parceiro_id if motorista
+      if (selectedUser.role === 'motorista' && aprovarParceiroId && aprovarParceiroId !== 'none') {
+        approvalPayload.parceiro_id = aprovarParceiroId;
+      }
+      
+      // Add classificacao if motorista
+      if (selectedUser.role === 'motorista' && aprovarClassificacao && aprovarClassificacao !== 'none') {
+        approvalPayload.classificacao = aprovarClassificacao;
+      }
+      
+      // Aprovar o utilizador com todos os dados
       await axios.put(
         `${API}/users/${selectedUser.id}/approve`,
         approvalPayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Se for motorista e tiver parceiro selecionado, atribuir
-      if (selectedUser.role === 'motorista' && aprovarParceiroId && aprovarParceiroId !== 'none') {
-        try {
-          await axios.put(
-            `${API}/motoristas/${selectedUser.id}/atribuir-parceiro`,
-            { parceiro_id: aprovarParceiroId },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          toast.success('Utilizador aprovado e parceiro atribuído!');
-        } catch (atribuirError) {
-          console.error('Erro ao atribuir parceiro:', atribuirError);
-          toast.warning('Utilizador aprovado, mas erro ao atribuir parceiro. Atribua manualmente.');
-        }
-      } else {
-        toast.success('Utilizador aprovado com sucesso!');
-      }
+      toast.success('Utilizador aprovado com sucesso!');
 
       setShowAprovarDialog(false);
       setSelectedUser(null);
       setAprovarParceiroId('');
       setAprovarPlanoId('');
       setAprovarPrecoEspecialId('');
+      setAprovarClassificacao('');
       setPrecosEspeciaisDisponiveis([]);
+      setClassificacoesDisponiveis([]);
       fetchData();
     } catch (error) {
       console.error('Error approving user:', error);
