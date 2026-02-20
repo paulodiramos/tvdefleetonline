@@ -43,6 +43,7 @@ import PerfilParceiroCompleto from "@/pages/PerfilParceiroCompleto";
 import GestaoParceirosModulos from "@/pages/GestaoParceirosModulos";
 import GestaoUtilizadores from "@/pages/GestaoUtilizadores";
 import GestaoPlanosParceiros from "@/pages/GestaoPlanosParceiros";
+import ProgressoesMotoristas from "@/pages/ProgressoesMotoristas";
 import DashboardPlanosAtivos from "@/pages/DashboardPlanosAtivos";
 import MeuPlanoParceiro from "@/pages/MeuPlanoParceiro";
 import MeuPlanoMotorista from "@/pages/MeuPlanoMotorista";
