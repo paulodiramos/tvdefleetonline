@@ -27,7 +27,30 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-20 (Latest - Correção Documentos & Playwright)
+### Session 2026-02-20 (Latest - Fluxo Aprovação Melhorado + Migração UI)
+- **Feature: UI do Fluxo de Aprovação Melhorado - DONE:**
+  - **Funcionalidade:** Admin pode atribuir Parceiro e Classificação ao aprovar motoristas
+  - **Frontend:** Modal de aprovação em `GestaoUtilizadores.js` agora inclui:
+    - Dropdown "Atribuir a Parceiro" com lista de todos os parceiros
+    - Dropdown "Classificação Inicial" com níveis (Bronze, Prata, Ouro, Platina, Diamante) e bónus
+  - **Backend:** Endpoint `PUT /api/users/{user_id}/approve` já suportava `parceiro_id` e `classificacao`
+  - **Testes:** 100% backend (10/10) + 100% frontend (iteration_56.json)
+
+- **Feature: Botão de Migração de Dados no Admin - DONE:**
+  - **Funcionalidade:** Botão "Corrigir Dados" na página de Gestão de Usuários
+  - **Modal:** Mostra estatísticas (total motoristas, sem dados pessoais, formato antigo)
+  - **Endpoints:**
+    - `GET /api/admin/verificar-migracao` - Verifica quantos motoristas precisam migração
+    - `POST /api/admin/migrar-motoristas` - Executa correção de dados
+  - **Testes:** Funcional, modal mostra dados correctos
+
+- **Refactoring: Hooks para FichaVeiculo.js - IN PROGRESS:**
+  - **Criado:** `/app/frontend/src/hooks/useFichaVeiculoState.js`
+  - **Hooks:** `useFichaVeiculoBasicState`, `useFichaVeiculoForms`
+  - **Estados Iniciais:** Exportados para reutilização
+  - **Próximo Passo:** Migrar `FichaVeiculo.js` para usar os hooks
+
+### Session 2026-02-20 (Correção Documentos & Playwright)
 - **Bug Fix: Registo de Motoristas "Not Found" - DONE:**
   - **Problema:** Ao fazer registo, aparecia "Not Found" no toast
   - **Causa:** URL duplicava `/api` - fazia `POST /api/api/auth/register` em vez de `POST /api/auth/register`
