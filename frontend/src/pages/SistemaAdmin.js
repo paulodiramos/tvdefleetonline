@@ -126,6 +126,44 @@ const SistemaAdmin = ({ user, onLogout }) => {
     }
   };
 
+  const fetchArmazenamento = async () => {
+    try {
+      setLoadingArmazenamento(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/sistema/armazenamento`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setArmazenamento(response.data);
+    } catch (error) {
+      console.error('Error fetching storage:', error);
+    } finally {
+      setLoadingArmazenamento(false);
+    }
+  };
+
+  const handleLimparTemporarios = async () => {
+    if (!confirm('Tem certeza que deseja limpar os ficheiros temporários?\n\nIsto irá remover: test_reports, dump, video_frames, cache do playwright')) {
+      return;
+    }
+    
+    try {
+      setLimpandoTemporarios(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/sistema/limpar-temporarios`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(response.data.message);
+      fetchArmazenamento();
+      fetchStatus();
+    } catch (error) {
+      console.error('Error cleaning temp files:', error);
+      toast.error('Erro ao limpar ficheiros temporários');
+    } finally {
+      setLimpandoTemporarios(false);
+    }
+  };
+
   const handleInstallPlaywright = async () => {
     try {
       setInstalling(true);
