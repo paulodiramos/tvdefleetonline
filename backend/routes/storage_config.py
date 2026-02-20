@@ -78,19 +78,26 @@ def get_parceiro_id(current_user: Dict) -> str:
 # ==================== GET CONFIGURATION ====================
 
 @router.get("")
-async def get_storage_config(current_user: Dict = Depends(get_current_user)):
-    """Get storage configuration for current partner"""
-    parceiro_id = get_parceiro_id(current_user)
+async def get_storage_config(
+    parceiro_id: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get storage configuration for current partner or specified partner (admin/gestao)"""
+    # If parceiro_id is specified and user is admin/gestao, use that
+    if parceiro_id and current_user.get("role") in ["admin", "gestao"]:
+        target_parceiro_id = parceiro_id
+    else:
+        target_parceiro_id = get_parceiro_id(current_user)
     
     config = await db.storage_config.find_one(
-        {"parceiro_id": parceiro_id},
+        {"parceiro_id": target_parceiro_id},
         {"_id": 0}
     )
     
     if not config:
         # Return default configuration
         return {
-            "parceiro_id": parceiro_id,
+            "parceiro_id": target_parceiro_id,
             "modo": StorageMode.LOCAL,
             "cloud_provider": CloudProvider.NONE,
             "cloud_connected": False,
@@ -114,7 +121,7 @@ async def get_storage_config(current_user: Dict = Depends(get_current_user)):
     
     if config.get("cloud_provider") and config.get("cloud_provider") != "none":
         credentials = await db.cloud_credentials.find_one(
-            {"parceiro_id": parceiro_id, "provider": config["cloud_provider"]},
+            {"parceiro_id": target_parceiro_id, "provider": config["cloud_provider"]},
             {"_id": 0, "email": 1, "access_token": 1}
         )
         if credentials and credentials.get("access_token"):
