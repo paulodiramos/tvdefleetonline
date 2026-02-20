@@ -198,6 +198,52 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     }
   };
 
+  // Verificar estado da migração
+  const handleCheckMigration = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/verificar-migracao`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMigrationResult(response.data);
+      setShowMigrationDialog(true);
+    } catch (error) {
+      console.error('Error checking migration:', error);
+      toast.error('Erro ao verificar estado da migração');
+    }
+  };
+
+  // Executar migração de motoristas
+  const handleRunMigration = async () => {
+    setMigratingMotoristas(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/migrar-motoristas`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const result = response.data;
+      setMigrationResult(prev => ({
+        ...prev,
+        ultimaExecucao: result
+      }));
+      
+      if (result.success) {
+        toast.success(`Migração concluída! ${result.resultados.campos_corrigidos} campos corrigidos.`);
+      } else {
+        toast.error(`Migração com erros: ${result.message}`);
+      }
+      
+      // Atualizar verificação após migração
+      handleCheckMigration();
+    } catch (error) {
+      console.error('Error running migration:', error);
+      toast.error('Erro ao executar migração');
+    } finally {
+      setMigratingMotoristas(false);
+    }
+  };
+
   const filterUsers = () => {
     let filtered = utilizadores;
 
