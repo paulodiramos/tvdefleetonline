@@ -198,17 +198,28 @@ async def approve_user(
         
         if motorista_exists:
             # Update existing motorista
+            motorista_update = {
+                "approved": True,
+                "approved_by": current_user["id"],
+                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "ativo": True,
+                "status_motorista": "ativo"
+            }
+            # Add parceiro if assigned
+            if request and request.parceiro_id:
+                motorista_update["parceiro_atribuido"] = request.parceiro_id
+                motorista_update["parceiro_nome"] = update_data.get("parceiro_nome")
+            # Add classificacao if assigned
+            if request and request.classificacao:
+                motorista_update["classificacao"] = request.classificacao
+            # Add plano if assigned
+            if request and request.plano_id:
+                motorista_update["plano_id"] = request.plano_id
+                motorista_update["plano_nome"] = update_data.get("plano_nome")
+            
             await db.motoristas.update_one(
                 {"$or": [{"id": user_id}, {"email": user.get("email")}]},
-                {
-                    "$set": {
-                        "approved": True,
-                        "approved_by": current_user["id"],
-                        "approved_at": datetime.now(timezone.utc).isoformat(),
-                        "ativo": True,
-                        "status_motorista": "ativo"
-                    }
-                }
+                {"$set": motorista_update}
             )
         else:
             # Create motorista document if it doesn't exist
