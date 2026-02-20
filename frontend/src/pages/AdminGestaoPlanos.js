@@ -1877,6 +1877,57 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Tab Preços Especiais */}
+          <TabsContent value="precos-especiais">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                      Preços Especiais
+                    </CardTitle>
+                    <CardDescription>
+                      Configure preços especiais para parceiros específicos
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    onClick={() => navigate('/admin/precos-especiais')}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Configurar Preços Especiais
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                  <DollarSign className="w-12 h-12 mx-auto text-green-500 mb-4" />
+                  <h3 className="text-lg font-semibold text-green-800 mb-2">
+                    Gestão de Preços Especiais
+                  </h3>
+                  <p className="text-green-700 mb-4">
+                    Defina preços personalizados para parceiros específicos, incluindo:
+                  </p>
+                  <ul className="text-sm text-green-600 space-y-1 mb-4">
+                    <li>• Descontos por percentagem</li>
+                    <li>• Preços fixos por plano</li>
+                    <li>• Preços por veículo</li>
+                    <li>• Preços por motorista</li>
+                    <li>• Combinações personalizadas</li>
+                  </ul>
+                  <Button 
+                    onClick={() => navigate('/admin/precos-especiais')}
+                    variant="outline"
+                    className="border-green-500 text-green-700 hover:bg-green-100"
+                  >
+                    Ir para Configuração Completa →
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
