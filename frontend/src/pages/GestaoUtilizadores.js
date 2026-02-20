@@ -68,6 +68,9 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     parceiros_associados: []
   });
   const [saving, setSaving] = useState(false);
+  const [migratingMotoristas, setMigratingMotoristas] = useState(false);
+  const [migrationResult, setMigrationResult] = useState(null);
+  const [showMigrationDialog, setShowMigrationDialog] = useState(false);
 
   // Verificar filtro da URL ao carregar
   useEffect(() => {
