@@ -500,14 +500,22 @@ async def get_storage_details(current_user: dict = Depends(get_current_user)):
             return f"{size_bytes / 1024:.2f} KB"
         return f"{size_bytes} bytes"
     
-    # Pastas a verificar
+    # Pastas a verificar - incluindo uploads de documentos de parceiros/motoristas
     pastas = {
-        "uploads": "/app/uploads",
-        "uploads_documentos": "/app/uploads/documentos",
-        "uploads_fotos": "/app/uploads/vehicle_photos",
-        "logs": "/var/log",
+        "uploads (Total)": "/app/backend/uploads",
+        "motoristas": "/app/backend/uploads/motoristas",
+        "vistorias": "/app/backend/uploads/vistorias",
+        "documentos": "/app/backend/uploads/documentos",
+        "vehicle_documents": "/app/backend/uploads/vehicle_documents",
+        "vehicle_photos": "/app/backend/uploads/vehicle_photos_info",
+        "contratos": "/app/backend/uploads/contratos",
+        "recibos": "/app/backend/uploads/recibos",
+        "backups": "/app/backend/uploads/backups",
+        "extintor_docs": "/app/backend/uploads/extintor_docs",
+        "comprovativos": "/app/backend/uploads/comprovativos_pagamento",
         "tmp": "/tmp",
-        "whatsapp_sessions": "/app/backend/whatsapp_service/sessions",
+        "logs": "/var/log",
+        "whatsapp_sessions": "/app/backend/whatsapp_service/.wwebjs_auth",
         "test_reports": "/app/test_reports",
         "dump": "/app/dump"
     }
