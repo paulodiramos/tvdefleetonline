@@ -879,7 +879,7 @@ class ComissoesService:
         logger.info(f"Motorista {motorista_id} promovido de {nivel_atual['nome']} para {proximo_nivel['nome']}")
         
         return True, {
-            "mensagem": f"Promoção realizada com sucesso!",
+            "mensagem": "Promoção realizada com sucesso!",
             "nivel_anterior": nivel_atual,
             "nivel_novo": proximo_nivel,
             "classificacao": classificacao
