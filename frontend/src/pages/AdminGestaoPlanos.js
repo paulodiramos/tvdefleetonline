@@ -2825,6 +2825,9 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         precos: { ...prev.precos, por_motorista_semanal: parseFloat(e.target.value) || 0 }
                       }))}
                     />
+                    {moduloForm.precos?.por_motorista_semanal > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.por_motorista_semanal * 1.23).toFixed(2)}</span>
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs text-slate-500">Mensal</Label>
@@ -2838,6 +2841,9 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         precos: { ...prev.precos, por_motorista_mensal: parseFloat(e.target.value) || 0 }
                       }))}
                     />
+                    {moduloForm.precos?.por_motorista_mensal > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.por_motorista_mensal * 1.23).toFixed(2)}</span>
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs text-slate-500">Anual</Label>
@@ -2851,10 +2857,28 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         precos: { ...prev.precos, por_motorista_anual: parseFloat(e.target.value) || 0 }
                       }))}
                     />
+                    {moduloForm.precos?.por_motorista_anual > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.por_motorista_anual * 1.23).toFixed(2)}</span>
+                    )}
                   </div>
                 </div>
               </div>
             )}
+            
+            {/* Destaque do Módulo */}
+            <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-500" />
+                <div>
+                  <Label className="font-medium text-amber-800">Módulo em Destaque</Label>
+                  <p className="text-xs text-amber-600">Destacar este módulo na lista para clientes</p>
+                </div>
+              </div>
+              <Switch
+                checked={moduloForm.destaque || false}
+                onCheckedChange={(checked) => setModuloForm(prev => ({ ...prev, destaque: checked }))}
+              />
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
