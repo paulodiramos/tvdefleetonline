@@ -1526,14 +1526,27 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                       <Edit className="w-4 h-4 mr-1" />
                       Editar
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-red-500"
-                      onClick={() => handleDeleteModulo(modulo.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {modulo.ativo ? (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-amber-500 hover:text-amber-700"
+                        onClick={() => handleDeleteModulo(modulo.id)}
+                        title="Desativar módulo"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDeleteModuloPermanente(modulo.id, modulo.nome)}
+                        title="Eliminar permanentemente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </CardFooter>
                 </Card>
               ))}
