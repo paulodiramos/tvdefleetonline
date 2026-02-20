@@ -30,6 +30,8 @@ class PasswordReset(BaseModel):
 class ApproveUserRequest(BaseModel):
     plano_id: Optional[str] = None
     preco_especial_id: Optional[str] = None
+    parceiro_id: Optional[str] = None
+    classificacao: Optional[str] = None
 
 
 @router.get("/users/pending")
