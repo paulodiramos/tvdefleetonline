@@ -2011,41 +2011,116 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                       Preços Especiais
                     </CardTitle>
                     <CardDescription>
-                      Configure preços especiais para parceiros específicos
+                      Visualize e gerencie preços especiais configurados para parceiros
                     </CardDescription>
                   </div>
-                  <Button 
-                    onClick={() => navigate('/admin/precos-especiais')}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Configurar Preços Especiais
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                  <DollarSign className="w-12 h-12 mx-auto text-green-500 mb-4" />
-                  <h3 className="text-lg font-semibold text-green-800 mb-2">
-                    Gestão de Preços Especiais
-                  </h3>
-                  <p className="text-green-700 mb-4">
-                    Defina preços personalizados para parceiros específicos, incluindo:
-                  </p>
-                  <ul className="text-sm text-green-600 space-y-1 mb-4">
-                    <li>• Descontos por percentagem</li>
-                    <li>• Preços fixos por plano</li>
-                    <li>• Preços por veículo</li>
-                    <li>• Preços por motorista</li>
-                    <li>• Combinações personalizadas</li>
-                  </ul>
-                  <Button 
-                    onClick={() => navigate('/admin/precos-especiais')}
-                    variant="outline"
-                    className="border-green-500 text-green-700 hover:bg-green-100"
-                  >
-                    Ir para Configuração Completa →
-                  </Button>
+                {/* Lista de Preços Especiais por Plano */}
+                <div className="space-y-4">
+                  {planos.filter(p => p.precos_especiais?.length > 0).length > 0 ? (
+                    planos.filter(p => p.precos_especiais?.length > 0).map(plano => (
+                      <div key={`pe-${plano.id}`} className="border rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div 
+                            className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                            style={{ backgroundColor: plano.cor + '20', color: plano.cor }}
+                          >
+                            {plano.icone}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold">{plano.nome}</h4>
+                            <Badge variant="outline" className="text-xs">{plano.tipo_usuario}</Badge>
+                          </div>
+                        </div>
+                        
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Parceiro</TableHead>
+                              <TableHead>Tipo</TableHead>
+                              <TableHead>Valor</TableHead>
+                              <TableHead>Validade</TableHead>
+                              <TableHead className="w-[80px]">Ações</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {plano.precos_especiais.map((pe, idx) => (
+                              <TableRow key={`${plano.id}-${idx}`}>
+                                <TableCell className="font-medium">
+                                  {pe.parceiro_nome || pe.parceiro_id}
+                                </TableCell>
+                                <TableCell>
+                                  {pe.desconto_percentagem ? (
+                                    <Badge className="bg-amber-100 text-amber-700">
+                                      -{pe.desconto_percentagem}%
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-blue-100 text-blue-700">
+                                      Preço Fixo
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {pe.preco_fixo_mensal && (
+                                    <span>€{pe.preco_fixo_mensal}/mês</span>
+                                  )}
+                                  {pe.desconto_percentagem && (
+                                    <span>{pe.desconto_percentagem}% desconto</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-sm text-slate-500">
+                                  {pe.data_fim ? (
+                                    <>até {new Date(pe.data_fim).toLocaleDateString('pt-PT')}</>
+                                  ) : (
+                                    <span className="text-green-600">Sem expiração</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    onClick={async () => {
+                                      if (!confirm(`Tem certeza que deseja remover o preço especial de "${pe.parceiro_nome || pe.parceiro_id}"?`)) return;
+                                      try {
+                                        const token = localStorage.getItem('token');
+                                        await axios.delete(
+                                          `${API}/gestao-planos/planos/${plano.id}/precos-especiais/${pe.id}`,
+                                          { headers: { Authorization: `Bearer ${token}` } }
+                                        );
+                                        toast.success('Preço especial removido');
+                                        fetchDados();
+                                      } catch (error) {
+                                        toast.error(error.response?.data?.detail || 'Erro ao remover preço especial');
+                                      }
+                                    }}
+                                    title="Remover preço especial"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+                      <DollarSign className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+                      <h3 className="text-lg font-semibold text-slate-700 mb-2">
+                        Nenhum Preço Especial Configurado
+                      </h3>
+                      <p className="text-slate-500 mb-4">
+                        Os preços especiais permitem definir valores personalizados para parceiros específicos.
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        Para adicionar, edite um plano e aceda à secção de Preços Especiais.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
