@@ -247,6 +247,31 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     }
   };
 
+  // Recalcular classificações de todos os motoristas
+  const handleRecalcularClassificacoes = async () => {
+    setRecalculandoClassificacoes(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/comissoes/classificacao/recalcular-todas`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setClassificacoesResult(response.data);
+      setShowClassificacoesDialog(true);
+      
+      if (response.data.resumo?.promovidos > 0) {
+        toast.success(`${response.data.resumo.promovidos} motorista(s) promovido(s)!`);
+      } else {
+        toast.info('Classificações recalculadas. Nenhuma promoção elegível.');
+      }
+    } catch (error) {
+      console.error('Error recalculating classifications:', error);
+      toast.error('Erro ao recalcular classificações');
+    } finally {
+      setRecalculandoClassificacoes(false);
+    }
+  };
+
   const filterUsers = () => {
     let filtered = utilizadores;
 
