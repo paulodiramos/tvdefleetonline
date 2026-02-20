@@ -466,3 +466,111 @@ async def definir_motorista_principal(
     await service.definir_motorista_principal(veiculo_id, request.motorista_id)
     
     return {"sucesso": True}
+
+
+# ==================== SISTEMA DE PROGRESSÃO AUTOMÁTICA ====================
+
+@router.get("/classificacao/motorista/{motorista_id}/progressao")
+async def verificar_progressao(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Verificar elegibilidade de um motorista para promoção
+    Retorna detalhes sobre nível actual, pontuação de cuidado e requisitos para próximo nível
+    """
+    service = get_service()
+    
+    try:
+        resultado = await service.verificar_progressao_motorista(motorista_id)
+        return resultado
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/classificacao/motorista/{motorista_id}/pontuacao-cuidado")
+async def obter_pontuacao_cuidado(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter pontuação detalhada de cuidado com veículo
+    Mostra breakdown de todos os factores (vistorias, incidentes, manutenções, avaliação)
+    """
+    service = get_service()
+    resultado = await service.calcular_pontuacao_cuidado_veiculo(motorista_id)
+    return resultado
+
+
+@router.post("/classificacao/motorista/{motorista_id}/promover")
+async def promover_motorista(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Tentar promover um motorista para o próximo nível
+    Verifica automaticamente a elegibilidade antes de promover
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Apenas administradores ou parceiros podem promover motoristas")
+    
+    service = get_service()
+    
+    try:
+        sucesso, detalhes = await service.promover_motorista(
+            motorista_id=motorista_id,
+            atribuido_por=current_user["id"]
+        )
+        
+        if sucesso:
+            return {"sucesso": True, **detalhes}
+        else:
+            raise HTTPException(status_code=400, detail=detalhes)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/classificacao/recalcular-todas")
+async def recalcular_todas_classificacoes(
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Recalcular classificações de todos os motoristas
+    Endpoint manual para o admin executar quando quiser
+    Também usado pelo job automático (semanal/diário)
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    resultado = await service.recalcular_todas_classificacoes(
+        atribuido_por=current_user["id"]
+    )
+    
+    return resultado
+
+
+@router.put("/classificacao/motorista/{motorista_id}/avaliacao-parceiro")
+async def atualizar_avaliacao_parceiro(
+    motorista_id: str,
+    avaliacao: int = Query(..., ge=0, le=100, description="Avaliação de 0 a 100"),
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Atualizar a avaliação manual do parceiro para um motorista
+    Esta avaliação contribui 15% para a pontuação de cuidado com veículo
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Apenas administradores ou parceiros")
+    
+    service = get_service()
+    
+    try:
+        resultado = await service.atualizar_avaliacao_parceiro(
+            motorista_id=motorista_id,
+            avaliacao=avaliacao,
+            avaliado_por=current_user["id"]
+        )
+        return resultado
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
