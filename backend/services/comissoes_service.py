@@ -587,3 +587,411 @@ class ComissoesService:
             upsert=True
         )
         return True
+    
+    # ==================== SISTEMA DE PROGRESSÃO AUTOMÁTICA ====================
+    
+    async def calcular_pontuacao_cuidado_veiculo(self, motorista_id: str) -> Dict:
+        """
+        Calcular pontuação de cuidado com veículo baseada em múltiplos factores:
+        - Vistorias realizadas (40%)
+        - Incidentes/multas (25%)
+        - Manutenções em dia (20%)
+        - Avaliação manual do parceiro (15%)
+        """
+        pontuacoes = {
+            "vistorias": 50,  # Default se não houver dados
+            "incidentes": 100,  # Default: sem incidentes = 100
+            "manutencoes": 50,
+            "avaliacao_parceiro": 50
+        }
+        detalhes = {}
+        
+        # 1. VISTORIAS - Calcular média das últimas vistorias
+        vistorias = await self.db.vistorias.find(
+            {"motorista_id": motorista_id}
+        ).sort("data", -1).limit(10).to_list(10)
+        
+        if vistorias:
+            # Calcular pontuação média das vistorias
+            total_pontos = 0
+            for vistoria in vistorias:
+                # Se a vistoria tem pontuação explícita
+                if "pontuacao" in vistoria:
+                    total_pontos += vistoria["pontuacao"]
+                else:
+                    # Calcular baseado em problemas encontrados
+                    problemas = len(vistoria.get("problemas", []))
+                    pontos_vistoria = max(0, 100 - (problemas * 10))
+                    total_pontos += pontos_vistoria
+            
+            pontuacoes["vistorias"] = total_pontos // len(vistorias)
+            detalhes["vistorias"] = f"{len(vistorias)} vistorias analisadas"
+        else:
+            detalhes["vistorias"] = "Sem vistorias registadas"
+        
+        # 2. INCIDENTES - Verificar multas e incidentes nos últimos 6 meses
+        seis_meses_atras = datetime.now(timezone.utc).replace(month=max(1, datetime.now().month - 6))
+        
+        incidentes = await self.db.incidentes.count_documents({
+            "motorista_id": motorista_id,
+            "created_at": {"$gte": seis_meses_atras.isoformat()}
+        })
+        
+        multas = await self.db.multas.count_documents({
+            "motorista_id": motorista_id,
+            "data": {"$gte": seis_meses_atras.isoformat()}
+        })
+        
+        total_problemas = incidentes + multas
+        if total_problemas == 0:
+            pontuacoes["incidentes"] = 100
+        elif total_problemas <= 2:
+            pontuacoes["incidentes"] = 80
+        elif total_problemas <= 4:
+            pontuacoes["incidentes"] = 60
+        else:
+            pontuacoes["incidentes"] = max(0, 100 - (total_problemas * 15))
+        
+        detalhes["incidentes"] = f"{incidentes} incidentes, {multas} multas nos últimos 6 meses"
+        
+        # 3. MANUTENÇÕES - Verificar se o motorista reporta problemas e cuida do veículo
+        # Verificar veículos atribuídos ao motorista
+        veiculos = await self.db.vehicles.find(
+            {"motorista_id": motorista_id}
+        ).to_list(10)
+        
+        if veiculos:
+            manutencoes_em_dia = 0
+            total_veiculos = len(veiculos)
+            
+            for veiculo in veiculos:
+                # Verificar se documentos estão em dia
+                docs_em_dia = 0
+                
+                # Seguro válido
+                seguro_val = veiculo.get("seguro", {}).get("data_validade")
+                if seguro_val:
+                    try:
+                        val_date = datetime.fromisoformat(seguro_val.replace('Z', '+00:00'))
+                        if val_date > datetime.now(timezone.utc):
+                            docs_em_dia += 1
+                    except:
+                        pass
+                
+                # Inspeção válida
+                insp_val = veiculo.get("inspecao", {}).get("validade")
+                if insp_val:
+                    try:
+                        val_date = datetime.fromisoformat(insp_val.replace('Z', '+00:00'))
+                        if val_date > datetime.now(timezone.utc):
+                            docs_em_dia += 1
+                    except:
+                        pass
+                
+                # Extintor válido
+                ext_val = veiculo.get("extintor", {}).get("data_validade")
+                if ext_val:
+                    try:
+                        val_date = datetime.fromisoformat(ext_val.replace('Z', '+00:00'))
+                        if val_date > datetime.now(timezone.utc):
+                            docs_em_dia += 1
+                    except:
+                        pass
+                
+                if docs_em_dia >= 2:  # Pelo menos 2 dos 3 em dia
+                    manutencoes_em_dia += 1
+            
+            pontuacoes["manutencoes"] = (manutencoes_em_dia / total_veiculos) * 100 if total_veiculos > 0 else 50
+            detalhes["manutencoes"] = f"{manutencoes_em_dia}/{total_veiculos} veículos com documentos em dia"
+        else:
+            detalhes["manutencoes"] = "Sem veículos atribuídos"
+        
+        # 4. AVALIAÇÃO DO PARCEIRO - Valor manual guardado
+        motorista = await self.db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if motorista:
+            avaliacao = motorista.get("avaliacao_parceiro")
+            if avaliacao is not None:
+                pontuacoes["avaliacao_parceiro"] = avaliacao
+                detalhes["avaliacao_parceiro"] = f"Avaliação: {avaliacao}/100"
+            else:
+                detalhes["avaliacao_parceiro"] = "Sem avaliação manual"
+        
+        # Calcular pontuação final ponderada
+        pontuacao_final = sum(
+            pontuacoes[key] * PESOS_CUIDADO_VEICULO[key]
+            for key in PESOS_CUIDADO_VEICULO
+        )
+        
+        return {
+            "pontuacao_final": round(pontuacao_final),
+            "pontuacoes_parciais": pontuacoes,
+            "detalhes": detalhes,
+            "pesos": PESOS_CUIDADO_VEICULO
+        }
+    
+    async def verificar_progressao_motorista(self, motorista_id: str) -> Dict:
+        """
+        Verificar se um motorista é elegível para subir de nível
+        Retorna informação sobre o nível actual e o potencial próximo nível
+        """
+        # Obter classificação actual
+        classificacao_atual = await self.obter_classificacao_motorista(motorista_id)
+        
+        # Calcular dados atuais
+        motorista = await self.db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if not motorista:
+            raise ValueError("Motorista não encontrado")
+        
+        # Calcular meses de serviço
+        data_inicio = motorista.get("data_inicio") or motorista.get("created_at")
+        meses_servico = 0
+        if data_inicio:
+            try:
+                if isinstance(data_inicio, str):
+                    data_inicio = datetime.fromisoformat(data_inicio.replace('Z', '+00:00'))
+                now = datetime.now(timezone.utc)
+                diff = now - data_inicio
+                meses_servico = diff.days // 30
+            except:
+                pass
+        
+        # Calcular pontuação de cuidado actualizada
+        calc_cuidado = await self.calcular_pontuacao_cuidado_veiculo(motorista_id)
+        pontuacao_cuidado = calc_cuidado["pontuacao_final"]
+        
+        # Obter configuração de níveis
+        config = await self.obter_config_classificacao()
+        niveis = sorted(config.get("niveis", []), key=lambda x: x.get("nivel", 0))
+        
+        nivel_atual = None
+        proximo_nivel = None
+        
+        if classificacao_atual:
+            nivel_atual_num = classificacao_atual.get("nivel_numero", 1)
+            nivel_atual = next((n for n in niveis if n["nivel"] == nivel_atual_num), niveis[0])
+            proximo_nivel = next((n for n in niveis if n["nivel"] == nivel_atual_num + 1), None)
+        else:
+            nivel_atual = niveis[0] if niveis else None
+            proximo_nivel = niveis[1] if len(niveis) > 1 else None
+        
+        # Verificar elegibilidade para o próximo nível
+        elegivel = False
+        razoes_falta = []
+        
+        if proximo_nivel:
+            meses_req = proximo_nivel.get("meses_minimos", 0)
+            cuidado_req = proximo_nivel.get("cuidado_veiculo_minimo", 0)
+            
+            if meses_servico >= meses_req and pontuacao_cuidado >= cuidado_req:
+                elegivel = True
+            else:
+                if meses_servico < meses_req:
+                    razoes_falta.append(f"Faltam {meses_req - meses_servico} meses de serviço")
+                if pontuacao_cuidado < cuidado_req:
+                    razoes_falta.append(f"Pontuação de cuidado {pontuacao_cuidado}/{cuidado_req}")
+        
+        return {
+            "motorista_id": motorista_id,
+            "motorista_nome": motorista.get("nome") or motorista.get("name"),
+            "meses_servico": meses_servico,
+            "pontuacao_cuidado": pontuacao_cuidado,
+            "detalhes_cuidado": calc_cuidado,
+            "nivel_atual": nivel_atual,
+            "proximo_nivel": proximo_nivel,
+            "elegivel_promocao": elegivel,
+            "razoes_falta": razoes_falta if not elegivel else []
+        }
+    
+    async def criar_notificacao(
+        self,
+        user_id: str,
+        titulo: str,
+        mensagem: str,
+        tipo: str = "info",
+        dados: Optional[Dict] = None
+    ):
+        """Criar uma notificação para o utilizador"""
+        now = datetime.now(timezone.utc)
+        notificacao = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "titulo": titulo,
+            "mensagem": mensagem,
+            "tipo": tipo,
+            "lida": False,
+            "criada_em": now.isoformat(),
+            "dados": dados or {}
+        }
+        await self.db.notificacoes.insert_one(notificacao)
+        return notificacao
+    
+    async def promover_motorista(self, motorista_id: str, atribuido_por: str = "sistema") -> Tuple[bool, Dict]:
+        """
+        Tentar promover um motorista para o próximo nível
+        Retorna (sucesso, detalhes)
+        """
+        verificacao = await self.verificar_progressao_motorista(motorista_id)
+        
+        if not verificacao["elegivel_promocao"]:
+            return False, {
+                "mensagem": "Motorista não elegível para promoção",
+                "razoes": verificacao["razoes_falta"],
+                "nivel_atual": verificacao["nivel_atual"],
+                "proximo_nivel": verificacao["proximo_nivel"]
+            }
+        
+        proximo_nivel = verificacao["proximo_nivel"]
+        nivel_atual = verificacao["nivel_atual"]
+        
+        if not proximo_nivel:
+            return False, {
+                "mensagem": "Motorista já está no nível máximo",
+                "nivel_atual": nivel_atual
+            }
+        
+        # Promover o motorista
+        classificacao = await self.atribuir_classificacao_motorista(
+            motorista_id=motorista_id,
+            nivel_id=proximo_nivel["id"],
+            nivel_manual=False,
+            pontuacao_cuidado_veiculo=verificacao["pontuacao_cuidado"],
+            atribuido_por=atribuido_por,
+            motivo=f"Promoção automática: {nivel_atual['nome']} → {proximo_nivel['nome']}"
+        )
+        
+        # Obter user_id do motorista para notificação
+        motorista = await self.db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "user_id": 1})
+        if motorista and motorista.get("user_id"):
+            bonus_diferenca = proximo_nivel.get("bonus_percentagem", 0) - nivel_atual.get("bonus_percentagem", 0)
+            await self.criar_notificacao(
+                user_id=motorista["user_id"],
+                titulo=f"🎉 Parabéns! Subiu para {proximo_nivel['nome']}!",
+                mensagem=f"O seu excelente desempenho foi reconhecido! Passou de {nivel_atual['nome']} para {proximo_nivel['nome']}. "
+                         f"O seu bónus de comissão aumentou +{bonus_diferenca}%.",
+                tipo="promocao",
+                dados={
+                    "nivel_anterior": nivel_atual,
+                    "nivel_novo": proximo_nivel,
+                    "bonus_aumento": bonus_diferenca
+                }
+            )
+        
+        logger.info(f"Motorista {motorista_id} promovido de {nivel_atual['nome']} para {proximo_nivel['nome']}")
+        
+        return True, {
+            "mensagem": f"Promoção realizada com sucesso!",
+            "nivel_anterior": nivel_atual,
+            "nivel_novo": proximo_nivel,
+            "classificacao": classificacao
+        }
+    
+    async def recalcular_todas_classificacoes(self, atribuido_por: str = "sistema") -> Dict:
+        """
+        Recalcular classificações de todos os motoristas
+        Usado pelo job automático e pelo botão manual do admin
+        """
+        resultados = {
+            "total_motoristas": 0,
+            "promovidos": [],
+            "mantidos": [],
+            "erros": [],
+            "iniciado_em": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Obter todos os motoristas activos
+        motoristas = await self.db.motoristas.find(
+            {"status": {"$ne": "inativo"}},
+            {"_id": 0, "id": 1, "nome": 1, "name": 1}
+        ).to_list(None)
+        
+        resultados["total_motoristas"] = len(motoristas)
+        
+        for motorista in motoristas:
+            motorista_id = motorista["id"]
+            nome = motorista.get("nome") or motorista.get("name") or motorista_id
+            
+            try:
+                # Verificar elegibilidade para promoção
+                sucesso, detalhes = await self.promover_motorista(motorista_id, atribuido_por)
+                
+                if sucesso:
+                    resultados["promovidos"].append({
+                        "motorista_id": motorista_id,
+                        "nome": nome,
+                        "nivel_anterior": detalhes["nivel_anterior"]["nome"],
+                        "nivel_novo": detalhes["nivel_novo"]["nome"]
+                    })
+                else:
+                    resultados["mantidos"].append({
+                        "motorista_id": motorista_id,
+                        "nome": nome,
+                        "nivel_atual": detalhes.get("nivel_atual", {}).get("nome", "N/A"),
+                        "razao": detalhes.get("mensagem", "Não elegível")
+                    })
+                    
+            except Exception as e:
+                logger.error(f"Erro ao recalcular classificação do motorista {motorista_id}: {str(e)}")
+                resultados["erros"].append({
+                    "motorista_id": motorista_id,
+                    "nome": nome,
+                    "erro": str(e)
+                })
+        
+        resultados["finalizado_em"] = datetime.now(timezone.utc).isoformat()
+        resultados["resumo"] = {
+            "promovidos": len(resultados["promovidos"]),
+            "mantidos": len(resultados["mantidos"]),
+            "erros": len(resultados["erros"])
+        }
+        
+        # Guardar registo da execução
+        await self.db.logs_sistema.insert_one({
+            "tipo": "recalculo_classificacoes",
+            "data": resultados["iniciado_em"],
+            "atribuido_por": atribuido_por,
+            "resultados": resultados["resumo"]
+        })
+        
+        logger.info(f"Recálculo de classificações concluído: {resultados['resumo']}")
+        
+        return resultados
+    
+    async def atualizar_avaliacao_parceiro(
+        self,
+        motorista_id: str,
+        avaliacao: int,
+        avaliado_por: str
+    ) -> Dict:
+        """
+        Atualizar a avaliação manual do parceiro para um motorista
+        Valor de 0 a 100
+        """
+        if avaliacao < 0 or avaliacao > 100:
+            raise ValueError("Avaliação deve estar entre 0 e 100")
+        
+        now = datetime.now(timezone.utc)
+        
+        await self.db.motoristas.update_one(
+            {"id": motorista_id},
+            {"$set": {
+                "avaliacao_parceiro": avaliacao,
+                "avaliacao_parceiro_data": now.isoformat(),
+                "avaliacao_parceiro_por": avaliado_por
+            }}
+        )
+        
+        # Recalcular pontuação de cuidado
+        calc = await self.calcular_pontuacao_cuidado_veiculo(motorista_id)
+        
+        # Atualizar classificação se necessário
+        await self.db.classificacoes_motoristas.update_one(
+            {"motorista_id": motorista_id},
+            {"$set": {"pontuacao_cuidado_veiculo": calc["pontuacao_final"]}}
+        )
+        
+        return {
+            "motorista_id": motorista_id,
+            "avaliacao": avaliacao,
+            "pontuacao_cuidado_atualizada": calc["pontuacao_final"],
+            "detalhes": calc
+        }
