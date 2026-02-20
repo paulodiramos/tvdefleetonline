@@ -2425,9 +2425,12 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         }));
                       }}
                     />
+                    {planoForm.precos?.semanal > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos.semanal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                    )}
                   </div>
                   <div>
-                    <Label>Mensal (€)</Label>
+                    <Label>Mensal (€ s/IVA)</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -2441,9 +2444,12 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         }));
                       }}
                     />
+                    {planoForm.precos?.mensal > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos.mensal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                    )}
                   </div>
                   <div>
-                    <Label>Anual (€)</Label>
+                    <Label>Anual (€ s/IVA)</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -2457,6 +2463,9 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         }));
                       }}
                     />
+                    {planoForm.precos?.anual > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos.anual * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                    )}
                   </div>
                 </div>
               )}
