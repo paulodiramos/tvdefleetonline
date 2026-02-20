@@ -96,6 +96,7 @@ from routes.admin import router as admin_router
 from routes.documentos import router as documentos_router
 from routes.users import router as users_router
 from routes.storage import router as storage_router
+from routes.storage_config import router as storage_config_router
 from routes.modulos import router as modulos_router
 from routes.recibos import router as recibos_router
 from routes.empresas_faturacao import router as empresas_faturacao_router
