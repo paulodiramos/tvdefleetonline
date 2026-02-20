@@ -19,29 +19,27 @@ ADMIN_EMAIL = "admin@tvdefleet.com"
 ADMIN_PASSWORD = "Admin123!"
 
 
-class TestSetup:
-    """Setup and authentication tests"""
-    
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get admin authentication token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
-        })
-        assert response.status_code == 200, f"Login failed: {response.text}"
-        return response.json().get("token")
-    
-    @pytest.fixture(scope="class")
-    def headers(self, auth_token):
-        """Get authenticated headers"""
-        return {
-            "Authorization": f"Bearer {auth_token}",
-            "Content-Type": "application/json"
-        }
+@pytest.fixture(scope="module")
+def auth_token():
+    """Get admin authentication token"""
+    response = requests.post(f"{BASE_URL}/api/auth/login", json={
+        "email": ADMIN_EMAIL,
+        "password": ADMIN_PASSWORD
+    })
+    assert response.status_code == 200, f"Login failed: {response.text}"
+    return response.json().get("token")
 
 
-class TestPermanentDeletion(TestSetup):
+@pytest.fixture(scope="module")
+def headers(auth_token):
+    """Get authenticated headers"""
+    return {
+        "Authorization": f"Bearer {auth_token}",
+        "Content-Type": "application/json"
+    }
+
+
+class TestPermanentDeletion:
     """Tests for permanent deletion endpoints"""
     
     def test_delete_plano_permanente_endpoint_exists(self, headers):
@@ -164,7 +162,7 @@ class TestPermanentDeletion(TestSetup):
         assert "permanentemente" in delete_response.json().get("message", "").lower()
 
 
-class TestPrecosEspeciais(TestSetup):
+class TestPrecosEspeciais:
     """Tests for preços especiais endpoints"""
     
     def test_list_precos_especiais_endpoint(self, headers):
@@ -224,7 +222,7 @@ class TestPrecosEspeciais(TestSetup):
                 assert delete_response.status_code == 200, f"Failed to delete preço especial: {delete_response.text}"
 
 
-class TestModuloDestaque(TestSetup):
+class TestModuloDestaque:
     """Tests for módulo destaque field"""
     
     def test_create_modulo_with_destaque(self, headers):
@@ -302,7 +300,7 @@ class TestModuloDestaque(TestSetup):
         print(f"Found {destaque_count} módulos with destaque=True out of {len(modulos)} total")
 
 
-class TestPlanoPrecos(TestSetup):
+class TestPlanoPrecos:
     """Tests for plano preços structure (with IVA fields)"""
     
     def test_plano_has_precos_plano_structure(self, headers):
@@ -336,7 +334,7 @@ class TestPlanoPrecos(TestSetup):
                 print("Plano does not have taxa_iva field (will default to 23%)")
 
 
-class TestDeactivationEndpoints(TestSetup):
+class TestDeactivationEndpoints:
     """Tests for deactivation (soft delete) endpoints"""
     
     def test_deactivate_plano(self, headers):
