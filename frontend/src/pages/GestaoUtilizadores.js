@@ -71,6 +71,9 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
   const [migratingMotoristas, setMigratingMotoristas] = useState(false);
   const [migrationResult, setMigrationResult] = useState(null);
   const [showMigrationDialog, setShowMigrationDialog] = useState(false);
+  const [recalculandoClassificacoes, setRecalculandoClassificacoes] = useState(false);
+  const [classificacoesResult, setClassificacoesResult] = useState(null);
+  const [showClassificacoesDialog, setShowClassificacoesDialog] = useState(false);
 
   // Verificar filtro da URL ao carregar
   useEffect(() => {
