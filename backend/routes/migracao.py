@@ -7,13 +7,16 @@ Executa as seguintes correções:
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from utils.database import db
+from utils.database import get_database
 from utils.auth import get_current_user
 from models.user import UserRole
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Obter instância da base de dados
+db = get_database()
 
 
 @router.post("/migrar-motoristas")
