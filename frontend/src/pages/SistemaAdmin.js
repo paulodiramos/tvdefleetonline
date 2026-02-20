@@ -4,11 +4,27 @@ import Layout from '@/components/Layout';
 import { API } from '@/App';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { 
   Server, HardDrive, RefreshCw, Play, CheckCircle, XCircle, 
-  AlertTriangle, Loader2, Monitor, Database
+  AlertTriangle, Loader2, Monitor, Database, Mail, Trash2, UserX, Shield
 } from 'lucide-react';
 
 const SistemaAdmin = ({ user, onLogout }) => {
@@ -16,6 +32,13 @@ const SistemaAdmin = ({ user, onLogout }) => {
   const [status, setStatus] = useState(null);
   const [installing, setInstalling] = useState(false);
   const [restarting, setRestarting] = useState(null);
+  
+  // Estados para emails bloqueados
+  const [emailsBloqueados, setEmailsBloqueados] = useState(null);
+  const [loadingEmails, setLoadingEmails] = useState(false);
+  const [limpandoEmails, setLimpandoEmails] = useState(false);
+  const [libertandoEmail, setLibertandoEmail] = useState(null);
+  const [showConfirmLimpar, setShowConfirmLimpar] = useState(false);
 
   useEffect(() => {
     fetchStatus();
