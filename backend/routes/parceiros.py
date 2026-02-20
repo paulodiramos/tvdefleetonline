@@ -691,13 +691,15 @@ async def delete_parceiro(
     parceiro_id: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Delete parceiro (Admin only)"""
+    """Delete parceiro PERMANENTEMENTE (Admin only)"""
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Apenas Admin pode eliminar parceiros")
     
     parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
     if not parceiro:
         raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    email = parceiro.get("email")
     
     # Unassign all vehicles
     vehicles_result = await db.vehicles.update_many(
@@ -715,15 +717,22 @@ async def delete_parceiro(
     if parceiro.get("user_id"):
         await db.users.delete_one({"id": parceiro["user_id"]})
     
+    # Também eliminar user por email (garante limpeza completa)
+    if email:
+        await db.users.delete_many({"email": email})
+    
     # Delete parceiro
     delete_result = await db.parceiros.delete_one({"id": parceiro_id})
     
     if delete_result.deleted_count == 0:
         raise HTTPException(status_code=500, detail="Erro ao eliminar parceiro")
     
+    logger.info(f"Parceiro {parceiro_id} ({email}) eliminado permanentemente por {current_user['id']}")
+    
     return {
         "message": f"Parceiro '{parceiro.get('nome_empresa', 'N/A')}' eliminado com sucesso",
         "parceiro_id": parceiro_id,
+        "email_libertado": email,
         "vehicles_unassigned": vehicles_result.modified_count,
         "motoristas_unassigned": motoristas_result.modified_count,
         "deleted_by": current_user["id"],
