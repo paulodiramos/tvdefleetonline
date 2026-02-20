@@ -9,6 +9,22 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +36,8 @@ import {
 import { 
   HardDrive, Cloud, CloudOff, RefreshCw, Loader2, CheckCircle, 
   XCircle, Settings, Link2, Unlink, FolderSync, Database,
-  FileText, Car, Users, Receipt, ClipboardCheck, FileCheck
+  FileText, Car, Users, Receipt, ClipboardCheck, FileCheck,
+  Building2, Eye
 } from 'lucide-react';
 
 const StorageConfig = ({ user, onLogout }) => {
@@ -32,11 +49,73 @@ const StorageConfig = ({ user, onLogout }) => {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [connectForm, setConnectForm] = useState({ email: '', access_token: '', api_key: '' });
+  
+  // Admin/Gestão: partner selection
+  const [parceiros, setParceiros] = useState([]);
+  const [selectedParceiro, setSelectedParceiro] = useState(null);
+  const [allConfigs, setAllConfigs] = useState([]);
+  const [activeTab, setActiveTab] = useState('config');
 
-  const fetchConfig = async () => {
+  const isAdmin = user?.role === 'admin';
+  const isGestao = user?.role === 'gestao';
+  const canSelectPartner = isAdmin || isGestao;
+
+  // Fetch list of partners for admin/gestão
+  const fetchParceiros = async () => {
+    if (!canSelectPartner) return;
+    
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/storage-config`, {
+      let endpoint = `${API}/parceiros`;
+      
+      if (isGestao) {
+        endpoint = `${API}/gestores/${user.id}/parceiros`;
+      }
+      
+      const response = await fetch(endpoint, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const lista = data.parceiros || data || [];
+        setParceiros(lista);
+      }
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    }
+  };
+
+  // Fetch all configs for admin view
+  const fetchAllConfigs = async () => {
+    if (!isAdmin) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/storage-config/admin/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAllConfigs(data.configs || []);
+      }
+    } catch (error) {
+      console.error('Error fetching all configs:', error);
+    }
+  };
+
+  const fetchConfig = async (parceiroId = null) => {
+    try {
+      const token = localStorage.getItem('token');
+      let url = `${API}/storage-config`;
+      
+      // If admin/gestão selected a specific partner
+      if (parceiroId && canSelectPartner) {
+        url = `${API}/storage-config?parceiro_id=${parceiroId}`;
+      }
+      
+      const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
