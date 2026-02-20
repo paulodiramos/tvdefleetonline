@@ -123,6 +123,13 @@ async def create_parceiro_public(parceiro_data: Dict[str, Any]):
             detail="Código de Certidão Comercial é obrigatório e deve estar no formato xxxx-xxxx-xxxx"
         )
     
+    # Buscar plano base gratuito para parceiros
+    plano_base = await db.planos_sistema.find_one({
+        "preco_mensal": 0, 
+        "ativo": True, 
+        "tipo_usuario": "parceiro"
+    }, {"_id": 0})
+    
     new_parceiro = {
         "id": parceiro_id,
         "nome": parceiro_data.get("nome"),
@@ -131,20 +138,36 @@ async def create_parceiro_public(parceiro_data: Dict[str, Any]):
         "nif": parceiro_data.get("nif"),
         "morada": parceiro_data.get("morada"),
         "codigo_postal": parceiro_data.get("codigo_postal"),
+        "localidade": parceiro_data.get("localidade"),
         "codigo_certidao_comercial": codigo_certidao,
         "responsavel_nome": parceiro_data.get("responsavel_nome"),
         "responsavel_contacto": parceiro_data.get("responsavel_contacto"),
+        "numero_veiculos": parceiro_data.get("numero_veiculos", 0),
+        "numero_motoristas": parceiro_data.get("numero_motoristas", 0),
+        "finalidade": parceiro_data.get("finalidade", "gestao_frota"),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "approved": False,
         "status": "pendente"
     }
+    
+    # Atribuir plano base se existir
+    if plano_base:
+        plano_valida_ate = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        new_parceiro["plano_id"] = plano_base["id"]
+        new_parceiro["plano_nome"] = plano_base["nome"]
+        new_parceiro["plano_valida_ate"] = plano_valida_ate
+        new_parceiro["plano_status"] = "pendente"  # Só fica ativo após aprovação
+        logger.info(f"Pre-assigned base plan {plano_base['id']} to new public parceiro {parceiro_id}")
+    else:
+        logger.warning(f"No base plan found for public parceiro registration {parceiro_id}")
     
     await db.parceiros.insert_one(new_parceiro)
     
     return {
         "success": True,
         "message": "Parceiro registado com sucesso. Aguarde aprovação.",
-        "parceiro_id": parceiro_id
+        "parceiro_id": parceiro_id,
+        "plano_atribuido": plano_base["nome"] if plano_base else None
     }
 
 
