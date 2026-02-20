@@ -165,6 +165,7 @@ class ModuloCreate(BaseModel):
     ordem: int = 0
     funcionalidades: List[str] = []
     requer_modulos: List[str] = []
+    destaque: bool = False
 
 
 class ModuloUpdate(BaseModel):
