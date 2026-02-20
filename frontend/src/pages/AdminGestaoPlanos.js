@@ -585,6 +585,22 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
     }
   };
 
+  const handleDeletePlanoPermanente = async (planoId, planoNome) => {
+    if (!confirm(`⚠️ ATENÇÃO: Tem certeza que deseja ELIMINAR PERMANENTEMENTE o plano "${planoNome}"?\n\nEsta ação é IRREVERSÍVEL!`)) return;
+    if (!confirm(`Última confirmação: Apagar permanentemente "${planoNome}"?`)) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/gestao-planos/planos/${planoId}?permanente=true`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Plano eliminado permanentemente');
+      fetchDados();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar plano');
+    }
+  };
+
   const handleDeleteModulo = async (moduloId) => {
     if (!confirm('Tem certeza que deseja desativar este módulo?')) return;
 
@@ -597,6 +613,38 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
       fetchDados();
     } catch (error) {
       toast.error('Erro ao desativar módulo');
+    }
+  };
+
+  const handleDeleteModuloPermanente = async (moduloId, moduloNome) => {
+    if (!confirm(`⚠️ ATENÇÃO: Tem certeza que deseja ELIMINAR PERMANENTEMENTE o módulo "${moduloNome}"?\n\nEsta ação é IRREVERSÍVEL!`)) return;
+    if (!confirm(`Última confirmação: Apagar permanentemente "${moduloNome}"?`)) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/gestao-planos/modulos/${moduloId}?permanente=true`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Módulo eliminado permanentemente');
+      fetchDados();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar módulo');
+    }
+  };
+
+  const handleDeleteCategoriaPermanente = async (categoriaId, categoriaNome) => {
+    if (!confirm(`⚠️ ATENÇÃO: Tem certeza que deseja ELIMINAR PERMANENTEMENTE a categoria "${categoriaNome}"?\n\nEsta ação é IRREVERSÍVEL!`)) return;
+    if (!confirm(`Última confirmação: Apagar permanentemente "${categoriaNome}"?`)) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/gestao-planos/categorias/${categoriaId}/permanente`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Categoria eliminada permanentemente');
+      fetchCategorias();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar categoria');
     }
   };
 
