@@ -1379,34 +1379,49 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                     
                     {modulo.precos && (
                       <div className="p-2 bg-slate-50 rounded-lg text-xs space-y-1">
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-start">
                           <span className="text-slate-500">Base mensal:</span>
-                          <span className="font-semibold">€{modulo.precos.mensal || 0}</span>
+                          <div className="text-right">
+                            <div className="font-semibold">€{formatarEuros(modulo.precos.mensal || 0)}</div>
+                            <div className="text-[10px] text-slate-400">€{formatarEuros(calcularSemIva(modulo.precos.mensal || 0))} s/IVA</div>
+                          </div>
                         </div>
                         {modulo.tipo_cobranca === 'por_veiculo' && modulo.precos.por_veiculo_mensal > 0 && (
-                          <div className="flex justify-between text-green-700">
+                          <div className="flex justify-between items-start text-green-700">
                             <span>Por veículo:</span>
-                            <span className="font-semibold">+€{modulo.precos.por_veiculo_mensal}/veículo</span>
+                            <div className="text-right">
+                              <div className="font-semibold">+€{formatarEuros(modulo.precos.por_veiculo_mensal)}</div>
+                              <div className="text-[10px] text-green-500">€{formatarEuros(calcularSemIva(modulo.precos.por_veiculo_mensal))} s/IVA</div>
+                            </div>
                           </div>
                         )}
                         {modulo.tipo_cobranca === 'por_motorista' && modulo.precos.por_motorista_mensal > 0 && (
-                          <div className="flex justify-between text-purple-700">
+                          <div className="flex justify-between items-start text-purple-700">
                             <span>Por motorista:</span>
-                            <span className="font-semibold">+€{modulo.precos.por_motorista_mensal}/motorista</span>
+                            <div className="text-right">
+                              <div className="font-semibold">+€{formatarEuros(modulo.precos.por_motorista_mensal)}</div>
+                              <div className="text-[10px] text-purple-500">€{formatarEuros(calcularSemIva(modulo.precos.por_motorista_mensal))} s/IVA</div>
+                            </div>
                           </div>
                         )}
                         {modulo.tipo_cobranca === 'por_veiculo_motorista' && (
                           <>
                             {modulo.precos.por_veiculo_mensal > 0 && (
-                              <div className="flex justify-between text-green-700">
+                              <div className="flex justify-between items-start text-green-700">
                                 <span>Por veículo:</span>
-                                <span className="font-semibold">+€{modulo.precos.por_veiculo_mensal}/veículo</span>
+                                <div className="text-right">
+                                  <div className="font-semibold">+€{formatarEuros(modulo.precos.por_veiculo_mensal)}</div>
+                                  <div className="text-[10px] text-green-500">€{formatarEuros(calcularSemIva(modulo.precos.por_veiculo_mensal))} s/IVA</div>
+                                </div>
                               </div>
                             )}
                             {modulo.precos.por_motorista_mensal > 0 && (
-                              <div className="flex justify-between text-purple-700">
+                              <div className="flex justify-between items-start text-purple-700">
                                 <span>Por motorista:</span>
-                                <span className="font-semibold">+€{modulo.precos.por_motorista_mensal}/motorista</span>
+                                <div className="text-right">
+                                  <div className="font-semibold">+€{formatarEuros(modulo.precos.por_motorista_mensal)}</div>
+                                  <div className="text-[10px] text-purple-500">€{formatarEuros(calcularSemIva(modulo.precos.por_motorista_mensal))} s/IVA</div>
+                                </div>
                               </div>
                             )}
                           </>
