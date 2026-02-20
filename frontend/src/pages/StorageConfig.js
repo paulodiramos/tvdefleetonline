@@ -311,6 +311,24 @@ const StorageConfig = ({ user, onLogout }) => {
     }
   };
 
+  const getModeLabel = (modo) => {
+    switch (modo) {
+      case 'local': return 'Local';
+      case 'cloud': return 'Cloud';
+      case 'both': return 'Ambos';
+      default: return modo || 'Local';
+    }
+  };
+
+  const getModeColor = (modo) => {
+    switch (modo) {
+      case 'local': return 'bg-slate-100 text-slate-800';
+      case 'cloud': return 'bg-green-100 text-green-800';
+      case 'both': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-slate-100 text-slate-800';
+    }
+  };
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
@@ -323,14 +341,165 @@ const StorageConfig = ({ user, onLogout }) => {
 
   return (
     <Layout user={user} onLogout={onLogout}>
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <Database className="w-6 h-6 text-blue-600" />
-            Armazenamento de Documentos
-          </h1>
-          <p className="text-slate-600">Configure onde os seus documentos são guardados</p>
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <Database className="w-6 h-6 text-blue-600" />
+              Armazenamento de Documentos
+            </h1>
+            <p className="text-slate-600">Configure onde os documentos são guardados</p>
+          </div>
+          
+          {/* Partner Selector for Admin/Gestão */}
+          {canSelectPartner && parceiros.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-slate-500" />
+              <Select
+                value={selectedParceiro || ''}
+                onValueChange={handleParceiroChange}
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Selecione um parceiro" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">-- Minha Configuração --</SelectItem>
+                  {parceiros.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.empresa || p.name || p.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
+
+        {/* Admin: Tabs for Overview vs Config */}
+        {isAdmin ? (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="config" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Configuração
+              </TabsTrigger>
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                Visão Geral
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Configurações de Todos os Parceiros</CardTitle>
+                  <CardDescription>
+                    Veja como cada parceiro tem configurado o armazenamento
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Parceiro</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Modo</TableHead>
+                        <TableHead>Cloud</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="w-[80px]">Ação</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allConfigs.map((cfg, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">
+                            {cfg.parceiro_nome || '-'}
+                          </TableCell>
+                          <TableCell className="text-slate-500">
+                            {cfg.parceiro_email || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getModeColor(cfg.modo)}>
+                              {getModeLabel(cfg.modo)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {cfg.cloud_provider && cfg.cloud_provider !== 'none' ? (
+                              <span className="flex items-center gap-1">
+                                {getProviderIcon(cfg.cloud_provider)}
+                                {cfg.cloud_provider}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {cfg.cloud_connected ? (
+                              <Badge className="bg-green-100 text-green-800">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Conectado
+                              </Badge>
+                            ) : cfg.modo !== 'local' ? (
+                              <Badge variant="outline">
+                                <CloudOff className="w-3 h-3 mr-1" />
+                                Não conectado
+                              </Badge>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedParceiro(cfg.parceiro_id);
+                                setActiveTab('config');
+                                handleParceiroChange(cfg.parceiro_id);
+                              }}
+                            >
+                              <Settings className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {allConfigs.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-slate-500 py-8">
+                            Nenhuma configuração encontrada
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="config">
+              {renderConfigSection()}
+            </TabsContent>
+          </Tabs>
+        ) : (
+          renderConfigSection()
+        )}
+      </div>
+    </Layout>
+  );
+
+  function renderConfigSection() {
+    return (
+      <>
+        {selectedParceiro && canSelectPartner && (
+          <Card className="mb-4 border-blue-200 bg-blue-50">
+            <CardContent className="py-3">
+              <div className="flex items-center gap-2 text-blue-800">
+                <Building2 className="w-4 h-4" />
+                <span>A configurar para: <strong>{parceiros.find(p => p.id === selectedParceiro)?.empresa || parceiros.find(p => p.id === selectedParceiro)?.name || 'Parceiro'}</strong></span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Storage Mode Selection */}
         <Card className="mb-6">
