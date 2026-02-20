@@ -507,6 +507,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     setAprovarParceiroId('');
     setAprovarPlanoId('');
     setAprovarPrecoEspecialId('');
+    setAprovarClassificacao('');
     setPrecosEspeciaisDisponiveis([]);
     
     // Fetch available plans for the approval dialog
@@ -519,6 +520,20 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     } catch (error) {
       console.error('Error fetching plans:', error);
       setPlanosDisponiveis([]);
+    }
+    
+    // Fetch available classifications for motoristas
+    if (usuario.role === 'motorista') {
+      try {
+        const token = localStorage.getItem('token');
+        const classRes = await axios.get(`${API}/comissoes/classificacao/config`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setClassificacoesDisponiveis(classRes.data?.niveis || []);
+      } catch (error) {
+        console.error('Error fetching classifications:', error);
+        setClassificacoesDisponiveis([]);
+      }
     }
     
     setShowAprovarDialog(true);
