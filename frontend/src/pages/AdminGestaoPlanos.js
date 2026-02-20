@@ -2132,12 +2132,11 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold flex items-center gap-2">
                   <Euro className="w-4 h-4" />
-                  Preços
+                  Preços (valores sem IVA)
                 </h4>
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="text-xs">
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Cálculo interligado: altere qualquer campo
+                  <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                    Introduza valores SEM IVA
                   </Badge>
                   <div className="flex items-center gap-2">
                     <Label className="text-xs">IVA:</Label>
@@ -2157,14 +2156,14 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                 <>
                   {/* Preço Base */}
                   <div>
-                    <Label className="text-sm font-medium text-blue-700 mb-2 block">Preço Base do Plano (c/IVA)</Label>
+                    <Label className="text-sm font-medium text-blue-700 mb-2 block">Preço Base do Plano (s/IVA)</Label>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <Label className="text-xs text-slate-500">Semanal (€)</Label>
+                        <Label className="text-xs text-slate-500">Semanal (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="c/IVA"
+                          placeholder="s/IVA"
                           className="border-blue-300 focus:border-blue-500"
                           value={planoForm.precos_plano?.base_semanal || ''}
                           onChange={(e) => {
@@ -2176,14 +2175,15 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                           }}
                         />
                         {planoForm.precos_plano?.base_semanal > 0 && (
-                          <span className="text-xs text-slate-400">s/IVA: €{(planoForm.precos_plano.base_semanal / (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.base_semanal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
                         )}
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Mensal (€)</Label>
+                        <Label className="text-xs text-slate-500">Mensal (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
+                          placeholder="s/IVA"
                           className="border-blue-200 focus:border-blue-400"
                           value={planoForm.precos_plano?.base_mensal || ''}
                           onChange={(e) => {
@@ -2195,14 +2195,15 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                           }}
                         />
                         {planoForm.precos_plano?.base_mensal > 0 && (
-                          <span className="text-xs text-slate-400">s/IVA: €{(planoForm.precos_plano.base_mensal / (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.base_mensal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
                         )}
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Anual (€)</Label>
+                        <Label className="text-xs text-slate-500">Anual (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
+                          placeholder="s/IVA"
                           className="border-blue-200 focus:border-blue-400"
                           value={planoForm.precos_plano?.base_anual || ''}
                           onChange={(e) => {
@@ -2214,7 +2215,7 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                           }}
                         />
                         {planoForm.precos_plano?.base_anual > 0 && (
-                          <span className="text-xs text-slate-400">s/IVA: €{(planoForm.precos_plano.base_anual / (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.base_anual * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
                         )}
                       </div>
                     </div>
