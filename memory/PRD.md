@@ -294,7 +294,11 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 - [x] Anexar documentos a seguros/inspeções/extintores - **DONE** (já existia)
 - [x] Preços Especiais - lógica de backend completa - **DONE** (2026-02-19)
   - 5 tipos: percentagem, valor_fixo, valor_fixo_veiculo, valor_fixo_motorista, valor_fixo_motorista_veiculo
-- [ ] Continuar refatoração do FichaVeiculo.js
+- [x] UI do Fluxo de Aprovação Melhorado - **DONE** (2026-02-20)
+  - Admin pode atribuir Parceiro e Classificação ao aprovar motoristas
+- [x] Botão de Migração de Dados no Admin - **DONE** (2026-02-20)
+  - Página /usuarios com botão "Corrigir Dados" e modal de estatísticas
+- [ ] Continuar refatoração do FichaVeiculo.js (hooks criados, falta migrar componente)
 
 ### P2 - Medium Priority
 - [ ] Integração WhatsApp
