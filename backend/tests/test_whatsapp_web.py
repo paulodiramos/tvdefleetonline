@@ -16,8 +16,13 @@ class TestWhatsAppWebAPI:
             "email": "admin@tvdefleet.com",
             "password": "Admin123!"
         })
+        print(f"Admin login response: {response.status_code}")
         if response.status_code == 200:
-            return response.json().get("token")
+            data = response.json()
+            # Try both token field names
+            token = data.get("access_token") or data.get("token")
+            if token:
+                return token
         pytest.skip("Admin authentication failed")
     
     @pytest.fixture
@@ -27,8 +32,12 @@ class TestWhatsAppWebAPI:
             "email": "geral@zmbusines.com",
             "password": "Admin123!"
         })
+        print(f"Parceiro login response: {response.status_code}")
         if response.status_code == 200:
-            return response.json().get("token")
+            data = response.json()
+            token = data.get("access_token") or data.get("token")
+            if token:
+                return token
         pytest.skip("Parceiro authentication failed")
     
     def test_health_endpoint(self):
@@ -39,7 +48,6 @@ class TestWhatsAppWebAPI:
         assert response.status_code == 200
         data = response.json()
         assert "status" in data
-        # Service should be running
         print(f"WhatsApp service status: {data.get('status')}")
         print(f"Chromium available: {data.get('chromium', {}).get('available')}")
     
@@ -145,10 +153,6 @@ class TestWhatsAppWebAPI:
             "Authorization": f"Bearer {admin_token}",
             "Content-Type": "application/json"
         }
-        
-        # Get current config
-        response = requests.get(f"{BASE_URL}/api/whatsapp-web/alerts-config", headers=headers)
-        original_config = response.json()
         
         # Update config
         new_config = {
