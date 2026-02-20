@@ -90,6 +90,8 @@ class PlanosModulosService:
         # Converter enums
         if "tipo_cobranca" in update_data and hasattr(update_data["tipo_cobranca"], 'value'):
             update_data["tipo_cobranca"] = update_data["tipo_cobranca"].value
+        if "tipo_usuario" in update_data and hasattr(update_data["tipo_usuario"], 'value'):
+            update_data["tipo_usuario"] = update_data["tipo_usuario"].value
         if "precos" in update_data and hasattr(update_data["precos"], 'model_dump'):
             update_data["precos"] = update_data["precos"].model_dump()
         
