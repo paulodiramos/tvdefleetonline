@@ -348,7 +348,7 @@ class ComissoesService:
                 now = datetime.now(timezone.utc)
                 diff = now - data_inicio
                 meses_servico = diff.days // 30
-            except:
+            except (ValueError, TypeError):
                 pass
         
         # Obter pontuação de cuidado do veículo (se existir)
@@ -752,7 +752,7 @@ class ComissoesService:
                 now = datetime.now(timezone.utc)
                 diff = now - data_inicio
                 meses_servico = diff.days // 30
-            except:
+            except (ValueError, TypeError):
                 pass
         
         # Calcular pontuação de cuidado actualizada
