@@ -2688,43 +2688,60 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
               </div>
             </div>
             
-            {/* Preços Base */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label>Semanal (€)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={moduloForm.precos?.semanal || ''}
-                  onChange={(e) => setModuloForm(prev => ({ 
-                    ...prev, 
-                    precos: { ...prev.precos, semanal: parseFloat(e.target.value) || 0 }
-                  }))}
-                />
+            {/* Preços Base - valores sem IVA */}
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-medium text-blue-700">Preços Base (s/IVA)</Label>
+                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                  Introduza valores SEM IVA
+                </Badge>
               </div>
-              <div>
-                <Label>Mensal (€)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={moduloForm.precos?.mensal || ''}
-                  onChange={(e) => setModuloForm(prev => ({ 
-                    ...prev, 
-                    precos: { ...prev.precos, mensal: parseFloat(e.target.value) || 0 }
-                  }))}
-                />
-              </div>
-              <div>
-                <Label>Anual (€)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={moduloForm.precos?.anual || ''}
-                  onChange={(e) => setModuloForm(prev => ({ 
-                    ...prev, 
-                    precos: { ...prev.precos, anual: parseFloat(e.target.value) || 0 }
-                  }))}
-                />
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-xs text-slate-500">Semanal (€ s/IVA)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={moduloForm.precos?.semanal || ''}
+                    onChange={(e) => setModuloForm(prev => ({ 
+                      ...prev, 
+                      precos: { ...prev.precos, semanal: parseFloat(e.target.value) || 0 }
+                    }))}
+                  />
+                  {moduloForm.precos?.semanal > 0 && (
+                    <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.semanal * 1.23).toFixed(2)}</span>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-500">Mensal (€ s/IVA)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={moduloForm.precos?.mensal || ''}
+                    onChange={(e) => setModuloForm(prev => ({ 
+                      ...prev, 
+                      precos: { ...prev.precos, mensal: parseFloat(e.target.value) || 0 }
+                    }))}
+                  />
+                  {moduloForm.precos?.mensal > 0 && (
+                    <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.mensal * 1.23).toFixed(2)}</span>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-500">Anual (€ s/IVA)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={moduloForm.precos?.anual || ''}
+                    onChange={(e) => setModuloForm(prev => ({ 
+                      ...prev, 
+                      precos: { ...prev.precos, anual: parseFloat(e.target.value) || 0 }
+                    }))}
+                  />
+                  {moduloForm.precos?.anual > 0 && (
+                    <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.anual * 1.23).toFixed(2)}</span>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -2733,7 +2750,7 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
               <div className="p-3 bg-green-50 rounded-lg">
                 <Label className="text-green-700 font-medium mb-2 flex items-center gap-1">
                   <Car className="w-4 h-4" />
-                  Preço por Veículo (€)
+                  Preço por Veículo (€ s/IVA)
                 </Label>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
@@ -2748,6 +2765,9 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         precos: { ...prev.precos, por_veiculo_semanal: parseFloat(e.target.value) || 0 }
                       }))}
                     />
+                    {moduloForm.precos?.por_veiculo_semanal > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.por_veiculo_semanal * 1.23).toFixed(2)}</span>
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs text-slate-500">Mensal</Label>
@@ -2761,6 +2781,9 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         precos: { ...prev.precos, por_veiculo_mensal: parseFloat(e.target.value) || 0 }
                       }))}
                     />
+                    {moduloForm.precos?.por_veiculo_mensal > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.por_veiculo_mensal * 1.23).toFixed(2)}</span>
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs text-slate-500">Anual</Label>
@@ -2774,6 +2797,9 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         precos: { ...prev.precos, por_veiculo_anual: parseFloat(e.target.value) || 0 }
                       }))}
                     />
+                    {moduloForm.precos?.por_veiculo_anual > 0 && (
+                      <span className="text-xs text-green-600 font-medium">c/IVA: €{(moduloForm.precos.por_veiculo_anual * 1.23).toFixed(2)}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2784,7 +2810,7 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
               <div className="p-3 bg-purple-50 rounded-lg">
                 <Label className="text-purple-700 font-medium mb-2 flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  Preço por Motorista (€)
+                  Preço por Motorista (€ s/IVA)
                 </Label>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
