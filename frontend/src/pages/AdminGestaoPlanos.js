@@ -2225,15 +2225,15 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                   <div className="pt-3 border-t border-slate-200">
                     <Label className="text-sm font-medium text-green-700 mb-2 flex items-center gap-2">
                       <Car className="w-4 h-4" />
-                      Preço por Veículo (c/IVA)
+                      Preço por Veículo (s/IVA)
                     </Label>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <Label className="text-xs text-slate-500">Semanal (€)</Label>
+                        <Label className="text-xs text-slate-500">Semanal (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="c/IVA"
+                          placeholder="s/IVA"
                           className="border-green-300 focus:border-green-500"
                           value={planoForm.precos_plano?.por_veiculo_semanal || ''}
                           onChange={(e) => {
@@ -2245,7 +2245,7 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                           }}
                         />
                         {planoForm.precos_plano?.por_veiculo_semanal > 0 && (
-                          <span className="text-xs text-slate-400">s/IVA: €{(planoForm.precos_plano.por_veiculo_semanal / (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.por_veiculo_semanal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
                         )}
                       </div>
                       <div>
