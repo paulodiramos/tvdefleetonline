@@ -403,11 +403,11 @@ tf = contact_box.text_frame
 tf.word_wrap = True
 
 contacts = [
-    "📧 Email: geral@tvdefleet.com",
-    "🌐 Website: www.tvdefleet.com", 
-    "📱 App: Google Play Store",
+    "Email: geral@tvdefleet.com",
+    "Website: www.tvdefleet.com", 
+    "App: Google Play Store",
     "",
-    "Agende uma Demonstração Gratuita!"
+    "Agende uma Demonstracao Gratuita!"
 ]
 
 for i, contact in enumerate(contacts):
@@ -417,7 +417,7 @@ for i, contact in enumerate(contacts):
         p = tf.add_paragraph()
     p.text = contact
     p.font.size = Pt(28) if i < 4 else Pt(32)
-    p.font.color.rgb = BRANCO if i < 4 else RgbColor(74, 222, 128)
+    set_font_color(p.font, BRANCO if i < 4 else (74, 222, 128))
     p.font.bold = True if i >= 4 else False
     p.alignment = PP_ALIGN.CENTER
     p.space_after = Pt(20)
@@ -425,5 +425,5 @@ for i, contact in enumerate(contacts):
 # Guardar
 output_path = "/app/docs/TVDEFleet_Apresentacao.pptx"
 prs.save(output_path)
-print(f"✅ PowerPoint criado com sucesso: {output_path}")
-print(f"📊 Total de slides: {len(prs.slides)}")
+print(f"PowerPoint criado com sucesso: {output_path}")
+print(f"Total de slides: {len(prs.slides)}")
