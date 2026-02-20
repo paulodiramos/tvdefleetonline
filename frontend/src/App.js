@@ -932,6 +932,16 @@ function App() {
             }
           />
           <Route
+            path="/whatsapp"
+            element={
+              user && ['admin', 'parceiro', 'gestao'].includes(user.role) ? (
+                <WhatsAppManager user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/contabilidade"
             element={
               user && ['admin', 'contabilista', 'parceiro', 'gestao'].includes(user.role) ? (
