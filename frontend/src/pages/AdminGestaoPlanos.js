@@ -2809,51 +2809,82 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
               <div>
                 <Label className="flex items-center gap-2 mb-2">
                   Ícone 
-                  <span className="text-xs text-slate-400">(emoji ou texto)</span>
+                  <span className="text-xs text-slate-400">(emoji)</span>
                 </Label>
-                <div className="space-y-2">
-                  <Input
-                    value={moduloForm.icone}
-                    onChange={(e) => setModuloForm(prev => ({ ...prev, icone: e.target.value }))}
-                    className="text-center text-xl"
-                    placeholder="📦"
-                  />
-                  <div className="flex flex-wrap gap-1 p-2 bg-slate-50 rounded border">
-                    {['📦', '📧', '🔧', '📅', '📢', '📄', '💬', '📊', '🤖', '🔍', '📚', '💰', '🚗', '👤', '⚙️', '🔔', '⚠️', '✅', '❌', '📌', '🔐', '📋', '🪪', '💳', '📈', '📉', '🏦', '💵', '🎫', '📝'].map(emoji => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => setModuloForm(prev => ({ ...prev, icone: emoji }))}
-                        className={`w-7 h-7 rounded hover:bg-slate-200 transition-colors text-base flex items-center justify-center ${moduloForm.icone === emoji ? 'bg-blue-100 ring-2 ring-blue-400' : ''}`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-11 text-xl justify-start gap-3"
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                        {moduloForm.icone || '📦'}
+                      </span>
+                      <span className="text-sm text-slate-500">Clique para escolher</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" align="start">
+                    <div className="space-y-2">
+                      <Input
+                        value={moduloForm.icone}
+                        onChange={(e) => setModuloForm(prev => ({ ...prev, icone: e.target.value }))}
+                        className="text-center text-xl h-9"
+                        placeholder="📦"
+                      />
+                      <div className="grid grid-cols-6 gap-1 max-h-36 overflow-y-auto">
+                        {['📦', '📧', '🔧', '📅', '📢', '📄', '💬', '📊', '🤖', '🔍', '📚', '💰', '🚗', '👤', '⚙️', '🔔', '⚠️', '✅', '🪪', '💳', '📈', '🏦', '💵', '📝'].map(emoji => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => setModuloForm(prev => ({ ...prev, icone: emoji }))}
+                            className={`w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors text-base flex items-center justify-center ${moduloForm.icone === emoji ? 'bg-blue-100 ring-2 ring-blue-400' : ''}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div>
                 <Label className="mb-2 block">Cor do Módulo</Label>
-                <div className="space-y-2">
-                  <Input
-                    type="color"
-                    value={moduloForm.cor}
-                    onChange={(e) => setModuloForm(prev => ({ ...prev, cor: e.target.value }))}
-                    className="w-full h-10"
-                  />
-                  <div className="flex flex-wrap gap-1 p-2 bg-slate-50 rounded border">
-                    {['#EF4444', '#F59E0B', '#10B981', '#8B5CF6', '#3B82F6', '#25D366', '#EC4899', '#6366F1', '#14B8A6', '#9333EA'].map(color => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => setModuloForm(prev => ({ ...prev, cor: color }))}
-                        className={`w-6 h-6 rounded-full border-2 ${moduloForm.cor === color ? 'ring-2 ring-offset-1 ring-slate-600' : 'border-transparent'}`}
-                        style={{ backgroundColor: color }}
-                        title={color}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-11 justify-start gap-3"
+                    >
+                      <span 
+                        className="w-8 h-8 rounded-lg border"
+                        style={{ backgroundColor: moduloForm.cor || '#3B82F6' }}
                       />
-                    ))}
-                  </div>
-                </div>
+                      <span className="text-sm text-slate-500">{moduloForm.cor || '#3B82F6'}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-44 p-3" align="start">
+                    <div className="space-y-3">
+                      <Input
+                        type="color"
+                        value={moduloForm.cor || '#3B82F6'}
+                        onChange={(e) => setModuloForm(prev => ({ ...prev, cor: e.target.value }))}
+                        className="w-full h-8 cursor-pointer"
+                      />
+                      <div className="grid grid-cols-5 gap-2">
+                        {['#EF4444', '#F59E0B', '#10B981', '#8B5CF6', '#3B82F6', '#25D366', '#EC4899', '#6366F1', '#14B8A6', '#0EA5E9'].map(color => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => setModuloForm(prev => ({ ...prev, cor: color }))}
+                            className={`w-6 h-6 rounded-full transition-transform hover:scale-110 ${moduloForm.cor === color ? 'ring-2 ring-offset-2 ring-slate-600' : ''}`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
