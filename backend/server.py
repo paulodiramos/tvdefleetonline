@@ -115,6 +115,7 @@ from routes.templates_contratos import router as templates_contratos_router
 from routes.ficheiros_importados import router as ficheiros_importados_router
 from routes.agenda import router as agenda_router
 from routes.whatsapp_cloud import router as whatsapp_router
+from routes.whatsapp_web import router as whatsapp_web_router
 from routes.rpa_automacao import router as rpa_automacao_router
 from routes.rpa_designer import router as rpa_designer_router
 from routes.rpa_uber_config import router as rpa_uber_config_router
