@@ -105,7 +105,7 @@ const RegistoMotorista = () => {
         approved: false
       };
 
-      const response = await axios.post(`${API}/api/auth/register`, finalData);
+      const response = await axios.post(`${API}/auth/register`, finalData);
       const userId = response.data.user_id || response.data.id;
       
       // 2. Upload de documentos
@@ -120,7 +120,7 @@ const RegistoMotorista = () => {
           formData.append('role', 'motorista');
           
           try {
-            await axios.post(`${API}/api/documentos/upload`, formData, {
+            await axios.post(`${API}/documentos/upload`, formData, {
               headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: token ? `Bearer ${token}` : ''
