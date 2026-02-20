@@ -123,9 +123,13 @@ async def create_parceiro_public(parceiro_data: Dict[str, Any]):
             detail="Código de Certidão Comercial é obrigatório e deve estar no formato xxxx-xxxx-xxxx"
         )
     
-    # Buscar plano base gratuito para parceiros
+    # Buscar plano base gratuito para parceiros (verificar ambos os campos de preço)
     plano_base = await db.planos_sistema.find_one({
-        "preco_mensal": 0, 
+        "$or": [
+            {"preco_mensal": 0},
+            {"precos.mensal": 0},
+            {"precos_plano.base_mensal": 0}
+        ],
         "ativo": True, 
         "tipo_usuario": "parceiro"
     }, {"_id": 0})
