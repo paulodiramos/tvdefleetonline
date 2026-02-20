@@ -48,8 +48,7 @@ def add_title_slide(prs, title, subtitle=""):
     
     # Fundo azul
     background = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, prs.slide_height)
-    background.fill.solid()
-    background.fill.fore_color.rgb = AZUL_ESCURO
+    set_shape_color(background, AZUL_ESCURO)
     background.line.fill.background()
     
     # Título
@@ -59,7 +58,7 @@ def add_title_slide(prs, title, subtitle=""):
     p.text = title
     p.font.size = Pt(54)
     p.font.bold = True
-    p.font.color.rgb = BRANCO
+    set_font_color(p.font, BRANCO)
     p.alignment = PP_ALIGN.CENTER
     
     # Subtítulo
@@ -69,7 +68,7 @@ def add_title_slide(prs, title, subtitle=""):
         p = tf.paragraphs[0]
         p.text = subtitle
         p.font.size = Pt(28)
-        p.font.color.rgb = RgbColor(147, 197, 253)  # Azul claro
+        set_font_color(p.font, (147, 197, 253))  # Azul claro
         p.alignment = PP_ALIGN.CENTER
     
     return slide
@@ -81,8 +80,7 @@ def add_content_slide(prs, title, bullet_points, icon=""):
     
     # Barra superior azul
     bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, Inches(1.2))
-    bar.fill.solid()
-    bar.fill.fore_color.rgb = AZUL_ESCURO
+    set_shape_color(bar, AZUL_ESCURO)
     bar.line.fill.background()
     
     # Título
@@ -92,7 +90,7 @@ def add_content_slide(prs, title, bullet_points, icon=""):
     p.text = f"{icon} {title}" if icon else title
     p.font.size = Pt(32)
     p.font.bold = True
-    p.font.color.rgb = BRANCO
+    set_font_color(p.font, BRANCO)
     
     # Conteúdo
     content_box = slide.shapes.add_textbox(Inches(0.8), Inches(1.6), Inches(11.733), Inches(5.5))
@@ -106,7 +104,7 @@ def add_content_slide(prs, title, bullet_points, icon=""):
             p = tf.add_paragraph()
         p.text = f"• {point}"
         p.font.size = Pt(22)
-        p.font.color.rgb = PRETO
+        set_font_color(p.font, PRETO)
         p.space_after = Pt(14)
     
     return slide
@@ -118,8 +116,7 @@ def add_two_column_slide(prs, title, left_content, right_content, icon=""):
     
     # Barra superior
     bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, Inches(1.2))
-    bar.fill.solid()
-    bar.fill.fore_color.rgb = AZUL_ESCURO
+    set_shape_color(bar, AZUL_ESCURO)
     bar.line.fill.background()
     
     # Título
@@ -129,7 +126,7 @@ def add_two_column_slide(prs, title, left_content, right_content, icon=""):
     p.text = f"{icon} {title}" if icon else title
     p.font.size = Pt(32)
     p.font.bold = True
-    p.font.color.rgb = BRANCO
+    set_font_color(p.font, BRANCO)
     
     # Coluna esquerda
     left_box = slide.shapes.add_textbox(Inches(0.5), Inches(1.6), Inches(5.8), Inches(5.5))
@@ -142,7 +139,7 @@ def add_two_column_slide(prs, title, left_content, right_content, icon=""):
             p = tf.add_paragraph()
         p.text = point
         p.font.size = Pt(20)
-        p.font.color.rgb = PRETO
+        set_font_color(p.font, PRETO)
         p.space_after = Pt(10)
     
     # Coluna direita
@@ -156,7 +153,7 @@ def add_two_column_slide(prs, title, left_content, right_content, icon=""):
             p = tf.add_paragraph()
         p.text = point
         p.font.size = Pt(20)
-        p.font.color.rgb = PRETO
+        set_font_color(p.font, PRETO)
         p.space_after = Pt(10)
     
     return slide
@@ -168,8 +165,7 @@ def add_table_slide(prs, title, headers, rows, icon=""):
     
     # Barra superior
     bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, Inches(1.2))
-    bar.fill.solid()
-    bar.fill.fore_color.rgb = AZUL_ESCURO
+    set_shape_color(bar, AZUL_ESCURO)
     bar.line.fill.background()
     
     # Título
@@ -179,7 +175,7 @@ def add_table_slide(prs, title, headers, rows, icon=""):
     p.text = f"{icon} {title}" if icon else title
     p.font.size = Pt(32)
     p.font.bold = True
-    p.font.color.rgb = BRANCO
+    set_font_color(p.font, BRANCO)
     
     # Tabela
     num_cols = len(headers)
@@ -197,11 +193,11 @@ def add_table_slide(prs, title, headers, rows, icon=""):
         cell = table.cell(0, i)
         cell.text = header
         cell.fill.solid()
-        cell.fill.fore_color.rgb = AZUL_CLARO
+        cell.fill.fore_color.rgb = rgb_to_pptx(AZUL_CLARO)
         p = cell.text_frame.paragraphs[0]
         p.font.bold = True
         p.font.size = Pt(16)
-        p.font.color.rgb = BRANCO
+        set_font_color(p.font, BRANCO)
         p.alignment = PP_ALIGN.CENTER
     
     # Rows
@@ -214,7 +210,7 @@ def add_table_slide(prs, title, headers, rows, icon=""):
             p.alignment = PP_ALIGN.CENTER
             if row_idx % 2 == 0:
                 cell.fill.solid()
-                cell.fill.fore_color.rgb = RgbColor(241, 245, 249)
+                cell.fill.fore_color.rgb = rgb_to_pptx((241, 245, 249))
     
     return slide
 
