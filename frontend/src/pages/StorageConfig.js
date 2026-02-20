@@ -356,14 +356,14 @@ const StorageConfig = ({ user, onLogout }) => {
             <div className="flex items-center gap-2">
               <Building2 className="w-5 h-5 text-slate-500" />
               <Select
-                value={selectedParceiro || ''}
-                onValueChange={handleParceiroChange}
+                value={selectedParceiro || 'self'}
+                onValueChange={(val) => handleParceiroChange(val === 'self' ? null : val)}
               >
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Selecione um parceiro" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">-- Minha Configuração --</SelectItem>
+                  <SelectItem value="self">-- Minha Configuração --</SelectItem>
                   {parceiros.map(p => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.empresa || p.name || p.email}
