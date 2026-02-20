@@ -2024,55 +2024,86 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                 </Select>
               </div>
               
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="flex items-center gap-2 mb-2">
                     Ícone 
-                    <span className="text-xs text-slate-400">(emoji ou texto)</span>
+                    <span className="text-xs text-slate-400">(emoji)</span>
                   </Label>
-                  <div className="space-y-2">
-                    <Input
-                      value={planoForm.icone}
-                      onChange={(e) => setPlanoForm(prev => ({ ...prev, icone: e.target.value }))}
-                      className="text-center text-xl"
-                      placeholder="📦"
-                    />
-                    <div className="flex flex-wrap gap-1 p-2 bg-slate-50 rounded border">
-                      {['📦', '👑', '⭐', '🚀', '💎', '🏆', '🎯', '💼', '📊', '🔥', '🌟', '⚡', '🛡️', '🎁', '🏅', '🚗', '🚙', '🚐', '💳', '💰', '📈', '✅', '🔔', '🏢', '👥', '🤝', '📱', '💻', '🎉', '🥇'].map(emoji => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={() => setPlanoForm(prev => ({ ...prev, icone: emoji }))}
-                          className={`w-8 h-8 rounded hover:bg-slate-200 transition-colors text-lg flex items-center justify-center ${planoForm.icone === emoji ? 'bg-blue-100 ring-2 ring-blue-400' : ''}`}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-12 text-2xl justify-start gap-3"
+                      >
+                        <span className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          {planoForm.icone || '📦'}
+                        </span>
+                        <span className="text-sm text-slate-500">Clique para escolher</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3" align="start">
+                      <div className="space-y-2">
+                        <Input
+                          value={planoForm.icone}
+                          onChange={(e) => setPlanoForm(prev => ({ ...prev, icone: e.target.value }))}
+                          className="text-center text-xl h-10"
+                          placeholder="📦"
+                        />
+                        <div className="grid grid-cols-6 gap-1 max-h-40 overflow-y-auto">
+                          {['📦', '👑', '⭐', '🚀', '💎', '🏆', '🎯', '💼', '📊', '🔥', '🌟', '⚡', '🛡️', '🎁', '🏅', '🚗', '🚙', '🚐', '💳', '💰', '📈', '✅', '🔔', '🏢'].map(emoji => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => setPlanoForm(prev => ({ ...prev, icone: emoji }))}
+                              className={`w-9 h-9 rounded-lg hover:bg-slate-100 transition-colors text-lg flex items-center justify-center ${planoForm.icone === emoji ? 'bg-blue-100 ring-2 ring-blue-400' : ''}`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label className="mb-2 block">Cor do Plano</Label>
-                  <div className="space-y-2">
-                    <Input
-                      type="color"
-                      value={planoForm.cor}
-                      onChange={(e) => setPlanoForm(prev => ({ ...prev, cor: e.target.value }))}
-                      className="w-full h-10"
-                    />
-                    <div className="flex flex-wrap gap-1 p-2 bg-slate-50 rounded border">
-                      {['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#14B8A6', '#6366F1', '#0EA5E9', '#64748B'].map(color => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => setPlanoForm(prev => ({ ...prev, cor: color }))}
-                          className={`w-7 h-7 rounded-full border-2 ${planoForm.cor === color ? 'ring-2 ring-offset-1 ring-slate-600' : 'border-transparent'}`}
-                          style={{ backgroundColor: color }}
-                          title={color}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-12 justify-start gap-3"
+                      >
+                        <span 
+                          className="w-10 h-10 rounded-lg border"
+                          style={{ backgroundColor: planoForm.cor || '#3B82F6' }}
                         />
-                      ))}
-                    </div>
-                  </div>
+                        <span className="text-sm text-slate-500">{planoForm.cor || '#3B82F6'}</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-3" align="start">
+                      <div className="space-y-3">
+                        <Input
+                          type="color"
+                          value={planoForm.cor || '#3B82F6'}
+                          onChange={(e) => setPlanoForm(prev => ({ ...prev, cor: e.target.value }))}
+                          className="w-full h-8 cursor-pointer"
+                        />
+                        <div className="grid grid-cols-5 gap-2">
+                          {['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#14B8A6', '#6366F1', '#0EA5E9', '#64748B'].map(color => (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() => setPlanoForm(prev => ({ ...prev, cor: color }))}
+                              className={`w-7 h-7 rounded-full transition-transform hover:scale-110 ${planoForm.cor === color ? 'ring-2 ring-offset-2 ring-slate-600' : ''}`}
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>
