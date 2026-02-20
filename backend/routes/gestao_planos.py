@@ -1241,6 +1241,34 @@ async def eliminar_categoria(
     return {"message": "Categoria desativada com sucesso"}
 
 
+@router.delete("/categorias/{categoria_id}/permanente")
+async def eliminar_categoria_permanente(
+    categoria_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar permanentemente uma categoria de plano (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    # Verificar se há planos usando esta categoria
+    planos_com_categoria = await db.planos_sistema.count_documents({
+        "categoria_id": categoria_id
+    })
+    
+    if planos_com_categoria > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Não é possível eliminar: {planos_com_categoria} plano(s) usam esta categoria. Remova-os primeiro."
+        )
+    
+    result = await db.categorias_plano.delete_one({"id": categoria_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Categoria não encontrada")
+    
+    return {"message": "Categoria eliminada permanentemente"}
+
+
 # ==================== ESTATÍSTICAS ====================
 
 @router.get("/estatisticas")
