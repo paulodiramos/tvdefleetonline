@@ -287,6 +287,141 @@ async def reindexar_fotos_veiculos(current_user: dict = Depends(get_current_user
     }
 
 
+
+@router.get("/emails-bloqueados")
+async def listar_emails_bloqueados(current_user: dict = Depends(get_current_user)):
+    """Lista emails de utilizadores eliminados (soft delete) que ainda bloqueiam novos registos"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas admin")
+    
+    # Buscar users com deleted=True
+    deleted_users = await db.users.find(
+        {"deleted": True},
+        {"_id": 0, "id": 1, "email": 1, "name": 1, "role": 1, "deleted_at": 1}
+    ).to_list(None)
+    
+    # Buscar motoristas com deleted=True
+    deleted_motoristas = await db.motoristas.find(
+        {"deleted": True},
+        {"_id": 0, "id": 1, "email": 1, "nome": 1, "deleted_at": 1}
+    ).to_list(None)
+    
+    return {
+        "total_bloqueados": len(deleted_users) + len(deleted_motoristas),
+        "users_eliminados": deleted_users,
+        "motoristas_eliminados": deleted_motoristas,
+        "nota": "Use o endpoint DELETE /admin/libertar-email/{email} para libertar um email"
+    }
+
+
+@router.delete("/libertar-email/{email}")
+async def libertar_email(
+    email: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove PERMANENTEMENTE todos os registos associados a um email
+    
+    Isto permite que o email seja usado novamente para um novo registo.
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas admin")
+    
+    resultados = {
+        "email": email,
+        "users_removidos": 0,
+        "motoristas_removidos": 0,
+        "parceiros_removidos": 0,
+        "documentos_removidos": 0
+    }
+    
+    # Encontrar todos os IDs associados ao email
+    user = await db.users.find_one({"email": email})
+    motorista = await db.motoristas.find_one({"email": email})
+    parceiro = await db.parceiros.find_one({"email": email})
+    
+    user_ids = []
+    if user:
+        user_ids.append(user.get("id"))
+    if motorista:
+        user_ids.append(motorista.get("id"))
+    if parceiro:
+        user_ids.append(parceiro.get("id"))
+    
+    # Remover documentos associados
+    if user_ids:
+        docs_result = await db.documentos.delete_many({"user_id": {"$in": user_ids}})
+        resultados["documentos_removidos"] = docs_result.deleted_count
+    
+    # Remover users
+    users_result = await db.users.delete_many({"email": email})
+    resultados["users_removidos"] = users_result.deleted_count
+    
+    # Remover motoristas
+    motoristas_result = await db.motoristas.delete_many({"email": email})
+    resultados["motoristas_removidos"] = motoristas_result.deleted_count
+    
+    # Remover parceiros
+    parceiros_result = await db.parceiros.delete_many({"email": email})
+    resultados["parceiros_removidos"] = parceiros_result.deleted_count
+    
+    total = sum([
+        resultados["users_removidos"],
+        resultados["motoristas_removidos"],
+        resultados["parceiros_removidos"]
+    ])
+    
+    if total == 0:
+        raise HTTPException(status_code=404, detail=f"Nenhum registo encontrado com o email {email}")
+    
+    logger.info(f"Email {email} libertado por {current_user['id']}: {resultados}")
+    
+    return {
+        "message": f"Email {email} libertado com sucesso",
+        "resultados": resultados
+    }
+
+
+@router.post("/limpar-eliminados")
+async def limpar_todos_eliminados(current_user: dict = Depends(get_current_user)):
+    """Remove PERMANENTEMENTE todos os registos marcados como eliminados (deleted=True)
+    
+    ATENÇÃO: Esta ação é IRREVERSÍVEL!
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas admin")
+    
+    resultados = {
+        "users_removidos": 0,
+        "motoristas_removidos": 0,
+        "documentos_removidos": 0
+    }
+    
+    # Encontrar todos os IDs de users eliminados
+    deleted_users = await db.users.find({"deleted": True}, {"id": 1}).to_list(None)
+    deleted_ids = [u["id"] for u in deleted_users]
+    
+    # Remover documentos dos users eliminados
+    if deleted_ids:
+        docs_result = await db.documentos.delete_many({"user_id": {"$in": deleted_ids}})
+        resultados["documentos_removidos"] = docs_result.deleted_count
+    
+    # Remover users eliminados
+    users_result = await db.users.delete_many({"deleted": True})
+    resultados["users_removidos"] = users_result.deleted_count
+    
+    # Remover motoristas eliminados
+    motoristas_result = await db.motoristas.delete_many({"deleted": True})
+    resultados["motoristas_removidos"] = motoristas_result.deleted_count
+    
+    logger.info(f"Limpeza de eliminados executada por {current_user['id']}: {resultados}")
+    
+    return {
+        "message": "Registos eliminados removidos permanentemente",
+        "resultados": resultados
+    }
+
+
+
 # ============================================
 # SISTEMA - Gestão do Servidor
 # ============================================
