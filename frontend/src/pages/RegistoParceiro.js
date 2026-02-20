@@ -96,7 +96,7 @@ const RegistoParceiro = () => {
         approved: false
       };
 
-      const registerResponse = await axios.post(`${API}/api/auth/register`, userData);
+      const registerResponse = await axios.post(`${API}/auth/register`, userData);
       const userId = registerResponse.data.user_id || registerResponse.data.id;
 
       // Validate codigo_certidao_comercial format
@@ -123,7 +123,7 @@ const RegistoParceiro = () => {
         finalidade: formData.finalidade
       };
 
-      await axios.post(`${API}/api/parceiros/register-public`, parceiroData);
+      await axios.post(`${API}/parceiros/register-public`, parceiroData);
       
       // Upload certidão comercial (opcional - só se houver ficheiro)
       if (certidaoComercial) {
@@ -134,7 +134,7 @@ const RegistoParceiro = () => {
           uploadForm.append('user_id', userId);
           uploadForm.append('role', 'parceiro');
           
-          await axios.post(`${API}/api/documentos/upload`, uploadForm, {
+          await axios.post(`${API}/documentos/upload`, uploadForm, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
