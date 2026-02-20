@@ -2,11 +2,30 @@
 Script para criar apresentação PowerPoint do TVDEFleet
 """
 from pptx import Presentation
-from pptx.util import Inches, Pt
-from pptx.dml.color import RgbColor
+from pptx.util import Inches, Pt, Emu
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
+from pptx.oxml.ns import nsmap
 import os
+
+# Função para criar cor RGB
+def RgbColor(r, g, b):
+    """Retorna tupla RGB"""
+    return (r, g, b)
+
+def set_shape_color(shape, rgb_tuple):
+    """Define cor de preenchimento de uma shape"""
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = rgb_to_pptx(rgb_tuple)
+
+def rgb_to_pptx(rgb_tuple):
+    """Converte tupla RGB para formato pptx"""
+    from pptx.dml.color import RGBColor
+    return RGBColor(rgb_tuple[0], rgb_tuple[1], rgb_tuple[2])
+
+def set_font_color(font, rgb_tuple):
+    """Define cor da fonte"""
+    font.color.rgb = rgb_to_pptx(rgb_tuple)
 
 # Criar apresentação
 prs = Presentation()
