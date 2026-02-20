@@ -74,6 +74,27 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
     - Diamante: 24+ meses serviço, 95+ pontuação cuidado (+5% bónus)
   - **Testes:** 100% backend (iteration_57.json) + 100% frontend
 
+### Session 2026-02-20 (Sistema de Progressão Automática)
+- **Feature: Sistema de Progressão Automática de Classificações - DONE:**
+  - **Backend:** Novos métodos em `comissoes_service.py`:
+    - `calcular_pontuacao_cuidado_veiculo()` - Calcula pontuação baseada em vistorias (40%), incidentes (25%), manutenções (20%), avaliação do parceiro (15%)
+    - `verificar_progressao_motorista()` - Verifica elegibilidade para promoção
+    - `promover_motorista()` - Promove e notifica o motorista via app
+    - `recalcular_todas_classificacoes()` - Recalcula todas as classificações (job automático/manual)
+  - **Endpoints novos:**
+    - `GET /api/comissoes/classificacao/motorista/{id}/progressao`
+    - `GET /api/comissoes/classificacao/motorista/{id}/pontuacao-cuidado`
+    - `POST /api/comissoes/classificacao/motorista/{id}/promover`
+    - `POST /api/comissoes/classificacao/recalcular-todas`
+    - `PUT /api/comissoes/classificacao/motorista/{id}/avaliacao-parceiro`
+  - **Frontend:** Botão "Progressões" em `/usuarios` com modal de resultados
+  - **Critérios de Progressão:**
+    - Prata: 3+ meses serviço, 60+ pontuação cuidado (+1% bónus)
+    - Ouro: 6+ meses serviço, 75+ pontuação cuidado (+2% bónus)
+    - Platina: 12+ meses serviço, 85+ pontuação cuidado (+3.5% bónus)
+    - Diamante: 24+ meses serviço, 95+ pontuação cuidado (+5% bónus)
+  - **Testes:** 100% backend (iteration_57.json) + 100% frontend
+
 ### Session 2026-02-20 (Fluxo Aprovação Melhorado + Migração UI)
 - **Feature: UI do Fluxo de Aprovação Melhorado - DONE:**
   - **Funcionalidade:** Admin pode atribuir Parceiro e Classificação ao aprovar motoristas
