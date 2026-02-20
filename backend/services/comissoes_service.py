@@ -675,7 +675,7 @@ class ComissoesService:
                         val_date = datetime.fromisoformat(seguro_val.replace('Z', '+00:00'))
                         if val_date > datetime.now(timezone.utc):
                             docs_em_dia += 1
-                    except:
+                    except (ValueError, TypeError):
                         pass
                 
                 # Inspeção válida
@@ -685,7 +685,7 @@ class ComissoesService:
                         val_date = datetime.fromisoformat(insp_val.replace('Z', '+00:00'))
                         if val_date > datetime.now(timezone.utc):
                             docs_em_dia += 1
-                    except:
+                    except (ValueError, TypeError):
                         pass
                 
                 # Extintor válido
@@ -695,7 +695,7 @@ class ComissoesService:
                         val_date = datetime.fromisoformat(ext_val.replace('Z', '+00:00'))
                         if val_date > datetime.now(timezone.utc):
                             docs_em_dia += 1
-                    except:
+                    except (ValueError, TypeError):
                         pass
                 
                 if docs_em_dia >= 2:  # Pelo menos 2 dos 3 em dia
