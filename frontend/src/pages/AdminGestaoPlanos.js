@@ -2249,7 +2249,7 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         )}
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Mensal (€)</Label>
+                        <Label className="text-xs text-slate-500">Mensal (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -2263,9 +2263,12 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                             }));
                           }}
                         />
+                        {planoForm.precos_plano?.por_veiculo_mensal > 0 && (
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.por_veiculo_mensal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                        )}
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Anual (€)</Label>
+                        <Label className="text-xs text-slate-500">Anual (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -2279,6 +2282,9 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                             }));
                           }}
                         />
+                        {planoForm.precos_plano?.por_veiculo_anual > 0 && (
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.por_veiculo_anual * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2287,15 +2293,15 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                   <div className="pt-3 border-t border-slate-200">
                     <Label className="text-sm font-medium text-purple-700 mb-2 flex items-center gap-2">
                       <Users className="w-4 h-4" />
-                      Preço por Motorista (c/IVA)
+                      Preço por Motorista (s/IVA)
                     </Label>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <Label className="text-xs text-slate-500">Semanal (€)</Label>
+                        <Label className="text-xs text-slate-500">Semanal (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
-                          placeholder="c/IVA"
+                          placeholder="s/IVA"
                           className="border-purple-300 focus:border-purple-500"
                           value={planoForm.precos_plano?.por_motorista_semanal || ''}
                           onChange={(e) => {
@@ -2307,11 +2313,11 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                           }}
                         />
                         {planoForm.precos_plano?.por_motorista_semanal > 0 && (
-                          <span className="text-xs text-slate-400">s/IVA: €{(planoForm.precos_plano.por_motorista_semanal / (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.por_motorista_semanal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
                         )}
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Mensal (€)</Label>
+                        <Label className="text-xs text-slate-500">Mensal (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -2325,9 +2331,12 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                             }));
                           }}
                         />
+                        {planoForm.precos_plano?.por_motorista_mensal > 0 && (
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.por_motorista_mensal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                        )}
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Anual (€)</Label>
+                        <Label className="text-xs text-slate-500">Anual (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -2341,6 +2350,9 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                             }));
                           }}
                         />
+                        {planoForm.precos_plano?.por_motorista_anual > 0 && (
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.por_motorista_anual * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2349,7 +2361,7 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                   <div className="pt-3 border-t border-slate-200">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-slate-700 mb-2 block">Taxa de Setup (€ c/IVA)</Label>
+                        <Label className="text-sm font-medium text-slate-700 mb-2 block">Taxa de Setup (€ s/IVA)</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -2360,13 +2372,13 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                           }))}
                         />
                         {planoForm.precos_plano?.setup > 0 && (
-                          <span className="text-xs text-slate-400">s/IVA: €{(planoForm.precos_plano.setup / (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.setup * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
                         )}
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-amber-700 mb-2 flex items-center gap-2">
                           <RefreshCw className="w-4 h-4" />
-                          Preço Renovação Mensal (€ c/IVA)
+                          Preço Renovação Mensal (€ s/IVA)
                         </Label>
                         <Input
                           type="number"
@@ -2386,7 +2398,10 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                             }));
                           }}
                         />
-                        <span className="text-xs text-slate-400">Preço após 1ª fatura (sem setup)</span>
+                        {planoForm.precos_plano?.renovacao_mensal > 0 && (
+                          <span className="text-xs text-green-600 font-medium">c/IVA: €{(planoForm.precos_plano.renovacao_mensal * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}</span>
+                        )}
+                        <span className="text-xs text-slate-400 block">Preço após 1ª fatura (sem setup)</span>
                       </div>
                     </div>
                   </div>
@@ -2395,7 +2410,7 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                 /* Preços simples para Motoristas */
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label>Semanal (€)</Label>
+                    <Label>Semanal (€ s/IVA)</Label>
                     <Input
                       type="number"
                       step="0.01"
