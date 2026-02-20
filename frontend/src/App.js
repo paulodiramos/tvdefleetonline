@@ -531,6 +531,16 @@ function App() {
             }
           />
           <Route
+            path="/armazenamento"
+            element={
+              user && ['admin', 'parceiro', 'gestao', 'operacional'].includes(user.role) ? (
+                <StorageConfig user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/integracoes"
             element={
               user ? <Integracoes user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
