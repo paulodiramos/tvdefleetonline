@@ -171,6 +171,19 @@ async def approve_user(
                     update_data["preco_especial_nome"] = preco_especial.get("nome")
                     logger.info(f"Assigning special price {request.preco_especial_id} to user {user_id}")
     
+    # Add parceiro_id if provided (for motoristas)
+    if request and request.parceiro_id:
+        parceiro = await db.parceiros.find_one({"id": request.parceiro_id})
+        if parceiro:
+            update_data["associated_partner_id"] = request.parceiro_id
+            update_data["parceiro_nome"] = parceiro.get("nome") or parceiro.get("name")
+            logger.info(f"Assigning partner {request.parceiro_id} to user {user_id}")
+    
+    # Add classificacao if provided
+    if request and request.classificacao:
+        update_data["classificacao"] = request.classificacao
+        logger.info(f"Assigning classification {request.classificacao} to user {user_id}")
+    
     await db.users.update_one(
         {"id": user_id},
         {"$set": update_data}
