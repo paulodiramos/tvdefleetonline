@@ -96,17 +96,27 @@ async def atualizar_modulo(
 @router.delete("/modulos/{modulo_id}")
 async def eliminar_modulo(
     modulo_id: str,
+    permanente: bool = False,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Desativar módulo (Admin only)"""
+    """Desativar ou eliminar permanentemente um módulo (Admin only)"""
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Apenas administradores")
     
     service = get_service()
-    success = await service.eliminar_modulo(modulo_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Módulo não encontrado")
-    return {"message": "Módulo desativado com sucesso"}
+    
+    if permanente:
+        # Eliminação permanente
+        result = await service.db.modulos.delete_one({"id": modulo_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Módulo não encontrado")
+        return {"message": "Módulo eliminado permanentemente"}
+    else:
+        # Apenas desativar
+        success = await service.eliminar_modulo(modulo_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Módulo não encontrado")
+        return {"message": "Módulo desativado com sucesso"}
 
 
 @router.post("/modulos/{modulo_id}/precos")
