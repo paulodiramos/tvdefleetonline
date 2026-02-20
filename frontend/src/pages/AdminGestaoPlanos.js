@@ -871,6 +871,10 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
               <Tag className="w-4 h-4" />
               Promoções
             </TabsTrigger>
+            <TabsTrigger value="precos-especiais" className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              Preços Especiais
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab Planos */}
