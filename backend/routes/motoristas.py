@@ -873,6 +873,51 @@ async def delete_motorista(
     return {"message": "Motorista deleted successfully"}
 
 
+@router.delete("/motoristas/{motorista_id}/permanente")
+async def delete_motorista_permanente(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar motorista PERMANENTEMENTE (Admin only)
+    
+    Remove completamente o motorista e o user associado da base de dados.
+    Esta ação é IRREVERSÍVEL!
+    """
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores podem eliminar permanentemente")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    email = motorista.get("email")
+    parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
+    
+    # Eliminar documentos associados
+    await db.documentos.delete_many({"user_id": motorista_id})
+    
+    # Eliminar despesas extras
+    await db.despesas_extras.delete_many({"motorista_id": motorista_id})
+    
+    # Eliminar da coleção motoristas
+    await db.motoristas.delete_one({"id": motorista_id})
+    
+    # Eliminar da coleção users
+    await db.users.delete_one({"id": motorista_id})
+    
+    # Também eliminar por email (caso haja duplicados)
+    if email:
+        await db.users.delete_many({"email": email, "role": "motorista"})
+    
+    # Atualizar subscrição do parceiro
+    if parceiro_id:
+        await atualizar_contagem_subscricao(parceiro_id)
+    
+    logger.info(f"Motorista {motorista_id} ({email}) eliminado permanentemente por {current_user['id']}")
+    
+    return {"message": f"Motorista {email} eliminado permanentemente", "email_libertado": email}
+
+
 @router.put("/motoristas/{motorista_id}/bloquear")
 async def bloquear_motorista(
     motorista_id: str,
