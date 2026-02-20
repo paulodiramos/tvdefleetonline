@@ -850,9 +850,9 @@ const StorageConfig = ({ user, onLogout }) => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
-    </Layout>
-  );
+      </>
+    );
+  }
 };
 
 export default StorageConfig;
