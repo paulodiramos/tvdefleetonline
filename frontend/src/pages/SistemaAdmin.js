@@ -347,11 +347,215 @@ const SistemaAdmin = ({ user, onLogout }) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Emails Bloqueados */}
+          <Card className="border-amber-200">
+            <CardHeader className="bg-amber-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-amber-800">
+                    <Mail className="w-5 h-5" />
+                    Emails Bloqueados
+                  </CardTitle>
+                  <CardDescription className="text-amber-700">
+                    Utilizadores eliminados cujos emails ainda bloqueiam novos registos
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={fetchEmailsBloqueados}
+                    disabled={loadingEmails}
+                  >
+                    {loadingEmails ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                  </Button>
+                  {emailsBloqueados?.total_bloqueados > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => setShowConfirmLimpar(true)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Limpar Todos
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {loadingEmails ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+                </div>
+              ) : emailsBloqueados?.total_bloqueados === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500" />
+                  <p className="font-medium text-green-700">Nenhum email bloqueado</p>
+                  <p className="text-sm">Todos os emails eliminados foram limpos do sistema</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                    <p className="text-sm text-amber-800">
+                      <strong>{emailsBloqueados?.total_bloqueados}</strong> email(s) bloqueado(s) impedem novos registos
+                    </p>
+                  </div>
+                  
+                  {/* Users eliminados */}
+                  {emailsBloqueados?.users_eliminados?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-2">
+                        <UserX className="w-4 h-4" />
+                        Utilizadores Eliminados ({emailsBloqueados.users_eliminados.length})
+                      </h4>
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50">
+                              <TableHead>Email</TableHead>
+                              <TableHead>Nome</TableHead>
+                              <TableHead>Tipo</TableHead>
+                              <TableHead>Eliminado em</TableHead>
+                              <TableHead className="w-[100px]">Ação</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {emailsBloqueados.users_eliminados.map((user, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell className="font-medium">{user.email}</TableCell>
+                                <TableCell>{user.name || '-'}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline">{user.role}</Badge>
+                                </TableCell>
+                                <TableCell className="text-sm text-slate-500">
+                                  {user.deleted_at ? new Date(user.deleted_at).toLocaleDateString('pt-PT') : '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleLibertarEmail(user.email)}
+                                    disabled={libertandoEmail === user.email}
+                                  >
+                                    {libertandoEmail === user.email ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Motoristas eliminados */}
+                  {emailsBloqueados?.motoristas_eliminados?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-2">
+                        <UserX className="w-4 h-4" />
+                        Motoristas Eliminados ({emailsBloqueados.motoristas_eliminados.length})
+                      </h4>
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50">
+                              <TableHead>Email</TableHead>
+                              <TableHead>Nome</TableHead>
+                              <TableHead>Eliminado em</TableHead>
+                              <TableHead className="w-[100px]">Ação</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {emailsBloqueados.motoristas_eliminados.map((mot, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell className="font-medium">{mot.email}</TableCell>
+                                <TableCell>{mot.nome || '-'}</TableCell>
+                                <TableCell className="text-sm text-slate-500">
+                                  {mot.deleted_at ? new Date(mot.deleted_at).toLocaleDateString('pt-PT') : '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleLibertarEmail(mot.email)}
+                                    disabled={libertandoEmail === mot.email}
+                                  >
+                                    {libertandoEmail === mot.email ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-6">
           Última atualização: {status?.timestamp ? new Date(status.timestamp).toLocaleString('pt-PT') : 'N/A'}
         </p>
+
+        {/* Modal de confirmação para limpar todos */}
+        <Dialog open={showConfirmLimpar} onOpenChange={setShowConfirmLimpar}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <Shield className="w-5 h-5" />
+                Confirmar Limpeza Total
+              </DialogTitle>
+              <DialogDescription>
+                Esta ação irá eliminar <strong>permanentemente</strong> todos os registos marcados como eliminados.
+                <br /><br />
+                Os emails serão libertados e poderão ser usados para novos registos.
+                <br /><br />
+                <span className="text-red-600 font-medium">Esta ação é IRREVERSÍVEL!</span>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowConfirmLimpar(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleLimparTodosEliminados}
+                disabled={limpandoEmails}
+              >
+                {limpandoEmails ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    A limpar...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Sim, Limpar Tudo
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
