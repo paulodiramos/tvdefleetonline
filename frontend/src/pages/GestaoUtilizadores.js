@@ -814,6 +814,17 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                 )}
               </Button>
             )}
+            {user?.role === 'admin' && (
+              <Button 
+                onClick={() => navigate('/admin/gestao-planos')}
+                variant="outline"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                data-testid="btn-gestao-planos"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Planos & Módulos
+              </Button>
+            )}
             <Button 
               onClick={handleOpenNovoUserDialog}
               className="bg-green-600 hover:bg-green-700"
