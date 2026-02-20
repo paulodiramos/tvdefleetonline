@@ -1071,14 +1071,27 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         >
                           <Tag className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => handleDeletePlano(plano.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {plano.ativo ? (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-amber-500 hover:text-amber-700"
+                            onClick={() => handleDeletePlano(plano.id)}
+                            title="Desativar plano"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => handleDeletePlanoPermanente(plano.id, plano.nome)}
+                            title="Eliminar permanentemente"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </CardFooter>
                     </Card>
                   ))}
@@ -1117,14 +1130,27 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         <Button variant="outline" size="sm" onClick={() => openPlanoModal(plano)}>
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-500"
-                          onClick={() => handleDeletePlano(plano.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {plano.ativo ? (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-amber-500 hover:text-amber-700"
+                            onClick={() => handleDeletePlano(plano.id)}
+                            title="Desativar plano"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => handleDeletePlanoPermanente(plano.id, plano.nome)}
+                            title="Eliminar permanentemente"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </CardFooter>
                     </Card>
                   ))}
