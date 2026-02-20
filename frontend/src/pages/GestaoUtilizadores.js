@@ -754,6 +754,17 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                 )}
               </Button>
             )}
+            {user?.role === 'admin' && (
+              <Button 
+                onClick={handleCheckMigration}
+                variant="outline"
+                className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                data-testid="btn-migration"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Corrigir Dados
+              </Button>
+            )}
             <Button 
               onClick={handleOpenNovoUserDialog}
               className="bg-green-600 hover:bg-green-700"
