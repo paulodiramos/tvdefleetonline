@@ -97,7 +97,7 @@ const LojaPlanos = ({ user, onLogout }) => {
       ]);
 
       // Ordenar planos por ordem
-      const planosOrdenados = planosRes.data.sort((a, b) => a.ordem - b.ordem);
+      const planosOrdenados = (planosRes.data || []).sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
       setPlanos(planosOrdenados);
       setMeuPlano(meuPlanoRes.data);
       setModulos(modulosRes.data || []);
