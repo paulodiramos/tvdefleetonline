@@ -1,119 +1,120 @@
 <analysis>**original_problem_statement:**
 O utilizador pretende evoluir o seu sistema de gestão de frotas. As solicitações do utilizador nesta sessão incluíram:
-1.  **Fluxo de Aprovação de Utilizadores:** Modificar o diálogo de aprovação para que o admin possa atribuir um **Plano** e **Preços Especiais** no momento da aprovação.
-2.  **Correção de Bugs Pós-Aprovação:** Resolver um problema em que motoristas aprovados não apareciam na lista de motoristas, pois o documento na coleção  não era criado.
-3.  **Melhorias na Gestão de Utilizadores (Admin):**
-    *   Permitir que o admin atribua um parceiro a um motorista já aprovado.
-    *   Permitir a troca de  de um utilizador.
-    *   Permitir a visualização de documentos a partir da lista de utilizadores.
-4.  **Correção de Bugs de Registo:** Resolver um erro Not Found que ocorria durante o registo de novos motoristas, embora o registo fosse concluído. Garantir que os documentos carregados no registo fiquem associados à ficha do motorista.
-5.  **Script de Migração de Dados:** Criar uma solução para corrigir motoristas existentes na base de dados que foram aprovados antes da correção do bug e que não constam na coleção .
-6.  **Melhorias de UI:** Reorganizar e alinhar a página de gestão de utilizadores para uma apresentação mais profissional em formato de tabela.
-7.  **Resolução de Problemas em Produção (Pós-Deploy):** Investigar e diagnosticar uma série de problemas reportados no ambiente de produção (), incluindo:
-    *   O domínio  não abre, enquanto  funciona.
-    *   O serviço Playwright (RPA) não está a funcionar.
-    *   As credenciais da Uber não estão a ser guardadas, com a Uber a devolver um erro de demasiados pedidos (rate-limiting).
-    *   Um alerta de armazenamento do servidor a 83% (339GB de 409GB).
-8.  **Funcionalidades na Página de Perfil do Utilizador:** Adicionar uma nova tab Motorista na página de perfil que permita ver documentos, atribuir parceiro e atribuir plano de faturação.
+1.  **Correção Crítica do Fluxo de Registo:** Resolver uma série de bugs que impediam o registo de novos motoristas. Os problemas incluíam:
+    *   Um erro Not Found que aparecia, embora o registo às vezes fosse parcialmente concluído.
+    *   Dados pessoais do formulário (morada, NIF, data de nascimento) não eram guardados na base de dados.
+    *   Documentos carregados no ato de inscrição não ficavam associados à ficha do motorista.
+    *   A validação do formulário falhava, mesmo com todos os documentos carregados.
+2.  **Refatoração de Componente:** Continuar a refatoração do ficheiro monolítico , que tinha mais de 5000 linhas, para o tornar mais modular e manutenível.
+3.  **Script de Migração de Dados:** Criar uma solução para corrigir todos os motoristas existentes na base de dados que foram afetados pelos bugs de registo antigos, garantindo que os seus dados e documentos ficassem consistentes com o novo formato.
+4.  **Melhoria do Fluxo de Aprovação:** Adicionar a capacidade de o admin atribuir um **parceiro** e uma **classificação** a um motorista no momento da aprovação.
+5.  **Estabilidade do Serviço Playwright (RPA):** Investigar por que o serviço Playwright não estava a funcionar de forma fiável.
+6.  **Esclarecimento de Requisitos:** Confirmar com o utilizador se todos os documentos pedidos no registo eram de facto necessários.
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-É um sistema de gestão de frotas full-stack (React/FastAPI/MongoDB). Nesta sessão, o agente implementou um grande volume de funcionalidades e correções, focadas em estabilizar o fluxo de vida do motorista (registo, aprovação, gestão) e resolver problemas críticos de produção.
-- O fluxo de aprovação de utilizadores foi completado, permitindo ao admin atribuir planos e preços.
-- Foi corrigido o bug central que impedia motoristas recém-aprovados de aparecerem na lista, garantindo a criação do documento na coleção .
-- Foi criado um endpoint de migração () com um botão na UI do admin para corrigir dados de motoristas antigos.
-- A página de gestão de utilizadores foi significativamente melhorada com novas ações (atribuir parceiro, mudar role) e uma refatoração completa da UI para um layout de tabela limpo.
-- A página de perfil do utilizador foi expandida para incluir gestão específica de motoristas (documentos, parceiro, plano).
-- Foram diagnosticados múltiplos problemas de infraestrutura em produção (SSL, armazenamento, serviço RPA) e o utilizador foi instruído sobre como contactar o suporte, uma vez que a resolução está fora do alcance do agente.
-- O erro de Not Found durante o registo foi corrigido.
+É um sistema de gestão de frotas full-stack (React/FastAPI/MongoDB). Nesta sessão, o agente focou-se em resolver bugs críticos e em refatoração técnica.
+- O fluxo de registo de motoristas foi completamente reparado. O agente corrigiu múltiplos problemas, incluindo um URL de API duplicado (), modelos de backend que não aceitavam todos os campos, e inconsistências nos nomes dos campos de documentos entre o formulário de registo e a ficha do motorista. Agora, todos os dados pessoais e documentos de um novo motorista são guardados corretamente.
+- Foi criado e executado um script de migração via API () que atualizou os dados de 36 motoristas existentes, corrigindo inconsistências de dados e renomeando campos de documentos para o novo formato.
+- A refatoração do ficheiro  avançou significativamente. Múltiplos componentes inline (tabs e modais) foram extraídos para ficheiros separados, resultando numa redução de mais de 1000 linhas no ficheiro principal.
+- O problema de instabilidade do Playwright foi diagnosticado como uma incompatibilidade de versões entre o Playwright e os browsers instalados. O agente reinstalou as versões corretas dos browsers e adicionou um endpoint de health-check ().
+- A lógica de backend para o fluxo de aprovação melhorado foi implementada, permitindo que um  e uma  sejam passados ao aprovar um utilizador.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a começar a investigar os dois últimos problemas reportados pelo utilizador:
-    1.  Garantir que o serviço **Playwright** está sempre ativo em produção.
-    2.  Corrigir o facto de os **documentos carregados no ato de inscrição não ficarem guardados** na ficha do motorista, obrigando a um segundo upload.
-    O agente começou por analisar o ficheiro  para o problema do Playwright.
+-   **Last item agent was working:** O agente estava a finalizar a funcionalidade de aprovação de utilizador melhorada. Tinha acabado de implementar a lógica de backend em  para que, ao aprovar um motorista, o admin possa atribuir um parceiro e uma classificação. O passo seguinte seria atualizar a interface de frontend.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both. O backend precisa de testes para a lógica do serviço Playwright e do fluxo de upload de documentos. O frontend precisa de testes para garantir que os documentos aparecem na ficha do motorista após o registo.
+-   **Which testing method agent to use?** both. O agente precisa de atualizar o modal de aprovação no frontend () e depois realizar um teste E2E para garantir que a seleção de um parceiro e classificação no frontend é corretamente guardada no backend nas coleções  e .
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Documentos carregados na inscrição não são guardados na ficha do motorista (P0)
--   Issue 2: Serviço Playwright não está sempre ativo em produção (P0)
--   Issue 3: Problemas críticos de infraestrutura em produção (SSL, Armazenamento) (P1)
--   Issue 4: Refatoração Incompleta de  (P2)
--   Issue 5: Instabilidade do scraper da Prio (P3)
+-   Issue 1: Concluir a UI do fluxo de aprovação melhorado (P0)
+-   Issue 2: Continuar refatoração de  (P1)
+-   Issue 3: Bug de navegação na página de ficha do veículo (P2)
+-   Issue 4: Criar UI no painel de admin para o script de migração de dados (P2)
+-   Issue 5: Problemas de infraestrutura em produção (SSL, Armazenamento) (P1)
+-   Issue 6: Instabilidade do scraper da Prio (P3)
 
 **Issues Detail:**
--   **Issue 1: Documentos carregados na inscrição não são guardados na ficha do motorista (P0)**
-    -   **Attempted fixes:** Nenhuma correção foi tentada ainda. O agente implementou um endpoint temporário de upload (), mas parece que a ligação entre os ficheiros temporários e o perfil do motorista final não está a ser feita corretamente após o registo ser concluído.
+-   **Issue 1: Concluir a UI do fluxo de aprovação melhorado (P0)**
+    -   **Attempted fixes:** A lógica de backend foi implementada em .
     -   **Next debug checklist:**
-        1.  Rever o fluxo no frontend em  para ver como os ficheiros são enviados.
-        2.  Analisar o endpoint de backend .
-        3.  Verificar se, após a criação do utilizador e do motorista, existe uma lógica para mover/associar os documentos do upload temporário ao ID do motorista recém-criado.
-        4.  Implementar essa lógica se estiver em falta.
-    -   **Why fix this issue and what will be achieved with the fix?** Evita uma péssima experiência de utilizador, onde os motoristas têm de carregar os seus documentos duas vezes.
+        1.  Editar o modal de aprovação de utilizador em .
+        2.  Adicionar dois campos  (dropdowns): um para selecionar um Parceiro e outro para uma Classificação.
+        3.  Atualizar a função de frontend que chama o endpoint  para incluir o  e a  selecionados.
+        4.  Testar o fluxo completo.
+    -   **Why fix this issue and what will be achieved with the fix?** Completa uma funcionalidade pedida pelo utilizador para tornar o processo de aprovação mais eficiente.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 2: Continuar refatoração de  (P1)**
+    -   **Attempted fixes:** O ficheiro foi reduzido de ~5162 para ~4080 linhas através da extração de 10+ componentes de tabs e modais para ficheiros separados.
+    -   **Next debug checklist:**
+        1.  Criar um hook customizado (ex: ).
+        2.  Mover a lógica de estado () e as funções de manipulação de eventos (handlers) de  para dentro do novo hook.
+        3.  Refatorar o componente  para consumir o hook, simplificando drasticamente o seu corpo.
+    -   **Why fix this issue and what will be achieved with the fix?** Melhora radicalmente a manutenibilidade, legibilidade e performance de um dos componentes mais complexos e importantes da aplicação.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 3: Bug de navegação na página de ficha do veículo (P2)**
+    -   **Attempted fixes:** Nenhum. O agente observou que clicar nos tabs da ficha do veículo por vezes redirecionava para o Dashboard, mas não investigou a fundo.
+    -   **Next debug checklist:**
+        1.  Reproduzir o erro navegando para a ficha de um veículo e clicando nos diferentes tabs.
+        2.  Inspecionar a consola do browser à procura de erros de Javascript no momento do redirecionamento.
+        3.  Verificar a implementação dos  handlers dos tabs em  e componentes relacionados.
+    -   **Why fix this issue and what will be achieved with the fix?** A ficha do veículo é uma página central, e a navegação por tabs tem de ser fiável para que os utilizadores possam aceder à informação.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 4: Criar UI no painel de admin para o script de migração de dados (P2)**
+    -   **Attempted fixes:** Nenhum. O script foi criado e executado via .
+    -   **Next debug checklist:**
+        1.  Adicionar um botão (ex: Corrigir Dados Antigos) na página .
+        2.  Ligar o  do botão para chamar o endpoint .
+        3.  Implementar um estado de  e mostrar ao admin o resultado da operação (ex: XX motoristas corrigidos com sucesso).
+    -   **Why fix this issue and what will be achieved with the fix?** Dá autonomia ao admin para resolver problemas de dados sem precisar de intervenção técnica.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on other issue:** Não.
 
--   **Issue 2: Serviço Playwright não está sempre ativo em produção (P0)**
-    -   **Attempted fixes:** O agente começou a ler o ficheiro  mas ainda não chegou a uma conclusão.
-    -   **Next debug checklist:**
-        1.  Verificar os ficheiros de configuração do  para garantir que o serviço RPA está configurado para reiniciar automaticamente ().
-        2.  Analisar os logs do serviço RPA em  para procurar por erros que possam estar a causar a sua paragem.
-        3.  Considerar adicionar um mecanismo de health check ao próprio serviço RPA.
-    -   **Why fix this issue and what will be achieved with the fix?** A automação RPA é uma funcionalidade central para o cliente. Se não estiver ativa, os scrapes de dados (ex: Uber) falham.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Backend.
-    -   **Blocked on other issue:** Pode estar bloqueado por problemas de infraestrutura em produção (Issue 3).
+-   **Issue 5: Problemas de infraestrutura em produção (SSL, Armazenamento) (P1)**
+    -   **Attempted fixes:** O agente anterior diagnosticou corretamente que estes problemas estão fora do seu controlo e instruiu o utilizador a contactar o suporte.
+    -   **Status:** BLOCKED (dependente da equipa de infraestrutura).
 
--   **Issue 3: Problemas críticos de infraestrutura em produção (SSL, Armazenamento) (P1)**
-    -   **Attempted fixes:** O agente diagnosticou corretamente que estes problemas (certificado SSL em falta para o domínio raiz, armazenamento do servidor quase cheio) estão fora do seu controlo e são da responsabilidade da equipa de infraestrutura. O agente forneceu ao utilizador um modelo detalhado para contactar o suporte da Emergent.
-    -   **Next debug checklist:** Aguardar a intervenção da equipa de suporte/infraestrutura.
-    -   **Why fix this issue and what will be achieved with the fix?** Resolve problemas críticos que impedem o acesso à aplicação e arriscam uma falha total do sistema devido à falta de espaço em disco.
-    -   **Status:** BLOCKED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** N/A (Infra issue).
-    -   **Blocked on other issue:** Não.
-
--   **Issue 4: Refatoração Incompleta de  (P2)**
-    -   **Description:** Ficheiro monolítico com mais de 5000 linhas que precisa de ser dividido em componentes mais pequenos. Esta tarefa foi adiada em favor de bugs críticos.
+-   **Issue 6: Instabilidade do scraper da Prio (P3)**
+    -   **Attempted fixes:** Nenhuma. Problema conhecido de sessões anteriores, não abordado.
     -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Frontend.
-    -   **Blocked on other issue:** Não.
-
--   **Issue 5: Instabilidade do scraper da Prio (P3)**
-    -   **Description:** Problema conhecido de sessões anteriores, não abordado.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Backend.
-    -   **Blocked on other issue:** Não.
 
 **In progress Task List**:
--   **Task 1: Corrigir associação de documentos no registo (P0)**
-    -   **Where to resume:** Investigar a lógica entre  e  para garantir que os documentos enviados para  são corretamente associados ao novo motorista.
-    -   **What will be achieved with this?** Os motoristas não terão de fazer upload dos documentos duas vezes.
+-   **Task 1: Completar UI do fluxo de aprovação de utilizador (P0)**
+    -   **Where to resume:** .
+    -   **What will be achieved with this?** Permitir que o admin atribua parceiros e classificações diretamente no modal de aprovação.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on something:** Não.
 
--   **Task 2: Garantir persistência do serviço Playwright (P0)**
-    -   **Where to resume:** Analisar a configuração do  e os logs do serviço RPA para diagnosticar porque não permanece ativo.
-    -   **What will be achieved with this?** A funcionalidade de automação RPA será fiável.
+-   **Task 2: Continuar refatoração de  com hooks (P1)**
+    -   **Where to resume:** .
+    -   **What will be achieved with this?** Reduzir ainda mais a complexidade do ficheiro, extraindo a lógica de estado e handlers para um hook customizado.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Backend.
-    -   **Blocked on something:** Potencialmente bloqueado pelos problemas de infraestrutura em produção.
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on something:** Não.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) Concluir a refatoração de .
-    *   (P2) Acompanhar a resolução dos problemas de infraestrutura em produção.
+    *   (P2) Corrigir bug de navegação nos tabs da .
+    *   (P2) Adicionar botão na UI do admin para executar o script de migração de dados.
     *   (P3) Investigar a instabilidade do scraper da Prio.
+    *   (P3) Implementar um sistema para o admin poder criar/gerir classificações de motoristas.
 *   **Future Tasks:**
     *   Integração com o WhatsApp.
     *   Implementar funcionalidades de Alertas Avançados e Comissões Avançadas.
@@ -121,105 +122,107 @@ O utilizador pretende evoluir o seu sistema de gestão de frotas. As solicitaç�
     *   Implementar um sistema de relógio de ponto na app móvel.
 
 **Completed work in this session**
--   **Funcionalidade: Aprovação de Utilizador com Planos (DONE)**
--   **Correção: Motorista Aprovado não Aparecia na Lista (DONE)**
--   **Funcionalidade: Script e UI para Sincronização de Dados de Motoristas Antigos (DONE)**
--   **Funcionalidade: Ações de Admin na Lista de Utilizadores (Atribuir Parceiro, Mudar Role) (DONE)**
--   **UI/UX: Refatoração da Tabela de Gestão de Utilizadores (DONE)**
--   **Funcionalidade: Tab Motorista na Página de Perfil do Utilizador (DONE)**
--   **Correção: Erro Not Found durante o Registo de Motoristas (DONE)**
--   **Diagnóstico: Problemas de Infraestrutura em Produção (SSL, Armazenamento, RPA) (DONE)**
--   **Correção: Adicionada lógica para que motoristas recém-registados (pendentes) sejam criados na coleção  imediatamente (DONE)**
+-   **Bugfix: Fluxo de Registo de Motorista (DONE):** Corrigido o bug crítico que impedia o registo de novos motoristas. Todos os dados do formulário e documentos são agora guardados corretamente.
+-   **Bugfix: Erro Not Found no Registo (DONE):** Resolvida a causa do erro (URL de API duplicada), eliminando a mensagem de erro enganadora.
+-   **Feature: Script de Migração de Dados (DONE):** Criado e executado um script () para corrigir os dados de todos os motoristas existentes na base de dados.
+-   **Task: Refatoração de  (IN PROGRESS):** Extraídos mais de 10 componentes (tabs e modais), reduzindo o ficheiro em mais de 1000 linhas e melhorando a sua modularidade.
+-   **Bugfix: Estabilidade do Playwright (DONE):** Diagnosticado e corrigido um problema de incompatibilidade de versões entre o Playwright e os browsers.
+-   **Feature: Health-check para o Playwright (DONE):** Adicionado um endpoint  para monitorização.
+-   **Feature: Lógica de Backend para Aprovação Melhorada (DONE):** Implementada a capacidade de atribuir parceiro e classificação ao aprovar um motorista.
+-   **Bugfix: Validação de Documentos no Registo (DONE):** Corrigida a lógica de validação do formulário que usava nomes de campos antigos.
 
 **Earlier issues found/mentioned but not fixed**
--   **Problemas de infraestrutura em produção:** O agente diagnosticou o problema do SSL e do armazenamento, mas não os pode corrigir. Estão bloqueados e aguardam a equipa de suporte.
+-   **Bug de navegação na :** O agente observou um redirecionamento inesperado ao clicar em tabs, mas não investigou a causa.
 -   **Instabilidade do scraper da Prio:** Continua por abordar.
+-   **Problemas de infraestrutura em produção:** Bloqueado, aguarda a equipa de suporte.
 
 **Known issue recurrence from previous fork**
--   **Data Sync/Integrity Issues:** O problema de os motoristas não aparecerem nas listas é uma recorrência do problema de base de dados desatualizada. O agente criou um patch (script de migração), mas a causa raiz de por que os dados ficam dessincronizados após o deploy pode persistir.
+-   **Data Sync/Integrity Issues:** A necessidade de criar mais um script de migração reforça o padrão de inconsistências de dados. Embora as causas-raiz do registo tenham sido corrigidas, a complexidade da sincronização entre as coleções  e  continua a ser um ponto de fragilidade.
 -   **Recurrence count:** Alta
--   **Status:** IN PROGRESS (sintomas corrigidos, causa raiz incerta)
+-   **Status:** IN PROGRESS (causas principais corrigidas, mas a arquitetura de dados propicia este tipo de problema).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Data Migration Scripting:** Criação de um endpoint de utilidade para corrigir inconsistências de dados em produção.
--   **Conditional UI Rendering:** A UI agora mostra/oculta elementos (botão de sync, seletores de preço especial) com base no estado dos dados.
--   **Component Refactoring (UI):** Transformação de uma lista baseada em  para uma estrutura de tabela com  para melhor legibilidade e alinhamento.
--   **Debugging de Infraestrutura vs. Código:** Distinção clara entre problemas que podem ser resolvidos no código e problemas que requerem intervenção no servidor de produção.
+-   **Data Migration Scripting:** Criação de um endpoint de API para executar uma migração de dados idempotente que corrige inconsistências em múltiplas coleções.
+-   **Component Refactoring Strategy:** Abordagem sistemática para decompor um componente monolítico, extraindo primeiro sub-componentes de UI (tabs, modais) e depois planeando a extração de lógica para hooks.
+-   **API Route Precedence Debugging:** Diagnóstico de um erro 404 causado por uma rota genérica com um parâmetro de URL (ex: ) a intercetar uma rota estática mais específica (ex: ).
+-   **Model-View-Backend Consistency:** A importância de garantir que os nomes dos campos e as estruturas de dados são consistentes desde o formulário de frontend, passando pelos modelos Pydantic do backend, até ao esquema da base de dados.
 
 **key DB schema**
--   **users:** , , ,  são campos centrais para a lógica de negócio.
--   **motoristas:** A sincronização e existência de documentos nesta coleção em paralelo com a coleção  é crítica. O campo  (True/False/None) controla a visibilidade em diferentes listas.
+-   **users:** Adicionados campos  e  para a lógica de aprovação.
+-   **motoristas:** Adicionados campos ,  e o alias  (para manter a compatibilidade com o  enquanto o frontend é migrado). A estrutura de dados agora espelha todos os campos de registo (morada, nif, etc.).
 
 **All files of reference**
 -   **Created:**
     -   
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
 -   **Updated Heavily:**
-    -    (Refatoração completa da UI e adição de múltiplas ações)
-    -    (Lógica de aprovação, atribuição de parceiro, mudança de role)
-    -    (Correção do fluxo de registo)
-    -    (Adição da tab e funcionalidades de motorista)
-    -    (Correção de endpoints da API)
-    -    (Adição de filtro para motoristas pendentes)
--   **To be updated:**
-    -    (Investigar por que o serviço para)
-    -    (Refatoração pendente)
+    -    (correção de URLs, nomes de campos, validação)
+    -    (remoção de código inline, importação de novos componentes)
+    -    (lógica de registo para guardar todos os campos)
+    -    (lógica de aprovação para incluir parceiro/classificação)
+    -    (expansão dos modelos para aceitar novos campos)
 
 **Areas that need refactoring**:
--    continua a ser a prioridade máxima para refatoração assim que os bugs críticos forem resolvidos.
+-   : Apesar do progresso, continua a ser a principal prioridade. O próximo passo é a extração de lógica para um hook customizado.
 
 **key api endpoints**
--   : (NOVO) Executa o script de migração de dados.
--   : (NOVO) Verifica se há motoristas a precisar de sync.
--   : (NOVO) Para upload de documentos durante o registo.
--   : (ATUALIZADO) Agora também cria o documento  se não existir.
--   : (NOVO) Atribui um plano de faturação a um utilizador.
--   : (ATUALIZADO) Aceita um parâmetro  para mostrar motoristas não ativos.
+-   : (CORRIGIDO) Agora guarda todos os dados e documentos do motorista corretamente.
+-   : (NOVO) Executa o script de migração para corrigir dados de motoristas existentes.
+-   : (NOVO) Verifica quantos motoristas precisam de migração.
+-   : (ATUALIZADO) Aceita  e  no body do request.
+-   : (NOVO) Endpoint para verificar a saúde da instalação do Playwright.
 
 **Critical Info for New Agent**
--   **Prioridade Máxima:** Resolver os dois problemas pendentes da última mensagem do utilizador: 1) os documentos do registo não ficam guardados e 2) o serviço Playwright não fica ativo.
--   **Problemas de Produção:** **NÃO TENTE** resolver os problemas de armazenamento (339GB) ou SSL diretamente. Eles estão bloqueados e requerem a intervenção do suporte da Emergent. O seu papel é focar-se nos problemas de código.
--   **Sincronização de Dados:** O sistema agora tem um mecanismo de sincronização para motoristas (). Se o utilizador reportar novamente que motoristas antigos não aparecem, instrua-o a usar o botão Sincronizar Motoristas na página de Gestão de Utilizadores.
--   **Fluxo do Motorista:** O fluxo correto agora é: Registo (cria doc em  e  com ) -> Aprovação (muda ) -> Gestão (atribuir parceiro, etc.). Qualquer bug neste fluxo é crítico.
+-   **Prioridade Máxima:** A tarefa mais urgente é completar a UI do fluxo de aprovação melhorado, adicionando os campos de Parceiro e Classificação ao modal em .
+-   **Refatoração de :** Esta é uma tarefa grande e contínua. O plano é extrair a lógica de estado e os handlers para um hook customizado. Não tente fazer tudo de uma vez.
+-   **Script de Migração:** O script de migração de backend está concluído (), mas falta uma interface no frontend para o admin o poder executar facilmente. Esta é uma tarefa pendente de baixa prioridade.
+-   **Bug de Navegação:** Esteja ciente de que pode haver um bug de navegação nos tabs da  que causa redirecionamentos inesperados. Se ocorrer, deve ser investigado.
+-   **Problemas de Infraestrutura:** **NÃO TENTE** resolver os problemas de SSL ou armazenamento do servidor. Estes estão bloqueados e são da responsabilidade da equipa de suporte.
 
 **documents and test reports created in this job**
--   
--   
--   
--   
--    (atualizado várias vezes)
+-    (Testes do Playwright e correção de documentos passaram)
+-    (Atualizado várias vezes ao longo da sessão)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: O utilizador pede para garantir que o Playwright fica sempre ativo e que os documentos carregados no registo são guardados. (EM PROGRESSO)
-2.  ****: O utilizador aponta que a lista de pendentes aparece em Utilizadores mas não em Motoristas. (CONCLUÍDO - A lógica foi corrigida)
-3.  ****: Utilizador reporta que clicar em Ver Docs na lista de admin dá erro e o registo mostra Not Found. (CONCLUÍDO)
-4.  ****: Repetição do ponto acima com screenshot. (CONCLUÍDO)
-5.  ****: O agente instrui o utilizador a contactar o suporte para os problemas de infraestrutura. (CONCLUÍDO)
-6.  ****: O utilizador esclarece que o alojamento é da Emergent e que o agente deve investigar o problema de espaço. (CONCLUÍDO - Agente escalou para suporte)
-7.  ****: O utilizador descreve o problema de rate-limiting da Uber e o problema de armazenamento. (CONCLUÍDO - Diagnosticado)
-8.  ****: O utilizador lista múltiplos problemas em produção (SSL, Playwright, credenciais Uber, armazenamento). (CONCLUÍDO - Diagnosticado)
-9.  ****: O utilizador aprova as melhorias de UI. (CONCLUÍDO)
-10. ****: O utilizador pede melhorias de UI na lista de utilizadores. (CONCLUÍDO)
+1.  ****: Utilizador reportou o bug crítico de registo com screenshot. (RESOLVIDO)
+2.  ****: Utilizador reportou que dados pessoais e documentos não eram guardados. (RESOLVIDO)
+3.  ****: Utilizador mostrou que os documentos não apareciam na ficha do motorista. (RESOLVIDO)
+4.  ****: Utilizador mostrou que a validação do formulário de registo falhava injustamente. (RESOLVIDO)
+5.  ****: Utilizador pediu para confirmar se todos os documentos eram necessários. (RESPONDIDO)
+6.  ****: Utilizador perguntou se as correções seriam aplicadas a registos antigos. (RESPONDIDO, o que levou à criação do script de migração)
+7.  ****: Utilizador pediu para melhorar o fluxo de aprovação e mencionou a necessidade futura de gerir classificações. (EM PROGRESSO)
+8.  ****: Utilizador perguntou sobre a gestão de motoristas existentes após o deploy. (RESPONDIDO)
+9.  ****: Utilizador aprovou o plano do agente para avançar com melhorias e refatoração. (CONCLUÍDO)
+10. ** / **: Utilizador pediu para continuar a tarefa de refatoração. (CONCLUÍDO)
 
 **Project Health Check:**
--   **Broken:** O ambiente de **produção** está em estado crítico devido a problemas de infraestrutura: armazenamento quase esgotado, certificado SSL mal configurado e o serviço RPA principal inativo. A aplicação em si também tem problemas de fiabilidade (associação de documentos, persistência do serviço RPA).
+-   **Broken:** O ambiente de **produção** permanece num estado precário devido aos problemas de infraestrutura (armazenamento, SSL), que estão bloqueados e à espera da equipa de suporte.
+-   **Mocked:** N/A.
+-   **Code Health:** O código da aplicação está significativamente mais saudável. O bug mais crítico (registo de motoristas) foi completamente resolvido e a refatoração de um componente chave está bem encaminhada.
 
 **3rd Party Integrations**
--   **Playwright:** Usado para automação RPA (scrapers Uber/Prio). Atualmente com problemas de estabilidade em produção.
+-   **Playwright:** Usado para automação RPA. O problema de estabilidade imediato (incompatibilidade de versão) foi resolvido.
 -   **Recharts:** Usado para gráficos no dashboard.
--   **Expo / EAS:** Utilizado para a aplicação móvel.
+-   **Expo / EAS:** Utilizado para a aplicação móvel (não foi modificado nesta sessão).
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. O agente usou o  várias vezes para validar as correções e novas funcionalidades.
+-   **Testing agent used after significant changes:** YES. O agente usou o  para validar as correções no fluxo de registo e no Playwright, com 100% de sucesso.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** A instabilidade do scraper da Prio e a causa raiz dos problemas de sincronização de dados pós-deploy. Os problemas de infraestrutura em produção são novas regressões críticas.
+-   **Known regressions:** O bug de navegação nos tabs da ficha do veículo foi observado nesta sessão.
 
 **Credentials to test flow:**
 -   **App Admin User:**  / 
 -   **App Partner User (Zeny):**  / 
 
 **What agent forgot to execute**
--   O agente não abordou a refatoração pendente de  nem o scraper da Prio, mas isso foi justificado pela necessidade de focar em bugs mais críticos e pedidos diretos do utilizador. A investigação sobre os problemas de produção foi corretamente escalada em vez de tentada diretamente, o que é o procedimento correto.</analysis>
+-   O agente não criou uma interface de utilizador para o script de migração de dados que criou. Embora o script funcione via API, o utilizador provavelmente esperaria um botão no painel de administração para o executar.
+-   O agente notou o bug de navegação na  mas não o investigou nem o adicionou à lista de problemas pendentes ativamente.</analysis>
