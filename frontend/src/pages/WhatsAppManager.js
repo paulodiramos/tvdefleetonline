@@ -86,8 +86,9 @@ const WhatsAppManager = ({ user, onLogout }) => {
       });
       const data = await response.json();
       
-      if (data.qrCode) {
-        setQrData(data.qrCode);
+      // Handle both 'qr' and 'qrCode' response formats
+      if (data.qr || data.qrCode) {
+        setQrData(data.qr || data.qrCode);
       } else if (data.connected) {
         setQrData(null);
         setPolling(false);
