@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Users, Search, Edit, Package, CheckCircle, XCircle, 
-  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar, Trash2, Gift, Building, FileText, RefreshCw, AlertTriangle
+  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar, Trash2, Gift, Building, FileText, RefreshCw, AlertTriangle, Award
 } from 'lucide-react';
 
 const GestaoUtilizadores = ({ user, onLogout }) => {
