@@ -793,6 +793,27 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                 Corrigir Dados
               </Button>
             )}
+            {user?.role === 'admin' && (
+              <Button 
+                onClick={handleRecalcularClassificacoes}
+                disabled={recalculandoClassificacoes}
+                variant="outline"
+                className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                data-testid="btn-recalcular-classificacoes"
+              >
+                {recalculandoClassificacoes ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    A processar...
+                  </>
+                ) : (
+                  <>
+                    <Award className="w-4 h-4 mr-2" />
+                    Progressões
+                  </>
+                )}
+              </Button>
+            )}
             <Button 
               onClick={handleOpenNovoUserDialog}
               className="bg-green-600 hover:bg-green-700"
