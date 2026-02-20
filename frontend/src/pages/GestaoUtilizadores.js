@@ -1868,6 +1868,81 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Diálogo de Resultados de Classificações */}
+        <Dialog open={showClassificacoesDialog} onOpenChange={setShowClassificacoesDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-600" />
+                Progressão de Classificações
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {classificacoesResult && (
+                <>
+                  {/* Resumo */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-slate-50 rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-slate-800">{classificacoesResult.total_motoristas}</p>
+                      <p className="text-sm text-slate-600">Total Motoristas</p>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-green-600">{classificacoesResult.resumo?.promovidos || 0}</p>
+                      <p className="text-sm text-green-700">Promovidos</p>
+                    </div>
+                    <div className="bg-amber-50 rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-amber-600">{classificacoesResult.resumo?.mantidos || 0}</p>
+                      <p className="text-sm text-amber-700">Mantidos</p>
+                    </div>
+                  </div>
+
+                  {/* Promovidos */}
+                  {classificacoesResult.promovidos?.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-green-800 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Motoristas Promovidos
+                      </h4>
+                      <div className="bg-green-50 border border-green-200 rounded-lg divide-y divide-green-200">
+                        {classificacoesResult.promovidos.map((m, idx) => (
+                          <div key={idx} className="p-3 flex justify-between items-center">
+                            <span className="font-medium text-green-800">{m.nome}</span>
+                            <span className="text-sm text-green-700">
+                              {m.nivel_anterior} → {m.nivel_novo}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info sobre critérios */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 mb-2">Critérios de Progressão</h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• <strong>Prata:</strong> 3+ meses serviço, 60+ pontuação cuidado</li>
+                      <li>• <strong>Ouro:</strong> 6+ meses serviço, 75+ pontuação cuidado</li>
+                      <li>• <strong>Platina:</strong> 12+ meses serviço, 85+ pontuação cuidado</li>
+                      <li>• <strong>Diamante:</strong> 24+ meses serviço, 95+ pontuação cuidado</li>
+                    </ul>
+                    <p className="text-xs text-blue-600 mt-2">
+                      A pontuação de cuidado é calculada com base em: vistorias (40%), incidentes (25%), manutenções (20%), avaliação manual (15%)
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowClassificacoesDialog(false)}
+              >
+                Fechar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
