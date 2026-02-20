@@ -27,7 +27,33 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-20 (Latest - Sistema de Progressão Automática)
+### Session 2026-02-20 (Latest - Gestão de Planos e Preços)
+- **Feature: Campos de Preços com IVA - DONE:**
+  - **Funcionalidade:** Todos os campos de preço em planos e módulos indicam "Introduza valores SEM IVA"
+  - **Cálculo automático:** Abaixo de cada campo aparece "c/IVA: €X.XX" calculado em verde
+  - **Ficheiros:** `frontend/src/pages/AdminGestaoPlanos.js`
+
+- **Feature: Módulos em Destaque - DONE:**
+  - **Funcionalidade:** Admin pode marcar módulos como "Em Destaque" para clientes
+  - **UI:** Switch com ícone de estrela no modal de edição de módulo
+  - **Backend Bug Fix:** Corrigido modelo `ModuloCreate` para incluir campo `destaque`
+  - **Backend Bug Fix:** Serviço agora usa `data.destaque` em vez de hardcoded `False`
+
+- **Feature: Aba Preços Especiais - DONE:**
+  - **Funcionalidade:** Nova aba dedicada que lista todos os preços especiais por plano
+  - **Tabela:** Mostra Parceiro, Tipo, Valor, Validade e botão de eliminar
+  - **Eliminar:** Botão de eliminar remove preço especial da lista
+
+- **Feature: Eliminação Permanente - DONE:**
+  - **Funcionalidade:** Admin pode eliminar permanentemente planos, módulos e categorias inativas
+  - **UI:** Items ativos mostram botão olho (amarelo) para desativar
+  - **UI:** Items inativos mostram botão lixeira (vermelho) para eliminar permanentemente
+  - **Backend Bug Fix:** Endpoints corrigidos para usar collections correctas (`planos_sistema`, `modulos_sistema`)
+  - **Confirmação:** Dupla confirmação antes de eliminar permanentemente
+
+- **Testes:** 100% backend (12/12) + 100% frontend (7/7 features) - iteration_58.json
+
+### Session 2026-02-20 (Sistema de Progressão Automática)
 - **Feature: Sistema de Progressão Automática de Classificações - DONE:**
   - **Backend:** Novos métodos em `comissoes_service.py`:
     - `calcular_pontuacao_cuidado_veiculo()` - Calcula pontuação baseada em vistorias (40%), incidentes (25%), manutenções (20%), avaliação do parceiro (15%)
