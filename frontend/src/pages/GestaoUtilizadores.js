@@ -1719,6 +1719,106 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Diálogo de Migração de Dados */}
+        <Dialog open={showMigrationDialog} onOpenChange={setShowMigrationDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 text-purple-600" />
+                Corrigir Dados de Motoristas
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-slate-600">
+                Esta ferramenta corrige dados de motoristas que possam ter sido registados com formatos antigos.
+              </p>
+              
+              {migrationResult && (
+                <div className="space-y-3">
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <h4 className="font-medium text-slate-800 mb-2">Estado Atual</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Total Motoristas:</span>
+                        <span className="font-medium">{migrationResult.total_motoristas || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Sem dados pessoais:</span>
+                        <span className="font-medium text-amber-600">
+                          {migrationResult.precisam_migracao?.sem_dados_pessoais || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Sem campo documentos:</span>
+                        <span className="font-medium text-amber-600">
+                          {migrationResult.precisam_migracao?.sem_campo_documentos || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Formato antigo:</span>
+                        <span className="font-medium text-amber-600">
+                          {migrationResult.precisam_migracao?.com_documentos_formato_antigo || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {migrationResult.ultimaExecucao && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <h4 className="font-medium text-green-800 mb-2">Última Execução</h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-green-700">Campos corrigidos:</span>
+                          <span className="font-medium">{migrationResult.ultimaExecucao.resultados?.campos_corrigidos || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-green-700">Docs renomeados:</span>
+                          <span className="font-medium">{migrationResult.ultimaExecucao.resultados?.documentos_renomeados || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!migrationResult.migracao_necessaria && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-sm text-green-800 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Todos os motoristas estão com dados correctos!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowMigrationDialog(false)}
+              >
+                Fechar
+              </Button>
+              <Button
+                onClick={handleRunMigration}
+                disabled={migratingMotoristas || (migrationResult && !migrationResult.migracao_necessaria)}
+                className="bg-purple-600 hover:bg-purple-700"
+                data-testid="btn-run-migration"
+              >
+                {migratingMotoristas ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    A corrigir...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Executar Correção
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
