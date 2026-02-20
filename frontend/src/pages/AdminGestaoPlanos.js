@@ -304,7 +304,8 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
     },
     icone: '📦',
     cor: '#6B7280',
-    funcionalidades: []
+    funcionalidades: [],
+    destaque: false
   });
   
   // Promoção form
