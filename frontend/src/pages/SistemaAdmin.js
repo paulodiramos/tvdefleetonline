@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   Table,
   TableBody,
@@ -24,7 +25,8 @@ import {
 } from "@/components/ui/dialog";
 import { 
   Server, HardDrive, RefreshCw, Play, CheckCircle, XCircle, 
-  AlertTriangle, Loader2, Monitor, Database, Mail, Trash2, UserX, Shield
+  AlertTriangle, Loader2, Monitor, Database, Mail, Trash2, UserX, Shield,
+  FolderOpen, FileText, Eraser
 } from 'lucide-react';
 
 const SistemaAdmin = ({ user, onLogout }) => {
@@ -39,10 +41,16 @@ const SistemaAdmin = ({ user, onLogout }) => {
   const [limpandoEmails, setLimpandoEmails] = useState(false);
   const [libertandoEmail, setLibertandoEmail] = useState(null);
   const [showConfirmLimpar, setShowConfirmLimpar] = useState(false);
+  
+  // Estados para armazenamento
+  const [armazenamento, setArmazenamento] = useState(null);
+  const [loadingArmazenamento, setLoadingArmazenamento] = useState(false);
+  const [limpandoTemporarios, setLimpandoTemporarios] = useState(false);
 
   useEffect(() => {
     fetchStatus();
     fetchEmailsBloqueados();
+    fetchArmazenamento();
   }, []);
 
   const fetchStatus = async () => {
