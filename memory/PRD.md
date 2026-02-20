@@ -319,6 +319,11 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - Admin pode atribuir Parceiro e Classificação ao aprovar motoristas
 - [x] Botão de Migração de Dados no Admin - **DONE** (2026-02-20)
   - Página /usuarios com botão "Corrigir Dados" e modal de estatísticas
+- [x] Sistema de Progressão Automática de Classificações - **DONE** (2026-02-20)
+  - Cálculo de pontuação de cuidado com veículo (vistorias, incidentes, manutenções, avaliação)
+  - Promoção automática de motoristas elegíveis
+  - Notificação via app quando motorista sobe de nível
+  - Botão "Progressões" no admin para recalcular todas
 - [ ] Continuar refatoração do FichaVeiculo.js (hooks criados, falta migrar componente)
 
 ### P2 - Medium Priority
