@@ -930,14 +930,13 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         <div className="p-3 bg-slate-50 rounded-lg space-y-2">
                           <div className="flex items-center justify-between">
                             <p className="text-xs text-slate-500 font-medium">Preços</p>
-                            <Badge variant="outline" className="text-xs">c/IVA</Badge>
                           </div>
                           {/* Base */}
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-blue-600 font-medium">Base:</span>
                             <div className="text-right">
-                              <span>€{formatarEuros(plano.precos_plano?.base_mensal || plano.precos?.mensal || 0)}/mês</span>
-                              <span className="text-xs text-slate-400 ml-1">(€{formatarEuros(calcularSemIva(plano.precos_plano?.base_mensal || plano.precos?.mensal || 0))} s/IVA)</span>
+                              <div className="font-semibold">€{formatarEuros(plano.precos_plano?.base_mensal || plano.precos?.mensal || 0)}/mês</div>
+                              <div className="text-[10px] text-slate-400">€{formatarEuros(calcularSemIva(plano.precos_plano?.base_mensal || plano.precos?.mensal || 0))} s/IVA</div>
                             </div>
                           </div>
                           {/* Por Veículo */}
@@ -948,8 +947,8 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                                 <span className="text-green-600 font-medium">Por Veículo:</span>
                               </span>
                               <div className="text-right">
-                                <span>+€{formatarEuros(plano.precos_plano?.por_veiculo_mensal || 0)}/mês</span>
-                                <span className="text-xs text-slate-400 ml-1">(€{formatarEuros(calcularSemIva(plano.precos_plano?.por_veiculo_mensal || 0))} s/IVA)</span>
+                                <div className="font-semibold">+€{formatarEuros(plano.precos_plano?.por_veiculo_mensal || 0)}/mês</div>
+                                <div className="text-[10px] text-slate-400">€{formatarEuros(calcularSemIva(plano.precos_plano?.por_veiculo_mensal || 0))} s/IVA</div>
                               </div>
                             </div>
                           )}
@@ -961,8 +960,8 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                                 <span className="text-purple-600 font-medium">Por Motorista:</span>
                               </span>
                               <div className="text-right">
-                                <span>+€{formatarEuros(plano.precos_plano?.por_motorista_mensal || 0)}/mês</span>
-                                <span className="text-xs text-slate-400 ml-1">(€{formatarEuros(calcularSemIva(plano.precos_plano?.por_motorista_mensal || 0))} s/IVA)</span>
+                                <div className="font-semibold">+€{formatarEuros(plano.precos_plano?.por_motorista_mensal || 0)}/mês</div>
+                                <div className="text-[10px] text-slate-400">€{formatarEuros(calcularSemIva(plano.precos_plano?.por_motorista_mensal || 0))} s/IVA</div>
                               </div>
                             </div>
                           )}
