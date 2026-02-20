@@ -12699,6 +12699,7 @@ app.include_router(plataformas_router, prefix="/api")
 app.include_router(browser_virtual_admin_router, prefix="/api")
 app.include_router(contabilidade_router, prefix="/api")
 app.include_router(contabilistas_router, prefix="/api")
+app.include_router(migracao_router, prefix="/api/admin")
 
 # api_router will be included at the very end of the file, after all routes are defined
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
