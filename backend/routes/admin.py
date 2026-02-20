@@ -468,6 +468,173 @@ async def get_system_status(current_user: dict = Depends(get_current_user)):
     }
 
 
+@router.get("/sistema/armazenamento")
+async def get_storage_details(current_user: dict = Depends(get_current_user)):
+    """Obtém detalhes de armazenamento por pasta"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    def get_folder_size(path):
+        """Calcula tamanho de uma pasta"""
+        total = 0
+        try:
+            if os.path.exists(path):
+                for dirpath, dirnames, filenames in os.walk(path):
+                    for f in filenames:
+                        fp = os.path.join(dirpath, f)
+                        try:
+                            total += os.path.getsize(fp)
+                        except:
+                            pass
+        except:
+            pass
+        return total
+    
+    def format_size(size_bytes):
+        """Formata tamanho em bytes para string legível"""
+        if size_bytes >= 1024**3:
+            return f"{size_bytes / (1024**3):.2f} GB"
+        elif size_bytes >= 1024**2:
+            return f"{size_bytes / (1024**2):.2f} MB"
+        elif size_bytes >= 1024:
+            return f"{size_bytes / 1024:.2f} KB"
+        return f"{size_bytes} bytes"
+    
+    # Pastas a verificar
+    pastas = {
+        "uploads": "/app/uploads",
+        "uploads_documentos": "/app/uploads/documentos",
+        "uploads_fotos": "/app/uploads/vehicle_photos",
+        "logs": "/var/log",
+        "tmp": "/tmp",
+        "whatsapp_sessions": "/app/backend/whatsapp_service/sessions",
+        "test_reports": "/app/test_reports",
+        "dump": "/app/dump"
+    }
+    
+    resultado = {
+        "pastas": [],
+        "total_uploads": 0,
+        "ficheiros_temporarios": 0
+    }
+    
+    for nome, path in pastas.items():
+        size = get_folder_size(path)
+        resultado["pastas"].append({
+            "nome": nome,
+            "path": path,
+            "tamanho_bytes": size,
+            "tamanho": format_size(size),
+            "existe": os.path.exists(path)
+        })
+        
+        if "upload" in nome:
+            resultado["total_uploads"] += size
+        if nome in ["tmp", "test_reports", "dump"]:
+            resultado["ficheiros_temporarios"] += size
+    
+    # Ordenar por tamanho
+    resultado["pastas"].sort(key=lambda x: x["tamanho_bytes"], reverse=True)
+    
+    resultado["total_uploads_formatado"] = format_size(resultado["total_uploads"])
+    resultado["ficheiros_temporarios_formatado"] = format_size(resultado["ficheiros_temporarios"])
+    
+    # Espaço em disco
+    disk_usage = shutil.disk_usage("/")
+    resultado["disco"] = {
+        "total": format_size(disk_usage.total),
+        "usado": format_size(disk_usage.used),
+        "livre": format_size(disk_usage.free),
+        "percentagem_usado": round(disk_usage.used / disk_usage.total * 100, 1)
+    }
+    
+    return resultado
+
+
+@router.post("/sistema/limpar-temporarios")
+async def limpar_ficheiros_temporarios(current_user: dict = Depends(get_current_user)):
+    """Limpa ficheiros temporários (test_reports, dump, cache)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    import shutil as sh
+    
+    resultado = {
+        "pastas_limpas": [],
+        "espaco_libertado": 0,
+        "erros": []
+    }
+    
+    # Pastas a limpar
+    pastas_limpar = [
+        "/app/test_reports",
+        "/app/dump",
+        "/app/video_frames",
+        "/tmp/playwright*"
+    ]
+    
+    def get_folder_size(path):
+        total = 0
+        try:
+            if os.path.exists(path):
+                for dirpath, dirnames, filenames in os.walk(path):
+                    for f in filenames:
+                        fp = os.path.join(dirpath, f)
+                        try:
+                            total += os.path.getsize(fp)
+                        except:
+                            pass
+        except:
+            pass
+        return total
+    
+    for pasta in pastas_limpar:
+        try:
+            if "*" in pasta:
+                # Padrão glob
+                import glob
+                for p in glob.glob(pasta):
+                    if os.path.isdir(p):
+                        size = get_folder_size(p)
+                        sh.rmtree(p)
+                        resultado["pastas_limpas"].append(p)
+                        resultado["espaco_libertado"] += size
+            elif os.path.exists(pasta):
+                size = get_folder_size(pasta)
+                if pasta == "/app/test_reports":
+                    # Manter a pasta, limpar conteúdo
+                    for f in os.listdir(pasta):
+                        fp = os.path.join(pasta, f)
+                        try:
+                            if os.path.isfile(fp):
+                                os.remove(fp)
+                            elif os.path.isdir(fp):
+                                sh.rmtree(fp)
+                        except:
+                            pass
+                else:
+                    sh.rmtree(pasta)
+                resultado["pastas_limpas"].append(pasta)
+                resultado["espaco_libertado"] += size
+        except Exception as e:
+            resultado["erros"].append(f"{pasta}: {str(e)}")
+    
+    # Formatar tamanho libertado
+    if resultado["espaco_libertado"] >= 1024**3:
+        resultado["espaco_libertado_formatado"] = f"{resultado['espaco_libertado'] / (1024**3):.2f} GB"
+    elif resultado["espaco_libertado"] >= 1024**2:
+        resultado["espaco_libertado_formatado"] = f"{resultado['espaco_libertado'] / (1024**2):.2f} MB"
+    else:
+        resultado["espaco_libertado_formatado"] = f"{resultado['espaco_libertado'] / 1024:.2f} KB"
+    
+    logger.info(f"Limpeza de temporários por {current_user['email']}: {resultado}")
+    
+    return {
+        "message": f"Limpeza concluída. Libertados {resultado['espaco_libertado_formatado']}",
+        "resultado": resultado
+    }
+
+
 @router.post("/sistema/playwright/install")
 async def install_playwright(current_user: dict = Depends(get_current_user)):
     """Instala/reinstala browsers do Playwright"""
