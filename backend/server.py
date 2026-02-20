@@ -108,6 +108,7 @@ from routes.sincronizacao import router as sincronizacao_router
 from routes.public import router as public_router
 from routes.ganhos import router as ganhos_router
 from routes.manutencao import router as manutencao_router
+from routes.migracao import router as migracao_router
 from routes.vistorias import router as vistorias_router
 from routes.cartoes_frota import router as cartoes_frota_router
 from routes.templates_contratos import router as templates_contratos_router
