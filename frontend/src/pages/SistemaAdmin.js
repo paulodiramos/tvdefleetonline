@@ -310,33 +310,121 @@ const SistemaAdmin = ({ user, onLogout }) => {
             </CardContent>
           </Card>
 
-          {/* Disk Usage */}
+          {/* Disk Usage - Detalhado */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HardDrive className="w-5 h-5" />
-                Armazenamento
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <HardDrive className="w-5 h-5" />
+                  Armazenamento
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={fetchArmazenamento}
+                    disabled={loadingArmazenamento}
+                  >
+                    {loadingArmazenamento ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={handleLimparTemporarios}
+                    disabled={limpandoTemporarios}
+                  >
+                    {limpandoTemporarios ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Eraser className="w-4 h-4 mr-2" />
+                    )}
+                    Limpar Temporários
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Usado: {status?.disk?.used_gb} GB</span>
-                  <span>Livre: {status?.disk?.free_gb} GB</span>
-                  <span>Total: {status?.disk?.total_gb} GB</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-3">
-                  <div 
-                    className={`h-3 rounded-full transition-all ${
-                      status?.disk?.percent_used > 90 ? 'bg-red-500' :
-                      status?.disk?.percent_used > 70 ? 'bg-yellow-500' : 'bg-green-500'
+              <div className="space-y-4">
+                {/* Barra de progresso geral */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Usado: {armazenamento?.disco?.usado || status?.disk?.used_gb + ' GB'}</span>
+                    <span>Livre: {armazenamento?.disco?.livre || status?.disk?.free_gb + ' GB'}</span>
+                    <span>Total: {armazenamento?.disco?.total || status?.disk?.total_gb + ' GB'}</span>
+                  </div>
+                  <Progress 
+                    value={armazenamento?.disco?.percentagem_usado || status?.disk?.percent_used || 0} 
+                    className={`h-3 ${
+                      (armazenamento?.disco?.percentagem_usado || status?.disk?.percent_used) > 90 ? '[&>div]:bg-red-500' :
+                      (armazenamento?.disco?.percentagem_usado || status?.disk?.percent_used) > 70 ? '[&>div]:bg-yellow-500' : '[&>div]:bg-green-500'
                     }`}
-                    style={{ width: `${status?.disk?.percent_used || 0}%` }}
                   />
+                  <p className="text-sm text-slate-500 text-center">
+                    {armazenamento?.disco?.percentagem_usado || status?.disk?.percent_used}% utilizado
+                  </p>
                 </div>
-                <p className="text-sm text-slate-500 text-center">
-                  {status?.disk?.percent_used}% utilizado
-                </p>
+
+                {/* Detalhes por pasta */}
+                {armazenamento?.pastas && (
+                  <div className="mt-4">
+                    <h4 className="font-medium text-slate-700 mb-2 flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4" />
+                      Detalhes por Pasta
+                    </h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-slate-50">
+                            <TableHead>Pasta</TableHead>
+                            <TableHead>Tamanho</TableHead>
+                            <TableHead>Estado</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {armazenamento.pastas.filter(p => p.existe).map((pasta, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{pasta.nome}</p>
+                                  <p className="text-xs text-slate-400">{pasta.path}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  pasta.tamanho_bytes > 100 * 1024 * 1024 ? "destructive" :
+                                  pasta.tamanho_bytes > 10 * 1024 * 1024 ? "secondary" : "outline"
+                                }>
+                                  {pasta.tamanho}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {pasta.existe ? (
+                                  <CheckCircle className="w-4 h-4 text-green-500" />
+                                ) : (
+                                  <XCircle className="w-4 h-4 text-slate-300" />
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Resumo */}
+                {armazenamento && (
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-700">Total Uploads</p>
+                      <p className="text-lg font-bold text-blue-900">{armazenamento.total_uploads_formatado}</p>
+                    </div>
+                    <div className="p-3 bg-amber-50 rounded-lg">
+                      <p className="text-sm text-amber-700">Ficheiros Temporários</p>
+                      <p className="text-lg font-bold text-amber-900">{armazenamento.ficheiros_temporarios_formatado}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
