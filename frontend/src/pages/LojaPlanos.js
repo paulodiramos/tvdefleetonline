@@ -233,11 +233,13 @@ const LojaPlanos = ({ user, onLogout }) => {
   };
 
   const canUpgrade = (plano) => {
+    if (!plano) return false;
     if (!meuPlano?.plano) return true;
     return plano.ordem > (meuPlano.plano.ordem || 0);
   };
 
   const canDowngrade = (plano) => {
+    if (!plano) return false;
     if (!meuPlano?.plano) return false;
     return plano.ordem < (meuPlano.plano.ordem || 0);
   };
