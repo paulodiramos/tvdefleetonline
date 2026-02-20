@@ -76,9 +76,13 @@ async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = De
     if current_user["role"] == UserRole.GESTAO:
         parceiro_dict["gestor_associado_id"] = current_user["id"]
     
-    # Assign base free plan for parceiro
+    # Assign base free plan for parceiro (check multiple price field formats)
     plano_base = await db.planos_sistema.find_one({
-        "preco_mensal": 0, 
+        "$or": [
+            {"preco_mensal": 0},
+            {"precos.mensal": 0},
+            {"precos_plano.base_mensal": 0}
+        ],
         "ativo": True, 
         "tipo_usuario": "parceiro"
     }, {"_id": 0})
