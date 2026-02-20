@@ -707,7 +707,8 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
         },
         icone: modulo.icone || '📦',
         cor: modulo.cor || '#6B7280',
-        funcionalidades: modulo.funcionalidades || []
+        funcionalidades: modulo.funcionalidades || [],
+        destaque: modulo.destaque || false
       });
     } else {
       setSelectedModulo(null);
@@ -730,7 +731,8 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
         },
         icone: '📦',
         cor: '#6B7280',
-        funcionalidades: []
+        funcionalidades: [],
+        destaque: false
       });
     }
     setShowModuloModal(true);
