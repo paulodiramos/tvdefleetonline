@@ -172,6 +172,7 @@ class ModuloUpdate(BaseModel):
     nome: Optional[str] = None
     descricao: Optional[str] = None
     tipo_cobranca: Optional[TipoCobranca] = None
+    tipo_usuario: Optional[TipoUsuario] = None
     precos: Optional[Precos] = None
     icone: Optional[str] = None
     cor: Optional[str] = None
