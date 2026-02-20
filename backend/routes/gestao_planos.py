@@ -107,7 +107,7 @@ async def eliminar_modulo(
     
     if permanente:
         # Eliminação permanente
-        result = await service.db.modulos.delete_one({"id": modulo_id})
+        result = await service.db.modulos_sistema.delete_one({"id": modulo_id})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Módulo não encontrado")
         return {"message": "Módulo eliminado permanentemente"}
@@ -225,7 +225,7 @@ async def eliminar_plano(
     
     if permanente:
         # Eliminação permanente
-        result = await service.db.planos.delete_one({"id": plano_id})
+        result = await service.db.planos_sistema.delete_one({"id": plano_id})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Plano não encontrado")
         return {"message": "Plano eliminado permanentemente"}
