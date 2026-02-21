@@ -1051,7 +1051,11 @@ export default function RPADesigner({ user, onLogout }) {
                 <CardContent className="px-4 pb-3">
                   <div className="grid grid-cols-2 gap-2">
                     {[0, 1, 2, 3].map(s => {
-                      const designExiste = designs.find(d => d.semana_offset === s);
+                      // Verificar se existe design para esta semana E tipo actual
+                      const designExiste = designs.find(d => 
+                        d.semana_offset === s && 
+                        (d.tipo_design || 'extracao') === tipoDesign
+                      );
                       return (
                         <button
                           key={s}
