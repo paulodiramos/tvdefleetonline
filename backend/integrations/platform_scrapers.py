@@ -191,20 +191,46 @@ class UberScraper(BaseScraper):
         self.platform_name = "Uber Fleet"
         self.login_url = "https://supplier.uber.com/"
         self.parceiro_id = parceiro_id
-        self.session_path = f"/tmp/uber_sessao_{parceiro_id}.json" if parceiro_id else None
+        # Usar directório de sessão persistente (mesmo que browser_interativo)
+        self.session_dir = f"/app/data/uber_sessions/parceiro_{parceiro_id}" if parceiro_id else None
+        self.session_path = f"/tmp/uber_sessao_{parceiro_id}.json" if parceiro_id else None  # fallback
     
     async def initialize(self):
-        """Inicializar browser, opcionalmente com sessão guardada"""
+        """Inicializar browser com contexto persistente se disponível"""
+        # Se temos directório de sessão persistente, usar launch_persistent_context
+        if self.session_dir and os.path.exists(self.session_dir):
+            try:
+                from playwright.async_api import async_playwright
+                self.playwright = await async_playwright().start()
+                
+                self.context = await self.playwright.chromium.launch_persistent_context(
+                    self.session_dir,
+                    headless=self.headless,
+                    args=[
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu'
+                    ],
+                    viewport={'width': 1920, 'height': 1080}
+                )
+                
+                self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+                logger.info(f"✅ UberScraper: Usando sessão persistente de {self.session_dir}")
+                return
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao usar sessão persistente: {e}, tentando método normal...")
+        
+        # Fallback para método normal
         await super().initialize()
         
-        # Se temos sessão guardada, carregar cookies
+        # Tentar carregar cookies do ficheiro antigo
         if self.session_path and os.path.exists(self.session_path):
             try:
                 import json
                 with open(self.session_path, 'r') as f:
                     storage_state = json.load(f)
                 
-                # Aplicar cookies
                 if 'cookies' in storage_state:
                     await self.context.add_cookies(storage_state['cookies'])
                     logger.info(f"✅ Sessão Uber carregada de {self.session_path}")
