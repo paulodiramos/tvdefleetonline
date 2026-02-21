@@ -3248,6 +3248,30 @@ async def generate_resumo_semanal_pdf(
     
     parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
     
+    # ============ BUSCAR DADOS DO PARCEIRO E CONFIGURAÇÃO DO RELATÓRIO ============
+    parceiro_dados = None
+    config_relatorio = None
+    
+    if parceiro_id:
+        # Buscar dados do parceiro (nome, NIF, etc.)
+        parceiro_dados = await db.parceiros.find_one(
+            {"id": parceiro_id},
+            {"_id": 0, "name": 1, "nif": 1, "email": 1, "morada": 1}
+        )
+        
+        # Se não encontrar em parceiros, buscar em users
+        if not parceiro_dados:
+            parceiro_dados = await db.users.find_one(
+                {"id": parceiro_id},
+                {"_id": 0, "name": 1, "nif": 1, "email": 1}
+            )
+        
+        # Buscar configuração do relatório
+        config_relatorio = await db.relatorio_config.find_one(
+            {"parceiro_id": parceiro_id},
+            {"_id": 0}
+        )
+    
     # ============ BUSCAR PORTAGENS VIA VERDE POR PARCEIRO (fora do loop de motoristas) ============
     # Os dados da Via Verde são por veículo/parceiro, não por motorista individual
     if parceiro_id:
