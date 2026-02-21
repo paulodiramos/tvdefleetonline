@@ -361,6 +361,7 @@ async def iniciar_sessao_design(
     
     plataforma_id = body.get("plataforma_id")
     semana_offset = body.get("semana_offset", 0)
+    tipo_design = body.get("tipo_design", "extracao")  # 'login' ou 'extracao'
     parceiro_id = body.get("parceiro_id")
     url_inicial = body.get("url_inicial")
     credenciais_teste = body.get("credenciais_teste")
@@ -407,6 +408,7 @@ async def iniciar_sessao_design(
         "plataforma_id": plataforma_id,
         "plataforma": {k: v for k, v in plataforma.items() if k != "_id"},
         "semana_offset": semana_offset,
+        "tipo_design": tipo_design,  # 'login' ou 'extracao'
         "admin_id": current_user["id"],
         "passos": [],
         "gravando": False,
