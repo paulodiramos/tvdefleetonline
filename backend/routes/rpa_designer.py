@@ -167,20 +167,33 @@ async def desativar_plataforma(
 @router.get("/designs")
 async def listar_designs(
     plataforma_id: Optional[str] = None,
+    tipo_design: Optional[str] = None,  # 'login' ou 'extracao'
     current_user: dict = Depends(get_current_user)
 ):
-    """Listar designs de uma plataforma"""
+    """Listar designs de uma plataforma
+    
+    Args:
+        plataforma_id: ID da plataforma
+        tipo_design: Tipo de design ('login' ou 'extracao')
+    """
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Apenas admin pode ver designs")
         
     filtro = {"ativo": True}
     if plataforma_id:
         filtro["plataforma_id"] = plataforma_id
+    if tipo_design:
+        filtro["tipo_design"] = tipo_design
         
     designs = await db.designs_rpa.find(
         filtro,
         {"_id": 0}
-    ).sort([("plataforma_id", 1), ("semana_offset", 1)]).to_list(length=100)
+    ).sort([("plataforma_id", 1), ("tipo_design", 1), ("semana_offset", 1)]).to_list(length=100)
+    
+    # Adicionar tipo_design por defeito se não existir (compatibilidade)
+    for d in designs:
+        if "tipo_design" not in d:
+            d["tipo_design"] = "extracao"  # Default para designs antigos
     
     return designs
 
@@ -319,6 +332,7 @@ class IniciarSessaoRequest(BaseModel):
     """Request para iniciar sessão de design"""
     plataforma_id: str
     semana_offset: int = 0
+    tipo_design: str = "extracao"  # 'login' ou 'extracao'
     usar_sessao_parceiro: Optional[Dict[str, Any]] = None  # {parceiro_id, session_path}
     url_inicial: Optional[str] = None  # URL para começar (pós-login)
 
