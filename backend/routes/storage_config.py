@@ -513,3 +513,195 @@ async def get_all_partners_storage_config(current_user: Dict = Depends(get_curre
         "total": len(configs),
         "configs": configs
     }
+
+
+# ==================== OAUTH CALLBACKS ====================
+
+@router.get("/oauth/google_drive/callback")
+async def google_drive_oauth_callback(code: str, state: str):
+    """Handle Google Drive OAuth callback"""
+    import httpx
+    
+    parceiro_id = state
+    
+    try:
+        # Exchange code for tokens
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
+                    "client_secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
+                    "code": code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": f"{os.environ.get('REACT_APP_BACKEND_URL', '')}/api/storage-config/oauth/google_drive/callback"
+                }
+            )
+            tokens = response.json()
+        
+        if "access_token" not in tokens:
+            raise HTTPException(status_code=400, detail=f"OAuth failed: {tokens.get('error_description', 'Unknown error')}")
+        
+        # Get user info
+        async with httpx.AsyncClient() as client:
+            user_info = await client.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                headers={"Authorization": f"Bearer {tokens['access_token']}"}
+            )
+            user_data = user_info.json()
+        
+        # Save credentials
+        await db.cloud_credentials.update_one(
+            {"parceiro_id": parceiro_id, "provider": "google_drive"},
+            {
+                "$set": {
+                    "parceiro_id": parceiro_id,
+                    "provider": "google_drive",
+                    "email": user_data.get("email"),
+                    "access_token": tokens["access_token"],
+                    "refresh_token": tokens.get("refresh_token"),
+                    "connected_at": datetime.now(timezone.utc)
+                }
+            },
+            upsert=True
+        )
+        
+        # Redirect to frontend
+        frontend_url = os.environ.get("REACT_APP_BACKEND_URL", "").replace("/api", "").rstrip("/")
+        return {"success": True, "message": "Google Drive conectado!", "redirect": f"{frontend_url}/armazenamento?connected=google_drive"}
+        
+    except Exception as e:
+        logger.error(f"Google Drive OAuth error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/oauth/dropbox/callback")
+async def dropbox_oauth_callback(code: str, state: str):
+    """Handle Dropbox OAuth callback"""
+    import httpx
+    
+    parceiro_id = state
+    
+    try:
+        # Exchange code for tokens
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.dropboxapi.com/oauth2/token",
+                data={
+                    "client_id": os.environ.get("DROPBOX_APP_KEY"),
+                    "client_secret": os.environ.get("DROPBOX_APP_SECRET"),
+                    "code": code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": f"{os.environ.get('REACT_APP_BACKEND_URL', '')}/api/storage-config/oauth/dropbox/callback"
+                }
+            )
+            tokens = response.json()
+        
+        if "access_token" not in tokens:
+            raise HTTPException(status_code=400, detail="OAuth failed")
+        
+        # Save credentials
+        await db.cloud_credentials.update_one(
+            {"parceiro_id": parceiro_id, "provider": "dropbox"},
+            {
+                "$set": {
+                    "parceiro_id": parceiro_id,
+                    "provider": "dropbox",
+                    "email": tokens.get("account_id"),
+                    "access_token": tokens["access_token"],
+                    "refresh_token": tokens.get("refresh_token"),
+                    "connected_at": datetime.now(timezone.utc)
+                }
+            },
+            upsert=True
+        )
+        
+        frontend_url = os.environ.get("REACT_APP_BACKEND_URL", "").replace("/api", "").rstrip("/")
+        return {"success": True, "message": "Dropbox conectado!", "redirect": f"{frontend_url}/armazenamento?connected=dropbox"}
+        
+    except Exception as e:
+        logger.error(f"Dropbox OAuth error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/oauth/onedrive/callback")
+async def onedrive_oauth_callback(code: str, state: str):
+    """Handle OneDrive/Microsoft OAuth callback"""
+    import msal
+    
+    parceiro_id = state
+    
+    try:
+        app = msal.ConfidentialClientApplication(
+            os.environ.get("MICROSOFT_CLIENT_ID"),
+            client_credential=os.environ.get("MICROSOFT_CLIENT_SECRET"),
+            authority="https://login.microsoftonline.com/common"
+        )
+        
+        result = app.acquire_token_by_authorization_code(
+            code,
+            scopes=["Files.ReadWrite.All", "offline_access"],
+            redirect_uri=f"{os.environ.get('REACT_APP_BACKEND_URL', '')}/api/storage-config/oauth/onedrive/callback"
+        )
+        
+        if "access_token" not in result:
+            raise HTTPException(status_code=400, detail=result.get("error_description", "OAuth failed"))
+        
+        # Get user info
+        import httpx
+        async with httpx.AsyncClient() as client:
+            user_info = await client.get(
+                "https://graph.microsoft.com/v1.0/me",
+                headers={"Authorization": f"Bearer {result['access_token']}"}
+            )
+            user_data = user_info.json()
+        
+        # Save credentials
+        await db.cloud_credentials.update_one(
+            {"parceiro_id": parceiro_id, "provider": "onedrive"},
+            {
+                "$set": {
+                    "parceiro_id": parceiro_id,
+                    "provider": "onedrive",
+                    "email": user_data.get("mail") or user_data.get("userPrincipalName"),
+                    "access_token": result["access_token"],
+                    "refresh_token": result.get("refresh_token"),
+                    "connected_at": datetime.now(timezone.utc)
+                }
+            },
+            upsert=True
+        )
+        
+        frontend_url = os.environ.get("REACT_APP_BACKEND_URL", "").replace("/api", "").rstrip("/")
+        return {"success": True, "message": "OneDrive conectado!", "redirect": f"{frontend_url}/armazenamento?connected=onedrive"}
+        
+    except Exception as e:
+        logger.error(f"OneDrive OAuth error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== TEST UPLOAD ====================
+
+@router.post("/test-upload")
+async def test_cloud_upload(current_user: Dict = Depends(get_current_user)):
+    """Test cloud upload with a small file"""
+    from utils.cloud_storage import CloudStorageService
+    
+    parceiro_id = get_parceiro_id(current_user)
+    
+    # Create test content
+    test_content = b"TVDEFleet Cloud Storage Test - " + datetime.now().isoformat().encode()
+    
+    result = await CloudStorageService.upload_document(
+        parceiro_id=parceiro_id,
+        file_content=test_content,
+        filename="test_upload.txt",
+        document_type="relatorio",
+        entity_id="test",
+        entity_name="teste"
+    )
+    
+    return {
+        "success": True,
+        "result": result
+    }
