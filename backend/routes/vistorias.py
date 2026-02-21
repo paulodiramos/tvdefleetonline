@@ -13,6 +13,7 @@ import os
 
 from utils.database import get_database
 from utils.auth import get_current_user
+from utils.file_upload_handler import FileUploadHandler
 
 router = APIRouter(prefix="/vehicles", tags=["vistorias"])
 db = get_database()
