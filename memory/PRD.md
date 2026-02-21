@@ -540,7 +540,13 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - Testes: 100% backend (9/9) + 100% frontend
 - [x] **NIF do Parceiro no Relatório Semanal** - **DONE** (2026-02-21)
   - Campo `incluir_nif_parceiro` adicionado à configuração de relatórios
-- [ ] **Bug WhatsApp** - Estado da conexão não atualiza na UI
+- [x] **Bug WhatsApp - Lock files do Chromium** - **FIXED** (2026-02-21)
+  - Corrigida limpeza de lock files (SingletonLock, SingletonCookie, SingletonSocket)
+  - Lock files agora são removidos da pasta raiz da sessão E da subpasta Default
+  - QR code agora é gerado correctamente após reinício do serviço
+- [x] **Download de Documentos para Motoristas do Registo Público** - **VERIFIED WORKING** (2026-02-21)
+  - Endpoint de download consegue encontrar ficheiros usando UUID via glob patterns
+  - Testado com sucesso para vários tipos de documentos (license_photo, carta_conducao, cc_frente)
 
 ### P1 - High Priority
 - [x] Seletor de parceiro ativo para gestores - **DONE**
