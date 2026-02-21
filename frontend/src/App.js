@@ -918,6 +918,11 @@ function App() {
               )
             }
           />
+          {/* Redirect /admin/rpa-designer para /rpa-designer */}
+          <Route
+            path="/admin/rpa-designer"
+            element={<Navigate to="/rpa-designer" replace />}
+          />
           <Route
             path="/login-plataformas"
             element={
