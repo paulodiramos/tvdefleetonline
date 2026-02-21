@@ -4780,6 +4780,7 @@ def get_default_relatorio_config():
         "incluir_data_emissao": True,
         "incluir_periodo": True,
         "incluir_nome_parceiro": True,
+        "incluir_nif_parceiro": False,  # NIF do parceiro no cabeçalho
         "incluir_nome_motorista": True,
         "incluir_veiculo": True,
         "incluir_viagens_bolt": True,
