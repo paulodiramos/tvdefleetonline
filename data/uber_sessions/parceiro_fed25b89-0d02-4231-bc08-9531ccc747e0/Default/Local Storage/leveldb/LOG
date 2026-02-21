@@ -1,3 +1,3 @@
-2026/02/21-21:41:34.548 22f7 Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/Local Storage/leveldb/MANIFEST-000001
-2026/02/21-21:41:34.550 22f7 Recovering log #3
-2026/02/21-21:41:34.551 22f7 Reusing old log /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/Local Storage/leveldb/000003.log 
+2026/02/21-21:44:59.788 2612 Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/Local Storage/leveldb/MANIFEST-000001
+2026/02/21-21:44:59.791 2612 Recovering log #3
+2026/02/21-21:44:59.791 2612 Reusing old log /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/Local Storage/leveldb/000003.log 
