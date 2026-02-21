@@ -126,7 +126,7 @@ class BrowserInterativo:
                         # Campos de dígito único são geralmente pequenos (menos de 100px de largura)
                         if box and box['width'] < 100:
                             valid_inputs.append(inp)
-                except:
+                except Exception:
                     continue
             
             logger.info(f"Encontrados {len(valid_inputs)} campos de input para SMS")
