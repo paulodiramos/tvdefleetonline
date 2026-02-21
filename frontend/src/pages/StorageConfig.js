@@ -245,27 +245,6 @@ const StorageConfig = ({ user, onLogout }) => {
   };
 
   const handleDisconnectProvider = async (providerId) => {
-          email: connectForm.email,
-          access_token: connectForm.access_token,
-          api_key: connectForm.api_key
-        })
-      });
-      
-      if (response.ok) {
-        toast.success(`${selectedProvider.nome} conectado com sucesso`);
-        setShowConnectModal(false);
-        setConnectForm({ email: '', access_token: '', api_key: '' });
-        fetchProviders();
-      } else {
-        const error = await response.json();
-        toast.error(error.detail || 'Erro ao conectar');
-      }
-    } catch (error) {
-      toast.error('Erro ao conectar serviço');
-    }
-  };
-
-  const handleDisconnectProvider = async (providerId) => {
     if (!confirm('Tem certeza que quer desconectar este serviço?')) return;
     
     try {
