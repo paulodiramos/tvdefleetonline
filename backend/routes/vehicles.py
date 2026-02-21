@@ -1892,20 +1892,14 @@ async def upload_seguro_document(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload insurance documents (carta verde, condições, fatura)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    """Upload insurance documents (carta verde, condições, fatura) - with cloud storage"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    insurance_docs_dir = UPLOAD_DIR / "insurance_docs"
-    insurance_docs_dir.mkdir(exist_ok=True)
-    
-    file_id = f"insurance_{doc_type}_{vehicle_id}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, insurance_docs_dir, file_id)
-    
     field_map = {
-        "carta_verde": "insurance.carta_verde_url",
-        "condicoes": "insurance.condicoes_url",
-        "fatura": "insurance.fatura_url"
+        "carta_verde": "carta_verde_url",
+        "condicoes": "condicoes_url",
+        "fatura": "fatura_url"
     }
     
     if doc_type not in field_map:
@@ -1915,20 +1909,31 @@ async def upload_seguro_document(
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
+    
+    # Use FileUploadHandler for cloud integration
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="documento_veiculo",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula"),
+        subfolder=f"seguro/{doc_type}"
+    )
+    
+    doc_url = upload_result.get("cloud_url") or upload_result.get("local_url")
+    
     insurance = vehicle.get("insurance", {})
-    if doc_type == "carta_verde":
-        insurance["carta_verde_url"] = file_info["saved_path"]
-    elif doc_type == "condicoes":
-        insurance["condicoes_url"] = file_info["saved_path"]
-    elif doc_type == "fatura":
-        insurance["fatura_url"] = file_info["saved_path"]
+    insurance[field_map[doc_type]] = doc_url
+    insurance[f"{doc_type}_cloud_path"] = upload_result.get("cloud_path")
+    insurance[f"{doc_type}_provider"] = upload_result.get("provider")
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
         {"$set": {"insurance": insurance}}
     )
     
-    return {"message": "Document uploaded successfully", "url": file_info["saved_path"]}
+    return {"message": "Document uploaded successfully", "url": doc_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.get("/{vehicle_id}/vistoria-template-pdf")
