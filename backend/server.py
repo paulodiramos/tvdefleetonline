@@ -1610,6 +1610,7 @@ class RelatorioConfigUpdate(BaseModel):
     incluir_data_emissao: Optional[bool] = None
     incluir_periodo: Optional[bool] = None
     incluir_nome_parceiro: Optional[bool] = None
+    incluir_nif_parceiro: Optional[bool] = None
     incluir_nome_motorista: Optional[bool] = None
     incluir_veiculo: Optional[bool] = None
     incluir_viagens_bolt: Optional[bool] = None
