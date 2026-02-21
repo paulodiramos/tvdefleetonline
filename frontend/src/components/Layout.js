@@ -141,7 +141,6 @@ const Layout = ({ children, user, onLogout }) => {
     if (user.role === 'parceiro') {
       const motoristasSubmenu = filtrarSubmenu([
         { path: '/motoristas', label: 'Lista de Motoristas' },
-        { path: '/comissoes', label: '💰 Comissões' },
         { path: '/contratos', label: '📄 Gestão de Contratos' },
         { path: '/criar-contrato', label: '➕ Criar Contrato' }
       ]);
@@ -193,13 +192,13 @@ const Layout = ({ children, user, onLogout }) => {
         });
       }
       
-      items.push({ path: '/mensagens', icon: MessageSquare, label: 'Mensagens' });
+      // Mensagens com Envio em Massa incluído
       items.push({ 
-        label: 'WhatsApp', 
-        icon: MessageCircle,
+        label: 'Mensagens', 
+        icon: MessageSquare,
         submenu: [
-          { path: '/whatsapp', label: '📱 Ligação QR Code' },
-          { path: '/whatsapp-cloud', label: '☁️ Envio em Massa' }
+          { path: '/mensagens', label: '💬 Conversas' },
+          { path: '/whatsapp-cloud', label: '📨 Envio em Massa' }
         ]
       });
       
