@@ -36,6 +36,8 @@ def parse_float(value):
 @router.post("/uber/ganhos")
 async def importar_ganhos_uber(
     file: UploadFile = File(...),
+    semana: Optional[int] = Form(None),
+    ano: Optional[int] = Form(None),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Importa ficheiro CSV de ganhos da Uber"""
@@ -72,18 +74,19 @@ async def importar_ganhos_uber(
         periodo_inicio = periodo_match.group(1) if periodo_match else None
         periodo_fim = periodo_match.group(2) if periodo_match else None
         
-        # Calcular semana e ano baseado no período
-        semana_calc = None
-        ano_calc = None
-        if periodo_inicio:
-            try:
-                # Formato YYYYMMDD
-                data_inicio = datetime.strptime(periodo_inicio, '%Y%m%d')
-                iso_cal = data_inicio.isocalendar()
-                ano_calc = iso_cal[0]
-                semana_calc = iso_cal[1]
-            except Exception:
-                pass
+        # Usar semana/ano fornecidos ou calcular do período
+        semana_calc = semana
+        ano_calc = ano
+        if not semana_calc or not ano_calc:
+            if periodo_inicio:
+                try:
+                    # Formato YYYYMMDD
+                    data_inicio = datetime.strptime(periodo_inicio, '%Y%m%d')
+                    iso_cal = data_inicio.isocalendar()
+                    ano_calc = ano_calc or iso_cal[0]
+                    semana_calc = semana_calc or iso_cal[1]
+                except Exception:
+                    pass
         
         # Obter parceiro_id do utilizador
         parceiro_id = user['id'] if user['role'] == 'parceiro' else user.get('parceiro_id')
