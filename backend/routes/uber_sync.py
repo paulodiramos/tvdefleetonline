@@ -135,48 +135,32 @@ async def verificar_minha_sessao(
     
     parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
     
-    # 1. Verificar na base de dados
+    # 1. Verificar directório de sessão persistente PRIMEIRO (é o que realmente importa)
+    session_dir = f"/app/data/uber_sessions/parceiro_{parceiro_id}"
+    cookies_file = os.path.join(session_dir, "Default", "Cookies")
+    
+    if os.path.exists(cookies_file):
+        mtime = os.path.getmtime(cookies_file)
+        idade_dias = (datetime.now().timestamp() - mtime) / 86400
+        
+        if idade_dias < 30:
+            expira = datetime.fromtimestamp(mtime + (30 * 86400))
+            return {
+                "ativa": True,
+                "expira": expira.isoformat(),
+                "dias_restantes": round(30 - idade_dias, 1),
+                "tipo": "persistente"
+            }
+    
+    # 2. Se não há cookies no disco, verificar BD mas avisar que precisa login
     sessao_db = await db.uber_sessions.find_one({"parceiro_id": parceiro_id})
     if sessao_db and sessao_db.get("active"):
-        expires_at = sessao_db.get("expires_at")
-        if expires_at:
-            try:
-                if isinstance(expires_at, str):
-                    expira = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
-                else:
-                    expira = expires_at
-                
-                now = datetime.now(timezone.utc)
-                if expira.tzinfo is None:
-                    expira = expira.replace(tzinfo=timezone.utc)
-                    
-                if expira > now:
-                    dias_restantes = (expira - now).days
-                    return {
-                        "ativa": True,
-                        "expira": expira.isoformat(),
-                        "dias_restantes": dias_restantes,
-                        "logged_in_at": sessao_db.get("logged_in_at")
-                    }
-            except Exception as e:
-                logger.warning(f"Erro ao verificar expiração: {e}")
-    
-    # 2. Verificar directório de sessão persistente
-    session_dir = f"/app/data/uber_sessions/parceiro_{parceiro_id}"
-    if os.path.exists(session_dir):
-        cookies_file = os.path.join(session_dir, "Default", "Cookies")
-        if os.path.exists(cookies_file):
-            mtime = os.path.getmtime(cookies_file)
-            idade_dias = (datetime.now().timestamp() - mtime) / 86400
-            
-            if idade_dias < 30:
-                expira = datetime.fromtimestamp(mtime + (30 * 86400))
-                return {
-                    "ativa": True,
-                    "expira": expira.isoformat(),
-                    "dias_restantes": round(30 - idade_dias, 1),
-                    "tipo": "persistente"
-                }
+        # A BD diz activa mas não temos cookies - precisa novo login
+        logger.warning(f"Sessão BD activa mas sem cookies para parceiro {parceiro_id}")
+        return {
+            "ativa": False,
+            "mensagem": "Sessão expirada. Faça login novamente na página de Configuração Uber."
+        }
     
     # 3. Fallback para ficheiro antigo (compatibilidade)
     session_path = f"/tmp/uber_sessao_{parceiro_id}.json"
