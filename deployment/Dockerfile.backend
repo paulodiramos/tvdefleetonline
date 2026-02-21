@@ -38,10 +38,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copiar requirements primeiro (para cache de layers)
-COPY requirements.txt .
+COPY requirements_vps.txt .
 
-# Instalar dependências Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar dependências Python (usando ficheiro simplificado para VPS)
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements_vps.txt
 
 # Instalar emergentintegrations
 RUN pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
