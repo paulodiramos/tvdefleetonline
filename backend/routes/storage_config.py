@@ -55,12 +55,12 @@ class StorageConfigUpdate(BaseModel):
 class CloudCredentials(BaseModel):
     """Cloud provider credentials"""
     provider: CloudProvider
-    # Generic fields - used differently per provider
     email: Optional[str] = None
+    password: Optional[str] = None  # Password for login
     access_token: Optional[str] = None
     refresh_token: Optional[str] = None
     api_key: Optional[str] = None
-    folder_id: Optional[str] = None  # Root folder ID in cloud
+    folder_id: Optional[str] = None
 
 
 def get_parceiro_id(current_user: Dict) -> str:
