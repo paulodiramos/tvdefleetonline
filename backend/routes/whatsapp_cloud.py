@@ -116,6 +116,86 @@ O pagamento de €{valor} foi processado com sucesso.
 📅 Data: {data_pagamento}
 
 Obrigado pela sua pontualidade!"""
+    },
+    "seguro_expirar": {
+        "name": "seguro_expirar",
+        "description": "Alerta de seguro a expirar",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "veiculo", "tipo_seguro", "dias", "data_expiracao"],
+        "preview": """🛡️ Seguro a Expirar, {nome}!
+
+O {tipo_seguro} do veículo {veiculo} expira em {dias} dias ({data_expiracao}).
+
+Por favor renove o seguro para evitar interrupções na actividade."""
+    },
+    "iuc_expirar": {
+        "name": "iuc_expirar",
+        "description": "Alerta de IUC a pagar",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "veiculo", "valor", "data_limite"],
+        "preview": """🚗 IUC a Pagar, {nome}!
+
+O IUC do veículo {veiculo} deve ser pago até {data_limite}.
+💰 Valor: €{valor}
+
+Evite coimas e multas, pague dentro do prazo."""
+    },
+    "reuniao_agendada": {
+        "name": "reuniao_agendada",
+        "description": "Convocatória para reunião",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "assunto", "data", "hora", "local"],
+        "preview": """📢 Reunião Agendada, {nome}!
+
+Está convocado(a) para uma reunião:
+📋 Assunto: {assunto}
+📅 Data: {data}
+🕐 Hora: {hora}
+📍 Local: {local}
+
+A sua presença é importante."""
+    },
+    "aviso_geral": {
+        "name": "aviso_geral",
+        "description": "Aviso geral para motoristas",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "titulo", "mensagem"],
+        "preview": """📣 Aviso, {nome}!
+
+{titulo}
+
+{mensagem}"""
+    },
+    "turno_atribuido": {
+        "name": "turno_atribuido",
+        "description": "Notificação de turno atribuído",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "data", "hora_inicio", "hora_fim", "veiculo"],
+        "preview": """📅 Turno Atribuído, {nome}!
+
+Foi-lhe atribuído um turno:
+📆 Data: {data}
+🕐 Horário: {hora_inicio} - {hora_fim}
+🚗 Veículo: {veiculo}
+
+Confirme a sua disponibilidade."""
+    },
+    "contrato_renovar": {
+        "name": "contrato_renovar",
+        "description": "Lembrete de renovação de contrato",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "tipo_contrato", "data_fim", "dias"],
+        "preview": """📝 Contrato a Renovar, {nome}!
+
+O seu {tipo_contrato} termina em {dias} dias ({data_fim}).
+
+Entre em contacto connosco para discutir a renovação."""
     }
 }
 
