@@ -100,6 +100,9 @@ async def importar_ganhos_uber(
                 motorista = await db.motoristas.find_one({'uuid_motorista_uber': uuid_motorista})
                 motorista_id = motorista['id'] if motorista else None
                 
+                # Usar parceiro_id do motorista se existir, senão usar do utilizador logado
+                ganho_parceiro_id = motorista.get('parceiro_id') if motorista else parceiro_id
+                
                 if motorista:
                     motoristas_encontrados += 1
                 else:
@@ -115,7 +118,7 @@ async def importar_ganhos_uber(
                     'id': str(uuid.uuid4()),
                     'uuid_motorista_uber': uuid_motorista,
                     'motorista_id': motorista_id,
-                    'parceiro_id': parceiro_id,
+                    'parceiro_id': ganho_parceiro_id,
                     'nome_motorista': row.get('Nome próprio do motorista', ''),
                     'apelido_motorista': row.get('Apelido do motorista', ''),
                     'nome': nome_completo,
