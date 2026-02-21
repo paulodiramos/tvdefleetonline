@@ -1346,6 +1346,25 @@ async def update_credenciais_plataformas(
         {"$set": {"credenciais_plataformas": creds_data}}
     )
     
+    # Sincronizar credenciais Uber com colecção dedicada
+    if creds_data.get("uber_email") or creds_data.get("uber_password"):
+        now = datetime.now(timezone.utc)
+        uber_update = {
+            "updated_at": now.isoformat()
+        }
+        if creds_data.get("uber_email"):
+            uber_update["email"] = creds_data["uber_email"]
+        if creds_data.get("uber_password"):
+            uber_update["password"] = creds_data["uber_password"]
+        if creds_data.get("uber_telefone"):
+            uber_update["telefone"] = creds_data["uber_telefone"]
+        
+        await db.credenciais_uber.update_one(
+            {"parceiro_id": parceiro_id},
+            {"$set": uber_update, "$setOnInsert": {"parceiro_id": parceiro_id, "created_at": now.isoformat()}},
+            upsert=True
+        )
+    
     logger.info(f"🔐 Credenciais plataformas atualizadas para parceiro {parceiro_id}")
     return {"message": "Credenciais atualizadas com sucesso"}
 
