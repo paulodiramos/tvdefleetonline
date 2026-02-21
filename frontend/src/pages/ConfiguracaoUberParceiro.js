@@ -286,9 +286,9 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
     setAtualizando(true);
     try {
       const token = localStorage.getItem('token');
-      // Enviar cada dígito individualmente com pequeno delay
-      const response = await axios.post(`${API}/browser/escrever`, { 
-        texto: codigoSMS 
+      // Usar endpoint específico para preencher SMS nos 4 campos
+      const response = await axios.post(`${API}/browser/preencher-sms`, { 
+        codigo: codigoSMS 
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -296,11 +296,12 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
       if (response.data.sucesso) {
         setScreenshot(response.data.screenshot);
         setCodigoSMS('');
-        toast.success('Código enviado!');
+        toast.success(response.data.mensagem || 'Código enviado!');
       } else {
         toast.error(response.data.erro || 'Erro ao enviar código');
       }
     } catch (error) {
+      console.error('Erro ao enviar código SMS:', error);
       toast.error('Erro ao enviar código');
     } finally {
       setAtualizando(false);
