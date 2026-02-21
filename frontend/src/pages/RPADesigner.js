@@ -280,7 +280,8 @@ export default function RPADesigner({ user, onLogout }) {
       // Construir body com parâmetros
       const body = {
         plataforma_id: plataformaSelecionada.id,
-        semana_offset: semanaSelecionada
+        semana_offset: semanaSelecionada,
+        tipo_design: tipoDesign  // 'login' ou 'extracao'
       };
       
       // Adicionar sessão do parceiro se selecionada
