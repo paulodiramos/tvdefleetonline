@@ -574,3 +574,252 @@ async def atualizar_avaliacao_parceiro(
         return resultado
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# ==================== DASHBOARD DE COMISSÕES ====================
+
+@router.get("/dashboard/resumo")
+async def obter_dashboard_resumo(
+    periodo: str = Query("mensal", description="diario, semanal, mensal"),
+    semana: Optional[int] = None,
+    mes: Optional[int] = None,
+    ano: Optional[int] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter resumo de comissões para o dashboard
+    Retorna totais, médias e métricas por período
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    from datetime import timedelta
+    now = datetime.now(timezone.utc)
+    
+    # Determinar ano e período
+    if not ano:
+        ano = now.year
+    if not mes:
+        mes = now.month
+    if not semana:
+        semana = now.isocalendar()[1]
+    
+    # Build parceiro filter
+    parceiro_filter = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        parceiro_filter["parceiro_id"] = current_user["id"]
+    
+    # Get all motoristas for this parceiro
+    motoristas_query = {
+        "$or": [
+            {"parceiro_id": parceiro_filter.get("parceiro_id")},
+            {"parceiro_atribuido": parceiro_filter.get("parceiro_id")}
+        ]
+    } if parceiro_filter else {}
+    
+    motoristas = await db.motoristas.find(
+        motoristas_query,
+        {"_id": 0, "id": 1, "name": 1, "classificacao": 1, "comissao_percentagem": 1}
+    ).to_list(1000)
+    
+    motorista_ids = [m["id"] for m in motoristas]
+    
+    # Query relatórios semanais para obter dados de comissões
+    relatorio_query = {"motorista_id": {"$in": motorista_ids}}
+    
+    if periodo == "semanal":
+        relatorio_query["semana"] = semana
+        relatorio_query["ano"] = ano
+    elif periodo == "mensal":
+        # Aproximação: semanas do mês
+        primeiro_dia = datetime(ano, mes, 1)
+        if mes == 12:
+            ultimo_dia = datetime(ano + 1, 1, 1) - timedelta(days=1)
+        else:
+            ultimo_dia = datetime(ano, mes + 1, 1) - timedelta(days=1)
+        
+        semana_inicio = primeiro_dia.isocalendar()[1]
+        semana_fim = ultimo_dia.isocalendar()[1]
+        relatorio_query["ano"] = ano
+        relatorio_query["semana"] = {"$gte": semana_inicio, "$lte": semana_fim}
+    else:  # diario - usar última semana
+        relatorio_query["semana"] = semana
+        relatorio_query["ano"] = ano
+    
+    relatorios = await db.relatorios_semanais.find(
+        relatorio_query,
+        {"_id": 0}
+    ).to_list(5000)
+    
+    # Calcular métricas
+    total_ganhos = sum(r.get("total_ganhos", 0) or 0 for r in relatorios)
+    total_despesas = sum(
+        (r.get("total_combustivel", 0) or 0) + 
+        (r.get("total_via_verde", 0) or 0) + 
+        (r.get("total_eletrico", 0) or 0) +
+        (r.get("valor_aluguer", 0) or 0)
+        for r in relatorios
+    )
+    total_liquido = sum(r.get("valor_liquido", 0) or 0 for r in relatorios)
+    
+    # Comissões estimadas (baseado em config do parceiro ou padrão 70%)
+    config_comissoes = await db.config_comissoes_parceiro.find_one(
+        {"parceiro_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    percentagem_comissao = 70  # Default
+    if config_comissoes:
+        if config_comissoes.get("usar_valor_fixo"):
+            percentagem_comissao = 0  # Valor fixo, não percentagem
+        else:
+            percentagem_comissao = config_comissoes.get("percentagem_fixa", 70)
+    
+    total_comissoes = total_ganhos * (percentagem_comissao / 100) if percentagem_comissao > 0 else 0
+    
+    # Calcular por motorista
+    comissoes_por_motorista = {}
+    for r in relatorios:
+        mid = r.get("motorista_id")
+        if mid not in comissoes_por_motorista:
+            comissoes_por_motorista[mid] = {
+                "motorista_id": mid,
+                "motorista_nome": r.get("motorista_nome", ""),
+                "ganhos": 0,
+                "despesas": 0,
+                "liquido": 0,
+                "comissao_estimada": 0,
+                "semanas": 0
+            }
+        
+        comissoes_por_motorista[mid]["ganhos"] += r.get("total_ganhos", 0) or 0
+        comissoes_por_motorista[mid]["despesas"] += (
+            (r.get("total_combustivel", 0) or 0) + 
+            (r.get("total_via_verde", 0) or 0) +
+            (r.get("total_eletrico", 0) or 0) +
+            (r.get("valor_aluguer", 0) or 0)
+        )
+        comissoes_por_motorista[mid]["liquido"] += r.get("valor_liquido", 0) or 0
+        comissoes_por_motorista[mid]["semanas"] += 1
+    
+    # Calcular comissão estimada por motorista
+    for mid, dados in comissoes_por_motorista.items():
+        dados["comissao_estimada"] = round(dados["ganhos"] * (percentagem_comissao / 100), 2)
+    
+    # Top 5 motoristas por comissão
+    top_motoristas = sorted(
+        comissoes_por_motorista.values(),
+        key=lambda x: x["comissao_estimada"],
+        reverse=True
+    )[:5]
+    
+    # Evolução semanal (últimas 8 semanas)
+    evolucao = []
+    semana_atual = semana
+    ano_atual = ano
+    
+    for i in range(8):
+        s = semana_atual - i
+        a = ano_atual
+        if s <= 0:
+            s = 52 + s
+            a -= 1
+        
+        rels_semana = [r for r in relatorios if r.get("semana") == s and r.get("ano") == a]
+        ganhos_semana = sum(r.get("total_ganhos", 0) or 0 for r in rels_semana)
+        comissao_semana = ganhos_semana * (percentagem_comissao / 100)
+        
+        evolucao.insert(0, {
+            "semana": s,
+            "ano": a,
+            "label": f"S{s}",
+            "ganhos": round(ganhos_semana, 2),
+            "comissao": round(comissao_semana, 2)
+        })
+    
+    return {
+        "periodo": periodo,
+        "semana": semana,
+        "mes": mes,
+        "ano": ano,
+        "totais": {
+            "total_ganhos": round(total_ganhos, 2),
+            "total_despesas": round(total_despesas, 2),
+            "total_liquido": round(total_liquido, 2),
+            "total_comissoes": round(total_comissoes, 2),
+            "percentagem_comissao": percentagem_comissao,
+            "total_motoristas": len(comissoes_por_motorista),
+            "total_relatorios": len(relatorios)
+        },
+        "top_motoristas": top_motoristas,
+        "evolucao_semanal": evolucao,
+        "por_motorista": list(comissoes_por_motorista.values())
+    }
+
+
+@router.get("/dashboard/por-motorista")
+async def obter_comissoes_por_motorista(
+    motorista_id: Optional[str] = None,
+    semana: Optional[int] = None,
+    ano: Optional[int] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter detalhes de comissões por motorista
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    now = datetime.now(timezone.utc)
+    if not ano:
+        ano = now.year
+    if not semana:
+        semana = now.isocalendar()[1]
+    
+    query = {"semana": semana, "ano": ano}
+    
+    if motorista_id:
+        query["motorista_id"] = motorista_id
+    elif current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    relatorios = await db.relatorios_semanais.find(
+        query,
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Obter config de comissões
+    config_comissoes = await db.config_comissoes_parceiro.find_one(
+        {"parceiro_id": current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None},
+        {"_id": 0}
+    )
+    
+    percentagem = 70
+    if config_comissoes:
+        percentagem = config_comissoes.get("percentagem_fixa", 70)
+    
+    resultado = []
+    for r in relatorios:
+        ganhos = r.get("total_ganhos", 0) or 0
+        comissao = ganhos * (percentagem / 100)
+        
+        resultado.append({
+            "motorista_id": r.get("motorista_id"),
+            "motorista_nome": r.get("motorista_nome"),
+            "semana": r.get("semana"),
+            "ano": r.get("ano"),
+            "ganhos_uber": r.get("ganhos_uber", 0),
+            "ganhos_bolt": r.get("ganhos_bolt", 0),
+            "total_ganhos": ganhos,
+            "despesas": {
+                "combustivel": r.get("total_combustivel", 0),
+                "via_verde": r.get("total_via_verde", 0),
+                "eletrico": r.get("total_eletrico", 0),
+                "aluguer": r.get("valor_aluguer", 0)
+            },
+            "valor_liquido": r.get("valor_liquido", 0),
+            "comissao_estimada": round(comissao, 2),
+            "percentagem_comissao": percentagem
+        })
+    
+    return {"motoristas": resultado, "semana": semana, "ano": ano}
