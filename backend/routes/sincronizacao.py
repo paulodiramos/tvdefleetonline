@@ -3022,7 +3022,7 @@ async def executar_sincronizacao_auto(
                                 resultados[fonte] = {
                                     "sucesso": False,
                                     "metodo": "rpa",
-                                    "erro": "Sessão Uber expirada. O parceiro deve fazer login novamente em /login-plataformas."
+                                    "erro": "Sessão Uber expirada. Faça login novamente em Configurações → Login Uber."
                                 }
                             else:
                                 # Extrair dados
