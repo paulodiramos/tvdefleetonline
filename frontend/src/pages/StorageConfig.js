@@ -641,32 +641,54 @@ const StorageConfig = ({ user, onLogout }) => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div>
-                        <Label>Email / Username</Label>
-                        <Input
-                          value={connectForm.email}
-                          onChange={(e) => setConnectForm({ ...connectForm, email: e.target.value })}
-                          placeholder={`Email da conta ${providers.find(p => p.id === config.cloud_provider)?.nome || 'cloud'}`}
-                          type="email"
-                        />
-                      </div>
-                      <div>
-                        <Label>Password</Label>
-                        <Input
-                          value={connectForm.password || ''}
-                          onChange={(e) => setConnectForm({ ...connectForm, password: e.target.value })}
-                          placeholder="Password"
-                          type="password"
-                        />
-                      </div>
-                      <Button
-                        onClick={handleConnectWithCredentials}
-                        disabled={!connectForm.email || !connectForm.password}
-                        className="w-full"
-                      >
-                        <Link2 className="w-4 h-4 mr-2" />
-                        Conectar Conta
-                      </Button>
+                      {/* OAuth Providers */}
+                      {['google_drive', 'dropbox', 'onedrive'].includes(config.cloud_provider) ? (
+                        <>
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <p className="text-sm text-blue-800 mb-3">
+                              Este serviço usa autenticação OAuth. Clique no botão abaixo para conectar a sua conta de forma segura.
+                            </p>
+                            <Button
+                              onClick={() => handleOAuthConnect(config.cloud_provider)}
+                              className="w-full bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Link2 className="w-4 h-4 mr-2" />
+                              Conectar com {providers.find(p => p.id === config.cloud_provider)?.nome}
+                            </Button>
+                          </div>
+                          <div className="text-center">
+                            <a
+                              href="/docs/CLOUD_STORAGE_SETUP.md"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              Ver instruções de configuração para administradores
+                            </a>
+                          </div>
+                        </>
+                      ) : (
+                        /* Terabox - uses API key */
+                        <>
+                          <div>
+                            <Label>API Key / Token</Label>
+                            <Input
+                              value={connectForm.api_key || ''}
+                              onChange={(e) => setConnectForm({ ...connectForm, api_key: e.target.value })}
+                              placeholder="Cole a sua API key"
+                              type="password"
+                            />
+                          </div>
+                          <Button
+                            onClick={handleConnectWithCredentials}
+                            disabled={!connectForm.api_key}
+                            className="w-full"
+                          >
+                            <Link2 className="w-4 h-4 mr-2" />
+                            Conectar Conta
+                          </Button>
+                        </>
+                      )}
                       <p className="text-xs text-slate-500 text-center">
                         As suas credenciais são encriptadas e guardadas de forma segura
                       </p>
