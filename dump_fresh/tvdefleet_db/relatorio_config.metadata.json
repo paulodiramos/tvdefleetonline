@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"850a566e867f4130b3d76153c1f814b8","collectionName":"relatorio_config","type":"collection"}

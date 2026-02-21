@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"ede88f6dd13944b38474bd50ae0b5120","collectionName":"relatorios_ganhos","type":"collection"}

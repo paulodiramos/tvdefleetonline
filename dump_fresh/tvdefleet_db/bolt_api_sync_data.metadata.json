@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"4028e0ada7f243569e65cad51a39e45c","collectionName":"bolt_api_sync_data","type":"collection"}

@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"c4b6b799def54d898416fb830dcb73fa","collectionName":"terabox_sync_logs","type":"collection"}

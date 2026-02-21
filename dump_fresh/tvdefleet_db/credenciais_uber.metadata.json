@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"cc72e37367144012b7f22b9678c96052","collectionName":"credenciais_uber","type":"collection"}

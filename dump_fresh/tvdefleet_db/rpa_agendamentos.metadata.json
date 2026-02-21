@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"18c5d6a5ce144bcfb102c1eda0ac207d","collectionName":"rpa_agendamentos","type":"collection"}
