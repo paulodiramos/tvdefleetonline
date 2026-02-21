@@ -26,6 +26,36 @@ import { Textarea } from '@/components/ui/textarea';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+// Função para download de documentos com autenticação
+const handleDownloadDocumento = async (motoristaId, tipoDocumento, nomeMotorista) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(
+      `${API}/api/motoristas/${motoristaId}/documento/${tipoDocumento}/download`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error('Erro ao fazer download');
+    }
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${nomeMotorista?.replace(/\s/g, '_') || 'motorista'}_${tipoDocumento}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+  } catch (error) {
+    console.error('Erro no download:', error);
+    toast.error('Erro ao fazer download do documento');
+  }
+};
+
 // Helper para classe de input preenchido (cor mais escura quando tem valor)
 const getFilledInputClass = (value) => {
   return value && value.toString().trim() !== '' 
