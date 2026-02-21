@@ -567,7 +567,7 @@ const StorageConfig = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
-        {/* Cloud Providers */}
+        {/* Cloud Provider Selection - Only ONE */}
         {(config?.modo === 'cloud' || config?.modo === 'both') && (
           <Card className="mb-6">
             <CardHeader>
@@ -576,48 +576,121 @@ const StorageConfig = ({ user, onLogout }) => {
                 Serviço de Cloud
               </CardTitle>
               <CardDescription>
-                Conecte a sua conta de armazenamento cloud
+                Selecione e configure o seu serviço de armazenamento cloud
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {providers.map(provider => (
-                  <div
-                    key={provider.id}
-                    className={`p-4 rounded-lg border-2 transition-colors cursor-pointer ${
-                      config?.cloud_provider === provider.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-slate-200 hover:border-slate-300'
-                    }`}
-                    onClick={() => {
-                      if (provider.connected) {
-                        setConfig({ ...config, cloud_provider: provider.id });
-                      }
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{getProviderIcon(provider.id)}</span>
-                        <span className="font-medium">{provider.nome}</span>
-                      </div>
-                      {provider.connected ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Conectado
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          <CloudOff className="w-3 h-3 mr-1" />
-                          Desconectado
-                        </Badge>
-                      )}
+            <CardContent className="space-y-6">
+              {/* Provider Selection */}
+              <div>
+                <Label className="mb-3 block">Escolha o serviço</Label>
+                <RadioGroup
+                  value={config?.cloud_provider || ''}
+                  onValueChange={(value) => {
+                    setConfig({ ...config, cloud_provider: value });
+                    setSelectedProvider(providers.find(p => p.id === value));
+                  }}
+                  className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                >
+                  {providers.map(provider => (
+                    <div key={provider.id} className="relative">
+                      <RadioGroupItem
+                        value={provider.id}
+                        id={`provider-${provider.id}`}
+                        className="sr-only"
+                      />
+                      <Label
+                        htmlFor={`provider-${provider.id}`}
+                        className={`flex flex-col items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          config?.cloud_provider === provider.id
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="text-3xl mb-2">{getProviderIcon(provider.id)}</span>
+                        <span className="font-medium text-sm">{provider.nome}</span>
+                        <span className="text-xs text-slate-500 text-center mt-1">{provider.descricao}</span>
+                        {provider.connected && (
+                          <Badge className="mt-2 bg-green-100 text-green-800">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Conectado
+                          </Badge>
+                        )}
+                      </Label>
                     </div>
-                    <p className="text-sm text-slate-500 mb-3">{provider.descricao}</p>
-                    {provider.connected ? (
+                  ))}
+                </RadioGroup>
+              </div>
+
+              {/* Login Form for Selected Provider */}
+              {config?.cloud_provider && (
+                <div className="border-t pt-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-2xl">{getProviderIcon(config.cloud_provider)}</span>
+                    <h3 className="font-semibold">
+                      Credenciais {providers.find(p => p.id === config.cloud_provider)?.nome}
+                    </h3>
+                  </div>
+                  
+                  {providers.find(p => p.id === config.cloud_provider)?.connected ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">{provider.email}</span>
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <div>
+                            <p className="font-medium text-green-800">Conta conectada</p>
+                            <p className="text-sm text-green-600">
+                              {providers.find(p => p.id === config.cloud_provider)?.email}
+                            </p>
+                          </div>
+                        </div>
                         <Button
-                          variant="ghost"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDisconnectProvider(config.cloud_provider)}
+                        >
+                          <Unlink className="w-4 h-4 mr-1" />
+                          Desconectar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Email / Username</Label>
+                        <Input
+                          value={connectForm.email}
+                          onChange={(e) => setConnectForm({ ...connectForm, email: e.target.value })}
+                          placeholder={`Email da conta ${providers.find(p => p.id === config.cloud_provider)?.nome}`}
+                          type="email"
+                        />
+                      </div>
+                      <div>
+                        <Label>Password</Label>
+                        <Input
+                          value={connectForm.password || ''}
+                          onChange={(e) => setConnectForm({ ...connectForm, password: e.target.value })}
+                          placeholder="Password"
+                          type="password"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleConnectWithCredentials}
+                        disabled={!connectForm.email || !connectForm.password}
+                        className="w-full"
+                      >
+                        <Link2 className="w-4 h-4 mr-2" />
+                        Conectar Conta
+                      </Button>
+                      <p className="text-xs text-slate-500 text-center">
+                        As suas credenciais são encriptadas e guardadas de forma segura
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
