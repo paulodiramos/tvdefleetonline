@@ -254,6 +254,15 @@ const ConfiguracaoRelatorios = ({ user, onLogout }) => {
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
+                  checked={config?.incluir_nif_parceiro}
+                  onChange={() => handleToggle('incluir_nif_parceiro')}
+                  className="w-4 h-4"
+                />
+                <span>NIF do Parceiro</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
                   checked={config?.incluir_nome_motorista}
                   onChange={() => handleToggle('incluir_nome_motorista')}
                   className="w-4 h-4"
