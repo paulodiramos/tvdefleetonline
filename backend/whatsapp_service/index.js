@@ -234,6 +234,16 @@ async function getOrCreateClient(parceiro_id) {
         console.log(`📱 WhatsApp loading for ${parceiro_id}: ${percent}% - ${message}`);
     });
     
+    // Remote session saved event
+    client.on('remote_session_saved', () => {
+        console.log(`💾 Remote session saved for ${parceiro_id}`);
+    });
+    
+    // Change state event
+    client.on('change_state', (state) => {
+        console.log(`🔄 State changed for ${parceiro_id}: ${state}`);
+    });
+    
     // Auth failure event
     client.on('auth_failure', (msg) => {
         console.error(`Auth failed for partner ${parceiro_id}:`, msg);
