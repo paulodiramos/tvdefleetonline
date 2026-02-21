@@ -86,6 +86,20 @@ function cleanupLockFiles() {
             sessions.forEach(session => {
                 const sessionPath = path.join(AUTH_PATH, session);
                 if (fs.statSync(sessionPath).isDirectory()) {
+                    // Clean locks in session root folder (where Chromium actually puts them)
+                    ['SingletonLock', 'SingletonCookie', 'SingletonSocket'].forEach(lockFile => {
+                        const lockPath = path.join(sessionPath, lockFile);
+                        if (fs.existsSync(lockPath)) {
+                            try {
+                                fs.unlinkSync(lockPath);
+                                console.log(`Removed lock file: ${lockPath}`);
+                            } catch (e) {
+                                console.error(`Failed to remove ${lockPath}:`, e.message);
+                            }
+                        }
+                    });
+                    
+                    // Also clean in Default subfolder (legacy location)
                     const defaultPath = path.join(sessionPath, 'Default');
                     if (fs.existsSync(defaultPath)) {
                         ['SingletonLock', 'SingletonCookie', 'SingletonSocket'].forEach(lockFile => {
