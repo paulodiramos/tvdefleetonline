@@ -14,12 +14,13 @@ from pathlib import Path
 
 from utils.database import get_database
 from utils.auth import get_current_user
+from utils.file_upload_handler import FileUploadHandler
 
 router = APIRouter(prefix="/documentos-motorista", tags=["Documentos Motorista"])
 logger = logging.getLogger(__name__)
 db = get_database()
 
-# Upload directory
+# Upload directory (fallback)
 ROOT_DIR = Path(__file__).parent.parent
 DOCS_UPLOAD_DIR = ROOT_DIR / "uploads" / "documentos_motoristas"
 DOCS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -55,6 +56,7 @@ async def upload_documento(
     """
     Upload de documento pelo motorista.
     O documento anterior do mesmo tipo é arquivado no histórico.
+    Integra automaticamente com cloud storage se configurado.
     """
     
     if current_user["role"] != "motorista":
@@ -72,15 +74,42 @@ async def upload_documento(
     if file_ext not in allowed_extensions:
         raise HTTPException(status_code=400, detail=f"Tipo de ficheiro não permitido. Use: {allowed_extensions}")
     
-    # Guardar ficheiro
+    # Get motorista's parceiro_id
+    motorista = await db.motoristas.find_one(
+        {"id": current_user["id"]},
+        {"_id": 0, "parceiro_id": 1, "parceiro_atribuido": 1, "nome": 1}
+    )
+    parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido") if motorista else None
+    
     doc_id = str(uuid.uuid4())
-    file_name = f"{current_user['id']}_{tipo}_{doc_id}{file_ext}"
-    file_path = DOCS_UPLOAD_DIR / file_name
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
     now = datetime.now(timezone.utc)
+    
+    # Use FileUploadHandler for cloud integration
+    if parceiro_id:
+        upload_result = await FileUploadHandler.save_file(
+            file=file,
+            parceiro_id=parceiro_id,
+            document_type="documento_motorista",
+            entity_id=current_user["id"],
+            entity_name=motorista.get("nome") if motorista else None,
+            subfolder=tipo
+        )
+        file_path = upload_result.get("local_path") or ""
+        file_url = upload_result.get("cloud_url") or upload_result.get("local_url")
+        cloud_path = upload_result.get("cloud_path")
+        provider = upload_result.get("provider")
+    else:
+        # Fallback to local-only storage
+        file_name = f"{current_user['id']}_{tipo}_{doc_id}{file_ext}"
+        file_path = str(DOCS_UPLOAD_DIR / file_name)
+        
+        content = await file.read()
+        with open(file_path, "wb") as buffer:
+            buffer.write(content)
+        
+        file_url = f"/api/documentos-motorista/ficheiro/{doc_id}"
+        cloud_path = None
+        provider = None
     
     # Buscar documento atual do mesmo tipo (para arquivar)
     documento_atual = await db.documentos_motorista.find_one({
@@ -105,11 +134,14 @@ async def upload_documento(
     documento = {
         "id": doc_id,
         "motorista_id": current_user["id"],
+        "parceiro_id": parceiro_id,
         "tipo": tipo,
         "tipo_nome": TIPOS_DOCUMENTOS[tipo],
         "nome_ficheiro": file.filename,
-        "path": str(file_path),
-        "file_url": f"/api/documentos-motorista/ficheiro/{doc_id}",
+        "path": file_path,
+        "file_url": file_url,
+        "cloud_path": cloud_path,
+        "cloud_provider": provider,
         "descricao": descricao,
         "data_validade": data_validade,
         "ativo": True,
