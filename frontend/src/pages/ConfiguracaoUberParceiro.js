@@ -668,76 +668,86 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                   
                   {/* Coluna Direita - Navegação */}
                   <div className="space-y-3">
-                    {/* Setas para CAPTCHA */}
-                    <div className="p-4 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg">
-                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                        🎮 Puzzle CAPTCHA
+                    {/* Setas para CAPTCHA - Design Simples */}
+                    <div className="p-5 bg-white rounded-xl shadow-lg border-2 border-slate-200">
+                      <h4 className="text-slate-800 font-bold mb-4 text-center text-lg">
+                        Controlos de Navegação
                       </h4>
-                      <div className="flex justify-center gap-2">
+                      
+                      {/* Layout em Cruz */}
+                      <div className="flex flex-col items-center gap-2">
+                        {/* Seta CIMA */}
                         <Button 
-                          onClick={() => enviarTecla('ArrowLeft')} 
-                          className="w-16 h-16 text-3xl bg-white text-purple-600 hover:bg-purple-100 font-bold shadow-lg"
+                          onClick={() => enviarTecla('ArrowUp')} 
+                          className="w-20 h-14 text-4xl bg-blue-500 hover:bg-blue-600 text-white font-black shadow-md rounded-xl"
                         >
-                          ◀
+                          ↑
                         </Button>
-                        <div className="flex flex-col gap-2">
+                        
+                        {/* Linha do meio: ESQUERDA + DIREITA */}
+                        <div className="flex gap-3">
                           <Button 
-                            onClick={() => enviarTecla('ArrowUp')} 
-                            className="w-16 h-7 text-xl bg-white text-purple-600 hover:bg-purple-100 font-bold shadow-lg"
+                            onClick={() => enviarTecla('ArrowLeft')} 
+                            className="w-20 h-14 text-4xl bg-blue-500 hover:bg-blue-600 text-white font-black shadow-md rounded-xl"
                           >
-                            ▲
+                            ←
                           </Button>
                           <Button 
-                            onClick={() => enviarTecla('ArrowDown')} 
-                            className="w-16 h-7 text-xl bg-white text-purple-600 hover:bg-purple-100 font-bold shadow-lg"
+                            onClick={() => enviarTecla('ArrowRight')} 
+                            className="w-20 h-14 text-4xl bg-blue-500 hover:bg-blue-600 text-white font-black shadow-md rounded-xl"
                           >
-                            ▼
+                            →
                           </Button>
                         </div>
+                        
+                        {/* Seta BAIXO */}
                         <Button 
-                          onClick={() => enviarTecla('ArrowRight')} 
-                          className="w-16 h-16 text-3xl bg-white text-purple-600 hover:bg-purple-100 font-bold shadow-lg"
+                          onClick={() => enviarTecla('ArrowDown')} 
+                          className="w-20 h-14 text-4xl bg-blue-500 hover:bg-blue-600 text-white font-black shadow-md rounded-xl"
                         >
-                          ▶
+                          ↓
                         </Button>
                       </div>
-                      <p className="text-purple-200 text-xs text-center mt-2">
-                        Use as setas para resolver o puzzle
+                      
+                      <p className="text-slate-500 text-sm text-center mt-4">
+                        Clique nas setas para mover no puzzle
                       </p>
                     </div>
                     
-                    {/* Teclas Especiais */}
-                    <div className="p-4 bg-slate-800 rounded-xl">
-                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                        ⌨️ Teclas
+                    {/* Teclas Especiais - Simples */}
+                    <div className="p-4 bg-slate-100 rounded-xl border-2 border-slate-200">
+                      <h4 className="text-slate-700 font-bold mb-3 text-center">
+                        Teclas
                       </h4>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         <Button 
                           onClick={() => enviarTecla('Enter')} 
-                          className="bg-green-600 hover:bg-green-700 text-white font-semibold"
-                          size="lg"
+                          className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl text-lg"
                         >
-                          Enter ↵
+                          ENTER
                         </Button>
                         <Button 
                           onClick={() => enviarTecla('Tab')} 
-                          className="bg-slate-600 hover:bg-slate-700 text-white font-semibold"
-                          size="lg"
+                          className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-4 rounded-xl text-lg"
                         >
-                          Tab ⇥
+                          TAB
                         </Button>
                         <Button 
                           onClick={() => enviarTecla('Escape')} 
-                          variant="outline"
-                          className="border-slate-500 text-slate-300 hover:bg-slate-700"
-                          size="lg"
+                          className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl text-lg"
                         >
-                          Esc ✕
+                          ESC
                         </Button>
                         <Button 
                           onClick={() => enviarTecla('Backspace')} 
-                          variant="outline"
-                          className="border-slate-500 text-slate-300 hover:bg-slate-700"
+                          className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-xl text-lg"
+                        >
+                          APAGAR
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                           size="lg"
                         >
                           ← Apagar
