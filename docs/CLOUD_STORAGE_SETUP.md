@@ -50,7 +50,7 @@ Este guia explica como configurar a integração com os serviços de armazenamen
 4. Nome: `TVDEFleet Web`
 5. **URIs de redireccionamento autorizados:**
    ```
-   https://motorista-cloud-sync.preview.emergentagent.com/api/storage-config/oauth/google_drive/callback
+   https://cloud-api-staging.preview.emergentagent.com/api/storage-config/oauth/google_drive/callback
    ```
    (Substitua pelo URL real da sua aplicação)
 6. Clique **Criar**
@@ -93,7 +93,7 @@ GOOGLE_CLIENT_SECRET=seu_client_secret_aqui
 
 1. Na tab **Settings**, em **OAuth 2**, adicione o Redirect URI:
    ```
-   https://motorista-cloud-sync.preview.emergentagent.com/api/storage-config/oauth/dropbox/callback
+   https://cloud-api-staging.preview.emergentagent.com/api/storage-config/oauth/dropbox/callback
    ```
    (Substitua pelo URL real da sua aplicação)
 
@@ -129,7 +129,7 @@ DROPBOX_APP_SECRET=seu_app_secret_aqui
    - Plataforma: **Web**
    - URL: 
    ```
-   https://motorista-cloud-sync.preview.emergentagent.com/api/storage-config/oauth/onedrive/callback
+   https://cloud-api-staging.preview.emergentagent.com/api/storage-config/oauth/onedrive/callback
    ```
 4. Clique **Registar**
 
