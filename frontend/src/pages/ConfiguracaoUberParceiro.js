@@ -544,9 +544,9 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                 Iniciar Login Manual
               </Button>
             ) : (
-              <>
-                {/* Área do Screenshot */}
-                <div className="relative border-2 border-blue-200 rounded-lg overflow-hidden bg-gray-100">
+              <div className="space-y-4">
+                {/* Área do Screenshot - MAIOR */}
+                <div className="relative rounded-xl overflow-hidden bg-slate-900 shadow-2xl border-4 border-slate-700">
                   {screenshot ? (
                     <img
                       ref={imgRef}
@@ -554,149 +554,218 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                       alt="Uber Fleet"
                       className="w-full cursor-crosshair"
                       onClick={handleImageClick}
-                      style={{ maxHeight: '500px', objectFit: 'contain' }}
+                      style={{ minHeight: '450px', maxHeight: '600px', objectFit: 'contain', backgroundColor: '#1a1a2e' }}
                     />
                   ) : (
-                    <div className="h-64 flex items-center justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                    <div className="h-96 flex items-center justify-center bg-slate-800">
+                      <div className="text-center">
+                        <Loader2 className="w-12 h-12 animate-spin text-blue-400 mx-auto mb-3" />
+                        <p className="text-slate-400">A carregar browser...</p>
+                      </div>
                     </div>
                   )}
                   
                   {atualizando && (
-                    <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                    <div className="absolute top-3 right-3 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       A processar...
                     </div>
                   )}
-                </div>
-                
-                {/* Controlos */}
-                <div className="flex flex-wrap gap-2 items-center">
-                  <Button onClick={preencherEmail} variant="outline" size="sm" className="bg-blue-50">
-                    📧 Preencher Email
-                  </Button>
-                  <Button onClick={preencherPassword} variant="outline" size="sm" className="bg-blue-50">
-                    🔑 Preencher Password
-                  </Button>
-                  <Button onClick={() => enviarTecla('Enter')} variant="outline" size="sm">
-                    Enter ↵
-                  </Button>
-                  <Button onClick={() => enviarTecla('Tab')} variant="outline" size="sm">
-                    Tab
-                  </Button>
-                  <Button onClick={atualizarScreenshot} variant="outline" size="icon" title="Atualizar">
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                </div>
-                
-                {/* Setas para CAPTCHA/Puzzle */}
-                <div className="flex gap-2 items-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <span className="text-purple-700 text-sm font-medium whitespace-nowrap">🎮 Setas:</span>
-                  <div className="flex gap-1">
-                    <Button 
-                      onClick={() => enviarTecla('ArrowLeft')} 
-                      variant="outline" 
-                      size="lg"
-                      className="w-14 h-14 text-2xl font-bold bg-white hover:bg-purple-100 border-2 border-purple-300"
-                      title="Esquerda"
-                    >
-                      ◀
-                    </Button>
-                    <div className="flex flex-col gap-1">
-                      <Button 
-                        onClick={() => enviarTecla('ArrowUp')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-14 h-6 text-lg font-bold bg-white hover:bg-purple-100 border-2 border-purple-300"
-                        title="Cima"
-                      >
-                        ▲
-                      </Button>
-                      <Button 
-                        onClick={() => enviarTecla('ArrowDown')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-14 h-6 text-lg font-bold bg-white hover:bg-purple-100 border-2 border-purple-300"
-                        title="Baixo"
-                      >
-                        ▼
-                      </Button>
-                    </div>
-                    <Button 
-                      onClick={() => enviarTecla('ArrowRight')} 
-                      variant="outline" 
-                      size="lg"
-                      className="w-14 h-14 text-2xl font-bold bg-white hover:bg-purple-100 border-2 border-purple-300"
-                      title="Direita"
-                    >
-                      ▶
-                    </Button>
-                  </div>
-                  <span className="text-purple-600 text-xs ml-2">Use para resolver puzzles CAPTCHA</span>
-                </div>
-                
-                {/* Campo para código SMS/Email de 4 dígitos */}
-                <div className="flex gap-2 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <span className="text-yellow-700 text-sm font-medium whitespace-nowrap">📱 Código SMS:</span>
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={4}
-                    placeholder="0000"
-                    value={codigoSMS}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                      setCodigoSMS(val);
-                    }}
-                    onKeyPress={(e) => e.key === 'Enter' && enviarCodigoSMS()}
-                    className="w-24 text-center text-lg font-mono tracking-widest"
-                  />
+                  
+                  {/* Botão refresh flutuante */}
                   <Button 
-                    onClick={enviarCodigoSMS} 
-                    variant="default" 
-                    size="sm"
-                    className="bg-yellow-600 hover:bg-yellow-700"
-                    disabled={codigoSMS.length !== 4 || atualizando}
+                    onClick={atualizarScreenshot} 
+                    variant="secondary" 
+                    size="icon"
+                    className="absolute top-3 left-3 bg-white/90 hover:bg-white shadow-lg"
+                    title="Atualizar imagem"
                   >
-                    Enviar Código
+                    <RefreshCw className="w-5 h-5" />
                   </Button>
                 </div>
-                
-                <div className="flex flex-wrap gap-2 items-center">
-                  <div className="flex-1 flex gap-2">
-                    <Input
-                      placeholder="Ou escreva manualmente aqui..."
-                      value={textoInput}
-                      onChange={(e) => setTextoInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && enviarTexto()}
-                    />
-                    <Button onClick={enviarTexto} variant="outline" size="icon" title="Enviar texto">
-                      <Keyboard className="w-4 h-4" />
-                    </Button>
+
+                {/* PAINEL DE CONTROLOS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  
+                  {/* Coluna Esquerda - Login */}
+                  <div className="space-y-3">
+                    {/* Preenchimento Automático */}
+                    <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        <User className="w-5 h-5" />
+                        Preenchimento Automático
+                      </h4>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={preencherEmail} 
+                          className="flex-1 bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+                          size="lg"
+                        >
+                          📧 Email
+                        </Button>
+                        <Button 
+                          onClick={preencherPassword} 
+                          className="flex-1 bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+                          size="lg"
+                        >
+                          🔑 Password
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Código SMS */}
+                    <div className="p-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl shadow-lg">
+                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        <Phone className="w-5 h-5" />
+                        Código SMS (4 dígitos)
+                      </h4>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={4}
+                          placeholder="0000"
+                          value={codigoSMS}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                            setCodigoSMS(val);
+                          }}
+                          onKeyPress={(e) => e.key === 'Enter' && enviarCodigoSMS()}
+                          className="w-28 text-center text-2xl font-mono tracking-[0.5em] bg-white border-0 shadow-inner"
+                        />
+                        <Button 
+                          onClick={enviarCodigoSMS} 
+                          className="flex-1 bg-white text-orange-600 hover:bg-orange-50 font-semibold"
+                          size="lg"
+                          disabled={codigoSMS.length !== 4 || atualizando}
+                        >
+                          Enviar →
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Texto Manual */}
+                    <div className="p-4 bg-slate-100 rounded-xl border-2 border-slate-200">
+                      <h4 className="text-slate-700 font-semibold mb-3 flex items-center gap-2">
+                        <Keyboard className="w-5 h-5" />
+                        Escrever Manualmente
+                      </h4>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Digite aqui..."
+                          value={textoInput}
+                          onChange={(e) => setTextoInput(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && enviarTexto()}
+                          className="flex-1"
+                        />
+                        <Button onClick={enviarTexto} className="bg-slate-700 hover:bg-slate-800">
+                          Enviar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Coluna Direita - Navegação */}
+                  <div className="space-y-3">
+                    {/* Setas para CAPTCHA */}
+                    <div className="p-4 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg">
+                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        🎮 Puzzle CAPTCHA
+                      </h4>
+                      <div className="flex justify-center gap-2">
+                        <Button 
+                          onClick={() => enviarTecla('ArrowLeft')} 
+                          className="w-16 h-16 text-3xl bg-white text-purple-600 hover:bg-purple-100 font-bold shadow-lg"
+                        >
+                          ◀
+                        </Button>
+                        <div className="flex flex-col gap-2">
+                          <Button 
+                            onClick={() => enviarTecla('ArrowUp')} 
+                            className="w-16 h-7 text-xl bg-white text-purple-600 hover:bg-purple-100 font-bold shadow-lg"
+                          >
+                            ▲
+                          </Button>
+                          <Button 
+                            onClick={() => enviarTecla('ArrowDown')} 
+                            className="w-16 h-7 text-xl bg-white text-purple-600 hover:bg-purple-100 font-bold shadow-lg"
+                          >
+                            ▼
+                          </Button>
+                        </div>
+                        <Button 
+                          onClick={() => enviarTecla('ArrowRight')} 
+                          className="w-16 h-16 text-3xl bg-white text-purple-600 hover:bg-purple-100 font-bold shadow-lg"
+                        >
+                          ▶
+                        </Button>
+                      </div>
+                      <p className="text-purple-200 text-xs text-center mt-2">
+                        Use as setas para resolver o puzzle
+                      </p>
+                    </div>
+                    
+                    {/* Teclas Especiais */}
+                    <div className="p-4 bg-slate-800 rounded-xl">
+                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        ⌨️ Teclas
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          onClick={() => enviarTecla('Enter')} 
+                          className="bg-green-600 hover:bg-green-700 text-white font-semibold"
+                          size="lg"
+                        >
+                          Enter ↵
+                        </Button>
+                        <Button 
+                          onClick={() => enviarTecla('Tab')} 
+                          className="bg-slate-600 hover:bg-slate-700 text-white font-semibold"
+                          size="lg"
+                        >
+                          Tab ⇥
+                        </Button>
+                        <Button 
+                          onClick={() => enviarTecla('Escape')} 
+                          variant="outline"
+                          className="border-slate-500 text-slate-300 hover:bg-slate-700"
+                          size="lg"
+                        >
+                          Esc ✕
+                        </Button>
+                        <Button 
+                          onClick={() => enviarTecla('Backspace')} 
+                          variant="outline"
+                          className="border-slate-500 text-slate-300 hover:bg-slate-700"
+                          size="lg"
+                        >
+                          ← Apagar
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
-                {/* Ações */}
-                <div className="flex gap-2">
+                {/* Ações Principais */}
+                <div className="flex gap-3">
                   <Button 
                     onClick={verificarLogin} 
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 text-lg shadow-lg"
                     disabled={atualizando}
                   >
-                    <CheckCircle className="w-4 h-4 mr-2" />
+                    <CheckCircle className="w-6 h-6 mr-2" />
                     Confirmar Login
                   </Button>
-                  <Button onClick={fecharBrowser} variant="destructive">
-                    <Square className="w-4 h-4 mr-2" />
+                  <Button 
+                    onClick={fecharBrowser} 
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-6 px-8"
+                  >
+                    <Square className="w-5 h-5 mr-2" />
                     Fechar
                   </Button>
                 </div>
-                
-                <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
-                  <strong>Dica:</strong> Clique na imagem para interagir. Use o campo de texto para escrever 
-                  email/password. Resolva o puzzle CAPTCHA clicando diretamente.
-                </div>
-              </>
+              </div>
             )}
           </CardContent>
         </Card>
