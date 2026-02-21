@@ -279,7 +279,7 @@ function App() {
             path="/comissoes"
             element={
               user && (user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') ? (
-                <Comissoes user={user} onLogout={handleLogout} />
+                <ComissoesDashboard user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/login" />
               )
