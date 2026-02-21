@@ -3537,12 +3537,43 @@ async def generate_resumo_semanal_pdf(
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=16, alignment=TA_CENTER)
     subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER, textColor=colors.grey)
+    info_style = ParagraphStyle('Info', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER, textColor=colors.HexColor('#333333'))
     
     elements = []
     
     # Título
     elements.append(Paragraph(f"Resumo Semanal do Parceiro", title_style))
     elements.append(Paragraph(f"Semana {semana}/{ano} ({week_start.strftime('%d/%m/%Y')} a {week_end.strftime('%d/%m/%Y')})", subtitle_style))
+    
+    # ============ CABEÇALHO COM DADOS DO PARCEIRO ============
+    header_lines = []
+    
+    # Nome do Parceiro
+    if config_relatorio and config_relatorio.get("incluir_nome_parceiro", True):
+        if parceiro_dados and parceiro_dados.get("name"):
+            header_lines.append(f"<b>Parceiro:</b> {parceiro_dados['name']}")
+    
+    # NIF do Parceiro
+    if config_relatorio and config_relatorio.get("incluir_nif_parceiro", False):
+        if parceiro_dados and parceiro_dados.get("nif"):
+            header_lines.append(f"<b>NIF:</b> {parceiro_dados['nif']}")
+    
+    # Número do Relatório
+    if config_relatorio and config_relatorio.get("incluir_numero_relatorio", False):
+        formato = config_relatorio.get("formato_numero_relatorio", "xxxxx/ano")
+        # Gerar número sequencial simples baseado na semana/ano
+        numero_seq = str(semana).zfill(5)
+        numero_relatorio = formato.replace("xxxxx", numero_seq).replace("ano", str(ano))
+        header_lines.append(f"<b>Nº Relatório:</b> {numero_relatorio}")
+    
+    # Data de emissão
+    if config_relatorio and config_relatorio.get("incluir_data_emissao", True):
+        header_lines.append(f"<b>Data de Emissão:</b> {datetime.now().strftime('%d/%m/%Y')}")
+    
+    if header_lines:
+        elements.append(Spacer(1, 5*mm))
+        elements.append(Paragraph(" | ".join(header_lines), info_style))
+    
     elements.append(Spacer(1, 10*mm))
     
     # Tabela de motoristas
