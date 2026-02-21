@@ -59,6 +59,47 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
+### Session 2026-02-21 (WhatsApp Cloud API + Envio em Massa)
+- **Feature: WhatsApp Cloud API - DONE:**
+  - **Nova integração:** API oficial da Meta para WhatsApp Business
+  - **6 Templates criados:**
+    - `relatorio_semanal` - Relatório com valores da semana
+    - `documento_expirar` - Alerta de documento a expirar
+    - `boas_vindas` - Boas-vindas a novo motorista
+    - `vistoria_agendada` - Notificação de vistoria
+    - `revisao_veiculo` - Alerta de revisão
+    - `pagamento_efetuado` - Confirmação de pagamento
+  - **Endpoints criados:**
+    - `GET /api/whatsapp-cloud/status` - Estado da configuração
+    - `GET /api/whatsapp-cloud/templates` - Lista templates
+    - `POST /api/whatsapp-cloud/send/relatorio-semanal` - Enviar relatório
+    - `POST /api/whatsapp-cloud/send/vistoria-massa` - Vistoria em massa
+    - `POST /api/whatsapp-cloud/send/massa` - Envio genérico em massa
+    - `GET /api/whatsapp-cloud/historico-envios` - Histórico
+  - **Ficheiro:** `backend/routes/whatsapp_cloud.py`
+
+- **Feature: Envio Relatório por WhatsApp - DONE:**
+  - **Endpoint:** `POST /api/relatorios/semanal/{id}/enviar-whatsapp`
+  - **Funcionalidade:** Envia relatório semanal por WhatsApp ao motorista
+  - **Ficheiro:** `backend/routes/relatorios.py` (linha 4562)
+
+- **Feature: Alertas Automáticos de Documentos - DONE:**
+  - **Endpoint:** `POST /api/alertas/documentos-expirar/enviar-whatsapp`
+  - **Funcionalidade:** Envia alertas de documentos a expirar por WhatsApp
+  - **Ficheiro:** `backend/routes/alertas.py`
+
+- **Feature: UI de Envio em Massa - DONE:**
+  - **Nova página:** `/whatsapp-cloud`
+  - **4 Tabs:** Envio em Massa, Alertas Documentos, Templates, Histórico
+  - **Funcionalidades:**
+    - Selecção múltipla de motoristas
+    - Agendar vistoria para múltiplos motoristas
+    - Enviar template personalizado
+    - Enviar alertas de documentos a expirar
+    - Ver histórico de envios
+  - **Ficheiro:** `frontend/src/pages/WhatsAppCloudManager.js`
+  - **Menu:** WhatsApp com submenu (QR Code + Cloud API)
+
 ### Session 2026-02-21 (Bugfixes - WhatsApp Lock Files + Document Downloads)
 - **Bugfix: WhatsApp Lock Files - FIXED:**
   - **Problema:** Os lock files do Chromium (SingletonLock, SingletonCookie, SingletonSocket) estavam na pasta raiz da sessão, não na subpasta Default
