@@ -274,8 +274,8 @@ async def upload_vistoria_foto(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload a photo to a vistoria"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    """Upload a photo to a vistoria - with cloud storage integration"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Verify vistoria exists
@@ -283,23 +283,29 @@ async def upload_vistoria_foto(
     if not vistoria:
         raise HTTPException(status_code=404, detail="Vistoria not found")
     
-    # Save file
-    upload_dir = f"/app/uploads/vistorias/{vistoria_id}"
-    os.makedirs(upload_dir, exist_ok=True)
+    # Get vehicle for parceiro_id
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0, "parceiro_id": 1, "matricula": 1})
+    parceiro_id = vehicle.get("parceiro_id") if vehicle else current_user.get("id")
     
-    file_id = str(uuid.uuid4())
-    file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    file_path = f"{upload_dir}/{file_id}.{file_ext}"
+    # Use FileUploadHandler for cloud integration
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="vistoria",
+        entity_id=vistoria_id,
+        entity_name=vehicle.get("matricula") if vehicle else None
+    )
     
-    content = await file.read()
-    with open(file_path, 'wb') as f:
-        f.write(content)
+    photo_url = upload_result.get("cloud_url") or upload_result.get("local_url")
     
     # Add photo reference to vistoria
     foto_info = {
-        "id": file_id,
+        "id": str(uuid.uuid4()),
         "filename": file.filename,
-        "path": file_path,
+        "path": upload_result.get("local_path"),
+        "url": photo_url,
+        "cloud_path": upload_result.get("cloud_path"),
+        "provider": upload_result.get("provider"),
         "uploaded_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -308,7 +314,7 @@ async def upload_vistoria_foto(
         {"$push": {"fotos": foto_info}}
     )
     
-    return {"message": "Photo uploaded", "foto_id": file_id}
+    return {"message": "Photo uploaded", "foto_id": foto_info["id"], "url": photo_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 # ==================== DANOS ====================
