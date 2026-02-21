@@ -23,6 +23,8 @@ export default function BackupAdmin({ user, onLogout }) {
   useEffect(() => {
     carregarColecoes();
     carregarHistorico();
+    carregarAnaliseLimpeza();
+    carregarStatsArmazenamento();
   }, []);
 
   const carregarColecoes = async () => {
@@ -52,6 +54,65 @@ export default function BackupAdmin({ user, onLogout }) {
       }
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
+    }
+  };
+
+  const carregarAnaliseLimpeza = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/backup/limpeza/analise`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAnaliseLimpeza(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar análise:', error);
+    }
+  };
+
+  const carregarStatsArmazenamento = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/backup/armazenamento/estatisticas`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStatsArmazenamento(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar stats:', error);
+    }
+  };
+
+  const executarLimpeza = async (categoriaId) => {
+    if (!confirm(`Tem certeza que deseja limpar "${categoriaId}"? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+    
+    setLimpando(categoriaId);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/backup/limpeza/executar/${categoriaId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`Limpeza concluída! ${data.documentos_removidos} documentos removidos.`);
+        carregarAnaliseLimpeza();
+        carregarColecoes();
+        carregarStatsArmazenamento();
+      } else {
+        toast.error('Erro ao executar limpeza');
+      }
+    } catch (error) {
+      toast.error('Erro ao executar limpeza');
+    } finally {
+      setLimpando(null);
     }
   };
 
