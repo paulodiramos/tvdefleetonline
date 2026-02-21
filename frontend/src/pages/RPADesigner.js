@@ -1188,14 +1188,20 @@ export default function RPADesigner({ user, onLogout }) {
                         <select
                           className="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-sm text-white"
                           value={sessaoParceiroSelecionada?.parceiro_id || ''}
-                          onChange={(e) => {
+                          onChange={async (e) => {
+                            const platNome = plataformaSelecionada?.nome?.toLowerCase() || '';
+                            const plataforma = platNome.includes('uber') ? 'uber' : 
+                                               platNome.includes('bolt') ? 'bolt' : 
+                                               platNome.includes('via') ? 'viaverde' : '';
                             const sessao = sessoesParceiros.find(s => 
-                              s.parceiro_id === e.target.value && 
-                              s.plataforma === (plataformaSelecionada?.nome?.toLowerCase().includes('uber') ? 'uber' : 
-                                               plataformaSelecionada?.nome?.toLowerCase().includes('bolt') ? 'bolt' : 
-                                               plataformaSelecionada?.nome?.toLowerCase().includes('via') ? 'viaverde' : '')
+                              s.parceiro_id === e.target.value && s.plataforma === plataforma
                             );
                             setSessaoParceiroSelecionada(sessao || null);
+                            
+                            // Carregar credenciais do parceiro automaticamente
+                            if (sessao) {
+                              await carregarCredenciaisParceiro(sessao.parceiro_id, plataforma);
+                            }
                           }}
                         >
                           <option value="">Não usar (começar do zero)</option>
