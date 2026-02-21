@@ -377,11 +377,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
   // Save all changes with confirmation
   const handleSaveInfo = async (silent = false) => {
     try {
-      console.log('🔍 handleSaveInfo iniciado', { silent, vehicle, infoForm });
-      
       // Verificar se vehicle existe
       if (!vehicle) {
-        console.error('❌ Vehicle é null/undefined');
+        console.error('Vehicle data not loaded');
         if (!silent) toast.error('Erro: dados do veículo não carregados');
         return;
       }
