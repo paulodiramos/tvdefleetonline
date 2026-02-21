@@ -321,7 +321,7 @@ async def preencher_sms_browser(
                             # Campos de dígito são geralmente pequenos
                             if box['width'] < 100 and box['height'] < 80:
                                 sms_inputs.append(inp)
-            except:
+            except Exception:
                 continue
         
         logger.info(f"Encontrados {len(sms_inputs)} campos potenciais para SMS")
