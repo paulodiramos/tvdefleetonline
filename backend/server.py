@@ -5017,6 +5017,7 @@ async def get_config_relatorio(
             "incluir_data_emissao": True,
             "incluir_periodo": True,
             "incluir_nome_parceiro": True,
+            "incluir_nif_parceiro": False,
             "incluir_nome_motorista": True,
             "incluir_veiculo": True,
             "incluir_viagens_bolt": True,
