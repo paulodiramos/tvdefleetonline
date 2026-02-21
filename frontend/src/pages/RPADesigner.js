@@ -1243,11 +1243,12 @@ export default function RPADesigner({ user, onLogout }) {
           </div>
 
           {/* Painel Central - Browser/Preview */}
-          <div className="col-span-6">
-            <Card className="bg-gray-800 border-gray-700 h-full">
-              <CardHeader className="pb-2">
+          <div className="col-span-12 lg:col-span-6">
+            <Card className="bg-gray-800 border-gray-700 h-full min-h-[400px]">
+              <CardHeader className="py-3 px-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm text-gray-300 flex items-center">
+                  <CardTitle className="text-sm text-gray-300 flex items-center gap-2">
+                    <Monitor className="w-4 h-4" /> Preview
                     <Monitor className="w-4 h-4 mr-2" />
                     {gravando ? 'Browser Interativo' : 'Preview'}
                   </CardTitle>
