@@ -27,7 +27,40 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-20 (Latest - WhatsApp Web Integration)
+### Session 2026-02-21 (Cloud Storage Integration)
+- **Feature: Sistema de Armazenamento Cloud por Parceiro - DONE:**
+  - **Parte 1: Configuração por Parceiro**
+    - 3 modos: Local, Cloud, Ambos (backup)
+    - 4 providers: Terabox, Google Drive, OneDrive, Dropbox
+    - Cada parceiro escolhe nas suas definições
+    - Admin pode ver/gerir configuração de todos
+    - Tab "Visão Geral" com tabela de todos os parceiros
+  - **Parte 2: Integrações Cloud**
+    - `CloudStorageService` - Serviço unificado em `/app/backend/utils/cloud_storage.py`
+    - `GoogleDriveProvider` - Upload, download, criar pastas, obter URLs
+    - `DropboxProvider` - Mesmas funcionalidades
+    - `OneDriveProvider` - Via Microsoft Graph API
+    - `TeraboxProvider` - Armazenamento local por parceiro
+    - OAuth callbacks para cada provider
+  - **Endpoints:**
+    - `GET /api/storage-config` - Obter configuração
+    - `PUT /api/storage-config` - Guardar configuração
+    - `GET /api/storage-config/providers` - Listar providers
+    - `POST /api/storage-config/connect/{provider}` - Conectar
+    - `DELETE /api/storage-config/disconnect/{provider}` - Desconectar
+    - `GET /api/storage-config/oauth/{provider}/url` - URL OAuth
+    - `GET /api/storage-config/oauth/{provider}/callback` - Callback OAuth
+    - `POST /api/storage-config/test-upload` - Testar upload
+  - **Ficheiros criados:**
+    - `/app/backend/utils/cloud_storage.py`
+    - `/app/backend/routes/storage_config.py`
+    - `/app/frontend/src/pages/StorageConfig.js`
+
+- **Bugfix: Loja de Planos - FIXED:**
+  - Erro "Cannot read properties of null (reading 'ordem')" corrigido
+  - Adicionadas verificações de null nas funções canUpgrade/canDowngrade
+
+### Session 2026-02-20 (WhatsApp Web Integration)
 - **Feature: WhatsApp Web com QR Code - DONE:**
   - **Arquitetura:** Microserviço Node.js (porta 3001) + API FastAPI + UI React
   - **Funcionalidade:** Cada parceiro tem a sua própria sessão WhatsApp
