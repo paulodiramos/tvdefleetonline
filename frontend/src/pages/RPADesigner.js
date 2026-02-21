@@ -788,6 +788,49 @@ export default function RPADesigner({ user, onLogout }) {
             const sessionId = '${sid}';
             const credenciais = ${credenciaisData};
             let ws = null;
+            let gravando = false;
+            
+            // Selecionar tipo de design
+            function selecionarTipoDesign(tipo) {
+              document.getElementById('tipo-design-selecionado').value = tipo;
+              const btnLogin = document.getElementById('btn-tipo-login');
+              const btnExtracao = document.getElementById('btn-tipo-extracao');
+              
+              if (tipo === 'login') {
+                btnLogin.style.background = '#3b82f6';
+                btnExtracao.style.background = '#1a3a5c';
+              } else {
+                btnLogin.style.background = '#1a3a5c';
+                btnExtracao.style.background = '#22c55e';
+              }
+            }
+            
+            // Iniciar/Parar gravação
+            function iniciarGravacao() {
+              const btn = document.getElementById('btn-gravar');
+              
+              if (!gravando) {
+                // Iniciar gravação
+                gravando = true;
+                btn.innerHTML = '⏹ Parar';
+                btn.style.background = '#ef4444';
+                
+                // Atualizar status
+                document.querySelector('.status-dot').style.background = '#ef4444';
+                document.querySelector('.status span').textContent = 'A GRAVAR';
+                
+                // Notificar o backend que está a gravar
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                  ws.send(JSON.stringify({
+                    tipo: 'iniciar_gravacao',
+                    tipo_design: document.getElementById('tipo-design-selecionado').value
+                  }));
+                }
+              } else {
+                // Parar gravação
+                pararSessao();
+              }
+            }
             
             // Preencher campos com credenciais pré-definidas imediatamente
             (function preencherCredenciais() {
