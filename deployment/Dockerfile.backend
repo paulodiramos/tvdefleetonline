@@ -46,6 +46,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Instalar emergentintegrations
 RUN pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
 
+# Instalar Playwright e os browsers necessários
+RUN pip install playwright && playwright install chromium
+
 # Copiar código da aplicação
 COPY . .
 
