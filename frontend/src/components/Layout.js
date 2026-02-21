@@ -493,7 +493,7 @@ const Layout = ({ children, user, onLogout }) => {
                       <DropdownMenuItem asChild>
                         <Link to="/gestao-documentos" className="flex items-center space-x-2 cursor-pointer" data-testid="link-gestao-documentos">
                           <FileText className="w-4 h-4" />
-                          <span>Gestão de Documentos</span>
+                          <span>Documentos</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -504,15 +504,15 @@ const Layout = ({ children, user, onLogout }) => {
                         </div>
                       </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/empresas-faturacao" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-empresas-faturacao">
-                          <Building2 className="w-4 h-4" />
-                          <span>Empresas de Faturação</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
                         <Link to="/dashboard-faturacao" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-dashboard-faturacao">
                           <BarChart3 className="w-4 h-4" />
                           <span>Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/empresas-faturacao" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-empresas-faturacao">
+                          <Building2 className="w-4 h-4" />
+                          <span>Empresas de Faturação</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -535,40 +535,37 @@ const Layout = ({ children, user, onLogout }) => {
                         </div>
                       </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/armazenamento" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-armazenamento">
-                          <span>☁️ Armazenamento Cloud</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
                         <Link to="/configuracoes-parceiro" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>📧 Email & Comunicações</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/configuracao-relatorios" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>⚙️ Configurações Relatórios</span>
+                          <span>📊 Relatórios</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/copia-seguranca" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-copia-seguranca">
-                          <span>💾 Cópia de Segurança</span>
+                        <Link to="/armazenamento" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-armazenamento">
+                          <span>☁️ Armazenamento Cloud</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <div className="px-2 py-1.5">
-                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
-                          <Zap className="w-3 h-3" />
-                          <span>Login Plataformas</span>
-                        </div>
-                      </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/minha-configuracao-uber" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="parceiro-login-uber">
-                          <span>🚗 Login Uber</span>
+                        <Link to="/copia-seguranca" className="flex items-center space-x-2 cursor-pointer" data-testid="link-copia-seguranca">
+                          <HardDrive className="w-4 h-4" />
+                          <span>Cópia de Segurança</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracao-prio" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="parceiro-login-prio">
-                          <span>⛽ Login Prio</span>
+                        <Link to="/minha-configuracao-uber" className="flex items-center space-x-2 cursor-pointer" data-testid="parceiro-login-uber">
+                          <Car className="w-4 h-4" />
+                          <span>Login Uber</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracao-prio" className="flex items-center space-x-2 cursor-pointer" data-testid="parceiro-login-prio">
+                          <Fuel className="w-4 h-4" />
+                          <span>Login Prio</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
