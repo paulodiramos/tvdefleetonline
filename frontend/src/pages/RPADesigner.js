@@ -1277,12 +1277,13 @@ export default function RPADesigner({ user, onLogout }) {
                       </div>
                     )}
                     
+                    {/* Botão principal - Abrir Preview */}
                     <Button 
-                      className="w-full bg-green-600 hover:bg-green-700"
-                      onClick={iniciarSessao}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={() => abrirPreviewSemGravar()}
                       disabled={!plataformaSelecionada || loading}
                     >
-                      <Play className="w-4 h-4 mr-2" /> Iniciar Gravação
+                      <Monitor className="w-4 h-4 mr-2" /> Abrir Preview
                     </Button>
                     
                     {/* Info sobre CAPTCHA */}
@@ -1293,6 +1294,15 @@ export default function RPADesigner({ user, onLogout }) {
                         : ' Selecione uma sessão de parceiro acima para evitar.'
                       }
                     </div>
+                    
+                    {/* Botão adicionar passo manual */}
+                    <Button 
+                      variant="outline"
+                      className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                      onClick={() => setMostrarAdicionarPasso(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Adicionar Passo Manual
+                    </Button>
                   </>
                 ) : (
                   <>
