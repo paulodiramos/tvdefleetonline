@@ -80,22 +80,35 @@ def calcular_periodo_semana_uber(semana: int, ano: int) -> tuple:
     Calcular período da semana para a Uber.
     
     Baseado nos relatórios Uber reais (2026):
-    - Semana 5: 20260126-20260202 = 26 jan (seg) - 2 fev (seg)
-    - Semana 6: 20260201-20260208 = 1 fev (dom) - 8 fev (dom)
+    - 20260201-20260208 = 1 fev (dom) - 8 fev (dom) 
+    - 20260208-20260215 = 8 fev (dom) - 15 fev (dom)
     
-    A Uber parece usar Segunda a Segunda como referência no ficheiro.
+    A Uber usa Domingo a Domingo (ou Sábado a Sábado dependendo da região).
+    O ficheiro mostra datas de Domingo a Domingo.
     """
     from datetime import datetime, timedelta
     
-    # Usar cálculo ISO como base (segunda a domingo)
-    jan4 = datetime(ano, 1, 4)  # 4 de janeiro está sempre na semana 1 ISO
-    inicio_semana_iso = jan4 - timedelta(days=jan4.weekday())  # Segunda da semana 1
-    inicio_semana_iso = inicio_semana_iso + timedelta(weeks=semana - 1)  # Segunda da semana solicitada
+    # Encontrar o primeiro domingo do ano
+    jan1 = datetime(ano, 1, 1)
+    # 6 = domingo
+    dias_para_domingo = (6 - jan1.weekday()) % 7
+    if dias_para_domingo == 0 and jan1.weekday() != 6:
+        dias_para_domingo = 7
     
-    # A Uber usa Segunda a Segunda (7 dias)
-    # Início: Segunda da semana ISO
-    # Fim: Segunda seguinte
-    inicio_semana_uber = inicio_semana_iso
+    # Primeiro domingo do ano
+    primeiro_domingo = jan1 + timedelta(days=dias_para_domingo)
+    if jan1.weekday() == 6:  # Se 1 de janeiro é domingo
+        primeiro_domingo = jan1
+    
+    # Calcular o domingo de início da semana solicitada
+    # Semana 1 começa no primeiro domingo do ano ou antes
+    inicio_semana_uber = primeiro_domingo + timedelta(weeks=semana - 2)
+    
+    # Se a semana calculada é antes do 1 de janeiro, ajustar
+    if inicio_semana_uber.year < ano:
+        inicio_semana_uber = primeiro_domingo + timedelta(weeks=semana - 1)
+    
+    # Fim é 7 dias depois (próximo domingo)
     fim_semana_uber = inicio_semana_uber + timedelta(days=7)
     
     return inicio_semana_uber.strftime("%Y-%m-%d"), fim_semana_uber.strftime("%Y-%m-%d")
