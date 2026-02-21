@@ -240,21 +240,32 @@ class UberScraper(BaseScraper):
     async def verificar_login(self) -> bool:
         """Verificar se está logado na Uber"""
         try:
-            await self.page.goto("https://supplier.uber.com/", wait_until="networkidle", timeout=30000)
-            await asyncio.sleep(3)
+            logger.info("🔍 UberScraper: Verificando sessão...")
+            
+            # Navegar com timeout mais longo e wait_until mais flexível
+            await self.page.goto("https://supplier.uber.com/", wait_until="domcontentloaded", timeout=60000)
+            await asyncio.sleep(5)
             
             url = self.page.url
             logger.info(f"📍 Uber URL atual: {url}")
             
             # Se redirecionou para login, não está logado
             if "login" in url.lower() or "auth" in url.lower():
+                logger.info("❌ Redirecionado para login - sessão não ativa")
                 return False
+            
+            # Se está no dashboard, está logado
+            if "supplier.uber.com" in url and "auth" not in url.lower() and "login" not in url.lower():
+                logger.info("✅ Login Uber verificado - no dashboard")
+                return True
             
             # Verificar elementos que indicam login
             dashboard_elements = [
                 'text="Relatórios"',
                 'text="Reports"',
                 'text="Dashboard"',
+                'text="Frota"',
+                'text="Fleet"',
                 '[data-testid="dashboard"]'
             ]
             
@@ -262,11 +273,12 @@ class UberScraper(BaseScraper):
                 try:
                     el = self.page.locator(selector)
                     if await el.count() > 0:
-                        logger.info("✅ Login Uber verificado - elementos de dashboard encontrados")
+                        logger.info(f"✅ Login Uber verificado - elemento encontrado: {selector}")
                         return True
                 except:
                     continue
             
+            logger.info("⚠️ Não foi possível confirmar login - elementos não encontrados")
             return False
             
         except Exception as e:
