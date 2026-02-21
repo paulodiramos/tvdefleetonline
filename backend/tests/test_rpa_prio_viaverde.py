@@ -15,7 +15,7 @@ import time
 from datetime import datetime, timedelta
 
 # URL base do backend
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://storage-dashboard-2.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cloud-fleet-manager.preview.emergentagent.com')
 
 # Credenciais de teste
 TEST_USER = {

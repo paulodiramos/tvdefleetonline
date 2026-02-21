@@ -4,7 +4,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://storage-dashboard-2.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cloud-fleet-manager.preview.emergentagent.com').rstrip('/')
 
 class TestWhatsAppWebAPI:
     """Test WhatsApp Web API endpoints"""
