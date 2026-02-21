@@ -247,8 +247,17 @@ export default function RPADesigner({ user, onLogout }) {
       const data = await res.json();
       setDesigns(data);
       
-      // Carregar passos do design da semana selecionada
-      const designAtual = data.find(d => d.semana_offset === semanaSelecionada);
+      // Separar designs por tipo
+      const login = data.filter(d => d.tipo_design === 'login');
+      const extracao = data.filter(d => d.tipo_design === 'extracao' || !d.tipo_design);
+      setDesignsLogin(login);
+      setDesignsExtracao(extracao);
+      
+      // Carregar passos do design da semana e tipo selecionados
+      const designAtual = data.find(d => 
+        d.semana_offset === semanaSelecionada && 
+        (d.tipo_design || 'extracao') === tipoDesign
+      );
       if (designAtual) {
         setPassos(designAtual.passos || []);
       } else {
