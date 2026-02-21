@@ -27,7 +27,7 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-21 (Dashboard de Comissões + NIF Relatórios)
+### Session 2026-02-21 (Dashboard de Comissões + NIF Relatórios + WhatsApp Debug)
 - **Feature: Dashboard de Comissões - DONE:**
   - **Nova página:** `/comissoes` transformada em dashboard de visualização
   - **4 Cards de Métricas:** Total Comissões, Ganhos Totais, Total Despesas, Motoristas
@@ -51,6 +51,19 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
     - `frontend/src/pages/ConfiguracaoRelatorios.js` - Checkbox já existia (linhas 255-260)
     - `backend/routes/relatorios.py` - Lógica de geração do PDF (linhas 3540-3590)
     - `backend/server.py` - Modelo Pydantic actualizado com `incluir_nif_parceiro`
+
+- **Investigação: Bug WhatsApp - INVESTIGATED:**
+  - **Diagnóstico:** O microserviço WhatsApp está funcional (QR code gerado, polling activo)
+  - **Melhorias feitas:** 
+    - Adicionados logs detalhados para eventos `ready`, `authenticated`, `loading_screen`
+    - Limpeza de erros anteriores quando novo QR code é gerado
+  - **Conclusão:** O bug "estado não atualiza" só pode ser confirmado quando alguém escaneia o QR code no telemóvel. O sistema de polling e status está correto.
+  - **Ficheiros modificados:** `backend/whatsapp_service/index.js`
+
+- **Verificação: Módulos Extra - VERIFIED WORKING:**
+  - O endpoint `POST /api/gestao-planos/modulos-extras/adicionar` já existia e funciona
+  - A página `/meu-plano` lista módulos disponíveis com botões "Adicionar" funcionais
+  - Testado com sucesso: módulo "comissoes" adicionado via API
 
 ### Session 2026-02-21 (Cloud Storage Integration - Parte 3)
 - **Feature: Integração de Uploads com Cloud Storage - DONE:**
