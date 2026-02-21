@@ -1,0 +1,2 @@
+2026/02/21-19:43:25.759 24f2 Creating DB /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb since it was missing.
+2026/02/21-19:43:25.764 24f2 Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/MANIFEST-000001
