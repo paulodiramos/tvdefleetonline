@@ -431,8 +431,11 @@ class TestMotoristasList:
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
         
-        # Check if motoristas list exists
-        motoristas = data.get("motoristas") or data if isinstance(data, list) else []
+        # Check if motoristas list exists (handle both formats)
+        if isinstance(data, list):
+            motoristas = data
+        else:
+            motoristas = data.get("motoristas") or []
         
         print(f"✅ GET /api/motoristas - Status 200 OK")
         print(f"   - Total motoristas: {len(motoristas)}")
