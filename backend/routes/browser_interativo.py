@@ -272,8 +272,8 @@ async def preencher_password_browser(
         if parceiro_id not in browsers_ativos:
             return {"sucesso": False, "erro": "Browser não iniciado"}
         
-        # Buscar credenciais
-        cred = await db.credenciais_uber.find_one({"parceiro_id": parceiro_id})
+        # Buscar credenciais (usa função centralizada)
+        cred = await get_uber_credentials(parceiro_id)
         if not cred or not cred.get("password"):
             return {"sucesso": False, "erro": "Password não configurada"}
         
