@@ -1988,8 +1988,8 @@ async def download_vistoria_template_pdf(
     c.drawString(2*cm, height - 5.6*cm, f"Km Atual: {vehicle.get('km_atual', 'N/A')}")
     
     # Date and inspector
-    c.drawString(2*cm, height - 6.5*cm, f"Data da Vistoria: ____/____/________")
-    c.drawString(10*cm, height - 6.5*cm, f"Inspetor: _______________________")
+    c.drawString(2*cm, height - 6.5*cm, "Data da Vistoria: ____/____/________")
+    c.drawString(10*cm, height - 6.5*cm, "Inspetor: _______________________")
     
     # Inspection checklist
     c.setFont("Helvetica-Bold", 12)
