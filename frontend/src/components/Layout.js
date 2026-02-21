@@ -504,34 +504,44 @@ const Layout = ({ children, user, onLogout }) => {
                         </div>
                       </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/dashboard-faturacao" className="flex items-center space-x-2 cursor-pointer" data-testid="link-dashboard-faturacao">
-                          <BarChart3 className="w-4 h-4" />
-                          <span>Dashboard Faturação</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/empresas-faturacao" className="flex items-center space-x-2 cursor-pointer" data-testid="link-empresas-faturacao">
+                        <Link to="/empresas-faturacao" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-empresas-faturacao">
                           <Building2 className="w-4 h-4" />
                           <span>Empresas de Faturação</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <div className="px-2 py-1.5">
-                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
-                          <Users className="w-3 h-3" />
-                          <span>Colaboradores</span>
-                        </div>
-                      </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/fornecedores" className="flex items-center space-x-2 cursor-pointer" data-testid="link-fornecedores">
+                        <Link to="/dashboard-faturacao" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-dashboard-faturacao">
+                          <BarChart3 className="w-4 h-4" />
+                          <span>Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/fornecedores" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-fornecedores">
                           <Building className="w-4 h-4" />
                           <span>Fornecedores</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/contabilistas" className="flex items-center space-x-2 cursor-pointer" data-testid="link-contabilistas">
+                        <Link to="/contabilistas" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-contabilistas">
                           <Calculator className="w-4 h-4" />
                           <span>Contabilistas</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5">
+                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                          <MessageSquare className="w-3 h-3" />
+                          <span>Comunicações</span>
+                        </div>
+                      </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/templates-mensagens" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-templates-mensagens">
+                          <span>📝 Templates de Mensagens</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/alertas-documentos" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-alertas-documentos">
+                          <span>🔔 Alertas de Documentos</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
