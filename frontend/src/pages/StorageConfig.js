@@ -206,38 +206,45 @@ const StorageConfig = ({ user, onLogout }) => {
     }
   };
 
-  const handleConnectProvider = async () => {
-    if (!selectedProvider) return;
+  const handleConnectWithCredentials = async () => {
+    if (!config?.cloud_provider || !connectForm.email || !connectForm.password) {
+      toast.error('Preencha email e password');
+      return;
+    }
     
+    setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      
-      // For OAuth providers, get the auth URL
-      if (['google_drive', 'onedrive', 'dropbox'].includes(selectedProvider.id)) {
-        const response = await fetch(`${API}/storage-config/oauth/${selectedProvider.id}/url`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.authorization_url) {
-            window.open(data.authorization_url, '_blank', 'width=600,height=700');
-            toast.info('Complete a autenticação na janela que abriu');
-            setShowConnectModal(false);
-            return;
-          }
-        }
-      }
-      
-      // For Terabox or manual connection
-      const response = await fetch(`${API}/storage-config/connect/${selectedProvider.id}`, {
+      const response = await fetch(`${API}/storage-config/connect/${config.cloud_provider}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          provider: selectedProvider.id,
+          provider: config.cloud_provider,
+          email: connectForm.email,
+          password: connectForm.password
+        })
+      });
+      
+      if (response.ok) {
+        toast.success('Conta conectada com sucesso!');
+        setConnectForm({ email: '', password: '' });
+        fetchProviders();
+        fetchConfig(selectedParceiro);
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Erro ao conectar. Verifique as credenciais.');
+      }
+    } catch (error) {
+      toast.error('Erro ao conectar serviço');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDisconnectProvider = async (providerId) => {
           email: connectForm.email,
           access_token: connectForm.access_token,
           api_key: connectForm.api_key
