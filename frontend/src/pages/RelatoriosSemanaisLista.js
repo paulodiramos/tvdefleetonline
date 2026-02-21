@@ -534,6 +534,22 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
                         </Button>
                       </div>
                       
+                      {/* Botão WhatsApp */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => enviarPorWhatsApp(relatorio.id)}
+                        disabled={sendingWhatsApp[relatorio.id]}
+                      >
+                        {sendingWhatsApp[relatorio.id] ? (
+                          <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                        )}
+                        {relatorio.whatsapp_enviado ? 'Reenviar WhatsApp' : 'Enviar WhatsApp'}
+                      </Button>
+                      
                       {relatorio.status === 'pendente_aprovacao' && (
                         <div className="grid grid-cols-2 gap-2">
                           <Button
