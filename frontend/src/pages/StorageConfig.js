@@ -824,19 +824,3 @@ const StorageConfig = ({ user, onLogout }) => {
 };
 
 export default StorageConfig;
-              <Button variant="outline" onClick={() => setShowConnectModal(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleConnectProvider}>
-                <Link2 className="w-4 h-4 mr-2" />
-                Conectar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </>
-    );
-  }
-};
-
-export default StorageConfig;
