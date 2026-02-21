@@ -27,6 +27,31 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
+### Session 2026-02-21 (Dashboard de Comissões + NIF Relatórios)
+- **Feature: Dashboard de Comissões - DONE:**
+  - **Nova página:** `/comissoes` transformada em dashboard de visualização
+  - **4 Cards de Métricas:** Total Comissões, Ganhos Totais, Total Despesas, Motoristas
+  - **Filtros:** Período (semanal/mensal), Semana, Mês, Ano
+  - **3 Tabs:** Evolução (gráfico semanal), Por Motorista (tabela), Ranking (top 5)
+  - **Botões:** "Configurar" (navega para /config/comissoes), "Atualizar"
+  - **Endpoints criados:**
+    - `GET /api/comissoes/dashboard/resumo` - Resumo com totais, evolução, top motoristas
+    - `GET /api/comissoes/dashboard/por-motorista` - Detalhes por motorista
+  - **Ficheiros:**
+    - `frontend/src/pages/ComissoesDashboard.js` - Novo dashboard
+    - `backend/routes/comissoes.py` - Endpoints de dashboard (linhas 579-700)
+  - **Menu actualizado:** Link "Comissões" em Motoristas aponta para dashboard
+  - **Testes:** 100% backend (9/9) + 100% frontend (iteration_61.json)
+
+- **Feature: NIF do Parceiro no Relatório Semanal - DONE:**
+  - **Checkbox adicionada:** "NIF do Parceiro" na página `/configuracao-relatorios`
+  - **Campo:** `incluir_nif_parceiro` no modelo de configuração
+  - **PDF actualizado:** Cabeçalho inclui NIF se opção estiver activada
+  - **Ficheiros modificados:**
+    - `frontend/src/pages/ConfiguracaoRelatorios.js` - Checkbox já existia (linhas 255-260)
+    - `backend/routes/relatorios.py` - Lógica de geração do PDF (linhas 3540-3590)
+    - `backend/server.py` - Modelo Pydantic actualizado com `incluir_nif_parceiro`
+
 ### Session 2026-02-21 (Cloud Storage Integration - Parte 3)
 - **Feature: Integração de Uploads com Cloud Storage - DONE:**
   - **Refatoração de Endpoints de Upload:**
