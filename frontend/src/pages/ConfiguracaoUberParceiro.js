@@ -748,14 +748,6 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                     </div>
                   </div>
                 </div>
-                          size="lg"
-                        >
-                          ← Apagar
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 
                 {/* Ações Principais */}
                 <div className="flex gap-3">
