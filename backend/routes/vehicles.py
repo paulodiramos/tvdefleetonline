@@ -11,6 +11,7 @@ import shutil
 
 from utils.database import get_database
 from utils.auth import get_current_user
+from utils.file_upload_handler import FileUploadHandler
 from models.veiculo import (
     Vehicle, VehicleCreate, VehicleMaintenance, VehicleVistoria, VistoriaCreate
 )
