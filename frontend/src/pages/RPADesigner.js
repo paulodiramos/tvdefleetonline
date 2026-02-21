@@ -368,7 +368,78 @@ export default function RPADesigner({ user, onLogout }) {
     }
   };
 
-  // Abrir preview numa janela popup grande
+  // Abrir preview SEM iniciar gravação imediatamente
+  // O utilizador pode ver a página, configurar opções, e depois clicar em "Iniciar Gravação" no popup
+  const abrirPreviewSemGravar = async () => {
+    if (!plataformaSelecionada) {
+      toast.error('Selecione uma plataforma primeiro');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Construir body com parâmetros
+      const body = {
+        plataforma_id: plataformaSelecionada.id,
+        semana_offset: semanaSelecionada,
+        tipo_design: tipoDesign  // 'login' ou 'extracao'
+      };
+      
+      // Adicionar sessão do parceiro se selecionada
+      if (sessaoParceiroSelecionada) {
+        body.parceiro_id = sessaoParceiroSelecionada.parceiro_id;
+      }
+      
+      // Adicionar URL inicial se definida
+      if (urlInicial) {
+        body.url_inicial = urlInicial;
+      }
+      
+      // Adicionar credenciais de teste se definidas
+      if (credenciaisTeste.email || credenciaisTeste.password) {
+        body.credenciais_teste = {
+          email: credenciaisTeste.email,
+          password: credenciaisTeste.password,
+          telefone: credenciaisTeste.telefone,
+          codigo_sms: credenciaisTeste.codigo_sms,
+          texto_livre: credenciaisTeste.texto_livre
+        };
+      }
+
+      const res = await fetch(`${API_URL}/api/rpa-designer/sessao/iniciar`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.detail || 'Erro ao iniciar sessão');
+      }
+      
+      if (data.session_id) {
+        setSessionId(data.session_id);
+        setGravando(true);
+        
+        // Conectar WebSocket
+        conectarWebSocket(data.session_id);
+        
+        // Abrir janela popup com opção de iniciar gravação
+        abrirPreviewPopupComOpcoes(data.session_id, body.tipo_design);
+      }
+    } catch (error) {
+      toast.error('Erro ao abrir preview');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Abrir preview numa janela popup grande COM opções de gravação
   const abrirPreviewPopup = (sid) => {
     // Preparar credenciais ANTES de abrir o popup
     const credenciaisParaPopup = {
