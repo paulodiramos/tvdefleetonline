@@ -71,6 +71,7 @@ async def salvar_minhas_credenciais(
     parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
     now = datetime.now(timezone.utc)
     
+    # Guardar na colecção dedicada credenciais_uber
     await db.credenciais_uber.update_one(
         {"parceiro_id": parceiro_id},
         {"$set": {
@@ -85,6 +86,26 @@ async def salvar_minhas_credenciais(
         }},
         upsert=True
     )
+    
+    # Sincronizar com credenciais_plataformas no parceiro/user
+    creds_update = {
+        "credenciais_plataformas.uber_email": data.email,
+        "credenciais_plataformas.uber_password": data.password,
+        "credenciais_plataformas.uber_telefone": data.telefone
+    }
+    
+    # Tentar actualizar em parceiros primeiro
+    result = await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": creds_update}
+    )
+    
+    # Se não encontrou em parceiros, tentar em users
+    if result.matched_count == 0:
+        await db.users.update_one(
+            {"id": parceiro_id},
+            {"$set": creds_update}
+        )
     
     return {"sucesso": True, "mensagem": "Credenciais guardadas"}
 
