@@ -1935,8 +1935,44 @@ async def websocket_design_browser(
                     
                 elif data.get("tipo") == "type" or data.get("tipo") == "inserir_texto":
                     texto = data.get("texto", "")
-                    # Digitar letra a letra com delay para parecer humano
-                    await page.keyboard.type(texto, delay=100)
+                    
+                    # Verificar se é um código SMS de 4 dígitos
+                    if len(texto) == 4 and texto.isdigit():
+                        # Tentar encontrar campos de input para SMS (4 campos separados)
+                        sms_inputs = await page.locator('input[type="text"], input[type="tel"], input[type="number"]').all()
+                        
+                        # Filtrar apenas inputs visíveis e pequenos (campos de dígitos)
+                        valid_inputs = []
+                        for inp in sms_inputs:
+                            try:
+                                if await inp.is_visible():
+                                    box = await inp.bounding_box()
+                                    if box and box['width'] < 100:
+                                        valid_inputs.append(inp)
+                            except:
+                                continue
+                        
+                        if len(valid_inputs) >= 4:
+                            # 4 campos separados - inserir um dígito em cada
+                            logger.info(f"WebSocket: A preencher 4 campos SMS com: {texto}")
+                            for i, digit in enumerate(texto[:4]):
+                                if i < len(valid_inputs):
+                                    await valid_inputs[i].click()
+                                    await asyncio.sleep(0.1)
+                                    await valid_inputs[i].fill(digit)
+                                    await asyncio.sleep(0.15)
+                        elif len(valid_inputs) >= 1:
+                            # Campo único
+                            await valid_inputs[0].click()
+                            await asyncio.sleep(0.1)
+                            await valid_inputs[0].fill(texto)
+                        else:
+                            # Fallback: digitar normalmente
+                            await page.keyboard.type(texto, delay=100)
+                    else:
+                        # Digitar letra a letra com delay para parecer humano
+                        await page.keyboard.type(texto, delay=100)
+                    
                     await asyncio.sleep(0.3)
                     
                     # Guardar passo na sessão
