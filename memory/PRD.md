@@ -25,6 +25,37 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 - Sistema de Mensagens com filtragem por hierarquia de roles
 - Página de Contabilidade com gestão de faturas e recibos
 
+## Deploy Readiness - Testes de Regressão (2026-02-21)
+
+### Resultado dos Testes: ✅ PASSED (100%)
+- **Backend:** 22/22 testes passaram
+- **Frontend:** Todas as páginas carregam correctamente
+
+### Páginas Testadas:
+| Página | Estado | Notas |
+|--------|--------|-------|
+| Login | ✅ OK | Admin e Parceiro |
+| Dashboard | ✅ OK | Carrega com estatísticas |
+| Motoristas | ✅ OK | 10 motoristas listados |
+| Veículos | ✅ OK | 16 veículos listados |
+| Comissões Dashboard | ✅ OK | Cards, filtros, tabs funcionais |
+| Config Comissões | ✅ OK | |
+| Config Relatórios | ✅ OK | Checkbox NIF presente |
+| Armazenamento | ✅ OK | Local/Cloud/Ambos + OAuth |
+| Meu Plano | ✅ OK | Plano e módulos extra |
+| WhatsApp | ✅ OK | QR code funciona |
+| Mensagens | ✅ OK | |
+| Financeiro | ✅ OK | Menu com opções |
+| Ficha Motorista | ✅ OK | |
+| Ficha Veículo | ✅ OK | |
+
+### APIs Mockadas (não afectam deploy):
+- **OAuth Cloud Storage:** Credenciais em branco (Google/Dropbox/OneDrive)
+- **WhatsApp:** Requer scan de QR code real para conectar
+
+### Limpeza para Produção:
+- ✅ Removidos console.logs de debug em FichaVeiculo.js
+
 ## What's Been Implemented
 
 ### Session 2026-02-21 (Dashboard de Comissões + NIF Relatórios + WhatsApp Debug + Cloud OAuth)
