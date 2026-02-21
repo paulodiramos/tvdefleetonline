@@ -2051,29 +2051,39 @@ async def upload_inspecao_document(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload inspection document"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    """Upload inspection document - with cloud storage"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
-    
-    inspection_docs_dir = UPLOAD_DIR / "inspection_docs"
-    inspection_docs_dir.mkdir(exist_ok=True)
-    
-    file_id = f"inspection_{vehicle_id}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, inspection_docs_dir, file_id)
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
+    
+    # Use FileUploadHandler for cloud integration
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="documento_veiculo",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula"),
+        subfolder="inspecao"
+    )
+    
+    doc_url = upload_result.get("cloud_url") or upload_result.get("local_url")
+    
     inspection = vehicle.get("inspection", {})
-    inspection["ficha_inspecao_url"] = file_info["saved_path"]
+    inspection["ficha_inspecao_url"] = doc_url
+    inspection["cloud_path"] = upload_result.get("cloud_path")
+    inspection["provider"] = upload_result.get("provider")
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
         {"$set": {"inspection": inspection}}
     )
     
-    return {"message": "Document uploaded successfully", "url": file_info["saved_path"]}
+    return {"message": "Document uploaded successfully", "url": doc_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.post("/{vehicle_id}/upload-extintor-doc")
@@ -2082,30 +2092,38 @@ async def upload_extintor_document(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload fire extinguisher certificate"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    """Upload fire extinguisher certificate - with cloud storage"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
-    
-    extintor_docs_dir = UPLOAD_DIR / "extintor_docs"
-    extintor_docs_dir.mkdir(exist_ok=True)
-    
-    file_id = f"extintor_{vehicle_id}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, extintor_docs_dir, file_id)
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
+    
+    # Use FileUploadHandler for cloud integration
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="extintor",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula")
+    )
+    
+    doc_url = upload_result.get("cloud_url") or upload_result.get("local_url")
+    
     extintor = vehicle.get("extintor", {})
-    file_url = file_info.get("pdf_path") or file_info.get("original_path")
-    extintor["certificado_url"] = file_url
+    extintor["certificado_url"] = doc_url
+    extintor["cloud_path"] = upload_result.get("cloud_path")
+    extintor["provider"] = upload_result.get("provider")
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
         {"$set": {"extintor": extintor}}
     )
     
-    return {"message": "Document uploaded successfully", "certificado_url": file_url, "file_info": file_info}
+    return {"message": "Document uploaded successfully", "certificado_url": doc_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.post("/{vehicle_id}/upload-carta-verde")
