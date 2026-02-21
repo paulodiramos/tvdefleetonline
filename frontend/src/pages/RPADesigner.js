@@ -229,12 +229,12 @@ export default function RPADesigner({ user, onLogout }) {
     }
   };
 
-  // Carregar designs quando plataforma muda
+  // Carregar designs quando plataforma ou tipo muda
   useEffect(() => {
     if (plataformaSelecionada) {
       carregarDesigns();
     }
-  }, [plataformaSelecionada]);
+  }, [plataformaSelecionada, tipoDesign]);
 
   const carregarDesigns = async () => {
     if (!plataformaSelecionada) return;
