@@ -13001,7 +13001,7 @@ async def download_documento_motorista(
     current_user: Dict = Depends(get_current_user)
 ):
     """Download de documento de motorista por tipo"""
-    if current_user["role"] not in [UserRole.ADMIN, "parceiro", "gestao"]:
+    if current_user["role"] not in ["admin", "parceiro", "gestao", "operacional"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     try:
