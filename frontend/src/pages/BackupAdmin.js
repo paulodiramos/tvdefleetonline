@@ -259,14 +259,122 @@ export default function BackupAdmin({ user, onLogout }) {
     <div className="p-6 space-y-6" data-testid="backup-admin-page">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Backup & Restore</h1>
-          <p className="text-gray-500">Exportar e importar dados do sistema</p>
+          <h1 className="text-2xl font-bold">Backup, Restore & Limpeza</h1>
+          <p className="text-gray-500">Gestão completa da base de dados</p>
         </div>
-        <Button onClick={() => { carregarColecoes(); carregarHistorico(); }} variant="outline">
+        <Button onClick={() => { carregarColecoes(); carregarHistorico(); carregarAnaliseLimpeza(); carregarStatsArmazenamento(); }} variant="outline">
           <RefreshCw className="w-4 h-4 mr-2" />
           Atualizar
         </Button>
       </div>
+
+      {/* Estatísticas de Armazenamento */}
+      {statsArmazenamento && (
+        <Card className="border-2 border-purple-200 bg-purple-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-purple-600" />
+              Estatísticas de Armazenamento
+            </CardTitle>
+            <CardDescription>Visão geral da base de dados</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-white p-4 rounded-lg text-center shadow-sm">
+                <div className="text-2xl font-bold text-purple-600">{statsArmazenamento.totais.total_colecoes}</div>
+                <div className="text-xs text-gray-500">Colecções</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg text-center shadow-sm">
+                <div className="text-2xl font-bold text-blue-600">{statsArmazenamento.totais.total_documentos?.toLocaleString()}</div>
+                <div className="text-xs text-gray-500">Documentos</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg text-center shadow-sm">
+                <div className="text-2xl font-bold text-green-600">{statsArmazenamento.totais.tamanho_dados_mb} MB</div>
+                <div className="text-xs text-gray-500">Dados</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg text-center shadow-sm">
+                <div className="text-2xl font-bold text-orange-600">{statsArmazenamento.totais.tamanho_indices_mb} MB</div>
+                <div className="text-xs text-gray-500">Índices</div>
+              </div>
+            </div>
+            
+            {/* Top 5 Colecções */}
+            <div className="bg-white rounded-lg p-4">
+              <h4 className="font-medium mb-3 text-sm text-gray-600">Top Colecções por Tamanho:</h4>
+              <div className="space-y-2">
+                {statsArmazenamento.top_colecoes?.slice(0, 5).map((col, idx) => (
+                  <div key={col.nome} className="flex items-center gap-3">
+                    <Badge variant="outline" className="w-6 h-6 flex items-center justify-center p-0 text-xs">
+                      {idx + 1}
+                    </Badge>
+                    <div className="flex-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{col.nome}</span>
+                        <span className="text-gray-500">{col.tamanho_mb} MB ({col.documentos.toLocaleString()} docs)</span>
+                      </div>
+                      <Progress value={Math.min(100, (col.tamanho_mb / (statsArmazenamento.top_colecoes[0]?.tamanho_mb || 1)) * 100)} className="h-1 mt-1" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Limpeza de Dados */}
+      {analiseLimpeza && analiseLimpeza.categorias?.length > 0 && (
+        <Card className="border-2 border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" />
+              Limpeza de Dados
+            </CardTitle>
+            <CardDescription>
+              <span className="text-red-600 font-medium">{analiseLimpeza.total_documentos_limpaveis.toLocaleString()}</span> documentos podem ser limpos com segurança
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {analiseLimpeza.categorias.map((cat) => (
+                <div key={cat.id} className="bg-white rounded-lg p-4 shadow-sm border">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-medium text-sm">{cat.nome}</h4>
+                      <p className="text-xs text-gray-500">{cat.total_documentos.toLocaleString()} documentos</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => executarLimpeza(cat.id)}
+                      disabled={limpando === cat.id}
+                      className="h-8"
+                    >
+                      {limpando === cat.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3 h-3" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {cat.colecoes.slice(0, 3).map(c => c.nome).join(', ')}
+                    {cat.colecoes.length > 3 && ` +${cat.colecoes.length - 3}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 p-3 bg-amber-100 rounded-lg flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                A limpeza remove logs antigos, notificações lidas e dados temporários. 
+                <strong> Dados importantes (motoristas, veículos, relatórios) NÃO são afetados.</strong>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Backup Completo */}
       <Card className="border-2 border-blue-200 bg-blue-50">
