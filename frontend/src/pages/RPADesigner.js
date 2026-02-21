@@ -1248,8 +1248,7 @@ export default function RPADesigner({ user, onLogout }) {
               <CardHeader className="py-3 px-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm text-gray-300 flex items-center gap-2">
-                    <Monitor className="w-4 h-4" /> Preview
-                    <Monitor className="w-4 h-4 mr-2" />
+                    <Monitor className="w-4 h-4" />
                     {gravando ? 'Browser Interativo' : 'Preview'}
                   </CardTitle>
                   {urlAtual && (
