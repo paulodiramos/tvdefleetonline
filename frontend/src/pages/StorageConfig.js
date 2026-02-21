@@ -685,14 +685,13 @@ const StorageConfig = ({ user, onLogout }) => {
                             </Button>
                           </div>
                           <div className="text-center">
-                            <a
-                              href="/docs/CLOUD_STORAGE_SETUP.md"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:underline"
+                            <button
+                              onClick={() => setShowDocsModal(true)}
+                              className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1"
                             >
+                              <HelpCircle className="w-3 h-3" />
                               Ver instruções de configuração para administradores
-                            </a>
+                            </button>
                           </div>
                         </>
                       ) : (
