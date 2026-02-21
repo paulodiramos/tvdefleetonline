@@ -772,16 +772,28 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                     </div>
                   </div>
                 </div>
+                )}
                 
                 {/* Ações Principais */}
                 <div className="flex gap-3">
                   <Button 
                     onClick={verificarLogin} 
-                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 text-lg shadow-lg"
-                    disabled={atualizando}
+                    className={`flex-1 font-bold py-6 text-lg shadow-lg ${loginConfirmado 
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'}`}
+                    disabled={atualizando || loginConfirmado}
                   >
-                    <CheckCircle className="w-6 h-6 mr-2" />
-                    Confirmar Login
+                    {loginConfirmado ? (
+                      <>
+                        <CheckCircle className="w-6 h-6 mr-2" />
+                        Login Confirmado!
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-6 h-6 mr-2" />
+                        Confirmar Login
+                      </>
+                    )}
                   </Button>
                   <Button 
                     onClick={fecharBrowser} 
