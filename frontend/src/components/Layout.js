@@ -225,6 +225,7 @@ const Layout = ({ children, user, onLogout }) => {
         submenu: [
           { path: '/resumo-semanal', label: '📊 Resumo Semanal' },
           { path: '/dashboard-faturacao', label: '📈 Dashboard Faturação' },
+          { path: '/empresas-faturacao', label: '🏢 Empresas de Faturação' },
           { path: '/contabilidade', label: '📋 Contabilidade' },
           { path: '/gestao-extras', label: '💰 Extras/Dívidas' },
           { path: '/verificar-recibos', label: '✅ Verificar Recibos' },
