@@ -576,9 +576,10 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 - [ ] Continuar refatoração do FichaVeiculo.js (hooks criados, falta migrar componente)
 
 ### P2 - Medium Priority
-- [ ] Bug WhatsApp - Estado da conexão não atualiza na UI
 - [ ] Implementar autenticação real com provedores de cloud (Google Drive, Dropbox, etc.)
+  - O fluxo OAuth está pronto, apenas precisa das credenciais no ficheiro .env
 - [ ] Base de dados de produção - sincronizar com nova DB
+- [ ] Continuar refatoração do FichaVeiculo.js (hooks criados, falta migrar componente)
 
 ### P3 - Low Priority
 - [ ] Alertas Avançados
