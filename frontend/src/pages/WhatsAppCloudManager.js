@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { API } from '@/App';
 import { toast } from 'sonner';
@@ -39,6 +40,9 @@ import {
 } from 'lucide-react';
 
 const WhatsAppCloudManager = ({ user, onLogout }) => {
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'enviar';
+  
   const [loading, setLoading] = useState(true);
   const [apiStatus, setApiStatus] = useState(null);
   const [templates, setTemplates] = useState([]);
