@@ -984,93 +984,32 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
-          {/* Tab Armazenamento Cloud */}
-          <TabsContent value="terabox" className="space-y-4">
-            <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+          {/* Tab Relatórios */}
+          <TabsContent value="relatorios" className="space-y-4">
+            <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white">
               <CardHeader>
                 <CardTitle className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
-                    <HardDrive className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <FileText className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <span className="text-xl">Armazenamento Cloud</span>
-                    <p className="text-sm font-normal text-slate-500 mt-0.5">Configure onde os seus documentos são guardados</p>
+                    <span className="text-xl">Configuração de Relatórios</span>
+                    <p className="text-sm font-normal text-slate-500 mt-0.5">Configure os relatórios semanais dos motoristas</p>
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Opções de armazenamento */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-purple-400 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Server className="w-8 h-8 text-slate-600" />
-                      <div>
-                        <h4 className="font-semibold">Local</h4>
-                        <p className="text-xs text-slate-500">No servidor</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-600">Documentos ficam apenas no servidor da aplicação.</p>
-                  </div>
-                  
-                  <div className="p-4 rounded-xl border-2 border-purple-400 bg-purple-50 relative">
-                    <div className="absolute -top-2 right-3 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full">Recomendado</div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <HardDrive className="w-8 h-8 text-purple-600" />
-                      <div>
-                        <h4 className="font-semibold text-purple-800">Cloud</h4>
-                        <p className="text-xs text-purple-600">Apenas na cloud</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-purple-700">Documentos vão diretamente para o seu cloud.</p>
-                  </div>
-                  
-                  <div className="p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-purple-400 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-3 mb-2">
-                      <RefreshCw className="w-8 h-8 text-slate-600" />
-                      <div>
-                        <h4 className="font-semibold">Ambos</h4>
-                        <p className="text-xs text-slate-500">Backup</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-600">Documentos no servidor + backup na cloud.</p>
-                  </div>
-                </div>
-
-                {/* Providers disponíveis */}
-                <div className="space-y-3">
-                  <h4 className="font-medium text-slate-700">Serviços de Cloud Disponíveis</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="p-3 rounded-lg border border-slate-200 bg-white text-center hover:border-purple-400 transition-colors cursor-pointer">
-                      <span className="text-2xl mb-1 block">📦</span>
-                      <span className="text-sm font-medium">Terabox</span>
-                      <span className="text-xs text-slate-500 block">1TB grátis</span>
-                    </div>
-                    <div className="p-3 rounded-lg border border-slate-200 bg-white text-center hover:border-blue-400 transition-colors cursor-pointer">
-                      <span className="text-2xl mb-1 block">🔵</span>
-                      <span className="text-sm font-medium">Google Drive</span>
-                      <span className="text-xs text-slate-500 block">15GB grátis</span>
-                    </div>
-                    <div className="p-3 rounded-lg border border-slate-200 bg-white text-center hover:border-blue-600 transition-colors cursor-pointer">
-                      <span className="text-2xl mb-1 block">☁️</span>
-                      <span className="text-sm font-medium">OneDrive</span>
-                      <span className="text-xs text-slate-500 block">5GB grátis</span>
-                    </div>
-                    <div className="p-3 rounded-lg border border-slate-200 bg-white text-center hover:border-blue-500 transition-colors cursor-pointer">
-                      <span className="text-2xl mb-1 block">📁</span>
-                      <span className="text-sm font-medium">Dropbox</span>
-                      <span className="text-xs text-slate-500 block">2GB grátis</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Botão para configurar */}
+                <p className="text-slate-600">
+                  Personalize os campos e o formato dos relatórios semanais gerados para os motoristas.
+                </p>
+                
                 <div className="flex justify-center pt-4">
                   <Button 
-                    onClick={() => navigate('/armazenamento')}
-                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-6 text-base shadow-lg"
+                    onClick={() => navigate('/configuracao-relatorios')}
+                    className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-8 py-6 text-base shadow-lg"
                   >
-                    <HardDrive className="w-5 h-5 mr-2" />
-                    Configurar Armazenamento Cloud
+                    <FileText className="w-5 h-5 mr-2" />
+                    Configurar Relatórios
                     <ArrowLeft className="w-5 h-5 ml-2 rotate-180" />
                   </Button>
                 </div>
