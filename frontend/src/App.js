@@ -401,6 +401,9 @@ function App() {
           {/* Redirect old routes to unified system */}
           <Route path="/lista-contratos" element={<Navigate to="/contratos" replace />} />
           <Route path="/templates-contratos" element={<Navigate to="/contratos" replace />} />
+          {/* Templates de mensagens e alertas para parceiro */}
+          <Route path="/templates-mensagens" element={<Navigate to="/whatsapp-cloud?tab=templates" replace />} />
+          <Route path="/alertas-documentos" element={<Navigate to="/gestao-documentos?tab=alertas" replace />} />
           <Route
             path="/criar-contrato"
             element={
