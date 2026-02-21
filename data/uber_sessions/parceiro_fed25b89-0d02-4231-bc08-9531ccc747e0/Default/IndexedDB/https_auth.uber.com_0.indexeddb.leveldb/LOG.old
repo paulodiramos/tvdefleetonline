@@ -1,7 +1,3 @@
-2026/02/21-19:54:34.354 26cd Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/02/21-19:54:34.354 26cd Recovering log #3
-2026/02/21-19:54:34.354 26cd Reusing old log /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/000003.log 
-2026/02/21-19:54:37.041 26d1 Level-0 table #5: started
-2026/02/21-19:54:37.043 26d1 Level-0 table #5: 4641 bytes OK
-2026/02/21-19:54:37.046 26d1 Delete type=0 #3
-2026/02/21-19:54:37.046 26d1 Manual compaction at level-0 from (begin) .. (end); will stop at (end)
+2026/02/21-19:56:08.585 26cd Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/02/21-19:56:08.585 26cd Recovering log #4
+2026/02/21-19:56:08.585 26cd Reusing old log /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/000004.log 
