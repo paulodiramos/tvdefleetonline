@@ -530,27 +530,15 @@ const Layout = ({ children, user, onLogout }) => {
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
-                          <MessageSquare className="w-3 h-3" />
-                          <span>Comunicações</span>
-                        </div>
-                      </div>
-                      <DropdownMenuItem asChild>
-                        <Link to="/templates-mensagens" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-templates-mensagens">
-                          <span>📝 Templates de Mensagens</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/alertas-documentos" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-alertas-documentos">
-                          <span>🔔 Alertas de Documentos</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <div className="px-2 py-1.5">
-                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
                           <Settings className="w-3 h-3" />
                           <span>Configurações</span>
                         </div>
                       </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/armazenamento" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-armazenamento">
+                          <span>☁️ Armazenamento Cloud</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/configuracoes-parceiro" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>📧 Email & Comunicações</span>
@@ -597,6 +585,7 @@ const Layout = ({ children, user, onLogout }) => {
                       </DropdownMenuItem>
                     </>
                   )}
+
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
