@@ -204,7 +204,7 @@ class TestCloudConnection:
                 "password": "testpassword"
             }
         )
-        assert response.status_code == 400
+        assert response.status_code in [400, 422]  # 422 for FastAPI validation error
         data = response.json()
         assert "detail" in data
         print(f"Expected error for invalid provider: {data['detail']}")
