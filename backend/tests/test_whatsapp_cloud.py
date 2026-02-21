@@ -35,8 +35,9 @@ class TestAuth:
         )
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "Token not in response"
-        return data["token"]
+        token = data.get("access_token") or data.get("token")
+        assert token, "Token not in response"
+        return token
     
     @pytest.fixture(scope="class")
     def parceiro_token(self):
@@ -47,8 +48,9 @@ class TestAuth:
         )
         assert response.status_code == 200, f"Parceiro login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "Token not in response"
-        return data["token"]
+        token = data.get("access_token") or data.get("token")
+        assert token, "Token not in response"
+        return token
 
     def test_admin_login_success(self, admin_token):
         """Test admin login returns valid token"""
