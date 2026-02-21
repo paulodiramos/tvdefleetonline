@@ -34,6 +34,32 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
   const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [processingBulk, setProcessingBulk] = useState(false);
+  const [sendingWhatsApp, setSendingWhatsApp] = useState({});
+
+  const enviarPorWhatsApp = async (relatorioId) => {
+    setSendingWhatsApp(prev => ({ ...prev, [relatorioId]: true }));
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/relatorios/semanal/${relatorioId}/enviar-whatsapp`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        toast.success('Relatório enviado por WhatsApp!');
+        fetchRelatorios();
+      } else {
+        toast.error(response.data.message || 'Erro ao enviar');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar WhatsApp:', error);
+      const msg = error.response?.data?.detail || 'Erro ao enviar por WhatsApp';
+      toast.error(msg);
+    } finally {
+      setSendingWhatsApp(prev => ({ ...prev, [relatorioId]: false }));
+    }
+  };
 
   useEffect(() => {
     fetchRelatorios();
