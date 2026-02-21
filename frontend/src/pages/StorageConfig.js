@@ -224,13 +224,14 @@ const StorageConfig = ({ user, onLogout }) => {
         body: JSON.stringify({
           provider: config.cloud_provider,
           email: connectForm.email,
-          password: connectForm.password
+          password: connectForm.password,
+          api_key: connectForm.api_key
         })
       });
       
       if (response.ok) {
         toast.success('Conta conectada com sucesso!');
-        setConnectForm({ email: '', password: '' });
+        setConnectForm({ email: '', password: '', api_key: '' });
         fetchProviders();
         fetchConfig(selectedParceiro);
       } else {
@@ -241,6 +242,31 @@ const StorageConfig = ({ user, onLogout }) => {
       toast.error('Erro ao conectar serviço');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // OAuth connect - redirects to provider's auth page
+  const handleOAuthConnect = async (providerId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/storage-config/oauth/${providerId}/url`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.auth_url) {
+          // Redirect to OAuth provider
+          window.location.href = data.auth_url;
+        } else {
+          toast.error('Erro: URL de autorização não recebida');
+        }
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Erro ao iniciar autenticação. Verifique se o serviço está configurado.');
+      }
+    } catch (error) {
+      toast.error('Erro ao conectar serviço');
     }
   };
 
