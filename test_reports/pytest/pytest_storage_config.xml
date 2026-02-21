@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="16" skipped="0" tests="17" time="3.387" timestamp="2026-02-21T00:31:31.487331+00:00" hostname="agent-env-309c2e5a-f20f-45ad-b9d3-f62fe38587db"><testcase classname="backend.tests.test_storage_config.TestStorageConfigGet" name="test_get_config_as_admin" time="0.729"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:60: in test_get_config_as_admin
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestStorageConfigGet" name="test_get_config_as_parceiro" time="0.448"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:76: in test_get_config_as_parceiro
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestStorageConfigGet" name="test_get_config_without_auth" time="0.108" /><testcase classname="backend.tests.test_storage_config.TestStorageProviders" name="test_list_providers" time="0.160"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:100: in test_list_providers
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestStorageProviders" name="test_list_providers_as_parceiro" time="0.129"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:128: in test_list_providers_as_parceiro
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestStorageConfigUpdate" name="test_update_config_to_local" time="0.153"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:154: in test_update_config_to_local
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestStorageConfigUpdate" name="test_update_config_cloud_requires_provider" time="0.104"><failure message="assert 401 == 400&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:170: in test_update_config_cloud_requires_provider
+    assert response.status_code == 400
+E   assert 401 == 400
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestCloudConnection" name="test_connect_provider_without_credentials" time="0.151"><failure message="assert 401 == 400&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:189: in test_connect_provider_without_credentials
+    assert response.status_code == 400
+E   assert 401 == 400
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestCloudConnection" name="test_connect_invalid_provider" time="0.169"><failure message="assert 401 == 400&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:205: in test_connect_invalid_provider
+    assert response.status_code == 400
+E   assert 401 == 400
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestCloudConnection" name="test_connect_terabox_with_credentials" time="0.104"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:222: in test_connect_terabox_with_credentials
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestAdminAllConfigs" name="test_get_all_configs_as_admin" time="0.120"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:239: in test_get_all_configs_as_admin
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestAdminAllConfigs" name="test_get_all_configs_as_parceiro_forbidden" time="0.117"><failure message="assert 401 == 403&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:261: in test_get_all_configs_as_parceiro_forbidden
+    assert response.status_code == 403
+E   assert 401 == 403
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestSyncStatus" name="test_get_sync_status" time="0.127"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:276: in test_get_sync_status
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestSyncStatus" name="test_trigger_sync_local_mode_fails" time="0.265"><failure message="assert 401 == 400&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:296: in test_trigger_sync_local_mode_fails
+    assert response.status_code == 400
+E   assert 401 == 400
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestDisconnectProvider" name="test_disconnect_provider_not_found" time="0.112"><failure message="assert 401 in [400, 404]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:312: in test_disconnect_provider_not_found
+    assert response.status_code in [400, 404]
+E   assert 401 in [400, 404]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestDownloadEndpoints" name="test_download_no_provider_configured" time="0.120"><failure message="assert 401 in [400, 500]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:327: in test_download_no_provider_configured
+    assert response.status_code in [400, 500]
+E   assert 401 in [400, 500]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_storage_config.TestDownloadEndpoints" name="test_list_cloud_files_no_provider" time="0.119"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_storage_config.py:336: in test_list_cloud_files_no_provider
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase></testsuite></testsuites>
