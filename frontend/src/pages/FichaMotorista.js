@@ -1000,14 +1000,12 @@ const FichaMotorista = ({ user }) => {
         )}
       </div>
       {documentos[tipoDocumento] && (
-        <a 
-          href={`${process.env.REACT_APP_BACKEND_URL}/api/motoristas/${motoristaId}/documento/${tipoDocumento}/download`} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+        <button 
+          onClick={() => handleDownloadDocumento(motoristaId, tipoDocumento, motorista?.name)}
+          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline cursor-pointer"
         >
           <FileText className="w-4 h-4" /> Ver PDF
-        </a>
+        </button>
       )}
     </div>
   );
