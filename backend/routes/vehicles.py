@@ -603,7 +603,7 @@ async def upload_vehicle_photo_alt(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload vehicle photo (alternative endpoint, max 3)"""
+    """Upload vehicle photo (alternative endpoint, max 3) - with cloud storage"""
     user_role = current_user["role"]
     allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]
     if user_role not in allowed_roles:
@@ -622,19 +622,25 @@ async def upload_vehicle_photo_alt(
     if len(current_photos) >= 3:
         raise HTTPException(status_code=400, detail="Maximum 3 photos allowed")
     
-    photos_dir = UPLOAD_DIR / "vehicle_photos_info"
-    photos_dir.mkdir(exist_ok=True)
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
     
-    file_id = f"photo_{vehicle_id}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, photos_dir, file_id)
-    photo_path = file_info.get("pdf_path") or file_info.get("original_path")
+    # Use FileUploadHandler for cloud integration
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="foto_veiculo",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula")
+    )
+    
+    photo_url = upload_result.get("cloud_url") or upload_result.get("local_url")
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$push": {"fotos_veiculo": photo_path}}
+        {"$push": {"fotos_veiculo": photo_url}}
     )
     
-    return {"message": "Photo uploaded successfully", "url": photo_path}
+    return {"message": "Photo uploaded successfully", "url": photo_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.delete("/{vehicle_id}/fotos/{foto_index}")
