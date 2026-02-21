@@ -1,0 +1,61 @@
+{
+  "summary": "TVDEFleet Regression Test Complete - All main pages and APIs working correctly before deploy. Tested authentication, dashboard, motoristas, vehicles, comissões, storage config, WhatsApp, mensagens, financeiro and all key features.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/storage-config/oauth/google_drive/url", "issue": "Returns 500/520 - Expected behavior when OAuth credentials not configured"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard Faturação", "issues": ["Console warnings about chart dimensions - minor issue, does not affect functionality"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_tvdefleet_regression.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FichaVeiculo component has excessive debug logging (🔍 FichaVeiculo - User: ...) - consider removing for production deploy",
+    "Cloud Storage OAuth credentials (GOOGLE_CLIENT_ID, DROPBOX_APP_KEY, MICROSOFT_CLIENT_ID) are empty in .env - this is expected as MOCKED"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_tvdefleet_regression.py"
+  ],
+  "success_rate": {
+    "backend": "100% (22/22 tests passed)",
+    "frontend": "100% - All pages load correctly"
+  },
+  "test_credentials": {
+    "parceiro": "geral@zmbusines.com / Admin123!",
+    "admin": "admin@tvdefleet.com / Admin123!"
+  },
+  "seed_data_creation": "None - used existing data",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Complete regression test performed. All 13 test areas verified: 1) Auth with admin and parceiro, 2) Dashboard loads correctly, 3) Motoristas list with 10 drivers, 4) Vehicles list with 16 vehicles, 5) Comissões Dashboard with metrics cards and tabs (Evolução, Por Motorista, Ranking), 6) Config Comissões page, 7) Configuração Relatórios with NIF checkbox, 8) Armazenamento with Local/Cloud/Ambos options and OAuth providers (Google Drive, Dropbox, OneDrive), 9) Meu Plano showing subscription details and extra modules, 10) WhatsApp with connect button and QR code, 11) Mensagens page, 12) Financeiro menu dropdown with options, 13) Ficha Motorista and Ficha Veiculo detail pages. OAuth and WhatsApp connection are MOCKED (credentials not configured).",
+  "mocked_apis": {
+    "Cloud Storage OAuth": "Google Drive, Dropbox, OneDrive OAuth credentials are blank - button shows 'não configurado' error as expected",
+    "WhatsApp": "QR code displays correctly, requires real phone scan to connect - functional but not connected"
+  },
+  "pages_tested": {
+    "login": "✅ Working",
+    "dashboard": "✅ Working", 
+    "motoristas": "✅ Working - 10 motoristas listed",
+    "vehicles": "✅ Working - 16 vehicles listed",
+    "comissoes": "✅ Working - Dashboard with cards, charts, tabs",
+    "config_comissoes": "✅ Working",
+    "configuracao_relatorios": "✅ Working - NIF checkbox present",
+    "armazenamento": "✅ Working - Local/Cloud/Ambos + OAuth providers",
+    "meu_plano": "✅ Working - Shows plan details and extra modules",
+    "whatsapp": "✅ Working - QR code displays",
+    "mensagens": "✅ Working",
+    "financeiro": "✅ Working - Menu with multiple options",
+    "dashboard_faturacao": "✅ Working",
+    "ficha_motorista": "✅ Working",
+    "ficha_veiculo": "✅ Working"
+  }
+}
