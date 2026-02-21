@@ -427,6 +427,7 @@ async def iniciar_sessao_design(
         "url_base": plataforma["url_base"],
         "url_inicial": url_inicial or plataforma["url_base"],
         "semana_offset": semana_offset,
+        "tipo_design": tipo_design,
         "usando_sessao_parceiro": usar_sessao_parceiro is not None,
         "usando_credenciais_teste": credenciais_teste is not None,
         "parceiro_id": parceiro_id
