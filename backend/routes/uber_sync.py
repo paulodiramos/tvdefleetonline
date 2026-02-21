@@ -330,10 +330,22 @@ async def sincronizar_uber(
             motoristas_importados = resultado.get("motoristas", [])
             
             # Calcular período baseado na semana selecionada
-            hoje = datetime.now()
-            dias_atras = data.semana_index * 7
-            periodo_fim = (hoje - timedelta(days=dias_atras)).strftime('%Y-%m-%d')
-            periodo_inicio = (hoje - timedelta(days=dias_atras + 7)).strftime('%Y-%m-%d')
+            # A Uber usa semanas de pagamento de Segunda (dia 0) a Domingo (dia 6)
+            # semana_index=0 é a semana atual, semana_index=1 é a semana passada, etc.
+            hoje = datetime.now().date()
+            
+            # Encontrar a última segunda-feira (início da semana atual)
+            dias_desde_segunda = hoje.weekday()  # 0=segunda, 6=domingo
+            segunda_atual = hoje - timedelta(days=dias_desde_segunda)
+            
+            # Retroceder N semanas conforme semana_index
+            segunda_da_semana = segunda_atual - timedelta(weeks=data.semana_index)
+            domingo_da_semana = segunda_da_semana + timedelta(days=6)
+            
+            periodo_inicio = segunda_da_semana.strftime('%Y-%m-%d')
+            periodo_fim = domingo_da_semana.strftime('%Y-%m-%d')
+            
+            logger.info(f"Período calculado: {periodo_inicio} a {periodo_fim} (semana_index={data.semana_index})")
             
             # Guardar cada motorista em ganhos_uber
             for mot in motoristas_importados:
