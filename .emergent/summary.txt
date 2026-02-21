@@ -4,180 +4,198 @@ O utilizador solicitou o deployment da sua aplicação de gestão de frotas para
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-A aplicação full-stack (React/FastAPI/MongoDB) está implementada no VPS do utilizador () utilizando Docker Compose. A infraestrutura consiste em contentores para o frontend, backend, MongoDB (versão 4.4, compatível com o CPU do VPS) e um proxy Nginx. No entanto, a aplicação está num estado não funcional devido a um ciclo de problemas de login, dependências do backend e configuração do Docker. A base de dados foi restaurada, mas as tentativas de redefinir as passwords para  têm sido inconsistentes. O agente preparou um conjunto final de ficheiros (um novo dump da base de dados com as passwords corretas, scripts de restauro e ficheiros de configuração) para tentar estabilizar o ambiente.
+A aplicação full-stack (React/FastAPI/MongoDB) está implementada no VPS do utilizador. O agente anterior resolveu o problema inicial de login e focou-se na correção da funcionalidade de RPA (Robotic Process Automation) para o login na plataforma Uber, que é uma funcionalidade crítica para o utilizador. Foram feitas várias correções na interface do utilizador, incluindo uma remodelação completa do menu de parceiros e da página de login remoto da Uber para melhorar a usabilidade. A persistência da sessão da Uber foi um problema recorrente; o agente implementou uma solução para guardar as sessões de login num diretório persistente e sincronizar as credenciais entre diferentes secções da aplicação. No entanto, a funcionalidade principal de extração de relatórios semanais da Uber ainda está a falhar.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a finalizar um pacote de correção completo para resolver os problemas de login persistentes no VPS. Isto incluiu:
-    1.  Gerar um novo hash de password para  que seja compatível com a versão do  no ambiente do VPS.
-    2.  Criar um novo dump da base de dados () com todas as passwords de utilizador já atualizadas.
-    3.  Criar um script  para automatizar a restauração da base de dados no VPS.
-    4.  Criar um  com instruções.
-    O objetivo era que o utilizador fizesse  e executasse o novo script para ter um ambiente limpo e funcional.
+-   **Last item agent was working:** O agente estava a diagnosticar porque a sincronização semanal da Uber falhava para a semana 6 (1 de fevereiro - 8 de fevereiro). O agente identificou que o problema estava na lógica de cálculo de datas no backend, que gerava um intervalo de datas incorreto (2 de fevereiro - 9 de fevereiro), fazendo com que o scraper não encontrasse o relatório correspondente no site da Uber.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Manual testing by curl/python -c. O próximo agente deve guiar o utilizador para executar os comandos e verificar o login.
--   **User Testing Done:** N (O utilizador estava a testar, mas encontrava erros continuamente).
+-   **Which testing method agent to use?** Backend testing agent. O agente deve corrigir a lógica de cálculo de datas em  e depois testar o endpoint de sincronização () para confirmar que o relatório semanal é agora encontrado e processado corretamente.
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Login falha consistentemente no VPS (P0)
--   Issue 2: Erro de RPA/Playwright devido a dependências em falta no contentor do backend (P1)
+-   Issue 1: O cálculo de datas para a sincronização do relatório semanal da Uber está incorreto (P0)
+-   Issue 2: A sessão da Uber é perdida durante a sincronização automática (P0)
 -   Issue 3: A base de dados é apagada ao executar  (P2)
 
 **Issues Detail:**
--   **Issue 1: Login falha consistentemente no VPS (P0)**
-    -   **Attempted fixes:**
-        -   Várias tentativas de atualizar as passwords para  usando scripts Python e comandos , que falharam ou não produziram o resultado esperado (). A causa provável é uma incompatibilidade entre o hash gerado e a lógica de verificação da aplicação ou a versão do .
-        -   Restauração da base de dados múltiplas vezes, pois era encontrada vazia.
-        -   O agente preparou um novo dump com as passwords supostamente corretas e um script de restauro.
+-   **Issue 1: O cálculo de datas para a sincronização do relatório semanal da Uber está incorreto (P0)**
+    -   **Attempted fixes:** O agente analisou os logs e o código, identificando a função  em  como a origem do erro. A correção ainda não foi implementada.
     -   **Next debug checklist:**
-        1.  Confirmar que o utilizador executou o último comando sugerido: .
-        2.  Verificar o output do script de restauro.
-        3.  Testar o login novamente em  com as credenciais  / .
-        4.  Se falhar, verificar os logs do backend: .
-        5.  Verificar o hash da password diretamente na base de dados:  e comparar com o hash gerado pelo script no .
-    -   **Why fix this issue and what will be achieved with the fix?** É o bloqueador principal. Sem login, a aplicação no VPS é inútil.
+        1.  Editar .
+        2.  Ajustar a lógica na função  para corresponder ao período dos relatórios da Uber (ex: de segunda a domingo, ou dia 1 a dia 8).
+        3.  Reiniciar o backend e testar a sincronização novamente para a semana 6.
+        4.  Verificar os logs do backend para confirmar que o scraper encontra e processa o relatório correto.
+    -   **Why fix this issue and what will be achieved with the fix?** Esta é a funcionalidade principal do RPA e está a bloquear a extração automática de dados de rendimentos.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Backend.
     -   **Blocked on other issue:** Não.
 
--   **Issue 2: Erro de RPA/Playwright devido a dependências em falta no contentor do backend (P1)**
-    -   **Attempted fixes:** O  foi atualizado para instalar  e outras dependências do Playwright. A construção do Docker passou após várias tentativas de resolver conflitos de dependências Python.
-    -   **Next debug checklist:** Assim que o login funcionar, pedir ao utilizador para testar a funcionalidade de Uber login e verificar os logs do backend () se ocorrer algum erro.
-    -   **Why fix this issue and what will be achieved with the fix?** Restaurará a funcionalidade de automação RPA.
-    -   **Status:** NOT STARTED (A correção foi implementada, mas não testada pelo utilizador).
+-   **Issue 2: A sessão da Uber é perdida durante a sincronização automática (P0)**
+    -   **Attempted fixes:**
+        -   O  foi modificado para usar um contexto de browser persistente () guardado em  em vez de ficheiros temporários.
+        -   Foi implementada a sincronização de credenciais e de estado da sessão na base de dados (coleção ).
+        -   Foi corrigido um bug de importação de  que causava falhas na verificação da sessão.
+    -   **Next debug checklist:**
+        1.  Após resolver o Issue 1 (cálculo de datas), executar novamente a sincronização completa.
+        2.  Monitorizar os logs do backend em busca de erros de sessão (, , etc.).
+        3.  Confirmar que o  está a reutilizar a sessão do diretório persistente sem necessidade de novo login.
+    -   **Why fix this issue and what will be achieved with the fix?** A persistência da sessão é fundamental para que o RPA funcione de forma autónoma, sem intervenção manual do utilizador.
+    -   **Status:** IN PROGRESS (a correção foi implementada, mas a sua eficácia foi mascarada pelo Issue 1).
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Backend.
-    -   **Blocked on other issue:** Issue 1: Login falha consistentemente no VPS.
+    -   **Blocked on other issue:** Issue 1.
 
 -   **Issue 3: A base de dados é apagada ao executar  (P2)**
-    -   **Attempted fixes:** Nenhuma tentativa direta, mas o agente observou que a base de dados aparecia vazia (0 utilizadores) após reinicializações, indicando um problema de persistência do volume do MongoDB. O  define um volume nomeado (), que deveria ser persistente.
+    -   **Attempted fixes:** Nenhuma nesta sessão. Este problema foi herdado do fork anterior.
     -   **Next debug checklist:**
-        1.  Verificar a configuração dos volumes no .
-        2.  Confirmar que o Docker está a gerir o volume corretamente ().
-        3.  Garantir que os dados do MongoDB estão a ser escritos no diretório correto dentro do contentor ().
-    -   **Why fix this issue and what will be achieved with the fix?** Garante que os dados da aplicação não são perdidos durante reinicializações ou atualizações dos contentores.
+        1.  Verificar a configuração do volume  no ficheiro .
+        2.  Executar  para confirmar que o volume nomeado está a ser criado e gerido pelo Docker.
+        3.  Realizar um ciclo de teste: , adicionar dados à BD, executar , executar  novamente e verificar se os dados persistem.
+    -   **Why fix this issue and what will be achieved with the fix?** Garante a integridade e durabilidade dos dados da aplicação, evitando perdas acidentais durante manutenções ou reinicializações.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Backend.
     -   **Blocked on other issue:** Não.
 
 **In progress Task List**:
--   **Task 1: Estabilizar o Ambiente de Deployment no VPS (P0)**
-    -   **Where to resume:** Verificar se o utilizador executou a última sequência de comandos para fazer  e correr o script . O objetivo é conseguir um estado estável com a aplicação a funcionar e o login acessível.
-    -   **What will be achieved with this?** A aplicação totalmente funcional no VPS do utilizador, concluindo a migração e o deployment.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on something:** N/A
+Nenhuma. As tarefas de UI foram concluídas nesta sessão.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) Criar um sistema de backup/restauração para o Admin poder exportar/importar dados para outros servidores.
-    *   (P1) Corrigir a funcionalidade de importação para RPA.
+    *   (P1) Criar um sistema de backup/restauração para o Admin poder exportar/importar dados.
     *   (P1) Corrigir a funcionalidade de importação para a Via Verde.
     *   (P1) Implementar a criação de backups para todos os módulos do sistema.
     *   (P2) Configurar o domínio  e instalar SSL (HTTPS) com Let's Encrypt.
 *   **Future Tasks:**
     *   Implementar a UI para as abas de Alertas, Templates e Histórico na página .
-    *   Ativar a integração com a WhatsApp Cloud API.
-    *   Remover a integração antiga com .
+    *   Ativar a integração com a WhatsApp Cloud API e remover a antiga integração .
     *   Refatorar componentes monolíticos como .
     *   Criar um sistema para arquivar dados antigos da base de dados.
     *   Implementar um sistema de relógio de ponto na app móvel.
 
 **Completed work in this session**
--   **Feature: Migração da Base de Dados para VPS (CONCLUÍDO):** O ficheiro de backup da base de dados foi transferido com sucesso para o VPS e restaurado várias vezes.
--   **Task: Estabilização do Backend Docker Build (CONCLUÍDO):** Resolvidos múltiplos conflitos de dependências Python, criando um ficheiro  dedicado. O  foi modificado para instalar as dependências do Playwright e outros módulos em falta (, , ).
--   **Task: Correção de Configuração do Docker Compose (CONCLUÍDO):** Corrigidos os caminhos de contexto, a versão do MongoDB (para ) e a configuração do Nginx.
--   **Task: Criação de Scripts de Suporte (CONCLUÍDO):** Criados === Restaurando base de dados TVDEFleet ===
-=== Base de dados restaurada com sucesso! ===
-=== Password de todos os utilizadores: 123456 ===, ,  e um novo dump da base de dados () com passwords redefinidas.
-
-**Earlier issues found/mentioned but not fixed**
--   Os novos pedidos do utilizador sobre importação de RPA, Via Verde e backups de módulos foram registados mas não implementados, pois a prioridade era estabilizar o ambiente.
-
-**Known issue recurrence from previous fork**
--   **Conflitos de Dependência:** A incompatibilidade do CPU antigo do VPS continua a causar problemas, exigindo a fixação de versões mais antigas de pacotes como ,  e .
--   **Persistência de Dados:** A base de dados parece estar a ser perdida, um problema recorrente que sugere um erro na configuração do volume do Docker.
--   **Inconsistência no Hashing de Passwords:** O erro  indica uma possível incompatibilidade entre as versões das bibliotecas  e , causando falhas na atualização de passwords.
+-   **Fix de RPA/Playwright:** Corrigida a lógica de introdução do código SMS na página de login da Uber, que agora preenche os 4 campos de dígito separados corretamente.
+-   **Redesign da UI/UX:**
+    -   Remodelada a interface de login remoto da Uber () com um layout mais limpo, botões de controlo (setas, enter) e feedback visual claro para o estado do login (Login Confirmado).
+    -   Reorganizado extensivamente o menu do parceiro () com base em vários pedidos do utilizador, movendo, adicionando e removendo itens.
+    -   Centralizadas as páginas de Relatórios e Armazenamento Cloud como abas dentro da página Configurações ().
+-   **Fix de Persistência da Sessão:**
+    -   Modificado o  para usar um diretório de sessão persistente (), resolvendo uma das principais causas de perda de sessão.
+    -   Sincronizada a gravação e leitura de credenciais entre a página de login da Uber e a secção de Plataformas nas configurações.
+-   **Estabilização do Ambiente:**
+    -   Implementado um script de arranque no  que executa Downloading Chromium 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-linux-arm64.zip
+|                                                                                |   0% of 175.9 MiB
+|■■■■■■■■                                                                        |  10% of 175.9 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 175.9 MiB
+Chromium 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium-1194
+Downloading Chromium Headless Shell 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-headless-shell-linux-arm64.zip
+|                                                                                |   0% of 106.1 MiB
+|■■■■■■■■                                                                        |  10% of 106.1 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 106.1 MiB
+Chromium Headless Shell 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium_headless_shell-1194
+Downloading Firefox 142.0.1 (playwright build v1495) from https://cdn.playwright.dev/dbazure/download/playwright/builds/firefox/1495/firefox-debian-12-arm64.zip
+|                                                                                |   0% of 88 MiB
+|■■■■■■■■                                                                        |  10% of 88 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
+Firefox 142.0.1 (playwright build v1495) downloaded to /pw-browsers/firefox-1495
+Downloading Webkit 26.0 (playwright build v2215) from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2215/webkit-debian-12-arm64.zip
+|                                                                                |   0% of 88 MiB
+|■■■■■■■■                                                                        |  10% of 88 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
+Webkit 26.0 (playwright build v2215) downloaded to /pw-browsers/webkit-2215 automaticamente para evitar erros de browsers em falta.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Docker & Docker Compose:** Usados para orquestrar a aplicação no VPS. A depuração envolveu a reconstrução de imagens (), gestão de volumes e verificação de logs.
--   **Dependency Hell (Python):** Uma grande parte do tempo foi gasta a resolver conflitos entre pacotes Python, especialmente relacionados com as bibliotecas do Google e versões compatíveis com o CPU antigo.
--   **MongoDB:** Utilização de  e  para backup/restauração. A persistência de dados através de volumes nomeados do Docker é crucial mas parece estar a falhar.
--   **Nginx Reverse Proxy:** Configurado para encaminhar o tráfego da porta 80 para os serviços de frontend (porta 3000) e backend (porta 8001), mas foi desativado temporariamente para depuração. A última versão usa uma configuração sem SSL.
--   **Password Hashing (bcrypt):** As tentativas de redefinir passwords falharam devido a problemas com a biblioteca , exigindo a geração de um hash estático e a sua inserção direta na DB.
+-   **Playwright RPA:** Usado para a automação da extração de dados da Uber. A sessão envolveu depuração de interações complexas (CAPTCHA, SMS) e, crucialmente, a implementação de uma sessão de login persistente.
+-   **Sessão Persistente:** A solução envolveu o uso de  para guardar os cookies e o estado do browser num diretório no disco (), permitindo que o scraper reutilize o login em execuções futuras.
+-   **Sincronização de Dados (Backend):** Foi necessário modificar múltiplos endpoints para garantir que as credenciais guardadas numa parte da aplicação (ex: página de login da Uber) fossem refletidas noutra (ex: tab de plataformas), atualizando múltiplas coleções na base de dados (, ).
+-   **Design Iterativo de UI (Frontend):** Grande parte da sessão foi dedicada a responder ao feedback do utilizador e a fazer alterações incrementais na interface (principalmente em  e ).
 
 **key DB schema**
--   **users:** O foco principal foi o campo , que está a causar os problemas de login. A estrutura da coleção contém  e .
+-   **users:** { _id, email, password, parceiro_id }
+-   **parceiros:** { _id, ..., credenciais_plataformas: { uber: { email, password } } }
+-   **credenciais_uber:** { _id, parceiro_id, email, password, phone } (Agora sincronizado com )
+-   **uber_sessions:** { _id, parceiro_id, status, expiry_date } (Regista metadados sobre sessões de login ativas)
 
 **All files of reference**
--   : Modificado para usar , volumes nomeados e uma configuração Nginx sem SSL.
--   : Modificado extensivamente para usar  e instalar dependências do Playwright.
--   : Um novo ficheiro criado para ter uma lista de dependências estável para o VPS.
--   === Restaurando base de dados TVDEFleet ===
-=== Base de dados restaurada com sucesso! ===
-=== Password de todos os utilizadores: 123456 ===: Novo script para automatizar a restauração da base de dados e a atualização de passwords.
--   : Novo dump da base de dados.
--   : Novas instruções de deployment.
-
-**Areas that need refactoring**:
--   A gestão de dependências Python precisa de ser consolidada. Ter  e  é confuso.
--   A configuração do  deve ser revista para garantir a persistência correta do volume do MongoDB.
--   O código para redefinir passwords deve ser robusto e não depender de hashes estáticos.
-
-**key api endpoints**
--   : O endpoint crítico que está a falhar com .
+-   
+-   
+-   
+-   
+-   
+-   
+-   
+-   
+-    (Relevante para o problema de persistência da BD)
 
 **Critical Info for New Agent**
--   **Prioridade Absoluta:** NÃO continuar a desenvolver novas funcionalidades. O foco total deve ser em estabilizar o ambiente no VPS e resolver o problema de login.
--   **Verificar o Último Passo:** O passo mais importante é confirmar se o utilizador executou com sucesso o  e o script === Restaurando base de dados TVDEFleet ===
-=== Base de dados restaurada com sucesso! ===
-=== Password de todos os utilizadores: 123456 === da última sessão. A solução para o login pode já estar no repositório.
--   **Não Confie, Verifique:** Após cada alteração, verifique os logs (), o estado dos contentores () e o conteúdo da base de dados (). Não assuma que os comandos funcionaram.
--   **Problema de Persistência:** Esteja ciente de que a base de dados pode ser apagada. Antes de qualquer depuração de login, confirme sempre que a base de dados não está vazia com .
--   **Comunicação com o Utilizador:** O utilizador está frustrado. Seja direto, forneça comandos claros e explique o que cada um faz. Peça sempre o output completo dos comandos.
-
-**documents and test reports created in this job**
--   
--   === Restaurando base de dados TVDEFleet ===
-=== Base de dados restaurada com sucesso! ===
-=== Password de todos os utilizadores: 123456 ===
--   
+-   **Foco Principal:** A prioridade máxima é resolver o , o bug no cálculo de datas em . A resolução deste problema provavelmente desbloqueará a verificação final da persistência da sessão ().
+-   **Sessão da Uber:** A lógica de sessão é frágil e distribuída por vários locais: o login interativo, o armazenamento em disco (), o registo na BD () e a reutilização pelo . Se os problemas de sessão persistirem após a correção da data, reveja este fluxo completo.
+-   **Interação com o Utilizador:** O utilizador é muito participativo e fornece feedback visual e específico sobre a UI. Esteja preparado para ciclos rápidos de alteração-verificação da interface.
+-   **Problemas de Infraestrutura:** Não se esqueça do  sobre a persistência da base de dados do Docker. Embora não seja um bloqueador imediato para a funcionalidade atual, é um risco crítico para a estabilidade da aplicação a longo prazo.
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. : O utilizador envia uma imagem mostrando que o login falhou com Invalid credentials. (PENDENTE)
-9.  : O utilizador relata que o login continua a falhar. (PENDENTE)
-8.  : O utilizador pergunta como instalar o SSL. (PENDENTE)
-7.  : O utilizador solicita a consolidação de todas as correções no Git. (EM PROGRESSO)
-6.  : O utilizador define a password padrão. (EM PROGRESSO)
-5.  : O utilizador pergunta sobre o estado das novas funcionalidades de backup. (PENDENTE)
-4.  : O utilizador reporta que a aplicação não consegue conectar-se à base de dados. (RESOLVIDO TEMPORARIAMENTE)
-3.  : O utilizador clarifica o requisito da funcionalidade de backup. (PENDENTE)
-2.  : O utilizador reporta novos problemas e solicita novas funcionalidades de backup/import. (PENDENTE)
-1.  : O utilizador pede para consolidar uma versão funcional no Git, incluindo o dump da base de dados com as passwords corretas. (EM PROGRESSO)
+10. **Pedido:** O utilizador reporta que a sincronização semanal da Uber não encontra o relatório da semana 6 porque as datas não correspondem (1 a 8 de fevereiro vs. o que o sistema procura). (PENDENTE)
+9.  **Pedido:** O utilizador queixa-se que a sessão está sempre a ser perdida e pede uma verificação total do sistema de sessão para que o RPA funcione. (EM PROGRESSO)
+8.  **Pedido:** O utilizador aponta que os dados (email/password) não são os mesmos entre a página de login da Uber e a tab Plataformas. (RESOLVIDO)
+7.  **Pedido:** O utilizador reporta que a sincronização falha com Sessão Uber não encontrada mesmo após o login, e a página fica em branco. (PARCIALMENTE RESOLVIDO, PENDENTE DE TESTE FINAL)
+6.  **Pedido:** O utilizador solicita que as credenciais guardadas nas páginas de login da Uber e Prio sejam as mesmas que aparecem na tab Plataformas. (RESOLVIDO)
+5.  **Pedido:** O utilizador reporta que o sistema não guarda a password na tab Plataformas e que a sincronização dá erro de sessão. (RESOLVIDO)
+4.  **Pedido:** O utilizador dá feedback sobre a tela pós-login, que é confusa e pede melhorias visuais. (RESOLVIDO)
+3.  **Pedido:** O utilizador pede para trocar a ordem das colunas na interface de login da Uber. (RESOLVIDO)
+2.  **Pedido:** O utilizador queixa-se da dificuldade do CAPTCHA da Uber e pede para usar símbolos mais simples na interface. (RESOLVIDO)
+1.  **Pedido:** O utilizador reporta um erro de Playwright devido à falta do executável do browser. (RESOLVIDO)
 
 **Project Health Check:**
--   **Broken:** A aplicação está totalmente inacessível para o utilizador final devido a um problema de login persistente. A infraestrutura base está de pé, mas a aplicação em si não funciona.
+-   **Broken:** A principal funcionalidade de automação da aplicação (sincronização semanal de rendimentos da Uber) está quebrada, o que impede o utilizador de extrair valor do sistema.
 -   **Mocked:** Nenhum.
 
 **3rd Party Integrations**
--   **Docker / Docker Hub:** Essencial para o deployment.
+-   **Docker / Docker Hub:** Usado para o deployment no VPS.
+-   **Playwright:** Essencial para a automação RPA de extração de dados da Uber.
 -   **Meta WhatsApp Cloud API:** Código presente mas inativo.
--   **Playwright:** Usado para automação RPA (Uber login), mas atualmente quebrado devido a dependências do SO em falta no contentor.
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** Nenhum.
--   **Known regressions:** O login, que funcionou brevemente numa fase inicial do deployment, está agora quebrado. A persistência da base de dados também regrediu.
-
-**Credentials to test flow:**
--   **VPS SSH:**  (password: , mas pode ter sido alterada).
--   **App Admin User:**  /  (password desejada, mas atualmente não funciona).
+-   **Known regressions:** A funcionalidade de sincronização da Uber, que é o objetivo principal, ainda não funciona de ponta a ponta. A persistência da sessão é uma fonte recorrente de problemas.
 
 **What agent forgot to execute**
-O agente entrou num ciclo longo de depuração de dependências e configurações, não conseguindo resolver o problema de login de forma definitiva. Embora tenha preparado um conjunto final de correções, a sua eficácia não foi verificada. As novas funcionalidades solicitadas pelo utilizador (sistema de backup) foram adiadas.</analysis>
+O agente concentrou-se corretamente nos problemas reportados pelo utilizador, mas ainda não abordou o problema de longa data da persistência da base de dados do MongoDB quando o  é reiniciado. Este é um risco técnico significativo que foi mencionado no handoff inicial.</analysis>
