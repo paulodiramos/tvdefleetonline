@@ -33,16 +33,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   HardDrive, Cloud, CloudOff, RefreshCw, Loader2, CheckCircle, 
   XCircle, Settings, Link2, Unlink, FolderSync, Database,
   FileText, Car, Users, Receipt, ClipboardCheck, FileCheck,
-  Building2, Eye
+  Building2, Eye, ExternalLink, HelpCircle
 } from 'lucide-react';
 
 const StorageConfig = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDocsModal, setShowDocsModal] = useState(false);
   const [config, setConfig] = useState(null);
   const [providers, setProviders] = useState([]);
   const [syncStatus, setSyncStatus] = useState(null);
