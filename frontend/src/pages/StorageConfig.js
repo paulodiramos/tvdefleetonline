@@ -867,6 +867,105 @@ const StorageConfig = ({ user, onLogout }) => {
             Guardar Configuração
           </Button>
         </div>
+
+        {/* Documentation Modal */}
+        <Dialog open={showDocsModal} onOpenChange={setShowDocsModal}>
+          <DialogContent className="max-w-3xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-blue-600" />
+                Configuração de Cloud Storage
+              </DialogTitle>
+              <DialogDescription>
+                Instruções para administradores configurarem os serviços de cloud
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-6 text-sm">
+                {/* Google Drive */}
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h3 className="font-bold text-lg text-blue-700 mb-2">🔵 Google Drive</h3>
+                  <ol className="list-decimal list-inside space-y-2 text-slate-700">
+                    <li>Aceda a <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Cloud Console</a></li>
+                    <li>Crie um novo projeto: <strong>TVDEFleet</strong></li>
+                    <li>Active a <strong>Google Drive API</strong> em APIs e Serviços → Biblioteca</li>
+                    <li>Configure o <strong>Ecrã de consentimento OAuth</strong> (Externo)</li>
+                    <li>Crie credenciais: <strong>ID de cliente OAuth</strong> → Aplicação Web</li>
+                    <li>Adicione o URI de redireccionamento:
+                      <code className="block bg-slate-100 p-2 rounded mt-1 text-xs break-all">
+                        {window.location.origin}/api/storage-config/oauth/google_drive/callback
+                      </code>
+                    </li>
+                    <li>Copie o <strong>Client ID</strong> e <strong>Client Secret</strong></li>
+                  </ol>
+                </div>
+
+                {/* Dropbox */}
+                <div className="border-l-4 border-blue-400 pl-4">
+                  <h3 className="font-bold text-lg text-blue-600 mb-2">📁 Dropbox</h3>
+                  <ol className="list-decimal list-inside space-y-2 text-slate-700">
+                    <li>Aceda a <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Dropbox App Console</a></li>
+                    <li>Crie uma nova app: <strong>Scoped access</strong> → <strong>Full Dropbox</strong></li>
+                    <li>Na tab Permissions, active: files.metadata.*, files.content.*</li>
+                    <li>Na tab Settings, adicione o Redirect URI:
+                      <code className="block bg-slate-100 p-2 rounded mt-1 text-xs break-all">
+                        {window.location.origin}/api/storage-config/oauth/dropbox/callback
+                      </code>
+                    </li>
+                    <li>Copie o <strong>App Key</strong> e <strong>App Secret</strong></li>
+                  </ol>
+                </div>
+
+                {/* OneDrive */}
+                <div className="border-l-4 border-sky-500 pl-4">
+                  <h3 className="font-bold text-lg text-sky-700 mb-2">☁️ OneDrive</h3>
+                  <ol className="list-decimal list-inside space-y-2 text-slate-700">
+                    <li>Aceda ao <a href="https://portal.azure.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Azure Portal</a></li>
+                    <li>Pesquise por <strong>Registos de aplicações</strong> → Novo registo</li>
+                    <li>Nome: <strong>TVDEFleet</strong>, Tipo: Contas em qualquer diretório + pessoais</li>
+                    <li>Adicione o URI de Redireccionamento (Web):
+                      <code className="block bg-slate-100 p-2 rounded mt-1 text-xs break-all">
+                        {window.location.origin}/api/storage-config/oauth/onedrive/callback
+                      </code>
+                    </li>
+                    <li>Copie o <strong>ID da aplicação (cliente)</strong></li>
+                    <li>Em Certificados e segredos, crie um <strong>Novo segredo</strong> e copie o valor</li>
+                    <li>Em Permissões de API, adicione: <strong>Files.ReadWrite.All</strong>, <strong>offline_access</strong></li>
+                  </ol>
+                </div>
+
+                {/* Final Step */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <h3 className="font-bold text-amber-800 mb-2">⚠️ Passo Final</h3>
+                  <p className="text-amber-700">
+                    Após obter as credenciais, adicione-as ao ficheiro <code className="bg-amber-100 px-1 rounded">.env</code> do backend:
+                  </p>
+                  <pre className="bg-slate-800 text-green-400 p-3 rounded mt-2 text-xs overflow-x-auto">
+{`# Google Drive
+GOOGLE_CLIENT_ID=seu_client_id
+GOOGLE_CLIENT_SECRET=seu_client_secret
+
+# Dropbox
+DROPBOX_APP_KEY=seu_app_key
+DROPBOX_APP_SECRET=seu_app_secret
+
+# OneDrive
+MICROSOFT_CLIENT_ID=seu_client_id
+MICROSOFT_CLIENT_SECRET=seu_client_secret`}
+                  </pre>
+                  <p className="text-amber-700 mt-2">
+                    Depois reinicie o backend: <code className="bg-amber-100 px-1 rounded">supervisorctl restart backend</code>
+                  </p>
+                </div>
+              </div>
+            </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDocsModal(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </>
     );
   }
