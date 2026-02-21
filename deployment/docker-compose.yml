@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: tvdefleet-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    environment:
+      - MONGO_INITDB_DATABASE=tvdefleet_db
+    networks:
+      - tvdefleet-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Backend FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../deployment/Dockerfile.backend
+    container_name: tvdefleet-backend
+    restart: always
+    ports:
+      - "8001:8001"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=tvdefleet_db
+      - CORS_ORIGINS=*
+      - JWT_SECRET=${JWT_SECRET:-tvdefleet-secret-key-change-in-production-2025}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - DOMAIN=${DOMAIN:-tvdefleet.com}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME}
+      - RPA_ENCRYPTION_KEY=${RPA_ENCRYPTION_KEY}
+      - WHATSAPP_CLOUD_ACCESS_TOKEN=${WHATSAPP_CLOUD_ACCESS_TOKEN}
+      - WHATSAPP_CLOUD_PHONE_NUMBER_ID=${WHATSAPP_CLOUD_PHONE_NUMBER_ID}
+      - WHATSAPP_CLOUD_WABA_ID=${WHATSAPP_CLOUD_WABA_ID}
+      - WHATSAPP_CLOUD_VERIFY_TOKEN=${WHATSAPP_CLOUD_VERIFY_TOKEN}
+      - WHATSAPP_CLOUD_APP_SECRET=${WHATSAPP_CLOUD_APP_SECRET}
+      - EMERGENT_LLM_KEY=${EMERGENT_LLM_KEY}
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_screenshots:/app/screenshots
+      - backend_downloads:/app/rpa_downloads
+    networks:
+      - tvdefleet-network
+    healthcheck:
+      test: curl --fail http://localhost:8001/api/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../deployment/Dockerfile.frontend
+      args:
+        - REACT_APP_BACKEND_URL=https://${DOMAIN:-tvdefleet.com}
+    container_name: tvdefleet-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - tvdefleet-network
+
+  # Nginx Reverse Proxy (opcional - se usar SSL)
+  nginx:
+    image: nginx:alpine
+    container_name: tvdefleet-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deployment/ssl:/etc/nginx/ssl:ro
+      - certbot_data:/var/www/certbot:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - tvdefleet-network
+
+  # Certbot para SSL (opcional)
+  certbot:
+    image: certbot/certbot
+    container_name: tvdefleet-certbot
+    volumes:
+      - ./deployment/ssl:/etc/letsencrypt
+      - certbot_data:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+networks:
+  tvdefleet-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  mongodb_config:
+  backend_uploads:
+  backend_screenshots:
+  backend_downloads:
+  certbot_data:
