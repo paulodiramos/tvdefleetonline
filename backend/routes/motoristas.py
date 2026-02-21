@@ -1159,7 +1159,7 @@ async def download_motorista_document(
         if motorista["id"] != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
     elif user_role in [UserRole.PARCEIRO, "parceiro"]:
-        parceiro_id = motorista.get("parceiro_atribuido") or motorista.get("parceiro_associado")
+        parceiro_id = motorista.get("parceiro_atribuido") or motorista.get("parceiro_associado") or motorista.get("parceiro_id")
         if parceiro_id != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
     elif user_role not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
@@ -1177,16 +1177,43 @@ async def download_motorista_document(
     if not doc_url:
         raise HTTPException(status_code=404, detail="Document not found")
     
-    # Convert URL to file path
-    if doc_url.startswith("uploads/"):
-        file_path = ROOT_DIR / doc_url
-    elif doc_url.startswith("/uploads/"):
-        file_path = ROOT_DIR / doc_url.lstrip("/")
+    file_path = None
+    
+    # Check if doc_url is a full path or just a UUID
+    if doc_url.startswith("uploads/") or doc_url.startswith("/uploads/"):
+        # Full path format
+        clean_path = doc_url.lstrip("/")
+        file_path = ROOT_DIR / clean_path
+    elif len(doc_url) == 36 and "-" in doc_url:
+        # UUID format - search for file in documentos folder
+        # Pattern: {motorista_id}_{doc_type}_{uuid}.{ext}
+        import glob
+        patterns = [
+            f"{ROOT_DIR}/uploads/documentos/{motorista_id}_{doc_type}_{doc_url}.*",
+            f"{ROOT_DIR}/uploads/documentos/{motorista_id}_{doc_type.replace('_', '')}_{doc_url}.*",
+            f"{ROOT_DIR}/uploads/motoristas/{motorista_id}/documentos/*{doc_url}*",
+        ]
+        for pattern in patterns:
+            matches = glob.glob(pattern)
+            if matches:
+                file_path = Path(matches[0])
+                break
+        
+        if not file_path:
+            # Try direct path in uploads
+            for ext in ['.pdf', '.png', '.jpg', '.jpeg']:
+                test_path = ROOT_DIR / "uploads" / "documentos" / f"{motorista_id}_{doc_type}_{doc_url}{ext}"
+                if test_path.exists():
+                    file_path = test_path
+                    break
     else:
+        # Assume it's a filename or path
         file_path = ROOT_DIR / "uploads" / doc_url
     
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail=f"Document file not found: {file_path}")
+    if not file_path or not file_path.exists():
+        # Log for debugging
+        logger.error(f"Document not found: motorista={motorista_id}, doc_type={doc_type}, doc_url={doc_url}")
+        raise HTTPException(status_code=404, detail=f"Document file not found")
     
     media_type, _ = mimetypes.guess_type(str(file_path))
     
