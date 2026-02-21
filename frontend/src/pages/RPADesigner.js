@@ -43,6 +43,7 @@ export default function RPADesigner({ user, onLogout }) {
   const [plataformaSelecionada, setPlataformaSelecionada] = useState(null);
   const [plataformaNovoSistema, setPlataformaNovoSistema] = useState(null);
   const [semanaSelecionada, setSemanaSelecionada] = useState(0);
+  const [tipoDesign, setTipoDesign] = useState('login'); // 'login' ou 'extracao'
   const [sessionId, setSessionId] = useState(null);
   const [passos, setPassos] = useState([]);
   const [gravando, setGravando] = useState(false);
@@ -50,6 +51,8 @@ export default function RPADesigner({ user, onLogout }) {
   const [urlAtual, setUrlAtual] = useState('');
   const [loading, setLoading] = useState(false);
   const [designs, setDesigns] = useState([]);
+  const [designsLogin, setDesignsLogin] = useState([]);
+  const [designsExtracao, setDesignsExtracao] = useState([]);
   const [showNovoPassoModal, setShowNovoPassoModal] = useState(false);
   const [novoPasso, setNovoPasso] = useState({
     tipo: 'click',
