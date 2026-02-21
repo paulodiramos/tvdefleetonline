@@ -473,6 +473,250 @@ async def send_custom_template(
     )
 
 
+# ==================== ENVIO EM MASSA ====================
+
+from pydantic import BaseModel
+from utils.database import get_database
+
+db = get_database()
+
+
+class EnvioMassaRequest(BaseModel):
+    motorista_ids: List[str]
+    template_name: str
+    parameters: List[str]
+    language: str = "pt_PT"
+
+
+class VistoriaEmMassaRequest(BaseModel):
+    motorista_ids: List[str]
+    data_vistoria: str
+    hora: str
+    local: str
+
+
+class MensagemPersonalizadaRequest(BaseModel):
+    motorista_ids: List[str]
+    mensagem: str
+
+
+@router.post("/send/massa")
+async def send_massa(
+    request: EnvioMassaRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Envia template para múltiplos motoristas
+    
+    Exemplo:
+    POST /api/whatsapp-cloud/send/massa
+    {
+        "motorista_ids": ["id1", "id2", "id3"],
+        "template_name": "vistoria_agendada",
+        "parameters": ["15/03/2025", "10:00", "Centro de Inspeções Lisboa"],
+        "language": "pt_PT"
+    }
+    """
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Obter dados dos motoristas
+    motoristas = await db.motoristas.find(
+        {"id": {"$in": request.motorista_ids}},
+        {"_id": 0, "id": 1, "name": 1, "nome": 1, "phone": 1, "whatsapp": 1}
+    ).to_list(100)
+    
+    resultados = {
+        "enviados": [],
+        "falhas": [],
+        "sem_telefone": []
+    }
+    
+    for motorista in motoristas:
+        telefone = motorista.get("whatsapp") or motorista.get("phone")
+        nome = motorista.get("name") or motorista.get("nome", "Motorista")
+        
+        if not telefone:
+            resultados["sem_telefone"].append({
+                "id": motorista["id"],
+                "nome": nome
+            })
+            continue
+        
+        # Substituir {nome} nos parâmetros se existir
+        params_formatados = []
+        for p in request.parameters:
+            if "{nome}" in p.lower():
+                p = p.replace("{nome}", nome).replace("{NOME}", nome)
+            params_formatados.append({"type": "text", "text": p})
+        
+        # Adicionar nome como primeiro parâmetro se o template espera
+        if request.template_name in ["vistoria_agendada", "documento_expirar", "revisao_veiculo"]:
+            params_formatados.insert(0, {"type": "text", "text": nome})
+        
+        try:
+            result = await send_template_message(
+                recipient_phone=telefone,
+                template_name=request.template_name,
+                template_language=request.language,
+                parameters=params_formatados
+            )
+            
+            if result.get("success"):
+                resultados["enviados"].append({
+                    "id": motorista["id"],
+                    "nome": nome,
+                    "telefone": telefone,
+                    "message_id": result.get("message_id")
+                })
+            else:
+                resultados["falhas"].append({
+                    "id": motorista["id"],
+                    "nome": nome,
+                    "erro": result.get("error")
+                })
+        except Exception as e:
+            resultados["falhas"].append({
+                "id": motorista["id"],
+                "nome": nome,
+                "erro": str(e)
+            })
+    
+    # Registar envio em massa na BD
+    await db.whatsapp_envios_massa.insert_one({
+        "id": str(uuid.uuid4()),
+        "template_name": request.template_name,
+        "parameters": request.parameters,
+        "motorista_ids": request.motorista_ids,
+        "enviados": len(resultados["enviados"]),
+        "falhas": len(resultados["falhas"]),
+        "sem_telefone": len(resultados["sem_telefone"]),
+        "enviado_por": current_user["id"],
+        "created_at": datetime.now().isoformat()
+    })
+    
+    return {
+        "success": True,
+        "total_motoristas": len(request.motorista_ids),
+        "enviados": len(resultados["enviados"]),
+        "falhas": len(resultados["falhas"]),
+        "sem_telefone": len(resultados["sem_telefone"]),
+        "detalhes": resultados
+    }
+
+
+@router.post("/send/vistoria-massa")
+async def send_vistoria_massa(
+    request: VistoriaEmMassaRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Envia notificação de vistoria para múltiplos motoristas
+    
+    Exemplo:
+    POST /api/whatsapp-cloud/send/vistoria-massa
+    {
+        "motorista_ids": ["id1", "id2", "id3"],
+        "data_vistoria": "15/03/2025",
+        "hora": "10:00",
+        "local": "Centro de Inspeções Lisboa"
+    }
+    """
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Obter dados dos motoristas com veículos
+    motoristas = await db.motoristas.find(
+        {"id": {"$in": request.motorista_ids}},
+        {"_id": 0, "id": 1, "name": 1, "nome": 1, "phone": 1, "whatsapp": 1, "veiculo_id": 1}
+    ).to_list(100)
+    
+    resultados = {
+        "enviados": [],
+        "falhas": [],
+        "sem_telefone": []
+    }
+    
+    for motorista in motoristas:
+        telefone = motorista.get("whatsapp") or motorista.get("phone")
+        nome = motorista.get("name") or motorista.get("nome", "Motorista")
+        
+        if not telefone:
+            resultados["sem_telefone"].append({"id": motorista["id"], "nome": nome})
+            continue
+        
+        # Obter matrícula do veículo
+        veiculo_info = "Veículo"
+        if motorista.get("veiculo_id"):
+            veiculo = await db.vehicles.find_one(
+                {"id": motorista["veiculo_id"]},
+                {"_id": 0, "matricula": 1, "marca": 1, "modelo": 1}
+            )
+            if veiculo:
+                veiculo_info = f"{veiculo.get('matricula', '')} ({veiculo.get('marca', '')} {veiculo.get('modelo', '')})"
+        
+        parameters = [
+            {"type": "text", "text": nome},
+            {"type": "text", "text": request.data_vistoria},
+            {"type": "text", "text": request.hora},
+            {"type": "text", "text": request.local},
+            {"type": "text", "text": veiculo_info}
+        ]
+        
+        try:
+            result = await send_template_message(
+                recipient_phone=telefone,
+                template_name="vistoria_agendada",
+                parameters=parameters
+            )
+            
+            if result.get("success"):
+                resultados["enviados"].append({
+                    "id": motorista["id"],
+                    "nome": nome,
+                    "telefone": telefone,
+                    "message_id": result.get("message_id")
+                })
+            else:
+                resultados["falhas"].append({
+                    "id": motorista["id"],
+                    "nome": nome,
+                    "erro": result.get("error")
+                })
+        except Exception as e:
+            resultados["falhas"].append({
+                "id": motorista["id"],
+                "nome": nome,
+                "erro": str(e)
+            })
+    
+    return {
+        "success": True,
+        "total_motoristas": len(request.motorista_ids),
+        "enviados": len(resultados["enviados"]),
+        "falhas": len(resultados["falhas"]),
+        "sem_telefone": len(resultados["sem_telefone"]),
+        "detalhes": resultados
+    }
+
+
+@router.get("/historico-envios")
+async def get_historico_envios(
+    limite: int = 50,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Lista histórico de envios em massa"""
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    envios = await db.whatsapp_envios_massa.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(limite)
+    
+    return {"envios": envios, "total": len(envios)}
+
+
 # ==================== WEBHOOK ENDPOINTS ====================
 
 @router.get("/webhook")
