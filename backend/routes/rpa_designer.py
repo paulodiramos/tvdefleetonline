@@ -1801,6 +1801,72 @@ async def listar_sessoes_parceiros(
     }
 
 
+@router.get("/parceiros-com-credenciais")
+async def listar_parceiros_com_credenciais(
+    plataforma: str = "uber",
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar parceiros que têm credenciais guardadas para uma plataforma (admin only)
+    
+    Permite ao admin usar as credenciais de um parceiro para fazer login e gravar designs
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode ver credenciais")
+    
+    parceiros_com_creds = []
+    
+    if plataforma == "uber":
+        # Buscar credenciais Uber
+        credenciais = await db.credenciais_uber.find({}, {"_id": 0}).to_list(100)
+        
+        for cred in credenciais:
+            if cred.get("email"):
+                parceiro_id = cred.get("parceiro_id")
+                
+                # Buscar info do parceiro
+                parceiro = await db.users.find_one({"id": parceiro_id}, {"_id": 0, "name": 1, "email": 1})
+                if not parceiro:
+                    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0, "nome_empresa": 1, "email": 1})
+                
+                if parceiro:
+                    parceiros_com_creds.append({
+                        "parceiro_id": parceiro_id,
+                        "parceiro_nome": parceiro.get("name") or parceiro.get("nome_empresa"),
+                        "parceiro_email": parceiro.get("email"),
+                        "plataforma": "uber",
+                        "plataforma_nome": "Uber Fleet",
+                        "cred_email": cred.get("email"),
+                        "cred_telefone": cred.get("telefone"),
+                        "tem_password": bool(cred.get("password"))
+                    })
+    
+    elif plataforma == "bolt":
+        # Buscar credenciais Bolt
+        credenciais = await db.credenciais_bolt.find({}, {"_id": 0}).to_list(100)
+        
+        for cred in credenciais:
+            if cred.get("email"):
+                parceiro_id = cred.get("parceiro_id")
+                parceiro = await db.users.find_one({"id": parceiro_id}, {"_id": 0, "name": 1, "email": 1})
+                
+                if parceiro:
+                    parceiros_com_creds.append({
+                        "parceiro_id": parceiro_id,
+                        "parceiro_nome": parceiro.get("name"),
+                        "parceiro_email": parceiro.get("email"),
+                        "plataforma": "bolt",
+                        "plataforma_nome": "Bolt Partner",
+                        "cred_email": cred.get("email"),
+                        "tem_password": bool(cred.get("password"))
+                    })
+    
+    return {
+        "parceiros": parceiros_com_creds,
+        "total": len(parceiros_com_creds),
+        "plataforma": plataforma
+    }
+
+
 # ==================== WEBSOCKET PARA BROWSER INTERATIVO ====================
 
 @router.websocket("/ws/design/{session_id}")
