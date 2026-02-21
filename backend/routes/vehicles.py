@@ -2132,24 +2132,37 @@ async def upload_carta_verde(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload carta verde document"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    """Upload carta verde document - with cloud storage"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
-    file_id = f"carta_verde_{vehicle_id}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
-    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
+    
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="documento_veiculo",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula"),
+        subfolder="carta_verde"
+    )
+    
+    doc_url = upload_result.get("cloud_url") or upload_result.get("local_url")
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$set": {"documento_carta_verde": document_path}}
+        {"$set": {
+            "documento_carta_verde": doc_url,
+            "documento_carta_verde_cloud": upload_result.get("cloud_path"),
+            "documento_carta_verde_provider": upload_result.get("provider")
+        }}
     )
     
-    return {"message": "Carta verde uploaded successfully", "url": document_path}
+    return {"message": "Carta verde uploaded successfully", "url": doc_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.post("/{vehicle_id}/upload-condicoes")
@@ -2158,24 +2171,37 @@ async def upload_condicoes(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload condições document"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    """Upload condições document - with cloud storage"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
-    file_id = f"condicoes_{vehicle_id}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
-    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
+    
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="documento_veiculo",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula"),
+        subfolder="condicoes"
+    )
+    
+    doc_url = upload_result.get("cloud_url") or upload_result.get("local_url")
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$set": {"documento_condicoes": document_path}}
+        {"$set": {
+            "documento_condicoes": doc_url,
+            "documento_condicoes_cloud": upload_result.get("cloud_path"),
+            "documento_condicoes_provider": upload_result.get("provider")
+        }}
     )
     
-    return {"message": "Condições document uploaded successfully", "url": document_path}
+    return {"message": "Condições document uploaded successfully", "url": doc_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.post("/{vehicle_id}/upload-recibo-seguro")
@@ -2184,24 +2210,37 @@ async def upload_recibo_seguro(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload recibo de pagamento do seguro"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    """Upload recibo de pagamento do seguro - with cloud storage"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
-    file_id = f"recibo_seguro_{vehicle_id}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
-    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
+    
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="recibo",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula"),
+        subfolder="seguro"
+    )
+    
+    doc_url = upload_result.get("cloud_url") or upload_result.get("local_url")
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$set": {"documento_recibo_seguro": document_path}}
+        {"$set": {
+            "documento_recibo_seguro": doc_url,
+            "documento_recibo_seguro_cloud": upload_result.get("cloud_path"),
+            "documento_recibo_seguro_provider": upload_result.get("provider")
+        }}
     )
     
-    return {"message": "Recibo de seguro uploaded successfully", "url": document_path}
+    return {"message": "Recibo de seguro uploaded successfully", "url": doc_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.post("/{vehicle_id}/upload-documento-inspecao")
@@ -2210,24 +2249,37 @@ async def upload_documento_inspecao(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload documento/certificado da inspeção"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    """Upload documento/certificado da inspeção - with cloud storage"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
-    file_id = f"doc_inspecao_{vehicle_id}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
-    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
+    
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="documento_veiculo",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula"),
+        subfolder="inspecao"
+    )
+    
+    doc_url = upload_result.get("cloud_url") or upload_result.get("local_url")
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$set": {"documento_inspecao": document_path}}
+        {"$set": {
+            "documento_inspecao": doc_url,
+            "documento_inspecao_cloud": upload_result.get("cloud_path"),
+            "documento_inspecao_provider": upload_result.get("provider")
+        }}
     )
     
-    return {"message": "Documento de inspeção uploaded successfully", "url": document_path}
+    return {"message": "Documento de inspeção uploaded successfully", "url": doc_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.post("/{vehicle_id}/upload-dua-frente")
