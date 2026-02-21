@@ -104,7 +104,6 @@ async def verificar_minha_sessao(
     if sessao_db and sessao_db.get("active"):
         expires_at = sessao_db.get("expires_at")
         if expires_at:
-            from datetime import datetime
             try:
                 if isinstance(expires_at, str):
                     expira = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
