@@ -4559,6 +4559,84 @@ async def enviar_relatorio(
     return {"message": "Relatório enviado com sucesso"}
 
 
+@router.post("/semanal/{relatorio_id}/enviar-whatsapp")
+async def enviar_relatorio_whatsapp(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Envia o relatório semanal por WhatsApp usando a Cloud API oficial"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Obter dados do motorista
+    motorista = await db.motoristas.find_one(
+        {"id": relatorio.get("motorista_id")}, 
+        {"_id": 0, "id": 1, "name": 1, "nome": 1, "phone": 1, "whatsapp": 1}
+    )
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    telefone = motorista.get("whatsapp") or motorista.get("phone")
+    if not telefone:
+        raise HTTPException(status_code=400, detail="Motorista não tem número de WhatsApp configurado")
+    
+    nome = motorista.get("name") or motorista.get("nome", "Motorista")
+    semana = f"{relatorio.get('semana', '')}/{relatorio.get('ano', '')}"
+    
+    # Calcular valores
+    total_viagens = relatorio.get("total_viagens", 0)
+    valor_bruto = float(relatorio.get("valor_bruto", 0) or relatorio.get("total_faturado", 0) or 0)
+    comissoes = float(relatorio.get("total_descontos", 0) or relatorio.get("comissoes", 0) or 0)
+    valor_liquido = float(relatorio.get("valor_liquido", 0) or relatorio.get("a_receber", 0) or 0)
+    
+    # Importar e usar a função de envio
+    from routes.whatsapp_cloud import send_template_message
+    
+    parameters = [
+        {"type": "text", "text": nome},
+        {"type": "text", "text": semana},
+        {"type": "text", "text": str(total_viagens)},
+        {"type": "text", "text": f"{valor_bruto:.2f}"},
+        {"type": "text", "text": f"{comissoes:.2f}"},
+        {"type": "text", "text": f"{valor_liquido:.2f}"}
+    ]
+    
+    try:
+        result = await send_template_message(
+            recipient_phone=telefone,
+            template_name="relatorio_semanal",
+            parameters=parameters
+        )
+        
+        # Registar envio no relatório
+        await db.relatorios_semanais.update_one(
+            {"id": relatorio_id},
+            {"$set": {
+                "whatsapp_enviado": True,
+                "whatsapp_enviado_em": datetime.now(timezone.utc).isoformat(),
+                "whatsapp_enviado_por": current_user["id"],
+                "whatsapp_message_id": result.get("message_id"),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Relatório enviado por WhatsApp para {telefone}",
+            "message_id": result.get("message_id")
+        }
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Erro ao enviar relatório por WhatsApp: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/semanal/{relatorio_id}/aprovar")
 async def aprovar_relatorio(
     relatorio_id: str,
