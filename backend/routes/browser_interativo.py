@@ -15,6 +15,33 @@ router = APIRouter(prefix="/browser", tags=["Browser Interativo"])
 db = get_database()
 
 
+async def get_uber_credentials(parceiro_id: str) -> dict:
+    """
+    Obter credenciais Uber do parceiro.
+    Tenta primeiro credenciais_uber, depois credenciais_plataformas.
+    """
+    # 1. Tentar colecção dedicada credenciais_uber
+    cred = await db.credenciais_uber.find_one({"parceiro_id": parceiro_id}, {"_id": 0})
+    
+    if cred and cred.get("email"):
+        return cred
+    
+    # 2. Fallback para credenciais_plataformas
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0, "credenciais_plataformas": 1})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0, "credenciais_plataformas": 1})
+    
+    if parceiro and parceiro.get("credenciais_plataformas"):
+        cp = parceiro["credenciais_plataformas"]
+        return {
+            "email": cp.get("uber_email"),
+            "password": cp.get("uber_password"),
+            "telefone": cp.get("uber_telefone")
+        }
+    
+    return {}
+
+
 class AcaoMouse(BaseModel):
     x: int
     y: int
