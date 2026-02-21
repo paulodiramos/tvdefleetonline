@@ -12993,6 +12993,77 @@ async def get_user_complete_details(user_id: str, current_user: Dict = Depends(g
         logger.error(f"Erro ao buscar detalhes completos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@api_router.get("/motoristas/{motorista_id}/documento/{tipo_documento}/download")
+async def download_documento_motorista(
+    motorista_id: str, 
+    tipo_documento: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download de documento de motorista por tipo"""
+    if current_user["role"] not in [UserRole.ADMIN, "parceiro", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    try:
+        # Buscar motorista para obter os documentos
+        motorista = await db.motoristas.find_one(
+            {"id": motorista_id},
+            {"_id": 0, "documentos": 1, "name": 1}
+        )
+        
+        if not motorista:
+            raise HTTPException(status_code=404, detail="Motorista não encontrado")
+        
+        documentos = motorista.get("documentos", {})
+        doc_url = documentos.get(tipo_documento)
+        
+        if not doc_url:
+            raise HTTPException(status_code=404, detail=f"Documento '{tipo_documento}' não encontrado")
+        
+        # Construir caminho do ficheiro
+        if doc_url.startswith("/uploads/"):
+            file_path = Path(f"/app/backend{doc_url}")
+        elif doc_url.startswith("uploads/"):
+            file_path = Path(f"/app/backend/{doc_url}")
+        else:
+            file_path = Path(doc_url)
+        
+        if not file_path.exists():
+            # Tentar caminho alternativo
+            alt_path = Path(f"/app/backend/uploads/motoristas/{file_path.name}")
+            if alt_path.exists():
+                file_path = alt_path
+            else:
+                raise HTTPException(status_code=404, detail=f"Ficheiro não encontrado: {file_path}")
+        
+        # Determinar nome do ficheiro
+        motorista_nome = motorista.get("name", "motorista").replace(" ", "_")
+        filename = f"{motorista_nome}_{tipo_documento}{file_path.suffix}"
+        
+        # Determinar media type
+        suffix = file_path.suffix.lower()
+        media_types = {
+            ".pdf": "application/pdf",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".webp": "image/webp"
+        }
+        media_type = media_types.get(suffix, "application/octet-stream")
+        
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type=media_type
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao fazer download de documento do motorista: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/documentos/{documento_id}/download")
 async def download_documento(documento_id: str, current_user: Dict = Depends(get_current_user)):
     """Download de documento (Admin, Parceiro ou Gestor)"""
