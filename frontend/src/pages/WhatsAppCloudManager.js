@@ -334,9 +334,9 @@ const WhatsAppCloudManager = ({ user, onLogout }) => {
           </Card>
         )}
 
-        <Tabs defaultValue="envio" className="space-y-4">
+        <Tabs defaultValue={initialTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="envio" className="flex items-center gap-2">
+            <TabsTrigger value="enviar" className="flex items-center gap-2">
               <Send className="w-4 h-4" /> Envio em Massa
             </TabsTrigger>
             <TabsTrigger value="alertas" className="flex items-center gap-2">
@@ -351,7 +351,7 @@ const WhatsAppCloudManager = ({ user, onLogout }) => {
           </TabsList>
 
           {/* Tab Envio em Massa */}
-          <TabsContent value="envio" className="space-y-4">
+          <TabsContent value="enviar" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Ações rápidas */}
               <Card>
