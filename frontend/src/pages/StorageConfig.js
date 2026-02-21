@@ -646,7 +646,7 @@ const StorageConfig = ({ user, onLogout }) => {
                         <Input
                           value={connectForm.email}
                           onChange={(e) => setConnectForm({ ...connectForm, email: e.target.value })}
-                          placeholder={`Email da conta ${providers.find(p => p.id === config.cloud_provider)?.nome}`}
+                          placeholder={`Email da conta ${providers.find(p => p.id === config.cloud_provider)?.nome || 'cloud'}`}
                           type="email"
                         />
                       </div>
