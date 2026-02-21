@@ -275,6 +275,112 @@ async def preencher_password_browser(
         return {"sucesso": False, "erro": str(e)}
 
 
+
+class CodigoSMS(BaseModel):
+    codigo: str
+
+
+@router.post("/preencher-sms")
+async def preencher_sms_browser(
+    data: CodigoSMS,
+    current_user: dict = Depends(get_current_user)
+):
+    """Preencher código SMS nos campos de 4 dígitos da Uber"""
+    
+    if current_user["role"] not in ["parceiro", "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
+    
+    try:
+        from services.browser_interativo import browsers_ativos
+        
+        if parceiro_id not in browsers_ativos:
+            return {"sucesso": False, "erro": "Browser não iniciado"}
+        
+        browser = browsers_ativos[parceiro_id]
+        codigo = data.codigo.replace(" ", "")[:4]  # Limpar e limitar a 4 dígitos
+        
+        if len(codigo) != 4 or not codigo.isdigit():
+            return {"sucesso": False, "erro": "Código deve ter 4 dígitos numéricos"}
+        
+        # Estratégia 1: Procurar campos de input para SMS (4 campos separados ou 1 campo único)
+        page = browser.page
+        
+        # Procurar todos os inputs visíveis
+        all_inputs = await page.locator('input').all()
+        sms_inputs = []
+        
+        for inp in all_inputs:
+            try:
+                if await inp.is_visible():
+                    input_type = await inp.get_attribute('type') or 'text'
+                    if input_type in ['text', 'tel', 'number', 'password']:
+                        box = await inp.bounding_box()
+                        if box:
+                            # Campos de dígito são geralmente pequenos
+                            if box['width'] < 100 and box['height'] < 80:
+                                sms_inputs.append(inp)
+            except:
+                continue
+        
+        logger.info(f"Encontrados {len(sms_inputs)} campos potenciais para SMS")
+        
+        if len(sms_inputs) >= 4:
+            # 4 campos separados - inserir um dígito em cada
+            logger.info(f"A preencher 4 campos separados com código: {codigo}")
+            for i, digit in enumerate(codigo):
+                if i < len(sms_inputs):
+                    await sms_inputs[i].click()
+                    await asyncio.sleep(0.1)
+                    await sms_inputs[i].fill(digit)
+                    await asyncio.sleep(0.2)
+            
+            await asyncio.sleep(0.5)
+            screenshot = await browser.screenshot()
+            
+            return {
+                "sucesso": True,
+                "screenshot": screenshot,
+                "mensagem": f"Código {codigo} inserido nos 4 campos"
+            }
+        
+        elif len(sms_inputs) >= 1:
+            # Campo único
+            logger.info(f"A preencher campo único com código: {codigo}")
+            await sms_inputs[0].click()
+            await asyncio.sleep(0.1)
+            await sms_inputs[0].fill(codigo)
+            
+            await asyncio.sleep(0.5)
+            screenshot = await browser.screenshot()
+            
+            return {
+                "sucesso": True,
+                "screenshot": screenshot,
+                "mensagem": f"Código {codigo} inserido no campo"
+            }
+        
+        else:
+            # Fallback: digitar diretamente
+            logger.info(f"Nenhum campo encontrado, a digitar código diretamente: {codigo}")
+            await page.keyboard.type(codigo, delay=100)
+            
+            await asyncio.sleep(0.5)
+            screenshot = await browser.screenshot()
+            
+            return {
+                "sucesso": True,
+                "screenshot": screenshot,
+                "mensagem": f"Código {codigo} digitado"
+            }
+        
+    except Exception as e:
+        logger.error(f"Erro ao preencher SMS: {e}")
+        return {"sucesso": False, "erro": str(e)}
+
+
+
 @router.post("/verificar-login")
 async def verificar_login_browser(
     current_user: dict = Depends(get_current_user)
