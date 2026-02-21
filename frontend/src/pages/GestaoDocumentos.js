@@ -229,19 +229,19 @@ const GestaoDocumentos = ({ user, onLogout }) => {
     }
   };
 
-  const handleSyncTerabox = async () => {
+  const handleSyncCloud = async () => {
     setSyncing(true);
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API}/terabox/sync-all`,
+        `${API}/storage-config/sync`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success('Sincronização com Terabox iniciada');
+      toast.success('Sincronização com Cloud iniciada');
       await fetchData();
     } catch (error) {
-      toast.error('Erro ao sincronizar com Terabox');
+      toast.error('Erro ao sincronizar com Cloud');
     } finally {
       setSyncing(false);
     }
