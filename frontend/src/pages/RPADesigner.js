@@ -709,12 +709,26 @@ export default function RPADesigner({ user, onLogout }) {
             <div class="sidebar">
               <h3>🔧 Dados para Design RPA</h3>
               
+              <!-- Tipo de Design -->
+              <div style="margin-bottom: 15px; padding: 10px; background: #0f3460; border-radius: 8px;">
+                <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 8px;">📋 Tipo de Design</label>
+                <div style="display: flex; gap: 6px;">
+                  <button id="btn-tipo-login" onclick="selecionarTipoDesign('login')" style="flex: 1; padding: 10px; background: ${tipoDesignAtual === 'login' ? '#3b82f6' : '#1a3a5c'}; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 12px; font-weight: bold;">
+                    🔑 Login
+                  </button>
+                  <button id="btn-tipo-extracao" onclick="selecionarTipoDesign('extracao')" style="flex: 1; padding: 10px; background: ${tipoDesignAtual === 'extracao' ? '#22c55e' : '#1a3a5c'}; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 12px; font-weight: bold;">
+                    📊 Extração
+                  </button>
+                </div>
+                <input type="hidden" id="tipo-design-selecionado" value="${tipoDesignAtual}" />
+              </div>
+              
               <!-- Botões de Controlo -->
               <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                <button onclick="pararSessao()" style="flex: 1; padding: 12px; background: #ef4444; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold;">
-                  ⏹ Parar
+                <button id="btn-gravar" onclick="iniciarGravacao()" style="flex: 1; padding: 12px; background: #22c55e; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold;">
+                  ▶ Iniciar Gravação
                 </button>
-                <button onclick="guardarDesign()" style="flex: 1; padding: 12px; background: #22c55e; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold;">
+                <button onclick="guardarDesign()" style="flex: 1; padding: 12px; background: #3b82f6; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold;">
                   💾 Guardar
                 </button>
               </div>
