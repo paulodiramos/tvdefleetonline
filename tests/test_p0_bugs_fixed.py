@@ -19,7 +19,7 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
     # Fallback for testing
-    BASE_URL = "https://vps-preview.preview.emergentagent.com"
+    BASE_URL = "https://vps-fleet-test.preview.emergentagent.com"
 
 print(f"Testing against: {BASE_URL}")
 

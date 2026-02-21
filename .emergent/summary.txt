@@ -1,198 +1,183 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou o deployment da sua aplicação de gestão de frotas para o seu próprio servidor VPS no endereço IP . Esta tarefa substituiu a prioridade anterior de configurar a integração da API do WhatsApp. O objetivo era ter a aplicação completa, incluindo a base de dados de produção, a funcionar no seu servidor privado. Após o deployment bem-sucedido, o utilizador pediu para que a base de dados do ambiente de produção (Emergent) fosse migrada para o novo VPS.
+O utilizador solicitou o deployment da sua aplicação de gestão de frotas para o seu próprio servidor VPS no endereço IP . Após a implementação inicial, a tarefa principal tornou-se a migração da base de dados de produção do ambiente Emergent para o VPS. Depois de várias tentativas, a base de dados foi restaurada, mas surgiram múltiplos problemas de dependências, configuração e autenticação que impedem o uso da aplicação. O utilizador solicitou que todas as passwords fossem redefinidas para  e que fosse criado um sistema de backup/restauração para administradores.
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-A aplicação full-stack (React/FastAPI/MongoDB) está agora implementada e a funcionar no VPS do utilizador () através de .
--   **Infraestrutura:** Três contentores estão ativos:  (Nginx com React build),  (FastAPI) e  (versão 4.4, compatível com o CPU do VPS).
--   **Rede:** O Nginx no contentor do frontend atua como reverse proxy, encaminhando os pedidos  para o serviço de backend, permitindo que a aplicação funcione corretamente na porta 80.
--   **Base de Dados:** A base de dados no VPS contém apenas dois utilizadores ( e ) que foram inseridos manualmente para permitir o login e teste da aplicação. A migração completa dos dados de produção ainda não foi concluída.
--   **Deployment:** Foi criada uma pasta  com os ,  e outros scripts necessários para a implementação.
+A aplicação full-stack (React/FastAPI/MongoDB) está implementada no VPS do utilizador () utilizando Docker Compose. A infraestrutura consiste em contentores para o frontend, backend, MongoDB (versão 4.4, compatível com o CPU do VPS) e um proxy Nginx. No entanto, a aplicação está num estado não funcional devido a um ciclo de problemas de login, dependências do backend e configuração do Docker. A base de dados foi restaurada, mas as tentativas de redefinir as passwords para  têm sido inconsistentes. O agente preparou um conjunto final de ficheiros (um novo dump da base de dados com as passwords corretas, scripts de restauro e ficheiros de configuração) para tentar estabilizar o ambiente.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a tentar migrar a base de dados de produção (do ambiente Emergent) para o VPS do utilizador. Várias tentativas de transferência do ficheiro de backup falharam (cópia via base64, links de download). Como solução temporária para permitir o login, o agente criou manualmente os utilizadores  e  na base de dados do VPS. O utilizador confirmou que o login funciona, mas que os restantes dados (parceiros, planos, etc.) não estão presentes.
+-   **Last item agent was working:** O agente estava a finalizar um pacote de correção completo para resolver os problemas de login persistentes no VPS. Isto incluiu:
+    1.  Gerar um novo hash de password para  que seja compatível com a versão do  no ambiente do VPS.
+    2.  Criar um novo dump da base de dados () com todas as passwords de utilizador já atualizadas.
+    3.  Criar um script  para automatizar a restauração da base de dados no VPS.
+    4.  Criar um  com instruções.
+    O objetivo era que o utilizador fizesse  e executasse o novo script para ter um ambiente limpo e funcional.
 -   **Status:** IN PROGRESS
--   **Agent Testing Done:** Y
--   **Which testing method agent to use?** Manual testing by curl/python -c
--   **User Testing Done:** Y
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Manual testing by curl/python -c. O próximo agente deve guiar o utilizador para executar os comandos e verificar o login.
+-   **User Testing Done:** N (O utilizador estava a testar, mas encontrava erros continuamente).
 
 **All Pending/In progress Issue list**:
--   Issue 1: Migrar a base de dados de produção completa para o VPS (P0)
+-   Issue 1: Login falha consistentemente no VPS (P0)
+-   Issue 2: Erro de RPA/Playwright devido a dependências em falta no contentor do backend (P1)
+-   Issue 3: A base de dados é apagada ao executar  (P2)
 
 **Issues Detail:**
--   **Issue 1: Migrar a base de dados de produção completa para o VPS (P0)**
+-   **Issue 1: Login falha consistentemente no VPS (P0)**
     -   **Attempted fixes:**
-        1.  Foi criado um backup da base de dados ().
-        2.  A tentativa de copiar o conteúdo do backup via  resultou num ficheiro corrompido no VPS ().
-        3.  Outras abordagens como partilha de ficheiros ou dividir o ficheiro foram consideradas mas abandonadas.
-        4.  A tentativa de adicionar o backup ao repositório Git para ser transferido via  não funcionou, pois o ficheiro não foi adicionado ao commit.
+        -   Várias tentativas de atualizar as passwords para  usando scripts Python e comandos , que falharam ou não produziram o resultado esperado (). A causa provável é uma incompatibilidade entre o hash gerado e a lógica de verificação da aplicação ou a versão do .
+        -   Restauração da base de dados múltiplas vezes, pois era encontrada vazia.
+        -   O agente preparou um novo dump com as passwords supostamente corretas e um script de restauro.
     -   **Next debug checklist:**
-        1.  Verificar por que o ficheiro  não foi adicionado ao repositório Git. Pode ser devido ao  ou a um erro no processo de commit.
-        2.  Confirmar que o  é executado antes do commit.
-        3.  Uma vez que o ficheiro esteja no repositório, guiar o utilizador para executar  no VPS.
-        4.  Executar o comando de restauro no VPS: .
-        5.  Se o Git falhar, usar uma alternativa robusta como  para transferir o ficheiro do ambiente Emergent para o VPS.
-    -   **Why fix this issue and what will be achieved with the fix?** Isto irá restaurar todos os dados da aplicação (utilizadores, veículos, motoristas, planos, etc.) no novo ambiente VPS, completando o processo de migração.
+        1.  Confirmar que o utilizador executou o último comando sugerido: .
+        2.  Verificar o output do script de restauro.
+        3.  Testar o login novamente em  com as credenciais  / .
+        4.  Se falhar, verificar os logs do backend: .
+        5.  Verificar o hash da password diretamente na base de dados:  e comparar com o hash gerado pelo script no .
+    -   **Why fix this issue and what will be achieved with the fix?** É o bloqueador principal. Sem login, a aplicação no VPS é inútil.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Backend (verificar dados na DB) e Frontend (verificar se os dados aparecem na UI).
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** Não.
+
+-   **Issue 2: Erro de RPA/Playwright devido a dependências em falta no contentor do backend (P1)**
+    -   **Attempted fixes:** O  foi atualizado para instalar  e outras dependências do Playwright. A construção do Docker passou após várias tentativas de resolver conflitos de dependências Python.
+    -   **Next debug checklist:** Assim que o login funcionar, pedir ao utilizador para testar a funcionalidade de Uber login e verificar os logs do backend () se ocorrer algum erro.
+    -   **Why fix this issue and what will be achieved with the fix?** Restaurará a funcionalidade de automação RPA.
+    -   **Status:** NOT STARTED (A correção foi implementada, mas não testada pelo utilizador).
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Backend.
+    -   **Blocked on other issue:** Issue 1: Login falha consistentemente no VPS.
+
+-   **Issue 3: A base de dados é apagada ao executar  (P2)**
+    -   **Attempted fixes:** Nenhuma tentativa direta, mas o agente observou que a base de dados aparecia vazia (0 utilizadores) após reinicializações, indicando um problema de persistência do volume do MongoDB. O  define um volume nomeado (), que deveria ser persistente.
+    -   **Next debug checklist:**
+        1.  Verificar a configuração dos volumes no .
+        2.  Confirmar que o Docker está a gerir o volume corretamente ().
+        3.  Garantir que os dados do MongoDB estão a ser escritos no diretório correto dentro do contentor ().
+    -   **Why fix this issue and what will be achieved with the fix?** Garante que os dados da aplicação não são perdidos durante reinicializações ou atualizações dos contentores.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Backend.
     -   **Blocked on other issue:** Não.
 
 **In progress Task List**:
--   **Task 1: Migração da Base de Dados**
-    -   **Where to resume:** Continuar as tentativas de transferir o ficheiro  para o VPS do utilizador e importá-lo para o MongoDB.
-    -   **What will be achieved with this?** A aplicação no VPS terá todos os dados da versão de produção.
+-   **Task 1: Estabilizar o Ambiente de Deployment no VPS (P0)**
+    -   **Where to resume:** Verificar se o utilizador executou a última sequência de comandos para fazer  e correr o script . O objetivo é conseguir um estado estável com a aplicação a funcionar e o login acessível.
+    -   **What will be achieved with this?** A aplicação totalmente funcional no VPS do utilizador, concluindo a migração e o deployment.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on something:** N/A.
+    -   **Blocked on something:** N/A
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) Configurar o domínio  para apontar para o IP .
-    *   (P1) Configurar SSL (HTTPS) no VPS usando Let's Encrypt.
-    *   (P1) Implementar a UI para as abas de Alertas, Templates e Histórico na página .
-    *   (P2) Ativar a integração com a WhatsApp Cloud API (ainda pendente das credenciais do utilizador).
+    *   (P1) Criar um sistema de backup/restauração para o Admin poder exportar/importar dados para outros servidores.
+    *   (P1) Corrigir a funcionalidade de importação para RPA.
+    *   (P1) Corrigir a funcionalidade de importação para a Via Verde.
+    *   (P1) Implementar a criação de backups para todos os módulos do sistema.
+    *   (P2) Configurar o domínio  e instalar SSL (HTTPS) com Let's Encrypt.
 *   **Future Tasks:**
+    *   Implementar a UI para as abas de Alertas, Templates e Histórico na página .
+    *   Ativar a integração com a WhatsApp Cloud API.
     *   Remover a integração antiga com .
     *   Refatorar componentes monolíticos como .
     *   Criar um sistema para arquivar dados antigos da base de dados.
     *   Implementar um sistema de relógio de ponto na app móvel.
 
 **Completed work in this session**
--   **Feature: Deployment em VPS (CONCLUÍDO):** A aplicação foi totalmente implementada num VPS externo usando Docker e Docker Compose.
--   **Task: Criação de Ficheiros de Deployment (CONCLUÍDO):** Foram criados e refinados os ficheiros ,  e .
--   **Task: Assistência na Preparação do VPS (CONCLUÍDO):** O agente guiou o utilizador na reinstalação do SO (Ubuntu 22.04) e na instalação de Docker, Docker Compose e Git.
--   **Bugfix: Resolução de Problemas de Build e Runtime (RESOLVIDO):** Uma longa sessão de debugging foi concluída com sucesso, resolvendo múltiplos problemas:
-    -   Incompatibilidade do CPU do VPS com MongoDB 7 (foi feito o downgrade para ).
-    -   Incompatibilidade do CPU com a versão do NumPy (foram fixadas versões mais antigas de , , etc.).
-    -   Versão desatualizada do Node.js (foi atualizada para ).
-    -   Dependências Python em falta (, , , , etc.).
-    -   Configuração incorreta do Nginx como reverse proxy (corrigido para encaminhar  para o backend).
-    -   Erro de  no login (corrigido adicionando um campo uid=0(root) gid=0(root) groups=0(root) ao documento do utilizador).
-    -   Password hash incorreta (corrigida gerando uma nova hash dentro do contentor do backend).
--   **Task: Seeding da Base de Dados (CONCLUÍDO - PARCIALMENTE):** Utilizadores  e  foram criados manualmente para permitir o login e teste da aplicação.
+-   **Feature: Migração da Base de Dados para VPS (CONCLUÍDO):** O ficheiro de backup da base de dados foi transferido com sucesso para o VPS e restaurado várias vezes.
+-   **Task: Estabilização do Backend Docker Build (CONCLUÍDO):** Resolvidos múltiplos conflitos de dependências Python, criando um ficheiro  dedicado. O  foi modificado para instalar as dependências do Playwright e outros módulos em falta (, , ).
+-   **Task: Correção de Configuração do Docker Compose (CONCLUÍDO):** Corrigidos os caminhos de contexto, a versão do MongoDB (para ) e a configuração do Nginx.
+-   **Task: Criação de Scripts de Suporte (CONCLUÍDO):** Criados === Restaurando base de dados TVDEFleet ===
+=== Base de dados restaurada com sucesso! ===
+=== Password de todos os utilizadores: 123456 ===, ,  e um novo dump da base de dados () com passwords redefinidas.
 
 **Earlier issues found/mentioned but not fixed**
--   Configurar e Ativar a WhatsApp Cloud API (Pendente de credenciais do utilizador).
--   Refatorar o componente .
--   Verificar se todas as categorias de planos são editáveis.
--   Corrigir bug de navegação na página da ficha do veículo.
+-   Os novos pedidos do utilizador sobre importação de RPA, Via Verde e backups de módulos foram registados mas não implementados, pois a prioridade era estabilizar o ambiente.
 
 **Known issue recurrence from previous fork**
-- A transferência de ficheiros grandes (como backups de DB) do ambiente Emergent para o exterior provou ser problemática.
+-   **Conflitos de Dependência:** A incompatibilidade do CPU antigo do VPS continua a causar problemas, exigindo a fixação de versões mais antigas de pacotes como ,  e .
+-   **Persistência de Dados:** A base de dados parece estar a ser perdida, um problema recorrente que sugere um erro na configuração do volume do Docker.
+-   **Inconsistência no Hashing de Passwords:** O erro  indica uma possível incompatibilidade entre as versões das bibliotecas  e , causando falhas na atualização de passwords.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Docker & Docker Compose:** Utilizados para containerizar e orquestrar os serviços da aplicação (frontend, backend, db) no VPS.
--   **Nginx Reverse Proxy:** Implementado no contentor do frontend para encaminhar pedidos de API () para o contentor do backend, permitindo uma única porta de entrada (80).
--   **Compatibilidade de CPU:** Foi necessário lidar com problemas de incompatibilidade do CPU antigo do VPS, que não suportava instruções AVX (para MongoDB 5+) nem X86_V2 (para versões recentes do NumPy). Isto exigiu o downgrade de várias dependências.
--   **Debugging de Dependências:** Foi necessário um processo iterativo de adicionar dependências em falta ao  e reconstruir a imagem do backend.
+-   **Docker & Docker Compose:** Usados para orquestrar a aplicação no VPS. A depuração envolveu a reconstrução de imagens (), gestão de volumes e verificação de logs.
+-   **Dependency Hell (Python):** Uma grande parte do tempo foi gasta a resolver conflitos entre pacotes Python, especialmente relacionados com as bibliotecas do Google e versões compatíveis com o CPU antigo.
+-   **MongoDB:** Utilização de  e  para backup/restauração. A persistência de dados através de volumes nomeados do Docker é crucial mas parece estar a falhar.
+-   **Nginx Reverse Proxy:** Configurado para encaminhar o tráfego da porta 80 para os serviços de frontend (porta 3000) e backend (porta 8001), mas foi desativado temporariamente para depuração. A última versão usa uma configuração sem SSL.
+-   **Password Hashing (bcrypt):** As tentativas de redefinir passwords falharam devido a problemas com a biblioteca , exigindo a geração de um hash estático e a sua inserção direta na DB.
 
 **key DB schema**
--   : Campo uid=0(root) gid=0(root) groups=0(root) (String) foi adicionado manualmente para ser compatível com a lógica de autenticação.
+-   **users:** O foco principal foi o campo , que está a causar os problemas de login. A estrutura da coleção contém  e .
 
 **All files of reference**
--   **Ficheiros Criados/Modificados:**
-    -   
-    -   
-    -   
-    -   
-    -    (criado no workspace, mas a transferência falhou)
+-   : Modificado para usar , volumes nomeados e uma configuração Nginx sem SSL.
+-   : Modificado extensivamente para usar  e instalar dependências do Playwright.
+-   : Um novo ficheiro criado para ter uma lista de dependências estável para o VPS.
+-   === Restaurando base de dados TVDEFleet ===
+=== Base de dados restaurada com sucesso! ===
+=== Password de todos os utilizadores: 123456 ===: Novo script para automatizar a restauração da base de dados e a atualização de passwords.
+-   : Novo dump da base de dados.
+-   : Novas instruções de deployment.
 
 **Areas that need refactoring**:
-- A forma como as variáveis de ambiente e chaves secretas são geridas no  (algumas estão hardcoded) deve ser melhorada, utilizando um ficheiro  de forma consistente.
+-   A gestão de dependências Python precisa de ser consolidada. Ter  e  é confuso.
+-   A configuração do  deve ser revista para garantir a persistência correta do volume do MongoDB.
+-   O código para redefinir passwords deve ser robusto e não depender de hashes estáticos.
 
 **key api endpoints**
--   : Endpoint de login, agora a funcionar no VPS.
--   A API está acessível através do Nginx em .
+-   : O endpoint crítico que está a falhar com .
 
 **Critical Info for New Agent**
--   **Prioridade Máxima:** A tarefa mais importante é concluir a migração da base de dados completa para o VPS do utilizador.
--   **Ambiente do VPS:** O VPS tem um CPU antigo. Qualquer atualização de dependências (especialmente ,  e ) deve ser feita com cuidado para evitar problemas de compatibilidade (AVX, X86_V2).
--   **Interação com o Utilizador:** O utilizador é prático e executa os comandos fornecidos, mas precisa de instruções muito claras, passo a passo, e por vezes copia/cola de forma incorreta. Comandos one-liner ou blocos de código para copiar devem ser preferidos.
--   **Estratégia de Backup:** A transferência do ficheiro de backup via  falhou. A próxima tentativa deve ser via usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
-           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
-           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
-           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
-           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
-           <command> [<args>]
-
-These are common Git commands used in various situations:
-
-start a working area (see also: git help tutorial)
-   clone     Clone a repository into a new directory
-   init      Create an empty Git repository or reinitialize an existing one
-
-work on the current change (see also: git help everyday)
-   add       Add file contents to the index
-   mv        Move or rename a file, a directory, or a symlink
-   restore   Restore working tree files
-   rm        Remove files from the working tree and from the index
-
-examine the history and state (see also: git help revisions)
-   bisect    Use binary search to find the commit that introduced a bug
-   diff      Show changes between commits, commit and working tree, etc
-   grep      Print lines matching a pattern
-   log       Show commit logs
-   show      Show various types of objects
-   status    Show the working tree status
-
-grow, mark and tweak your common history
-   branch    List, create, or delete branches
-   commit    Record changes to the repository
-   merge     Join two or more development histories together
-   rebase    Reapply commits on top of another base tip
-   reset     Reset current HEAD to the specified state
-   switch    Switch branches
-   tag       Create, list, delete or verify a tag object signed with GPG
-
-collaborate (see also: git help workflows)
-   fetch     Download objects and refs from another repository
-   pull      Fetch from and integrate with another repository or a local branch
-   push      Update remote refs along with associated objects
-
-'git help -a' and 'git help -g' list available subcommands and some
-concept guides. See 'git help <command>' or 'git help <concept>'
-to read about a specific subcommand or concept.
-See 'git help git' for an overview of the system. (garantindo que o ficheiro é adicionado) ou, como fallback, via .
+-   **Prioridade Absoluta:** NÃO continuar a desenvolver novas funcionalidades. O foco total deve ser em estabilizar o ambiente no VPS e resolver o problema de login.
+-   **Verificar o Último Passo:** O passo mais importante é confirmar se o utilizador executou com sucesso o  e o script === Restaurando base de dados TVDEFleet ===
+=== Base de dados restaurada com sucesso! ===
+=== Password de todos os utilizadores: 123456 === da última sessão. A solução para o login pode já estar no repositório.
+-   **Não Confie, Verifique:** Após cada alteração, verifique os logs (), o estado dos contentores () e o conteúdo da base de dados (). Não assuma que os comandos funcionaram.
+-   **Problema de Persistência:** Esteja ciente de que a base de dados pode ser apagada. Antes de qualquer depuração de login, confirme sempre que a base de dados não está vazia com .
+-   **Comunicação com o Utilizador:** O utilizador está frustrado. Seja direto, forneça comandos claros e explique o que cada um faz. Peça sempre o output completo dos comandos.
 
 **documents and test reports created in this job**
 -   
--   Vários ficheiros de deployment na pasta .
+-   === Restaurando base de dados TVDEFleet ===
+=== Base de dados restaurada com sucesso! ===
+=== Password de todos os utilizadores: 123456 ===
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. : O utilizador confirma que o login funciona, mas a base de dados está incompleta. (PENDENTE)
-9.  : O utilizador indica que o login no browser falhou. (RESOLVIDO)
-8.  : O utilizador partilha o resultado do curl, mostrando credenciais inválidas. (RESOLVIDO)
-7.  : O utilizador mostra o resultado do comando de login, que não retornou nada. (RESOLVIDO)
-6.  : O utilizador pede para migrar a base de dados completa em vez de criar utilizadores manualmente. (EM PROGRESSO)
-5.  : O utilizador reporta que não consegue fazer login no frontend. (RESOLVIDO)
-4.  : O utilizador enfatiza a importância de colocar o sistema no VPS devido a problemas com o suporte da Emergent.
-3.  : O utilizador pede clarificação sobre onde executar um comando.
-2.  : O utilizador pergunta se precisa de reiniciar após instalar o .
-1.  : O utilizador pede ajuda para gerir o espaço no VPS. (RESOLVIDO com a reinstalação do SO).
+10. : O utilizador envia uma imagem mostrando que o login falhou com Invalid credentials. (PENDENTE)
+9.  : O utilizador relata que o login continua a falhar. (PENDENTE)
+8.  : O utilizador pergunta como instalar o SSL. (PENDENTE)
+7.  : O utilizador solicita a consolidação de todas as correções no Git. (EM PROGRESSO)
+6.  : O utilizador define a password padrão. (EM PROGRESSO)
+5.  : O utilizador pergunta sobre o estado das novas funcionalidades de backup. (PENDENTE)
+4.  : O utilizador reporta que a aplicação não consegue conectar-se à base de dados. (RESOLVIDO TEMPORARIAMENTE)
+3.  : O utilizador clarifica o requisito da funcionalidade de backup. (PENDENTE)
+2.  : O utilizador reporta novos problemas e solicita novas funcionalidades de backup/import. (PENDENTE)
+1.  : O utilizador pede para consolidar uma versão funcional no Git, incluindo o dump da base de dados com as passwords corretas. (EM PROGRESSO)
 
 **Project Health Check:**
--   **Broken:** A funcionalidade completa da aplicação está dependente da migração da base de dados.
--   **Mocked:** Nenhum. A aplicação está a funcionar com dados reais, embora incompletos.
+-   **Broken:** A aplicação está totalmente inacessível para o utilizador final devido a um problema de login persistente. A infraestrutura base está de pé, mas a aplicação em si não funciona.
+-   **Mocked:** Nenhum.
 
 **3rd Party Integrations**
--   **Meta WhatsApp Cloud API:** Integração de código existe, mas está inativa e não configurada no novo VPS.
--   **Docker/Docker Hub:** Utilizado para as imagens base (, , , ).
+-   **Docker / Docker Hub:** Essencial para o deployment.
+-   **Meta WhatsApp Cloud API:** Código presente mas inativo.
+-   **Playwright:** Usado para automação RPA (Uber login), mas atualmente quebrado devido a dependências do SO em falta no contentor.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO (Não aplicável, foi um processo de deployment manual).
--   **Troubleshoot agent used after agent stuck in loop:** NO.
+-   **Testing agent used after significant changes:** NO
+-   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** Nenhum.
--   **Known regressions:** Nenhuma.
+-   **Known regressions:** O login, que funcionou brevemente numa fase inicial do deployment, está agora quebrado. A persistência da base de dados também regrediu.
 
 **Credentials to test flow:**
--   **VPS SSH:**  (a password foi partilhada na conversa, , mas pode ter sido alterada).
--   **App Admin User:**  / 
--   **App Partner User:**  / 
+-   **VPS SSH:**  (password: , mas pode ter sido alterada).
+-   **App Admin User:**  /  (password desejada, mas atualmente não funciona).
 
 **What agent forgot to execute**
-O agente não conseguiu concluir a tarefa principal solicitada no final da sessão: a migração da base de dados de produção. As várias tentativas de transferência do ficheiro de backup falharam.</analysis>
+O agente entrou num ciclo longo de depuração de dependências e configurações, não conseguindo resolver o problema de login de forma definitiva. Embora tenha preparado um conjunto final de correções, a sua eficácia não foi verificada. As novas funcionalidades solicitadas pelo utilizador (sistema de backup) foram adiadas.</analysis>

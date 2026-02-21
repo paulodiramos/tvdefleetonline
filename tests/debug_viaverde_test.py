@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://vps-preview.preview.emergentagent.com/api"
+BACKEND_URL = "https://vps-fleet-test.preview.emergentagent.com/api"
 
 # Test credentials
 TEST_CREDENTIALS = {
