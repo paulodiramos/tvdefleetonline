@@ -1,0 +1,68 @@
+{
+  "summary": "Iteration 61: Tested Comissões Dashboard feature and NIF do Parceiro checkbox. All backend APIs working (9/9 tests passed). Frontend UI working correctly with dashboard cards, period filters, tabs, and navigation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_comissoes_dashboard.py",
+    "/app/test_reports/pytest/pytest_comissoes_dashboard.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Backend fix: Added 'incluir_nif_parceiro' field to RelatorioConfig and RelatorioConfigUpdate models to persist NIF checkbox setting",
+    "Backend fix: Added 'incluir_nif_parceiro' field to default config creation in GET /api/parceiros/{id}/config-relatorio"
+  ],
+  "updated_files": [
+    "/app/backend/server.py",
+    "/app/backend/tests/test_comissoes_dashboard.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "100% - all requested features working"
+  },
+  "test_credentials": {
+    "parceiro": {"email": "geral@zmbusines.com", "password": "Admin123!"},
+    "admin": {"email": "admin@tvdefleet.com", "password": "Admin123!"}
+  },
+  "seed_data_creation": "None required",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Comissões Dashboard tested in iteration 61. Dashboard at /comissoes shows: 4 metric cards (Total Comissões, Ganhos Totais, Total Despesas, Motoristas), period filters (semanal/mensal), 3 tabs (Evolução, Por Motorista, Ranking). Config page at /config/comissoes. NIF checkbox at /configuracao-relatorios working. Motoristas menu shows 'Comissões' link. Dashboard shows zeroed data when no reports exist for selected period (expected behavior).",
+  "features_tested": {
+    "comissoes_dashboard": {
+      "route": "/comissoes",
+      "cards": ["Total Comissões", "Ganhos Totais", "Total Despesas", "Motoristas"],
+      "filters": ["Semanal", "Mensal", "Semana selector", "Mês selector", "Ano selector"],
+      "tabs": ["Evolução", "Por Motorista", "Ranking"],
+      "buttons": ["Configurar → /config/comissoes", "Atualizar"]
+    },
+    "backend_apis": {
+      "GET /api/comissoes/dashboard/resumo": "PASS - Returns totais, evolucao_semanal, top_motoristas",
+      "GET /api/comissoes/dashboard/por-motorista": "PASS - Returns motoristas list with ganhos/despesas",
+      "GET /api/comissoes/parceiro/config": "PASS - Returns parceiro commission config",
+      "PUT /api/comissoes/parceiro/config": "PASS - Updates config (percentagem_fixa, etc)",
+      "GET /api/parceiros/{id}/config-relatorio": "PASS - Returns report config with incluir_nif_parceiro",
+      "PUT /api/parceiros/{id}/config-relatorio": "PASS - Updates and persists incluir_nif_parceiro"
+    },
+    "nif_checkbox": {
+      "location": "/configuracao-relatorios",
+      "field": "incluir_nif_parceiro",
+      "status": "Working - checkbox visible and persists to database"
+    },
+    "menu_navigation": {
+      "motoristas_menu": "Shows 'Comissões' link",
+      "comissoes_link_target": "/comissoes (dashboard)"
+    }
+  },
+  "bugfix_applied": {
+    "issue": "incluir_nif_parceiro field not persisting when updating report config",
+    "root_cause": "Field was missing from RelatorioConfig and RelatorioConfigUpdate Pydantic models in server.py",
+    "fix": "Added 'incluir_nif_parceiro: bool = False' to RelatorioConfig and 'incluir_nif_parceiro: Optional[bool] = None' to RelatorioConfigUpdate models"
+  }
+}
