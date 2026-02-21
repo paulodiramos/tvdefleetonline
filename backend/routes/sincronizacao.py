@@ -3000,7 +3000,7 @@ async def executar_sincronizacao_auto(
                     resultados[fonte] = {
                         "sucesso": False,
                         "metodo": "rpa",
-                        "erro": "Sessão Uber não encontrada. O parceiro deve fazer login em /login-plataformas primeiro."
+                        "erro": "Sessão Uber não encontrada. Faça login em Configurações → Login Uber."
                     }
                 else:
                     try:
