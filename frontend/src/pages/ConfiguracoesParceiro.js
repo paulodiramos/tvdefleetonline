@@ -1024,6 +1024,66 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
+          {/* Tab Armazenamento Cloud */}
+          <TabsContent value="armazenamento" className="space-y-4">
+            <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <HardDrive className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <span className="text-xl">Armazenamento Cloud</span>
+                    <p className="text-sm font-normal text-slate-500 mt-0.5">Configure onde os seus documentos são guardados</p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <p className="text-slate-600">
+                  Configure a integração com serviços de armazenamento cloud para guardar documentos, relatórios e vistorias.
+                </p>
+                
+                {/* Providers disponíveis */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-slate-700">Serviços Disponíveis</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="p-3 rounded-lg border border-slate-200 bg-white text-center">
+                      <span className="text-2xl mb-1 block">📦</span>
+                      <span className="text-sm font-medium">Terabox</span>
+                      <span className="text-xs text-slate-500 block">1TB grátis</span>
+                    </div>
+                    <div className="p-3 rounded-lg border border-slate-200 bg-white text-center">
+                      <span className="text-2xl mb-1 block">🔵</span>
+                      <span className="text-sm font-medium">Google Drive</span>
+                      <span className="text-xs text-slate-500 block">15GB grátis</span>
+                    </div>
+                    <div className="p-3 rounded-lg border border-slate-200 bg-white text-center">
+                      <span className="text-2xl mb-1 block">☁️</span>
+                      <span className="text-sm font-medium">OneDrive</span>
+                      <span className="text-xs text-slate-500 block">5GB grátis</span>
+                    </div>
+                    <div className="p-3 rounded-lg border border-slate-200 bg-white text-center">
+                      <span className="text-2xl mb-1 block">📁</span>
+                      <span className="text-sm font-medium">Dropbox</span>
+                      <span className="text-xs text-slate-500 block">2GB grátis</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-center pt-4">
+                  <Button 
+                    onClick={() => navigate('/armazenamento')}
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-6 text-base shadow-lg"
+                  >
+                    <HardDrive className="w-5 h-5 mr-2" />
+                    Configurar Armazenamento
+                    <ArrowLeft className="w-5 h-5 ml-2 rotate-180" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Tab Sincronização Automática */}
           <TabsContent value="sincronizacao" className="space-y-4">
             <ConfigSincronizacao user={user} />
