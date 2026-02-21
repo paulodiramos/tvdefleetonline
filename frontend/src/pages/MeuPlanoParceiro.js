@@ -22,7 +22,6 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchMeuPlano();
-    fetchPlanosDisponiveis();
   }, []);
 
   const fetchMeuPlano = async () => {
@@ -38,44 +37,6 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
       toast.error('Erro ao carregar plano');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchPlanosDisponiveis = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/planos`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const planosParceiro = response.data.filter(p => p.tipo_usuario === 'parceiro' && p.ativo);
-      setPlanosDisponiveis(planosParceiro);
-    } catch (error) {
-      console.error('Error fetching planos:', error);
-    }
-  };
-
-  const handleTrocarPlano = async () => {
-    if (!planoSelecionado) {
-      toast.error('Selecione um plano');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API}/users/trocar-plano`,
-        {
-          plano_id: planoSelecionado,
-          periodicidade: periodicidadeSelecionada
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success('Plano alterado com sucesso!');
-      setShowTrocarPlano(false);
-      fetchMeuPlano();
-    } catch (error) {
-      console.error('Error changing plan:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao trocar plano');
     }
   };
 
