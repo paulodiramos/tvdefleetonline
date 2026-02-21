@@ -24,7 +24,7 @@ services:
   # Backend FastAPI
   backend:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: ../deployment/Dockerfile.backend
     container_name: tvdefleet-backend
     restart: always
@@ -68,7 +68,7 @@ services:
   # Frontend React
   frontend:
     build:
-      context: ./frontend
+      context: ../frontend
       dockerfile: ../deployment/Dockerfile.frontend
       args:
         - REACT_APP_BACKEND_URL=https://${DOMAIN:-tvdefleet.com}
