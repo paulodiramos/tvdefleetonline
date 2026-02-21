@@ -2982,19 +2982,27 @@ async def executar_sincronizacao_auto(
                 # Verificar se existe sessão guardada (múltiplos métodos)
                 import os as os_module
                 
+                logger.info(f"🔍 Verificando sessão Uber para parceiro {pid}")
+                
                 # Método 1: Directório de sessão persistente
                 session_dir = f"/app/data/uber_sessions/parceiro_{pid}"
-                has_session = os_module.path.exists(session_dir) and os_module.path.exists(os_module.path.join(session_dir, "Default", "Cookies"))
+                cookies_path = os_module.path.join(session_dir, "Default", "Cookies")
+                has_session = os_module.path.exists(session_dir) and os_module.path.exists(cookies_path)
+                logger.info(f"   Método 1 (directório): {session_dir} - exists={os_module.path.exists(session_dir)}, cookies={os_module.path.exists(cookies_path)}")
                 
                 # Método 2: Verificar na base de dados
                 if not has_session:
                     sessao_db = await db.uber_sessions.find_one({"parceiro_id": pid, "active": True})
                     has_session = sessao_db is not None
+                    logger.info(f"   Método 2 (DB): sessao={sessao_db is not None}")
                 
                 # Método 3: Ficheiro antigo (compatibilidade)
                 if not has_session:
                     sessao_path = f"/tmp/uber_sessao_{pid}.json"
                     has_session = os_module.path.exists(sessao_path)
+                    logger.info(f"   Método 3 (ficheiro): {sessao_path} - exists={os_module.path.exists(sessao_path)}")
+                
+                logger.info(f"   Resultado final: has_session={has_session}")
                 
                 if not has_session:
                     resultados[fonte] = {
