@@ -311,10 +311,10 @@ const GestaoDocumentos = ({ user, onLogout }) => {
             </p>
           </div>
           <div className="flex gap-2">
-            {teraboxConnected && (
+            {cloudConnected && (
               <Button 
                 variant="outline" 
-                onClick={handleSyncTerabox}
+                onClick={handleSyncCloud}
                 disabled={syncing}
               >
                 {syncing ? (
@@ -322,13 +322,13 @@ const GestaoDocumentos = ({ user, onLogout }) => {
                 ) : (
                   <RefreshCw className="w-4 h-4 mr-2" />
                 )}
-                Sincronizar Terabox
+                Sincronizar Cloud
               </Button>
             )}
-            <Link to="/terabox">
+            <Link to="/armazenamento">
               <Button variant="outline">
                 <Folder className="w-4 h-4 mr-2" />
-                Abrir Terabox
+                Configurar Cloud
               </Button>
             </Link>
           </div>
