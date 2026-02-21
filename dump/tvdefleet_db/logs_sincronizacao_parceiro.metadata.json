@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"96f104e96cdc42ad9db586e7398a72aa","collectionName":"logs_sincronizacao_parceiro","type":"collection"}

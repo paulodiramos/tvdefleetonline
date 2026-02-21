@@ -1,175 +1,198 @@
 <analysis>**original_problem_statement:**
-O utilizador pretende continuar a desenvolver a sua aplicação de gestão de frotas. Inicialmente, o foco estava na correção de bugs (ligação WhatsApp, download de documentos) e melhorias na UI. O âmbito expandiu-se para uma substituição completa do sistema de mensagens WhatsApp, migrando da instável biblioteca  para a **API oficial da Meta (WhatsApp Cloud API)**.
-
-Os requisitos mais recentes e críticos do utilizador incluem:
-1.  **Implementar a API Oficial do WhatsApp:** Substituir a solução existente por uma integração robusta usando a WhatsApp Cloud API para enviar relatórios, alertas e mensagens em massa.
-2.  **Modelos de Mensagem (Templates):** Criar templates para relatórios semanais, vistorias, revisões e outros avisos de gestão de frota.
-3.  **Envio de Relatórios por WhatsApp:** Adicionar uma opção para enviar relatórios semanais gerados diretamente por WhatsApp.
-4.  **Alertas Automáticos:** Criar um sistema que envie alertas via WhatsApp para motoristas com documentos a expirar.
-5.  **Envio em Massa:** Desenvolver uma funcionalidade para administradores e parceiros enviarem uma mensagem padronizada para uma lista selecionada de motoristas.
-6.  **Agendamento Automático:** Implementar um sistema de agendamento para o envio automático dos relatórios semanais.
-7.  **Investigar Alojamento (VPS):** O utilizador pediu uma análise sobre a viabilidade e os custos de migrar a aplicação para um servidor VPS.
+O utilizador solicitou o deployment da sua aplicação de gestão de frotas para o seu próprio servidor VPS no endereço IP . Esta tarefa substituiu a prioridade anterior de configurar a integração da API do WhatsApp. O objetivo era ter a aplicação completa, incluindo a base de dados de produção, a funcionar no seu servidor privado. Após o deployment bem-sucedido, o utilizador pediu para que a base de dados do ambiente de produção (Emergent) fosse migrada para o novo VPS.
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-A aplicação full-stack (React/FastAPI/MongoDB) foi significativamente atualizada. A integração anterior com  foi substituída por uma nova e robusta integração com a **API oficial da Meta (WhatsApp Cloud API)**.
-- **Backend:**
-    - Foi criado um novo serviço () para gerir toda a comunicação com a WhatsApp Cloud API.
-    - Novos endpoints foram implementados para:
-        - Enviar mensagens baseadas em templates ().
-        - Enviar mensagens em massa para múltiplos motoristas ().
-        - Enviar relatórios semanais por WhatsApp ().
-        - Enviar alertas de documentos a expirar ().
-    - Foi implementado um serviço de agendamento () usando  para automatizar tarefas, como o envio de relatórios.
-    - Uma lista com 12 templates de mensagem pré-definidos foi adicionada.
-- **Frontend:**
-    - Uma nova página () foi criada para gerir a nova integração, com uma UI que inclui abas para Envio em Massa, Alertas Documentos, Templates e Histórico.
-    - A navegação principal foi atualizada com um submenu WhatsApp que liga tanto para a nova página (Cloud API) como para a antiga (Legacy).
-    - A página de listagem de relatórios foi atualizada com um botão para Enviar por WhatsApp.
+A aplicação full-stack (React/FastAPI/MongoDB) está agora implementada e a funcionar no VPS do utilizador () através de .
+-   **Infraestrutura:** Três contentores estão ativos:  (Nginx com React build),  (FastAPI) e  (versão 4.4, compatível com o CPU do VPS).
+-   **Rede:** O Nginx no contentor do frontend atua como reverse proxy, encaminhando os pedidos  para o serviço de backend, permitindo que a aplicação funcione corretamente na porta 80.
+-   **Base de Dados:** A base de dados no VPS contém apenas dois utilizadores ( e ) que foram inseridos manualmente para permitir o login e teste da aplicação. A migração completa dos dados de produção ainda não foi concluída.
+-   **Deployment:** Foi criada uma pasta  com os ,  e outros scripts necessários para a implementação.
 
 **Last working item**:
--   **Last item agent was working:** O agente concluiu a implementação completa da integração com a WhatsApp Cloud API e as funcionalidades associadas (relatórios, alertas, envio em massa). Após a implementação, foi executado o  que confirmou que todas as novas funcionalidades no backend e frontend passaram nos testes. O último passo foi pedir ao utilizador as credenciais necessárias (API Token, etc.) para ativar a ligação à API da Meta.
--   **Status:** USER VERIFICATION PENDING
+-   **Last item agent was working:** O agente estava a tentar migrar a base de dados de produção (do ambiente Emergent) para o VPS do utilizador. Várias tentativas de transferência do ficheiro de backup falharam (cópia via base64, links de download). Como solução temporária para permitir o login, o agente criou manualmente os utilizadores  e  na base de dados do VPS. O utilizador confirmou que o login funciona, mas que os restantes dados (parceiros, planos, etc.) não estão presentes.
+-   **Status:** IN PROGRESS
 -   **Agent Testing Done:** Y
--   **Which testing method agent to use?** Manual testing by user. A integração está code-complete e testada pelo agente, mas requer as credenciais do utilizador para ser ativada e testada de ponta a ponta.
--   **User Testing Done:** N
+-   **Which testing method agent to use?** Manual testing by curl/python -c
+-   **User Testing Done:** Y
 
 **All Pending/In progress Issue list**:
--   Issue 1: Configurar e Ativar a WhatsApp Cloud API (P0)
--   Issue 2: Refatorar o componente  (P2)
--   Issue 3: Verificar se todas as categorias de planos são editáveis (P2)
--   Issue 4: Corrigir bug de navegação na página da ficha do veículo (P2)
+-   Issue 1: Migrar a base de dados de produção completa para o VPS (P0)
 
 **Issues Detail:**
--   **Issue 1: Configurar e Ativar a WhatsApp Cloud API (P0)**
-    -   **Attempted fixes:** N/A. O agente implementou toda a lógica de código e aguarda as credenciais do utilizador.
+-   **Issue 1: Migrar a base de dados de produção completa para o VPS (P0)**
+    -   **Attempted fixes:**
+        1.  Foi criado um backup da base de dados ().
+        2.  A tentativa de copiar o conteúdo do backup via  resultou num ficheiro corrompido no VPS ().
+        3.  Outras abordagens como partilha de ficheiros ou dividir o ficheiro foram consideradas mas abandonadas.
+        4.  A tentativa de adicionar o backup ao repositório Git para ser transferido via  não funcionou, pois o ficheiro não foi adicionado ao commit.
     -   **Next debug checklist:**
-        1.  Obter do utilizador as seguintes credenciais: , , .
-        2.  Adicionar estas credenciais ao ficheiro .
-        3.  Reiniciar o serviço de backend (backend: stopped
-backend: started).
-        4.  Realizar um teste de envio de mensagem através da nova UI para confirmar a ligação.
-    -   **Why fix this issue and what will be achieved with the fix?** Ativará a principal funcionalidade solicitada pelo utilizador, proporcionando um sistema de mensagens estável e oficial para a aplicação.
-    -   **Status:** BLOCKED (Aguardando credenciais do utilizador).
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both.
+        1.  Verificar por que o ficheiro  não foi adicionado ao repositório Git. Pode ser devido ao  ou a um erro no processo de commit.
+        2.  Confirmar que o  é executado antes do commit.
+        3.  Uma vez que o ficheiro esteja no repositório, guiar o utilizador para executar  no VPS.
+        4.  Executar o comando de restauro no VPS: .
+        5.  Se o Git falhar, usar uma alternativa robusta como  para transferir o ficheiro do ambiente Emergent para o VPS.
+    -   **Why fix this issue and what will be achieved with the fix?** Isto irá restaurar todos os dados da aplicação (utilizadores, veículos, motoristas, planos, etc.) no novo ambiente VPS, completando o processo de migração.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Backend (verificar dados na DB) e Frontend (verificar se os dados aparecem na UI).
     -   **Blocked on other issue:** Não.
 
 **In progress Task List**:
--   **Task 1: Implementar UI para funcionalidades pendentes da WhatsApp Cloud API**
-    -   **Where to resume:** Na página .
-    -   **What will be achieved with this?** Implementar a interface para as abas Alertas Documentos, Templates e Histórico, que atualmente são placeholders. Adicionar também uma UI para configurar o agendamento de relatórios.
-    -   **Status:** NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** Frontend.
-    -   **Blocked on something:** Issue 1 (Configurar e Ativar a WhatsApp Cloud API). É preferível ativar a API primeiro.
+-   **Task 1: Migração da Base de Dados**
+    -   **Where to resume:** Continuar as tentativas de transferir o ficheiro  para o VPS do utilizador e importá-lo para o MongoDB.
+    -   **What will be achieved with this?** A aplicação no VPS terá todos os dados da versão de produção.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on something:** N/A.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
+    *   (P1) Configurar o domínio  para apontar para o IP .
+    *   (P1) Configurar SSL (HTTPS) no VPS usando Let's Encrypt.
     *   (P1) Implementar a UI para as abas de Alertas, Templates e Histórico na página .
-    *   (P1) Criar uma UI para o utilizador configurar o agendamento de relatórios semanais.
-    *   (P1) Ativar a autenticação real com os provedores de cloud (Google Drive, etc.), que também aguarda credenciais do utilizador.
+    *   (P2) Ativar a integração com a WhatsApp Cloud API (ainda pendente das credenciais do utilizador).
 *   **Future Tasks:**
-    *   Remover a integração antiga com  (código e UI) após a nova API estar estável.
-    *   Implementar funcionalidades de Alertas Avançados.
+    *   Remover a integração antiga com .
+    *   Refatorar componentes monolíticos como .
     *   Criar um sistema para arquivar dados antigos da base de dados.
     *   Implementar um sistema de relógio de ponto na app móvel.
-    *   Investigar a instabilidade do scraper da Prio.
 
 **Completed work in this session**
--   **Feature: Migração para WhatsApp Cloud API (CONCLUÍDO):** Substituída a biblioteca  pela API oficial da Meta.
--   **Feature: Backend para WhatsApp Cloud API (CONCLUÍDO):** Criados todos os serviços e endpoints necessários em .
--   **Feature: UI para Envio em Massa via WhatsApp (CONCLUÍDO):** Criada a página  com funcionalidade de envio em massa.
--   **Feature: Envio de Relatórios e Alertas por WhatsApp (CONCLUÍDO):** Integrados os módulos de relatórios e alertas com o novo serviço de WhatsApp.
--   **Feature: Agendador de Tarefas (CONCLUÍDO):** Implementado um serviço de scheduler em  para tarefas automáticas.
--   **Enhancement: Botão de Envio por WhatsApp (CONCLUÍDO):** Adicionado botão na UI de relatórios.
--   **Enhancement: Navegação (CONCLUÍDO):** Atualizado o menu principal com um submenu para as páginas de WhatsApp.
--   **Testing: Testes Automatizados (CONCLUÍDO):** Executado com sucesso o , com 100% de aprovação nos testes de backend.
--   **Bugfix: Bug de Download de Documentos (RESOLVIDO):** Confirmado que o endpoint de download já tratava corretamente os UUIDs, resolvendo o problema reportado.
+-   **Feature: Deployment em VPS (CONCLUÍDO):** A aplicação foi totalmente implementada num VPS externo usando Docker e Docker Compose.
+-   **Task: Criação de Ficheiros de Deployment (CONCLUÍDO):** Foram criados e refinados os ficheiros ,  e .
+-   **Task: Assistência na Preparação do VPS (CONCLUÍDO):** O agente guiou o utilizador na reinstalação do SO (Ubuntu 22.04) e na instalação de Docker, Docker Compose e Git.
+-   **Bugfix: Resolução de Problemas de Build e Runtime (RESOLVIDO):** Uma longa sessão de debugging foi concluída com sucesso, resolvendo múltiplos problemas:
+    -   Incompatibilidade do CPU do VPS com MongoDB 7 (foi feito o downgrade para ).
+    -   Incompatibilidade do CPU com a versão do NumPy (foram fixadas versões mais antigas de , , etc.).
+    -   Versão desatualizada do Node.js (foi atualizada para ).
+    -   Dependências Python em falta (, , , , etc.).
+    -   Configuração incorreta do Nginx como reverse proxy (corrigido para encaminhar  para o backend).
+    -   Erro de  no login (corrigido adicionando um campo uid=0(root) gid=0(root) groups=0(root) ao documento do utilizador).
+    -   Password hash incorreta (corrigida gerando uma nova hash dentro do contentor do backend).
+-   **Task: Seeding da Base de Dados (CONCLUÍDO - PARCIALMENTE):** Utilizadores  e  foram criados manualmente para permitir o login e teste da aplicação.
 
 **Earlier issues found/mentioned but not fixed**
-- A necessidade de refatorar componentes monolíticos como  persiste como uma dívida técnica.
+-   Configurar e Ativar a WhatsApp Cloud API (Pendente de credenciais do utilizador).
+-   Refatorar o componente .
+-   Verificar se todas as categorias de planos são editáveis.
+-   Corrigir bug de navegação na página da ficha do veículo.
 
 **Known issue recurrence from previous fork**
-- O problema do  foi resolvido de forma definitiva com a migração para a API oficial. A dívida técnica de refatoração continua a ser um ponto recorrente.
+- A transferência de ficheiros grandes (como backups de DB) do ambiente Emergent para o exterior provou ser problemática.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **WhatsApp Cloud API Integration:** A aplicação agora utiliza a API oficial e paga da Meta, que é baseada em tokens e templates, garantindo estabilidade e evitando bloqueios.
--   **Background Task Scheduling:** Foi introduzido o  no backend para permitir a execução de tarefas recorrentes de forma assíncrona, como o envio de relatórios semanais.
--   **API-Driven Frontend:** A nova página  é um bom exemplo de uma UI desacoplada que consome uma série de novos endpoints do backend para fornecer funcionalidades complexas.
+-   **Docker & Docker Compose:** Utilizados para containerizar e orquestrar os serviços da aplicação (frontend, backend, db) no VPS.
+-   **Nginx Reverse Proxy:** Implementado no contentor do frontend para encaminhar pedidos de API () para o contentor do backend, permitindo uma única porta de entrada (80).
+-   **Compatibilidade de CPU:** Foi necessário lidar com problemas de incompatibilidade do CPU antigo do VPS, que não suportava instruções AVX (para MongoDB 5+) nem X86_V2 (para versões recentes do NumPy). Isto exigiu o downgrade de várias dependências.
+-   **Debugging de Dependências:** Foi necessário um processo iterativo de adicionar dependências em falta ao  e reconstruir a imagem do backend.
 
 **key DB schema**
-- Nenhuma alteração significativa ao esquema da base de dados nesta sessão.
+-   : Campo uid=0(root) gid=0(root) groups=0(root) (String) foi adicionado manualmente para ser compatível com a lógica de autenticação.
 
 **All files of reference**
--   **Ficheiros Criados:**
+-   **Ficheiros Criados/Modificados:**
     -   
     -   
     -   
     -   
--   **Ficheiros Modificados:**
-    -   
-    -   
-    -   
-    -   
-    -   
-    -   
-    -   
-    -   
+    -    (criado no workspace, mas a transferência falhou)
 
 **Areas that need refactoring**:
-- A integração antiga com  ( e ) tornou-se obsoleta e deve ser removida para limpar a base de código.
+- A forma como as variáveis de ambiente e chaves secretas são geridas no  (algumas estão hardcoded) deve ser melhorada, utilizando um ficheiro  de forma consistente.
 
 **key api endpoints**
--   : Envia uma mensagem usando um template pré-aprovado.
--   : Envia a mesma mensagem para múltiplos motoristas.
--   : Desencadeia o envio de um relatório semanal via WhatsApp.
--   : Envia alertas sobre documentos a expirar.
--   : Configura uma tarefa agendada.
--   : Verifica o estado do agendador.
+-   : Endpoint de login, agora a funcionar no VPS.
+-   A API está acessível através do Nginx em .
 
 **Critical Info for New Agent**
--   **Prioridade Máxima:** A ativação da WhatsApp Cloud API está pendente das credenciais do utilizador. O agente deve guiar o utilizador para obter e fornecer o , o  e o  da sua conta Meta for Developers.
--   **Duas Frentes de Trabalho:** O utilizador demonstrou interesse em duas áreas: 1) Finalizar a integração do WhatsApp e 2) Explorar a migração para um servidor VPS. O agente deve gerir ambas as conversas, mas priorizar a conclusão do trabalho no WhatsApp, que está quase finalizado.
--   **Próximos Passos (Implementação):** Após a ativação da API, os próximos passos lógicos são construir a UI para as abas pendentes na página  (Alertas, Templates, Histórico) e para a configuração do agendador.
+-   **Prioridade Máxima:** A tarefa mais importante é concluir a migração da base de dados completa para o VPS do utilizador.
+-   **Ambiente do VPS:** O VPS tem um CPU antigo. Qualquer atualização de dependências (especialmente ,  e ) deve ser feita com cuidado para evitar problemas de compatibilidade (AVX, X86_V2).
+-   **Interação com o Utilizador:** O utilizador é prático e executa os comandos fornecidos, mas precisa de instruções muito claras, passo a passo, e por vezes copia/cola de forma incorreta. Comandos one-liner ou blocos de código para copiar devem ser preferidos.
+-   **Estratégia de Backup:** A transferência do ficheiro de backup via  falhou. A próxima tentativa deve ser via usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
+           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
+           <command> [<args>]
+
+These are common Git commands used in various situations:
+
+start a working area (see also: git help tutorial)
+   clone     Clone a repository into a new directory
+   init      Create an empty Git repository or reinitialize an existing one
+
+work on the current change (see also: git help everyday)
+   add       Add file contents to the index
+   mv        Move or rename a file, a directory, or a symlink
+   restore   Restore working tree files
+   rm        Remove files from the working tree and from the index
+
+examine the history and state (see also: git help revisions)
+   bisect    Use binary search to find the commit that introduced a bug
+   diff      Show changes between commits, commit and working tree, etc
+   grep      Print lines matching a pattern
+   log       Show commit logs
+   show      Show various types of objects
+   status    Show the working tree status
+
+grow, mark and tweak your common history
+   branch    List, create, or delete branches
+   commit    Record changes to the repository
+   merge     Join two or more development histories together
+   rebase    Reapply commits on top of another base tip
+   reset     Reset current HEAD to the specified state
+   switch    Switch branches
+   tag       Create, list, delete or verify a tag object signed with GPG
+
+collaborate (see also: git help workflows)
+   fetch     Download objects and refs from another repository
+   pull      Fetch from and integrate with another repository or a local branch
+   push      Update remote refs along with associated objects
+
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system. (garantindo que o ficheiro é adicionado) ou, como fallback, via .
 
 **documents and test reports created in this job**
 -   
--    (atualizado)
+-   Vários ficheiros de deployment na pasta .
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: O utilizador perguntou sobre a migração para um VPS, imediatamente após o agente ter pedido as credenciais do WhatsApp. (PENDENTE)
-2.  ****: O utilizador aprovou o plano do agente para implementar as funcionalidades do WhatsApp. (CONCLUÍDO)
-3.  ****: Confirmação do utilizador para avançar com o plano de implementação do WhatsApp. (CONCLUÍDO)
-4.  ****: O utilizador detalhou os requisitos para a nova integração do WhatsApp. (CONCLUÍDO)
-5.  ****: Confirmação do utilizador para avançar com o plano. (CONCLUído)
-6.  ****: O utilizador pediu que o template do relatório semanal incluísse os valores. (CONCLUÍDO)
-7.  ****: O utilizador confirmou a escolha pela API oficial da Meta e os tipos de templates. (CONCLUÍDO)
-8.  ****: O utilizador definiu a estratégia de comunicação. (CONCLUÍDO)
-9.  ****: O utilizador perguntou sobre a plataforma Brevo como alternativa. O agente pesquisou e apresentou os preços. (CONCLUÍDO)
-10. ****: O utilizador reportou um sintoma do bug da biblioteca . (RESOLVIDO)
+10. : O utilizador confirma que o login funciona, mas a base de dados está incompleta. (PENDENTE)
+9.  : O utilizador indica que o login no browser falhou. (RESOLVIDO)
+8.  : O utilizador partilha o resultado do curl, mostrando credenciais inválidas. (RESOLVIDO)
+7.  : O utilizador mostra o resultado do comando de login, que não retornou nada. (RESOLVIDO)
+6.  : O utilizador pede para migrar a base de dados completa em vez de criar utilizadores manualmente. (EM PROGRESSO)
+5.  : O utilizador reporta que não consegue fazer login no frontend. (RESOLVIDO)
+4.  : O utilizador enfatiza a importância de colocar o sistema no VPS devido a problemas com o suporte da Emergent.
+3.  : O utilizador pede clarificação sobre onde executar um comando.
+2.  : O utilizador pergunta se precisa de reiniciar após instalar o .
+1.  : O utilizador pede ajuda para gerir o espaço no VPS. (RESOLVIDO com a reinstalação do SO).
 
 **Project Health Check:**
--   **Broken:** Nenhuma funcionalidade existente está quebrada.
--   **Mocked:** A integração com a WhatsApp Cloud API está implementada e testada, mas não está funcional porque aguarda as credenciais de produção do utilizador.
+-   **Broken:** A funcionalidade completa da aplicação está dependente da migração da base de dados.
+-   **Mocked:** Nenhum. A aplicação está a funcionar com dados reais, embora incompletos.
 
 **3rd Party Integrations**
--   **Meta WhatsApp Cloud API:** Integrada, mas a aguardar credenciais para ativação.
--   **wppconnect-team/wppconnect:** Integração legacy, a ser descontinuada.
--   **PyDrive2, dropbox, onedrivesdk:** Bibliotecas para integração com serviços de cloud, implementadas mas a aguardar credenciais.
+-   **Meta WhatsApp Cloud API:** Integração de código existe, mas está inativa e não configurada no novo VPS.
+-   **Docker/Docker Hub:** Utilizado para as imagens base (, , , ).
 
 **Testing status**
--   **Testing agent used after significant changes:** YES.
+-   **Testing agent used after significant changes:** NO (Não aplicável, foi um processo de deployment manual).
 -   **Troubleshoot agent used after agent stuck in loop:** NO.
--   **Test files created:** 
+-   **Test files created:** Nenhum.
 -   **Known regressions:** Nenhuma.
 
 **Credentials to test flow:**
+-   **VPS SSH:**  (a password foi partilhada na conversa, , mas pode ter sido alterada).
 -   **App Admin User:**  / 
--   **App Partner User (Zeny):**  / 
+-   **App Partner User:**  / 
 
 **What agent forgot to execute**
-O agente executou todas as tarefas solicitadas. A continuação do trabalho está agora dependente de uma ação do utilizador (fornecer credenciais).</analysis>
+O agente não conseguiu concluir a tarefa principal solicitada no final da sessão: a migração da base de dados de produção. As várias tentativas de transferência do ficheiro de backup falharam.</analysis>

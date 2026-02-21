@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"02686c6fc6a049f5b25ab29dceae8ad4","collectionName":"historico_custos_veiculo","type":"collection"}

@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"f71f66ea917c4f499500987191731571","collectionName":"ficheiros_importados","type":"collection"}

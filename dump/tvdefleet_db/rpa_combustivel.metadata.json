@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"d729ad3b14dd43cea1f3ed8590761d68","collectionName":"rpa_combustivel","type":"collection"}

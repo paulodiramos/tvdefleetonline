@@ -9,7 +9,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cloud-api-staging.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://vps-preview.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "admin@tvdefleet.com"
