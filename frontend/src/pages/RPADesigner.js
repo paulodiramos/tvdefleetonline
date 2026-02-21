@@ -689,8 +689,8 @@ export default function RPADesigner({ user, onLogout }) {
             <h1>🎨 RPA Preview</h1>
             <div class="url-bar" id="url-display">A carregar...</div>
             <div class="status">
-              <div class="status-dot"></div>
-              <span>A GRAVAR</span>
+              <div class="status-dot" style="background: #f59e0b;"></div>
+              <span>PREVIEW</span>
             </div>
           </div>
           
@@ -700,7 +700,7 @@ export default function RPADesigner({ user, onLogout }) {
                 <div class="loading-spinner"></div>
                 <p>A iniciar browser...</p>
                 <p style="font-size: 12px; margin-top: 10px; color: #64748b;">
-                  Clique na imagem para interagir
+                  Clique em "Iniciar Gravação" quando estiver pronto
                 </p>
               </div>
               <img id="preview-img" style="display: none;" alt="Preview" />
