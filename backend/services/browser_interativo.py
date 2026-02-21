@@ -179,9 +179,9 @@ class BrowserInterativo:
         
     async def guardar_sessao(self):
         """
-        Guardar estado da sessão.
+        Guardar estado da sessão na base de dados e confirmar ficheiros locais.
         Com launch_persistent_context, a sessão é automaticamente guardada no user_data_dir.
-        Este método existe para compatibilidade e apenas confirma que o directório existe.
+        Este método também regista na base de dados que a sessão está ativa.
         """
         if not self.context:
             return False
@@ -189,12 +189,33 @@ class BrowserInterativo:
             # Com contexto persistente, os dados são guardados automaticamente
             if os.path.exists(self.user_data_dir):
                 logger.info(f"Sessão Uber persistente activa em: {self.user_data_dir}")
+                
+                # Guardar registo na base de dados
+                from database import db
+                from datetime import datetime, timedelta
+                
+                now = datetime.now(timezone.utc)
+                expira = now + timedelta(days=30)
+                
+                await db.uber_sessions.update_one(
+                    {"parceiro_id": self.parceiro_id},
+                    {"$set": {
+                        "parceiro_id": self.parceiro_id,
+                        "active": True,
+                        "logged_in_at": now.isoformat(),
+                        "expires_at": expira.isoformat(),
+                        "user_data_dir": self.user_data_dir,
+                        "updated_at": now.isoformat()
+                    }},
+                    upsert=True
+                )
+                logger.info(f"Sessão Uber guardada na base de dados para parceiro {self.parceiro_id}")
                 return True
             else:
                 logger.warning(f"Directório de sessão não encontrado: {self.user_data_dir}")
                 return False
         except Exception as e:
-            logger.error(f"Erro ao verificar sessão Uber: {e}")
+            logger.error(f"Erro ao guardar sessão Uber: {e}")
             return False
             
     async def extrair_rendimentos(self) -> dict:
