@@ -36,14 +36,36 @@ load_dotenv(ROOT_DIR / '.env')
 
 # Install Playwright browsers on startup (for production)
 def install_playwright_browsers():
+    """Verifica e instala os browsers do Playwright automaticamente"""
+    import shutil
+    
+    # Verificar se o chromium já está instalado
+    chromium_path = "/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell"
+    
+    if os.path.exists(chromium_path):
+        logging.info("✅ Playwright Chromium já está instalado")
+        return True
+    
+    logging.info("🔄 A instalar Playwright Chromium...")
     try:
-        result = subprocess.run(['playwright', 'install', 'chromium'], capture_output=True, text=True, timeout=300)
+        result = subprocess.run(
+            ['playwright', 'install', 'chromium'], 
+            capture_output=True, 
+            text=True, 
+            timeout=300
+        )
         if result.returncode == 0:
-            logging.info("Playwright Chromium installed successfully")
+            logging.info("✅ Playwright Chromium instalado com sucesso!")
+            return True
         else:
-            logging.warning(f"Playwright install warning: {result.stderr}")
+            logging.warning(f"⚠️ Playwright install warning: {result.stderr}")
+            return False
+    except subprocess.TimeoutExpired:
+        logging.error("❌ Timeout ao instalar Playwright browsers")
+        return False
     except Exception as e:
-        logging.warning(f"Could not install Playwright browsers: {e}")
+        logging.warning(f"❌ Não foi possível instalar Playwright browsers: {e}")
+        return False
 
 # Run Playwright install on module load
 install_playwright_browsers()
