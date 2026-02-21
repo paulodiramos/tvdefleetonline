@@ -19,9 +19,12 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [planoData, setPlanoData] = useState(null);
+  const [modulosExtras, setModulosExtras] = useState([]);
+  const [adicionandoModulo, setAdicionandoModulo] = useState(null);
 
   useEffect(() => {
     fetchMeuPlano();
+    fetchModulosExtras();
   }, []);
 
   const fetchMeuPlano = async () => {
@@ -37,6 +40,38 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
       toast.error('Erro ao carregar plano');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchModulosExtras = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/gestao-planos/modulos-extras`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setModulosExtras(response.data.modulos_extras || []);
+    } catch (error) {
+      console.error('Error fetching modulos extras:', error);
+    }
+  };
+
+  const handleAdicionarModulo = async (moduloCodigo) => {
+    try {
+      setAdicionandoModulo(moduloCodigo);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/gestao-planos/modulos-extras/adicionar?modulo_codigo=${moduloCodigo}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message);
+      fetchMeuPlano();
+      fetchModulosExtras();
+    } catch (error) {
+      console.error('Error adding module:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao adicionar módulo');
+    } finally {
+      setAdicionandoModulo(null);
     }
   };
 
