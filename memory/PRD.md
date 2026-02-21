@@ -27,7 +27,7 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
-### Session 2026-02-21 (Dashboard de Comissões + NIF Relatórios + WhatsApp Debug)
+### Session 2026-02-21 (Dashboard de Comissões + NIF Relatórios + WhatsApp Debug + Cloud OAuth)
 - **Feature: Dashboard de Comissões - DONE:**
   - **Nova página:** `/comissoes` transformada em dashboard de visualização
   - **4 Cards de Métricas:** Total Comissões, Ganhos Totais, Total Despesas, Motoristas
@@ -64,6 +64,23 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - O endpoint `POST /api/gestao-planos/modulos-extras/adicionar` já existia e funciona
   - A página `/meu-plano` lista módulos disponíveis com botões "Adicionar" funcionais
   - Testado com sucesso: módulo "comissoes" adicionado via API
+
+- **Feature: Cloud Storage OAuth - STRUCTURE READY (needs credentials):**
+  - **Endpoints OAuth Implementados:**
+    - `GET /api/storage-config/oauth/{provider}/url` - Gera URL de autorização OAuth
+    - `GET /api/storage-config/oauth/google_drive/callback` - Callback Google Drive
+    - `GET /api/storage-config/oauth/dropbox/callback` - Callback Dropbox
+    - `GET /api/storage-config/oauth/onedrive/callback` - Callback OneDrive
+  - **Providers Suportados:** Google Drive, Dropbox, OneDrive (Terabox usa API key)
+  - **Variáveis de Ambiente Adicionadas ao `.env`:**
+    - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+    - `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET`
+    - `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`
+  - **Ficheiros:** `backend/routes/storage_config.py` (linhas 353-705)
+  - **NOTA:** Para funcionar, o utilizador deve:
+    1. Criar aplicação no Google Cloud Console / Dropbox App Console / Azure Portal
+    2. Configurar Redirect URIs: `{BACKEND_URL}/api/storage-config/oauth/{provider}/callback`
+    3. Preencher as variáveis de ambiente no backend/.env
 
 ### Session 2026-02-21 (Cloud Storage Integration - Parte 3)
 - **Feature: Integração de Uploads com Cloud Storage - DONE:**
