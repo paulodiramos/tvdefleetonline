@@ -909,6 +909,134 @@ async def websocket_parceiro_login(websocket: WebSocket, session_id: str):
             del active_login_sessions[session_id]
 
 
+# ==================== EXECUÇÃO SEQUENCIAL (LOGIN + EXTRAÇÃO) ====================
+
+class ExecutarSincronizacaoRequest(BaseModel):
+    """Request para executar sincronização completa (Login + Extração)"""
+    plataforma_id: str
+    parceiro_id: str
+    semana_offset: int = 0
+
+@router.post("/executar-sincronizacao")
+async def executar_sincronizacao_completa(
+    data: ExecutarSincronizacaoRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Executa uma sincronização completa para uma plataforma:
+    1. Primeiro executa o design de LOGIN (se existir) para estabelecer sessão
+    2. Depois executa o design de EXTRAÇÃO para obter os dados
+    
+    Esta abordagem permite separar a criação de sessão (que pode requerer
+    intervenção manual para CAPTCHA) da extração automática de dados.
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode executar sincronização")
+    
+    # Verificar plataforma
+    plataforma = await db.plataformas_rpa.find_one({"id": data.plataforma_id})
+    if not plataforma:
+        raise HTTPException(status_code=404, detail="Plataforma não encontrada")
+    
+    # Buscar designs de login e extração para esta plataforma e semana
+    design_login = await db.designs_rpa.find_one({
+        "plataforma_id": data.plataforma_id,
+        "semana_offset": data.semana_offset,
+        "tipo_design": "login",
+        "ativo": True
+    })
+    
+    design_extracao = await db.designs_rpa.find_one({
+        "plataforma_id": data.plataforma_id,
+        "semana_offset": data.semana_offset,
+        "tipo_design": "extracao",
+        "ativo": True
+    })
+    
+    # Se não existe design de extração com tipo novo, procurar design antigo (sem tipo)
+    if not design_extracao:
+        design_extracao = await db.designs_rpa.find_one({
+            "plataforma_id": data.plataforma_id,
+            "semana_offset": data.semana_offset,
+            "tipo_design": {"$exists": False},
+            "ativo": True
+        })
+    
+    if not design_extracao:
+        return {
+            "sucesso": False,
+            "erro": f"Não existe design de extração para a semana {data.semana_offset}. Crie primeiro um design de Extração no RPA Designer.",
+            "plataforma": plataforma.get("nome"),
+            "semana_offset": data.semana_offset
+        }
+    
+    execution_id = str(uuid.uuid4())
+    
+    return {
+        "sucesso": True,
+        "execution_id": execution_id,
+        "plataforma": plataforma.get("nome"),
+        "parceiro_id": data.parceiro_id,
+        "semana_offset": data.semana_offset,
+        "tem_design_login": design_login is not None,
+        "tem_design_extracao": design_extracao is not None,
+        "design_login_id": design_login.get("id") if design_login else None,
+        "design_extracao_id": design_extracao.get("id") if design_extracao else None,
+        "instrucoes": (
+            "Use o endpoint /ws/executar-sincronizacao/{execution_id} para iniciar a execução via WebSocket. "
+            "O sistema irá executar primeiro o design de Login (se existir) e depois o de Extração."
+        )
+    }
+
+
+@router.get("/designs-sincronizacao/{plataforma_id}/{semana_offset}")
+async def obter_designs_sincronizacao(
+    plataforma_id: str,
+    semana_offset: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Retorna os designs disponíveis para uma sincronização (Login e Extração).
+    Útil para o frontend mostrar o estado antes de iniciar a sincronização.
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode ver designs")
+    
+    design_login = await db.designs_rpa.find_one({
+        "plataforma_id": plataforma_id,
+        "semana_offset": semana_offset,
+        "tipo_design": "login",
+        "ativo": True
+    }, {"_id": 0, "passos": 0})
+    
+    design_extracao = await db.designs_rpa.find_one({
+        "plataforma_id": plataforma_id,
+        "semana_offset": semana_offset,
+        "tipo_design": "extracao",
+        "ativo": True
+    }, {"_id": 0, "passos": 0})
+    
+    # Fallback para designs antigos sem tipo
+    if not design_extracao:
+        design_extracao = await db.designs_rpa.find_one({
+            "plataforma_id": plataforma_id,
+            "semana_offset": semana_offset,
+            "tipo_design": {"$exists": False},
+            "ativo": True
+        }, {"_id": 0, "passos": 0})
+        if design_extracao:
+            design_extracao["tipo_design"] = "extracao"  # Normalizar
+    
+    return {
+        "plataforma_id": plataforma_id,
+        "semana_offset": semana_offset,
+        "login": design_login,
+        "extracao": design_extracao,
+        "pode_executar": design_extracao is not None,
+        "fluxo": "login + extracao" if design_login else "apenas extracao"
+    }
+
+
 # ==================== MOTOR DE EXECUÇÃO RPA ====================
 
 class ExecutarDesignRequest(BaseModel):
