@@ -184,13 +184,15 @@ async function getOrCreateClient(parceiro_id) {
     
     // QR Code event
     client.on('qr', async (qr) => {
-        console.log(`QR Code received for partner ${parceiro_id}`);
+        console.log(`📱 QR Code received for partner ${parceiro_id}`);
         const qrDataUrl = await qrcode.toDataURL(qr);
         qrCodes.set(parceiro_id, qrDataUrl);
         
         const status = clientStatus.get(parceiro_id) || {};
         status.connected = false;
         status.ready = false;
+        status.error = null;  // Clear any previous errors when new QR is generated
+        status.qrGeneratedAt = new Date();
         status.lastActivity = new Date();
         clientStatus.set(parceiro_id, status);
     });
