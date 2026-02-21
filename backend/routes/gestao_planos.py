@@ -43,6 +43,67 @@ async def listar_modulos(
     return modulos
 
 
+@router.get("/modulos-extras")
+async def listar_modulos_extras(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar módulos extras disponíveis para compra (não incluídos no plano atual)"""
+    # Buscar módulos da collection
+    modulos = await db.modulos.find({"ativo": True}, {"_id": 0}).to_list(100)
+    
+    # Buscar plano do utilizador para saber quais módulos já tem
+    user_id = current_user["id"]
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "modulos_ativos": 1, "plano_id": 1})
+    
+    modulos_ativos = user.get("modulos_ativos", []) if user else []
+    
+    # Filtrar módulos que o utilizador não tem e que têm preço > 0
+    modulos_extras = []
+    for m in modulos:
+        if m.get("codigo") not in modulos_ativos and m.get("preco_mensal", 0) > 0:
+            modulos_extras.append(m)
+    
+    return {
+        "modulos_extras": modulos_extras,
+        "modulos_ativos": modulos_ativos,
+        "total": len(modulos_extras)
+    }
+
+
+@router.post("/modulos-extras/adicionar")
+async def adicionar_modulo_extra(
+    modulo_codigo: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Adicionar um módulo extra à conta do utilizador"""
+    user_id = current_user["id"]
+    
+    # Verificar se módulo existe
+    modulo = await db.modulos.find_one({"codigo": modulo_codigo, "ativo": True}, {"_id": 0})
+    if not modulo:
+        raise HTTPException(status_code=404, detail="Módulo não encontrado")
+    
+    # Adicionar módulo ao utilizador
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$addToSet": {"modulos_ativos": modulo_codigo}}
+    )
+    
+    if result.modified_count == 0:
+        # Verificar se já tinha o módulo
+        user = await db.users.find_one({"id": user_id}, {"_id": 0, "modulos_ativos": 1})
+        if modulo_codigo in (user.get("modulos_ativos", []) if user else []):
+            raise HTTPException(status_code=400, detail="Módulo já está ativo")
+    
+    logger.info(f"Módulo {modulo_codigo} adicionado ao utilizador {user_id}")
+    
+    return {
+        "success": True,
+        "message": f"Módulo '{modulo.get('nome')}' adicionado com sucesso",
+        "modulo": modulo
+    }
+
+
 @router.get("/modulos/{modulo_id}")
 async def obter_modulo(
     modulo_id: str,
