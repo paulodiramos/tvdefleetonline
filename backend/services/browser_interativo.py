@@ -295,7 +295,7 @@ class BrowserInterativo:
         valor = valor.replace(",", ".")
         try:
             return float(valor)
-        except:
+        except ValueError:
             return 0.0
             
     async def fechar(self):
