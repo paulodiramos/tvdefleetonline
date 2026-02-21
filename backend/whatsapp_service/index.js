@@ -197,10 +197,11 @@ async function getOrCreateClient(parceiro_id) {
     
     // Ready event
     client.on('ready', () => {
-        console.log(`WhatsApp ready for partner ${parceiro_id}`);
+        console.log(`✅ WhatsApp READY for partner ${parceiro_id}`);
+        console.log(`   Client info: ${JSON.stringify(client.info)}`);
         qrCodes.delete(parceiro_id);
         
-        clientStatus.set(parceiro_id, {
+        const newStatus = {
             connected: true,
             ready: true,
             error: null,
@@ -210,7 +211,10 @@ async function getOrCreateClient(parceiro_id) {
                 platform: client.info?.platform || 'Unknown'
             },
             lastActivity: new Date()
-        });
+        };
+        
+        console.log(`   Setting status: ${JSON.stringify(newStatus)}`);
+        clientStatus.set(parceiro_id, newStatus);
     });
     
     // Authenticated event
