@@ -443,6 +443,13 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - Documentos carregados no registo agora ficam associados ao motorista
 - [x] **Correção Playwright/RPA** - **DONE** (2026-02-20)
   - Browsers reinstalados na versão correcta (v1194)
+- [x] **Integração Cloud Storage Completa** - **DONE** (2026-02-21)
+  - 3 modos: Local, Cloud, Ambos (backup)
+  - 4 providers: Terabox, Google Drive, OneDrive, Dropbox
+  - Todos os endpoints de upload refatorados para usar FileUploadHandler
+  - Endpoints de download da cloud implementados
+  - Testes: 100% backend (17/17) + 100% frontend
+- [ ] **Bug WhatsApp** - Estado da conexão não atualiza na UI
 
 ### P1 - High Priority
 - [x] Seletor de parceiro ativo para gestores - **DONE**
