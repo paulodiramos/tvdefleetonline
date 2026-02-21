@@ -966,6 +966,16 @@ function App() {
             }
           />
           <Route
+            path="/whatsapp-cloud"
+            element={
+              user && ['admin', 'parceiro', 'gestao'].includes(user.role) ? (
+                <WhatsAppCloudManager user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/contabilidade"
             element={
               user && ['admin', 'contabilista', 'parceiro', 'gestao'].includes(user.role) ? (
