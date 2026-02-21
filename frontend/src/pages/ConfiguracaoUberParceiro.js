@@ -603,10 +603,12 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                       title="Atualizar imagem"
                     >
                       <RefreshCw className="w-5 h-5" />
-                  </Button>
+                    </Button>
+                  )}
                 </div>
 
-                {/* PAINEL DE CONTROLOS */}
+                {/* PAINEL DE CONTROLOS - esconder quando login confirmado */}
+                {!loginConfirmado && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   
                   {/* Coluna Esquerda - Navegação/Setas */}
