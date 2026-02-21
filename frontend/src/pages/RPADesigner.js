@@ -1522,11 +1522,13 @@ export default function RPADesigner({ user, onLogout }) {
           </div>
 
           {/* Painel Direito - Passos */}
-          <div className="col-span-3">
+          <div className="col-span-12 lg:col-span-3">
             <Card className="bg-gray-800 border-gray-700 h-full">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-300 flex items-center justify-between">
-                  <span>📝 Passos Gravados ({passos.length})</span>
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="text-sm text-gray-300 flex items-center justify-between flex-wrap gap-2">
+                  <span className="flex items-center gap-1.5">
+                    <List className="w-4 h-4" /> Passos Gravados ({passos.length})
+                  </span>
                   {passos.length > 0 && (
                     <div className="flex gap-1">
                       <Button 
@@ -1538,7 +1540,7 @@ export default function RPADesigner({ user, onLogout }) {
                             toast.info('Último passo removido');
                           }
                         }}
-                        className="text-yellow-400 hover:text-yellow-300 text-xs"
+                        className="text-yellow-400 hover:text-yellow-300 text-xs h-7 px-2"
                       >
                         ↩️ Anular
                       </Button>
@@ -1550,7 +1552,7 @@ export default function RPADesigner({ user, onLogout }) {
                             setPassos([]);
                           }
                         }}
-                        className="text-red-400 hover:text-red-300 text-xs"
+                        className="text-red-400 hover:text-red-300 text-xs h-7 px-2"
                       >
                         🗑️ Limpar
                       </Button>
@@ -1558,12 +1560,12 @@ export default function RPADesigner({ user, onLogout }) {
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+              <CardContent className="px-4 pb-3">
+                <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
                   {passos.length === 0 ? (
-                    <div className="text-center text-gray-500 py-8">
-                      <p>Nenhum passo gravado</p>
-                      <p className="text-sm mt-2">
+                    <div className="text-center text-gray-500 py-6">
+                      <p className="text-sm">Nenhum passo gravado</p>
+                      <p className="text-xs mt-1.5">
                         Inicie a gravação e clique na página para gravar passos
                       </p>
                     </div>
@@ -1571,21 +1573,21 @@ export default function RPADesigner({ user, onLogout }) {
                     passos.map((passo, index) => (
                       <div
                         key={index}
-                        className={`flex items-center gap-2 p-2 rounded text-sm group ${
+                        className={`flex items-center gap-2 p-2 rounded text-xs group ${
                           passo.tipo === 'fill_credential' 
                             ? 'bg-yellow-900/50 border border-yellow-600' 
                             : 'bg-gray-700'
                         }`}
                       >
-                        <span className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-xs text-white">
+                        <span className="w-5 h-5 bg-gray-600 rounded-full flex items-center justify-center text-xs text-white shrink-0">
                           {passo.ordem}
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
-                            <span>
+                            <span className="shrink-0">
                               {TIPOS_PASSO.find(t => t.value === passo.tipo)?.icon || '❓'}
                             </span>
-                            <span className="text-gray-300 truncate text-xs">
+                            <span className="text-gray-300 truncate">
                               {passo.descricao || passo.tipo}
                             </span>
                           </div>
@@ -1595,7 +1597,7 @@ export default function RPADesigner({ user, onLogout }) {
                             </div>
                           )}
                         </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 shrink-0">
                           {passo.tipo === 'type' && (
                             <button
                               onClick={() => {
