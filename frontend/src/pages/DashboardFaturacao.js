@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Layout from '../components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -18,7 +19,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
-export default function DashboardFaturacao() {
+export default function DashboardFaturacao({ user, onLogout }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [ano, setAno] = useState(new Date().getFullYear());
