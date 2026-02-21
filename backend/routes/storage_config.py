@@ -89,49 +89,54 @@ async def get_storage_config(
     else:
         target_parceiro_id = get_parceiro_id(current_user)
     
+    # Default configuration
+    default_config = {
+        "parceiro_id": target_parceiro_id,
+        "modo": StorageMode.LOCAL,
+        "cloud_provider": CloudProvider.NONE,
+        "cloud_connected": False,
+        "cloud_email": None,
+        "sync_relatorios": True,
+        "sync_recibos": True,
+        "sync_vistorias": True,
+        "sync_documentos_veiculos": True,
+        "sync_documentos_motoristas": True,
+        "sync_contratos": True,
+        "sync_comprovativos": True,
+        "pasta_raiz": "/TVDEFleet",
+        "espaco_usado_local": 0,
+        "espaco_usado_cloud": 0,
+        "ultimo_sync": None
+    }
+    
     config = await db.storage_config.find_one(
         {"parceiro_id": target_parceiro_id},
         {"_id": 0}
     )
     
     if not config:
-        # Return default configuration
-        return {
-            "parceiro_id": target_parceiro_id,
-            "modo": StorageMode.LOCAL,
-            "cloud_provider": CloudProvider.NONE,
-            "cloud_connected": False,
-            "cloud_email": None,
-            "sync_relatorios": True,
-            "sync_recibos": True,
-            "sync_vistorias": True,
-            "sync_documentos_veiculos": True,
-            "sync_documentos_motoristas": True,
-            "sync_contratos": True,
-            "sync_comprovativos": True,
-            "pasta_raiz": "/TVDEFleet",
-            "espaco_usado_local": 0,
-            "espaco_usado_cloud": 0,
-            "ultimo_sync": None
-        }
+        return default_config
+    
+    # Merge stored config with defaults (stored values take precedence)
+    merged_config = {**default_config, **config}
     
     # Check if cloud is actually connected
     cloud_connected = False
     cloud_email = None
     
-    if config.get("cloud_provider") and config.get("cloud_provider") != "none":
+    if merged_config.get("cloud_provider") and merged_config.get("cloud_provider") != "none":
         credentials = await db.cloud_credentials.find_one(
-            {"parceiro_id": target_parceiro_id, "provider": config["cloud_provider"]},
+            {"parceiro_id": target_parceiro_id, "provider": merged_config["cloud_provider"]},
             {"_id": 0, "email": 1, "access_token": 1}
         )
         if credentials and credentials.get("access_token"):
             cloud_connected = True
             cloud_email = credentials.get("email")
     
-    config["cloud_connected"] = cloud_connected
-    config["cloud_email"] = cloud_email
+    merged_config["cloud_connected"] = cloud_connected
+    merged_config["cloud_email"] = cloud_email
     
-    return config
+    return merged_config
 
 
 @router.put("")
