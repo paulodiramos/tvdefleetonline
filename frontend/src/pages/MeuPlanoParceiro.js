@@ -12,7 +12,8 @@ import AdicionarRecursosCard from '@/components/AdicionarRecursosCard';
 import { 
   DollarSign, TrendingUp, Users, Car, Package, 
   Calendar, CheckCircle, Info, Zap, ArrowRight,
-  AlertTriangle, Percent, HardDrive, Code, BarChart
+  AlertTriangle, Percent, HardDrive, Code, BarChart,
+  Smartphone, MessageCircle
 } from 'lucide-react';
 
 const MeuPlanoParceiro = ({ user, onLogout }) => {
