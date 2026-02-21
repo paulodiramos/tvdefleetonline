@@ -68,3 +68,5 @@ pytz
 tzlocal
 cryptography
 aiofiles
+dropbox
+msal
