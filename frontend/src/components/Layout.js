@@ -490,14 +490,6 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Meu Plano</span>
                         </Link>
                       </DropdownMenuItem>
-                      {itemPermitido('Terabox') && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/terabox" className="flex items-center space-x-2 cursor-pointer">
-                            <HardDrive className="w-4 h-4" />
-                            <span>Terabox</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
                       <DropdownMenuItem asChild>
                         <Link to="/gestao-documentos" className="flex items-center space-x-2 cursor-pointer" data-testid="link-gestao-documentos">
                           <FileText className="w-4 h-4" />
@@ -527,7 +519,7 @@ const Layout = ({ children, user, onLogout }) => {
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
                           <Users className="w-3 h-3" />
-                          <span>Parceiros</span>
+                          <span>Colaboradores</span>
                         </div>
                       </div>
                       <DropdownMenuItem asChild>
@@ -555,11 +547,6 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracoes-parceiro?tab=credenciais" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🔐 Plataformas</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
                         <Link to="/configuracao-relatorios" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>⚙️ Configurações Relatórios</span>
                         </Link>
@@ -569,23 +556,6 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>💾 Cópia de Segurança</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/config/comissoes" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="config-comissoes-link">
-                          <span>💰 Comissões</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/armazenamento" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="storage-config-link">
-                          <span>📁 Armazenamento Cloud</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      {itemPermitido('📱 WhatsApp') && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
-                            <span>📱 WhatsApp</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
