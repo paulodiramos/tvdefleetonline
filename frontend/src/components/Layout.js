@@ -141,6 +141,7 @@ const Layout = ({ children, user, onLogout }) => {
     if (user.role === 'parceiro') {
       const motoristasSubmenu = filtrarSubmenu([
         { path: '/motoristas', label: 'Lista de Motoristas' },
+        { path: '/comissoes', label: '💰 Comissões' },
         { path: '/contratos', label: '📄 Gestão de Contratos' },
         { path: '/criar-contrato', label: '➕ Criar Contrato' }
       ]);
