@@ -8,22 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AdicionarRecursosCard from '@/components/AdicionarRecursosCard';
 import { 
   DollarSign, TrendingUp, Users, Car, Package, 
-  Calendar, CheckCircle, Info, Zap, ArrowRight
+  Calendar, CheckCircle, Info, Zap, ArrowRight,
+  AlertTriangle, Percent, HardDrive, Code, BarChart
 } from 'lucide-react';
 
 const MeuPlanoParceiro = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [planoData, setPlanoData] = useState(null);
-  const [planosDisponiveis, setPlanosDisponiveis] = useState([]);
-  const [showTrocarPlano, setShowTrocarPlano] = useState(false);
-  const [planoSelecionado, setPlanoSelecionado] = useState('');
-  const [periodicidadeSelecionada, setPeriodicidadeSelecionada] = useState('mensal');
 
   useEffect(() => {
     fetchMeuPlano();
