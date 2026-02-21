@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { 
   FileText, Edit, Check, X, Eye, Download, Send, 
   ArrowLeft, Calendar, User, Car, DollarSign, AlertCircle,
-  Trash2, CheckSquare, Square, RefreshCw
+  Trash2, CheckSquare, Square, RefreshCw, MessageCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
