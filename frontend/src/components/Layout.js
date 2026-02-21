@@ -194,7 +194,14 @@ const Layout = ({ children, user, onLogout }) => {
       }
       
       items.push({ path: '/mensagens', icon: MessageSquare, label: 'Mensagens' });
-      items.push({ path: '/whatsapp', icon: MessageCircle, label: 'WhatsApp' });
+      items.push({ 
+        label: 'WhatsApp', 
+        icon: MessageCircle,
+        submenu: [
+          { path: '/whatsapp', label: '📱 Ligação QR Code' },
+          { path: '/whatsapp-cloud', label: '☁️ Envio em Massa' }
+        ]
+      });
       
       return items;
     }
