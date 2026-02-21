@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import logging
+import uuid
 
 from utils.auth import get_current_user
 
