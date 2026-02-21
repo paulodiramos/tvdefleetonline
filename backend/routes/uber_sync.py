@@ -330,22 +330,27 @@ async def sincronizar_uber(
             motoristas_importados = resultado.get("motoristas", [])
             
             # Calcular período baseado na semana selecionada
-            # A Uber usa semanas de pagamento de Segunda (dia 0) a Domingo (dia 6)
-            # semana_index=0 é a semana atual, semana_index=1 é a semana passada, etc.
+            # A Uber usa semanas de pagamento de DOMINGO a SÁBADO
+            # Exemplo: 1 de fevereiro (Domingo) a 7 de fevereiro (Sábado)
+            # Mas na interface mostra até dia 8 (Domingo seguinte) como fim inclusivo
             hoje = datetime.now().date()
             
-            # Encontrar a última segunda-feira (início da semana atual)
-            dias_desde_segunda = hoje.weekday()  # 0=segunda, 6=domingo
-            segunda_atual = hoje - timedelta(days=dias_desde_segunda)
+            # Encontrar o último domingo (início da semana Uber)
+            # weekday(): 0=segunda, 6=domingo
+            # Para Domingo: se hoje é domingo (6), dias_desde_domingo = 0
+            # Se hoje é segunda (0), dias_desde_domingo = 1, etc.
+            dias_desde_domingo = (hoje.weekday() + 1) % 7
+            domingo_atual = hoje - timedelta(days=dias_desde_domingo)
             
             # Retroceder N semanas conforme semana_index
-            segunda_da_semana = segunda_atual - timedelta(weeks=data.semana_index)
-            domingo_da_semana = segunda_da_semana + timedelta(days=6)
+            domingo_da_semana = domingo_atual - timedelta(weeks=data.semana_index)
+            # A Uber mostra o intervalo até o domingo seguinte (8 dias no display)
+            domingo_seguinte = domingo_da_semana + timedelta(days=7)
             
-            periodo_inicio = segunda_da_semana.strftime('%Y-%m-%d')
-            periodo_fim = domingo_da_semana.strftime('%Y-%m-%d')
+            periodo_inicio = domingo_da_semana.strftime('%Y-%m-%d')
+            periodo_fim = domingo_seguinte.strftime('%Y-%m-%d')
             
-            logger.info(f"Período calculado: {periodo_inicio} a {periodo_fim} (semana_index={data.semana_index})")
+            logger.info(f"Período Uber calculado: {periodo_inicio} a {periodo_fim} (semana_index={data.semana_index})")
             
             # Guardar cada motorista em ganhos_uber
             for mot in motoristas_importados:
