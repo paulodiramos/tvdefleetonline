@@ -4,8 +4,8 @@
 Sistema de gestão de frotas TVDE (Uber, Bolt, etc.) com funcionalidades completas para parceiros e administradores.
 
 ## Última Atualização
-**Data:** Dezembro 2025
-**Sessão:** Preparação de deployment para VPS
+**Data:** Fevereiro 2026
+**Sessão:** Correção de bug no cálculo de datas da sincronização Uber
 
 ---
 
@@ -21,6 +21,12 @@ Sistema de gestão de frotas TVDE (Uber, Bolt, etc.) com funcionalidades complet
 - Sistema de vistorias
 - Importação de dados (Uber, Bolt, Via Verde)
 - RPA para extração automática de dados
+
+### ✅ Correção RPA Uber (Fevereiro 2026)
+- **Bug corrigido:** Cálculo de datas para sincronização semanal
+- O sistema agora calcula correctamente semanas de Segunda a Domingo
+- `semana_index=0` = semana atual, `semana_index=1` = semana passada, etc.
+- Ficheiro corrigido: `backend/routes/uber_sync.py`
 
 ### ✅ WhatsApp Cloud API (Dezembro 2025)
 - **Status:** Code-complete, aguarda credenciais
@@ -42,13 +48,15 @@ Sistema de gestão de frotas TVDE (Uber, Bolt, etc.) com funcionalidades complet
 ## Backlog Priorizado
 
 ### P0 - Crítico
-- [ ] Configurar credenciais WhatsApp Cloud API
-- [ ] Deploy no VPS 94.46.171.222
+- [x] ~~Corrigir cálculo de datas para sincronização Uber~~ ✓ CORRIGIDO
+- [ ] Verificar persistência da sessão Uber durante sincronização
+- [ ] Verificar persistência da base de dados Docker
 
 ### P1 - Alta Prioridade
+- [ ] Sistema de backup/restauração para Admin
+- [ ] Corrigir importação Via Verde
+- [ ] Configurar domínio tvdefleet.com com SSL
 - [ ] UI completa para abas WhatsApp Cloud (Alertas, Templates, Histórico)
-- [ ] UI para configuração de agendamento de relatórios
-- [ ] Ativar OAuth para cloud storage (Google Drive, etc.)
 
 ### P2 - Média Prioridade
 - [ ] Remover código legacy whatsapp-web.js
