@@ -649,24 +649,40 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 w-full max-w-3xl">
-            <TabsTrigger value="email" className="flex items-center gap-2">
+          <TabsList className="inline-flex h-12 items-center justify-start rounded-xl bg-white p-1.5 shadow-sm border border-slate-200 gap-1 w-auto">
+            <TabsTrigger 
+              value="email" 
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-blue-700"
+            >
               <Mail className="w-4 h-4" />
               Email
             </TabsTrigger>
-            <TabsTrigger value="whatsapp" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="whatsapp" 
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-green-700"
+            >
               <MessageCircle className="w-4 h-4" />
               WhatsApp
             </TabsTrigger>
-            <TabsTrigger value="terabox" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="terabox" 
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-purple-700"
+            >
               <HardDrive className="w-4 h-4" />
-              Terabox
+              Armazenamento Cloud
             </TabsTrigger>
-            <TabsTrigger value="sincronizacao" className="flex items-center gap-2" data-testid="tab-sincronizacao">
+            <TabsTrigger 
+              value="sincronizacao" 
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-orange-600"
+              data-testid="tab-sincronizacao"
+            >
               <RefreshCw className="w-4 h-4" />
               Sincronização
             </TabsTrigger>
-            <TabsTrigger value="credenciais" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="credenciais" 
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-slate-800"
+            >
               <Lock className="w-4 h-4" />
               Plataformas
             </TabsTrigger>
