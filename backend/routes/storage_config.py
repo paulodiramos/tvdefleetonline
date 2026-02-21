@@ -725,3 +725,102 @@ async def test_cloud_upload(current_user: Dict = Depends(get_current_user)):
         "success": True,
         "result": result
     }
+
+
+
+# ==================== DOWNLOAD FROM CLOUD ====================
+
+@router.get("/download")
+async def download_file_from_cloud(
+    cloud_path: str,
+    provider: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download a file from cloud storage"""
+    from fastapi.responses import StreamingResponse
+    from utils.cloud_storage import CloudStorageService
+    import io
+    
+    parceiro_id = get_parceiro_id(current_user)
+    
+    try:
+        # Get provider instance
+        cloud_provider = await CloudStorageService.get_provider(parceiro_id)
+        if not cloud_provider:
+            raise HTTPException(status_code=400, detail="Cloud provider não configurado")
+        
+        # Download file content
+        content = await cloud_provider.download_file(cloud_path)
+        
+        # Get filename from path
+        filename = cloud_path.split('/')[-1] if '/' in cloud_path else cloud_path
+        
+        # Determine content type
+        import mimetypes
+        content_type, _ = mimetypes.guess_type(filename)
+        if not content_type:
+            content_type = 'application/octet-stream'
+        
+        return StreamingResponse(
+            io.BytesIO(content),
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Length": str(len(content))
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Download from cloud failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao descarregar ficheiro: {str(e)}")
+
+
+@router.get("/download-url")
+async def get_download_url(
+    cloud_path: str,
+    provider: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get a direct download URL for a file in cloud storage"""
+    from utils.cloud_storage import CloudStorageService
+    
+    parceiro_id = get_parceiro_id(current_user)
+    
+    try:
+        url = await CloudStorageService.get_document_url(parceiro_id, cloud_path, provider)
+        if not url:
+            raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+        
+        return {"url": url, "cloud_path": cloud_path, "provider": provider}
+        
+    except Exception as e:
+        logger.error(f"Get download URL failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao obter URL: {str(e)}")
+
+
+@router.get("/files")
+async def list_cloud_files(
+    folder_path: Optional[str] = "",
+    current_user: Dict = Depends(get_current_user)
+):
+    """List files in a cloud folder"""
+    from utils.cloud_storage import CloudStorageService
+    
+    parceiro_id = get_parceiro_id(current_user)
+    
+    try:
+        cloud_provider = await CloudStorageService.get_provider(parceiro_id)
+        if not cloud_provider:
+            return {"files": [], "message": "Cloud provider não configurado"}
+        
+        files = await cloud_provider.list_files(folder_path)
+        
+        return {
+            "folder_path": folder_path,
+            "files": files,
+            "total": len(files)
+        }
+        
+    except Exception as e:
+        logger.error(f"List cloud files failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao listar ficheiros: {str(e)}")
