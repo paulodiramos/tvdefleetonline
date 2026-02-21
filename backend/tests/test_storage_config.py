@@ -22,7 +22,8 @@ def admin_token():
         json=ADMIN_CREDENTIALS
     )
     assert response.status_code == 200, f"Admin login failed: {response.text}"
-    return response.json().get("token")
+    data = response.json()
+    return data.get("access_token") or data.get("token")
 
 
 @pytest.fixture(scope="module")
@@ -33,7 +34,8 @@ def parceiro_token():
         json=PARCEIRO_CREDENTIALS
     )
     assert response.status_code == 200, f"Parceiro login failed: {response.text}"
-    return response.json().get("token")
+    data = response.json()
+    return data.get("access_token") or data.get("token")
 
 
 @pytest.fixture
