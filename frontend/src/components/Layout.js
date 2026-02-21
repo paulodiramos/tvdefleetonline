@@ -491,18 +491,6 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/empresas-faturacao" className="flex items-center space-x-2 cursor-pointer" data-testid="link-empresas-faturacao">
-                          <Building2 className="w-4 h-4" />
-                          <span>Empresas de Faturação</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/dashboard-faturacao" className="flex items-center space-x-2 cursor-pointer" data-testid="link-dashboard-faturacao">
-                          <TrendingUp className="w-4 h-4" />
-                          <span>Dashboard Faturação</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
                         <Link to="/fornecedores" className="flex items-center space-x-2 cursor-pointer" data-testid="link-fornecedores">
                           <Building className="w-4 h-4" />
                           <span>Fornecedores</span>
