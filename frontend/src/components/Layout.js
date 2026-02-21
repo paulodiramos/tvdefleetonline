@@ -490,6 +490,32 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Gestão de Documentos</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5">
+                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                          <TrendingUp className="w-3 h-3" />
+                          <span>Faturação</span>
+                        </div>
+                      </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard-faturacao" className="flex items-center space-x-2 cursor-pointer" data-testid="link-dashboard-faturacao">
+                          <BarChart3 className="w-4 h-4" />
+                          <span>Dashboard Faturação</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/empresas-faturacao" className="flex items-center space-x-2 cursor-pointer" data-testid="link-empresas-faturacao">
+                          <Building2 className="w-4 h-4" />
+                          <span>Empresas de Faturação</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5">
+                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                          <Users className="w-3 h-3" />
+                          <span>Parceiros</span>
+                        </div>
+                      </div>
                       <DropdownMenuItem asChild>
                         <Link to="/fornecedores" className="flex items-center space-x-2 cursor-pointer" data-testid="link-fornecedores">
                           <Building className="w-4 h-4" />
