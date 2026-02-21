@@ -414,7 +414,7 @@ async def upload_vehicle_photo(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload vehicle photo (max 3 photos)"""
+    """Upload vehicle photo (max 3 photos) - with cloud storage integration"""
     user_role = current_user["role"]
     allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]
     if user_role not in allowed_roles:
@@ -433,19 +433,36 @@ async def upload_vehicle_photo(
     if len(current_photos) >= 3:
         raise HTTPException(status_code=400, detail="Maximum 3 photos allowed per vehicle")
     
-    file_id = f"vehicle_{vehicle_id}_photo_{len(current_photos) + 1}_{uuid.uuid4()}"
-    vehicle_photos_dir = UPLOAD_DIR / "vehicles"
-    vehicle_photos_dir.mkdir(exist_ok=True)
+    # Get parceiro_id for cloud storage
+    parceiro_id = vehicle.get("parceiro_id") or current_user.get("id")
     
-    file_info = await process_uploaded_file(file, vehicle_photos_dir, file_id)
-    photo_url = file_info["pdf_path"] if file_info["pdf_path"] else file_info["original_path"]
+    # Use FileUploadHandler for cloud integration
+    upload_result = await FileUploadHandler.save_file(
+        file=file,
+        parceiro_id=parceiro_id,
+        document_type="foto_veiculo",
+        entity_id=vehicle_id,
+        entity_name=vehicle.get("matricula")
+    )
+    
+    # Get the best URL (cloud or local)
+    photo_url = upload_result.get("cloud_url") or upload_result.get("local_url")
+    
+    # Store photo info with cloud metadata
+    photo_info = {
+        "url": photo_url,
+        "local_path": upload_result.get("local_path"),
+        "cloud_path": upload_result.get("cloud_path"),
+        "provider": upload_result.get("provider"),
+        "uploaded_at": upload_result.get("uploaded_at")
+    }
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$push": {"fotos": photo_url}}
+        {"$push": {"fotos": photo_url, "fotos_info": photo_info}}
     )
     
-    return {"message": "Photo uploaded successfully", "photo_url": photo_url}
+    return {"message": "Photo uploaded successfully", "photo_url": photo_url, "cloud_synced": bool(upload_result.get("cloud_path"))}
 
 
 @router.put("/{vehicle_id}/atualizar-km")
