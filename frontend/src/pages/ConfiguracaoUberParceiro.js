@@ -588,6 +588,52 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                   </Button>
                 </div>
                 
+                {/* Setas para CAPTCHA/Puzzle */}
+                <div className="flex gap-2 items-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <span className="text-purple-700 text-sm font-medium whitespace-nowrap">🎮 Setas:</span>
+                  <div className="flex gap-1">
+                    <Button 
+                      onClick={() => enviarTecla('ArrowLeft')} 
+                      variant="outline" 
+                      size="lg"
+                      className="w-14 h-14 text-2xl font-bold bg-white hover:bg-purple-100 border-2 border-purple-300"
+                      title="Esquerda"
+                    >
+                      ◀
+                    </Button>
+                    <div className="flex flex-col gap-1">
+                      <Button 
+                        onClick={() => enviarTecla('ArrowUp')} 
+                        variant="outline" 
+                        size="sm"
+                        className="w-14 h-6 text-lg font-bold bg-white hover:bg-purple-100 border-2 border-purple-300"
+                        title="Cima"
+                      >
+                        ▲
+                      </Button>
+                      <Button 
+                        onClick={() => enviarTecla('ArrowDown')} 
+                        variant="outline" 
+                        size="sm"
+                        className="w-14 h-6 text-lg font-bold bg-white hover:bg-purple-100 border-2 border-purple-300"
+                        title="Baixo"
+                      >
+                        ▼
+                      </Button>
+                    </div>
+                    <Button 
+                      onClick={() => enviarTecla('ArrowRight')} 
+                      variant="outline" 
+                      size="lg"
+                      className="w-14 h-14 text-2xl font-bold bg-white hover:bg-purple-100 border-2 border-purple-300"
+                      title="Direita"
+                    >
+                      ▶
+                    </Button>
+                  </div>
+                  <span className="text-purple-600 text-xs ml-2">Use para resolver puzzles CAPTCHA</span>
+                </div>
+                
                 {/* Campo para código SMS/Email de 4 dígitos */}
                 <div className="flex gap-2 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <span className="text-yellow-700 text-sm font-medium whitespace-nowrap">📱 Código SMS:</span>
