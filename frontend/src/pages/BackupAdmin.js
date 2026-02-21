@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { Progress } from '../components/ui/progress';
 import { toast } from 'sonner';
-import { Download, Upload, Database, RefreshCw, FileJson, History, HardDrive } from 'lucide-react';
+import { 
+  Download, Upload, Database, RefreshCw, FileJson, History, HardDrive,
+  Trash2, AlertTriangle, BarChart3, Loader2
+} from 'lucide-react';
 import { API } from '../App';
 import Layout from '../components/Layout';
 
@@ -11,6 +16,9 @@ export default function BackupAdmin({ user, onLogout }) {
   const [colecoes, setColecoes] = useState(null);
   const [historico, setHistorico] = useState([]);
   const [importFile, setImportFile] = useState(null);
+  const [analiseLimpeza, setAnaliseLimpeza] = useState(null);
+  const [statsArmazenamento, setStatsArmazenamento] = useState(null);
+  const [limpando, setLimpando] = useState(null);
 
   useEffect(() => {
     carregarColecoes();
