@@ -81,8 +81,8 @@ const GestaoDocumentos = ({ user, onLogout }) => {
   const [filtroPeriodo, setFiltroPeriodo] = useState('30');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Terabox integration
-  const [teraboxConnected, setTeraboxConnected] = useState(false);
+  // Cloud storage integration
+  const [cloudConnected, setCloudConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
@@ -99,11 +99,11 @@ const GestaoDocumentos = ({ user, onLogout }) => {
       const [
         motoristasRes,
         veiculosRes,
-        teraboxStatusRes
+        cloudStatusRes
       ] = await Promise.all([
         axios.get(`${API}/motoristas`, { headers }).catch(() => ({ data: [] })),
         axios.get(`${API}/vehicles`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${API}/terabox/stats`, { headers }).catch(() => ({ data: null }))
+        axios.get(`${API}/storage-config`, { headers }).catch(() => ({ data: null }))
       ]);
 
       const motoristasData = motoristasRes.data || [];
@@ -111,7 +111,8 @@ const GestaoDocumentos = ({ user, onLogout }) => {
 
       setMotoristas(motoristasData);
       setVeiculos(veiculosData);
-      setTeraboxConnected(!!teraboxStatusRes.data);
+      // Check if any cloud storage is connected
+      setCloudConnected(cloudStatusRes.data?.cloud_connected || cloudStatusRes.data?.terabox_connected || false);
 
       // Calculate stats
       calculateStats(motoristasData, veiculosData);
