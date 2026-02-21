@@ -8,7 +8,7 @@ import {
   Modal, Platform, KeyboardAvoidingView
 } from 'react-native';
 
-const API_URL = 'https://sync-weekly.preview.emergentagent.com/api';
+const API_URL = 'https://frota-sync-rpa.preview.emergentagent.com/api';
 
 // ===== CONTEXT =====
 const AuthContext = React.createContext(null);

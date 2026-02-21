@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://sync-weekly.preview.emergentagent.com/api"
+BACKEND_URL = "https://frota-sync-rpa.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@tvdefleet.com", "password": "o72ocUHy"}
