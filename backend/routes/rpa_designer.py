@@ -1095,7 +1095,33 @@ async def websocket_executar_design(
                     
                 elif tipo == "type":
                     texto = passo.get("valor", "")
-                    await page.keyboard.type(texto, delay=50)
+                    
+                    # Verificar se é um código SMS de 4 dígitos
+                    if len(texto) == 4 and texto.isdigit():
+                        sms_inputs = await page.locator('input[type="text"], input[type="tel"], input[type="number"]').all()
+                        valid_inputs = []
+                        for inp in sms_inputs:
+                            try:
+                                if await inp.is_visible():
+                                    box = await inp.bounding_box()
+                                    if box and box['width'] < 100:
+                                        valid_inputs.append(inp)
+                            except:
+                                continue
+                        
+                        if len(valid_inputs) >= 4:
+                            for i, digit in enumerate(texto[:4]):
+                                if i < len(valid_inputs):
+                                    await valid_inputs[i].click()
+                                    await asyncio.sleep(0.1)
+                                    await valid_inputs[i].fill(digit)
+                                    await asyncio.sleep(0.15)
+                        elif len(valid_inputs) >= 1:
+                            await valid_inputs[0].fill(texto)
+                        else:
+                            await page.keyboard.type(texto, delay=50)
+                    else:
+                        await page.keyboard.type(texto, delay=50)
                     await asyncio.sleep(0.3)
                     
                 elif tipo == "press":
