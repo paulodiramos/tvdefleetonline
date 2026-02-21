@@ -153,13 +153,47 @@ async def importar_ganhos_uber(
                     'importado_por': user['id']
                 }
                 
-                await db.ganhos_uber.insert_one(ganho)
+                # Verificar se já existe (por UUID + semana + ano)
+                existe = await db.ganhos_uber.find_one({
+                    'uuid_motorista_uber': uuid_motorista,
+                    'semana': semana_calc,
+                    'ano': ano_calc
+                })
+                
+                if existe:
+                    # Actualizar em vez de inserir
+                    await db.ganhos_uber.update_one(
+                        {'id': existe['id']},
+                        {'$set': ganho}
+                    )
+                    logger.info(f"Actualizado ganho Uber para {uuid_motorista} semana {semana_calc}/{ano_calc}")
+                else:
+                    await db.ganhos_uber.insert_one(ganho)
+                
                 ganho_copy = {k: v for k, v in ganho.items() if k != '_id'}
                 ganhos_importados.append(ganho_copy)
                 total_ganhos += pago_total
                 
             except Exception as e:
                 erros.append(f"Linha {row_num}: {str(e)}")
+        
+        # Guardar também resumo da importação
+        if ganhos_importados and semana_calc and ano_calc:
+            await db.importacoes_uber.update_one(
+                {'parceiro_id': parceiro_id, 'semana': semana_calc, 'ano': ano_calc},
+                {'$set': {
+                    'parceiro_id': parceiro_id,
+                    'semana': semana_calc,
+                    'ano': ano_calc,
+                    'total_motoristas': len(ganhos_importados),
+                    'total_ganhos': total_ganhos,
+                    'ficheiro': file.filename,
+                    'data_importacao': datetime.now(timezone.utc).isoformat(),
+                    'importado_por': user['id'],
+                    'fonte': 'csv_manual'
+                }},
+                upsert=True
+            )
         
         # Serializar para resposta
         ganhos_serializados = []
