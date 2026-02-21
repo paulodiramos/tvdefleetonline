@@ -523,14 +523,16 @@ async def guardar_sessao_como_design(
         raise HTTPException(status_code=404, detail="Sessão não encontrada")
         
     session = active_design_sessions[session_id]
+    tipo_design = session.get("tipo_design", "extracao")
     
     # Permitir guardar mesmo sem passos (design vazio)
     now = datetime.now(timezone.utc).isoformat()
     
-    # Verificar se já existe design para esta semana
+    # Verificar se já existe design para esta semana E tipo
     existente = await db.designs_rpa.find_one({
         "plataforma_id": session["plataforma_id"],
         "semana_offset": session["semana_offset"],
+        "tipo_design": tipo_design,
         "ativo": True
     })
     
@@ -541,6 +543,7 @@ async def guardar_sessao_como_design(
             {"$set": {
                 "nome": nome,
                 "passos": session["passos"],
+                "tipo_design": tipo_design,
                 "versao": existente.get("versao", 0) + 1,
                 "testado": False,
                 "atualizado_em": now
@@ -555,6 +558,7 @@ async def guardar_sessao_como_design(
             "plataforma_id": session["plataforma_id"],
             "nome": nome,
             "semana_offset": session["semana_offset"],
+            "tipo_design": tipo_design,  # 'login' ou 'extracao'
             "passos": session["passos"],
             "variaveis": ["SEMANA_INICIO", "SEMANA_FIM", "SEMANA_OFFSET"],
             "versao": 1,
@@ -575,6 +579,7 @@ async def guardar_sessao_como_design(
     return {
         "sucesso": True,
         "design_id": design_id,
+        "tipo_design": tipo_design,
         "passos_gravados": len(session["passos"])
     }
 
