@@ -142,9 +142,9 @@ const Layout = ({ children, user, onLogout }) => {
       const motoristasSubmenu = [
         { path: '/motoristas', label: 'Lista de Motoristas' },
         { path: '/comissoes', label: '💰 Comissões' },
+        { path: '/progressoes-motoristas', label: '🏆 Progressões' },
         { path: '/contratos', label: '📄 Gestão de Contratos' },
-        { path: '/criar-contrato', label: '➕ Criar Contrato' },
-        { path: '/progressoes-motoristas', label: '🏆 Progressões' }
+        { path: '/criar-contrato', label: '➕ Criar Contrato' }
       ];
       
       const veiculosSubmenu = [
