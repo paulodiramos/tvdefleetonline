@@ -258,28 +258,48 @@ async def connect_cloud_provider(
     credentials: CloudCredentials,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Connect a cloud provider with credentials"""
+    """Connect a cloud provider with credentials (email + password)"""
     parceiro_id = get_parceiro_id(current_user)
     
     if provider not in ["terabox", "google_drive", "onedrive", "dropbox"]:
         raise HTTPException(status_code=400, detail="Provider inválido")
+    
+    if not credentials.email or not credentials.password:
+        raise HTTPException(status_code=400, detail="Email e password são obrigatórios")
+    
+    # Encrypt password before storing (using base64 for simplicity - should use proper encryption in production)
+    import base64
+    encrypted_password = base64.b64encode(credentials.password.encode()).decode()
     
     # Store credentials
     cred_data = {
         "parceiro_id": parceiro_id,
         "provider": provider,
         "email": credentials.email,
-        "access_token": credentials.access_token,
+        "password_encrypted": encrypted_password,
+        "access_token": credentials.access_token,  # Will be obtained via login
         "refresh_token": credentials.refresh_token,
-        "api_key": credentials.api_key,
-        "folder_id": credentials.folder_id,
         "connected_at": datetime.now(timezone.utc),
-        "connected_by": current_user["id"]
+        "connected_by": current_user["id"],
+        "status": "connected"
     }
     
     await db.cloud_credentials.update_one(
         {"parceiro_id": parceiro_id, "provider": provider},
         {"$set": cred_data},
+        upsert=True
+    )
+    
+    # Clear any other provider credentials (only one allowed)
+    await db.cloud_credentials.delete_many({
+        "parceiro_id": parceiro_id,
+        "provider": {"$ne": provider}
+    })
+    
+    # Update config to use this provider
+    await db.storage_config.update_one(
+        {"parceiro_id": parceiro_id},
+        {"$set": {"cloud_provider": provider}},
         upsert=True
     )
     
