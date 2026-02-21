@@ -5,7 +5,7 @@ import asyncio
 from playwright.async_api import async_playwright
 import os
 
-BASE_URL = "https://cloud-fleet-manager.preview.emergentagent.com"
+BASE_URL = "https://fleet-reports-dash.preview.emergentagent.com"
 OUTPUT_DIR = "/app/video_frames"
 
 # Páginas a capturar com descrição

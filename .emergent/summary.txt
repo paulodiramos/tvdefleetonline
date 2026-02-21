@@ -1,172 +1,185 @@
 <analysis>**original_problem_statement:**
-O utilizador pretende continuar a desenvolver a sua aplicação de gestão de frotas. As solicitações iniciais abrangiam melhorias na gestão de preços, correção de bugs (registo de parceiros, emails bloqueados), e a criação de uma interface de administração para gerir utilizadores e armazenamento.
+O utilizador pretende continuar a desenvolver a sua aplicação de gestão de frotas. As solicitações iniciais abrangiam melhorias na gestão de preços e correção de bugs. Durante as sessões, o âmbito expandiu-se para incluir: integração com WhatsApp, gestão avançada de armazenamento na cloud (Terabox, Google Drive, etc.), e uma série de melhorias de UI/UX e funcionalidades, como um módulo de comissões e uma loja de módulos extra.
 
-Durante a sessão, o âmbito expandiu-se significativamente com novas solicitações:
-1.  **Integração com WhatsApp:** Implementar um sistema de ligação via QR Code para que os parceiros possam enviar notificações, alertas e relatórios aos motoristas.
-2.  **Gestão de Armazenamento Avançada:**
-    *   Criar uma funcionalidade para descarregar o servidor, movendo o armazenamento de documentos (relatórios, documentos de veículos/motoristas, etc.) para serviços de cloud de terceiros (Terabox, Google Drive, OneDrive, Dropbox).
-    *   Permitir que cada parceiro escolha o seu modo de armazenamento: ,  (apenas num serviço externo), ou  (local com backup na cloud).
-    *   O administrador do sistema deve ter uma visão geral e a capacidade de configurar o modo de armazenamento para cada parceiro.
-    *   A ligação aos serviços cloud deve ser simplificada, utilizando email/password em vez de OAuth, e permitindo apenas um serviço cloud ativo por parceiro.
-3.  **Correção de Bug:** Resolver um erro crítico que impedia o carregamento da página Loja de Planos.
+Os requisitos mais recentes do utilizador incluem:
+1.  **Limpeza de Dados:** Eliminar dados de teste (planos e categorias) da base de dados.
+2.  **Reorganização da UI:**
+    *   Mover a Loja de Planos para dentro da página Meu Plano.
+    *   Adicionar um módulo de Comissões para os motoristas.
+    *   Na página Meu Plano, remover a função Trocar Plano e, em vez disso, mostrar uma lista de Módulos Disponíveis Extra que podem ser adquiridos.
+    *   Confirmar que a Aplicação Móvel é um módulo.
+    *   Mover Empresas de Faturação para o menu Financeiro e reorganizar o painel do parceiro.
+3.  **Funcionalidades de Relatórios e Comissões:**
+    *   Adicionar os campos Nome do Parceiro, NIF do Parceiro e Número do Relatório ao relatório semanal em PDF.
+    *   Rework das páginas de comissões: a URL  deve ser a página de configuração, e  deve ser transformada num dashboard de visualização.
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
-Uma aplicação full-stack (React/FastAPI/MongoDB) de gestão de frotas.
-- Foi concluída a UI para **Gestão de Armazenamento do Sistema**, que mostra o espaço em disco detalhado por pasta e permite limpar ficheiros temporários.
-- Foi implementada uma **página de configuração de armazenamento** () onde os parceiros podem escolher o seu modo de armazenamento (, , ) e onde o admin pode gerir as configurações de todos os parceiros. A UI foi adaptada para uma ligação simplificada com email/password aos serviços cloud.
-- Foram criados os serviços de backend para a integração com a cloud () e um utilitário central () para gerir para onde os ficheiros são enviados.
-- Foi implementada uma **integração com o WhatsApp Web** através de um microserviço Node.js, com uma página no frontend para os utilizadores se conectarem via QR Code.
-- Foi corrigido um bug crítico na página **Loja de Planos**.
+A aplicação full-stack (React/FastAPI/MongoDB) está largamente funcional.
+- A **Integração com Armazenamento Cloud** foi concluída. Todos os principais endpoints de upload (, , ) foram refatorados para usar um  centralizado. A UI permite que os parceiros configurem o seu modo de armazenamento e conectem-se a provedores (embora a autenticação real esteja mockada). Foi criado um endpoint de download.
+- Foram feitas várias **melhorias de UI/UX**. O menu de configurações do parceiro foi redesenhado, e os menus principais foram reorganizados para uma melhor navegação.
+- A página **Meu Plano** foi atualizada para listar dinamicamente os módulos extra disponíveis a partir de uma API, e a antiga funcionalidade de trocar plano foi removida.
+- Foi criado um novo **Módulo de Comissões** com uma página de configuração em  e um link no menu de motoristas.
+- Foi feita uma **limpeza na base de dados**, removendo dados de teste que poluíam a UI.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a dar início à **Parte 3** da funcionalidade de **Integração com Cloud Storage**. Tinha acabado de criar um utilitário central, , destinado a decidir se um ficheiro é guardado localmente ou na cloud, com base na configuração do parceiro. O passo seguinte era começar a refatorar todos os endpoints de upload de ficheiros da aplicação para utilizarem este novo handler, começando pelo endpoint de upload de documentos de motoristas em .
+-   **Last item agent was working:** O agente estava a implementar um conjunto de pedidos do utilizador. O último foco foi na funcionalidade de comissões e relatórios. O agente atualizou os links do menu para que Comissões apontasse para a página de configuração correta () e estava a preparar-se para modificar a geração do relatório semanal para incluir o NIF do parceiro e transformar a página  num dashboard.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Backend testing agent. Após refatorar cada endpoint de upload, é necessário testar dois cenários: 1) Com o parceiro em modo Local, o ficheiro deve ser guardado no servidor. 2) Com o parceiro em modo Cloud, o handler deve invocar o serviço de cloud (possivelmente com um mock para o teste).
+-   **Which testing method agent to use?** Both
+    - **Frontend:** Tirar screenshots da página de configuração de relatórios () para verificar o novo campo NIF do Parceiro. Verificar a página  para garantir que foi transformada num dashboard de visualização.
+    - **Backend:** Gerar um relatório em PDF para confirmar que o campo NIF é incluído corretamente quando a opção está ativa.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Issue 1: O estado da ligação WhatsApp não atualiza na UI (P0)
--   Issue 2: Continuar refatoração de  (P2)
--   Issue 3: Verificar se todas as categorias de planos são editáveis (P2)
--   Issue 4: Bug de navegação na página de ficha do veículo (P2)
+-   Issue 1: Transformar a página  num dashboard de visualização (P0)
+-   Issue 2: O estado da ligação WhatsApp não atualiza na UI (P0)
+-   Issue 3: Adicionar o campo NIF do Parceiro ao relatório semanal (P1)
+-   Issue 4: Continuar refatoração de  (P2)
+-   Issue 5: Verificar se todas as categorias de planos são editáveis (P2)
+-   Issue 6: Bug de navegação na página de ficha do veículo (P2)
 
 **Issues Detail:**
--   **Issue 1: O estado da ligação WhatsApp não atualiza na UI (P0)**
-    -   **Attempted fixes:** O agente identificou e limpou ficheiros de lock do perfil do Chromium, suspeitando que pudessem estar a bloquear novas sessões. No entanto, o problema principal persiste.
+-   **Issue 1: Transformar a página  num dashboard de visualização (P0)**
+    -   **Attempted fixes:** O agente atualizou os links do menu em  para que o item Comissões aponte para a página de configuração já existente em .
     -   **Next debug checklist:**
-        1.  Verificar os logs do microserviço Node.js () para confirmar se o evento  está a ser disparado após o scan do QR code.
-        2.  Analisar a comunicação entre o frontend () e o backend (). Confirmar que o polling no frontend está a chamar o endpoint  e que este endpoint está a obter o estado correto do serviço Node.js.
-        3.  Verificar se há algum erro de CORS ou de rede na consola do browser do frontend.
-    -   **Why fix this issue and what will be achieved with the fix?** É um bug bloqueante que impede os utilizadores de usar a funcionalidade de WhatsApp, uma das principais solicitações do utilizador.
+        1.  Reutilizar ou criar um novo ficheiro para a rota .
+        2.  Desenhar e implementar a UI de um dashboard dentro desse ficheiro para mostrar as principais métricas de comissões.
+        3.  Criar os endpoints de backend necessários para fornecer os dados a este novo dashboard.
+    -   **Why fix this issue and what will be achieved with the fix?** Cumpre um pedido explícito do utilizador para separar a configuração da visualização de dados, melhorando a usabilidade.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on other issue:** Não.
 
--   **Issue 2: Continuar refatoração de  (P2)**
-    -   **Status:** NOT STARTED (Nesta sessão)
-    -   **Why fix this issue and what will be achieved with the fix?** Melhora a manutenibilidade de um componente complexo.
+-   **Issue 2: O estado da ligação WhatsApp não atualiza na UI (P0)**
+    -   **Attempted fixes:** Limpeza de ficheiros de lock do Chromium (em forks anteriores).
+    -   **Next debug checklist:**
+        1.  Verificar os logs do microserviço  (Node.js) para confirmar a emissão do evento .
+        2.  Analisar o fluxo de comunicação: Frontend () -> Backend () -> Microserviço. Validar o polling do endpoint .
+        3.  Inspecionar a consola do browser por erros de CORS ou de rede.
+    -   **Why fix this issue and what will be achieved with the fix?** Desbloqueia a funcionalidade de WhatsApp, que é um requisito importante para o utilizador.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** Não.
 
--   **Issue 3: Verificar se todas as categorias são editáveis (P2)**
-    -   **Status:** NOT STARTED
-
--   **Issue 4: Bug de navegação na página de ficha do veículo (P2)**
-    -   **Status:** NOT STARTED
+-   **Issue 3: Adicionar o campo NIF do Parceiro ao relatório semanal (P1)**
+    -   **Attempted fixes:** O agente identificou o ficheiro  como o local para a alteração da UI.
+    -   **Next debug checklist:**
+        1.  Em , adicionar uma checkbox para NIF do Parceiro ao estado .
+        2.  No backend (provavelmente em ), modificar a lógica de geração de PDF para obter o NIF do parceiro e incluí-lo no cabeçalho do relatório se a opção estiver selecionada.
+    -   **Why fix this issue and what will be achieved with the fix?** Adiciona informação fiscal importante aos relatórios, um requisito do negócio.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on other issue:** Não.
 
 **In progress Task List**:
--   **Task 1: Concluir a Integração com Cloud Storage (P0)**
-    -   **Where to resume:** Refatorar o endpoint de upload em  para usar o .
-    -   **What will be achieved with this?** A aplicação será capaz de guardar ficheiros em serviços de armazenamento na cloud, respondendo a um requisito fulcral do utilizador para reduzir o uso de espaço no servidor.
-    -   **Status:** IN PROGRESS
-    -   **Sub-tasks:**
-        1.  **Implementar a Lógica dos Provedores Cloud:** O ficheiro  é um esqueleto. É preciso implementar a lógica de upload real para cada provedor (Terabox, Google Drive, etc.), usando as credenciais encriptadas.
-        2.  **Refatorar Todos os Endpoints de Upload:** Depois dos motoristas, é preciso encontrar e refatorar todos os outros endpoints que lidam com uploads de ficheiros (veículos, vistorias, documentos gerais, etc.) para usar o .
-        3.  **Implementar Download da Cloud:** O utilizador perguntou especificamente se seria possível descarregar os ficheiros. É preciso criar os endpoints de backend e a lógica de UI para permitir o download de ficheiros a partir da cloud.
-    -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on something:** Não.
+N/A
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
+    *   (P0) **Implementar a lógica de backend para adicionar módulos extra.** A UI na página Meu Plano está pronta, mas os botões Adicionar não têm funcionalidade. É preciso criar o endpoint que associa um módulo comprado a um parceiro.
+    *   (P1) **Implementar a autenticação real com os provedores de cloud** em . A lógica atual é um mock.
     *   (P1) Implementar a funcionalidade de download para ficheiros armazenados na cloud.
 *   **Future Tasks:**
-    *   Implementar funcionalidades de Alertas Avançados e Comissões Avançadas.
+    *   Implementar funcionalidades de Alertas Avançados.
     *   Criar um sistema para arquivar dados antigos da base de dados.
     *   Implementar um sistema de relógio de ponto na app móvel.
     *   Investigar a instabilidade do scraper da Prio.
 
 **Completed work in this session**
--   **Feature: UI de Gestão de Armazenamento Melhorada:** Concluída a página de admin do sistema com uma vista detalhada do uso do disco e um botão para limpar ficheiros temporários.
--   **Feature: UI de Configuração de Cloud Storage:** Criada uma nova página para parceiros e administradores configurarem o modo de armazenamento (Local/Cloud/Ambos) e conectarem-se a provedores de cloud com email/password.
--   **Feature: Base da Integração WhatsApp:** Implementada a UI de conexão via QR Code e os endpoints de backend necessários para a comunicação com o microserviço.
--   **Bugfix: Loja de Planos:** Corrigido um erro que causava o crash da página, adicionando as verificações de nulidade necessárias.
+-   **Feature: Integração com Cloud Storage (Concluída):** Refatorados todos os principais endpoints de upload de ficheiros para usar um handler central. Foi criado um endpoint de download e toda a funcionalidade da UI de configuração foi testada e verificada.
+-   **Feature: Refatoração da Página Meu Plano (Concluída):** A página foi redesenhada para remover a funcionalidade Trocar Plano e, em vez disso, listar dinamicamente os Módulos Disponíveis Extra a partir de uma API, incluindo a Aplicação Móvel.
+-   **Feature: Módulo de Comissões e Reorganização da UI (Concluída):** Foi criada a base para o módulo de Comissões e vários menus (menu principal, menu financeiro, painel do parceiro) foram reorganizados para uma navegação mais intuitiva.
+-   **Bugfix/Cleanup: Limpeza de Dados de Teste (Concluída):** Foram removidas com sucesso 22 categorias e 9 planos de teste da base de dados, limpando a UI da Loja de Planos.
 
 **Earlier issues found/mentioned but not fixed**
--   O bug de conexão do WhatsApp (Issue 1) é o principal problema encontrado nesta sessão que não foi resolvido.
+- O bug do estado da ligação do WhatsApp é o principal problema não resolvido que transita entre sessões.
 
 **Known issue recurrence from previous fork**
--   A necessidade de refatorar componentes monolíticos como  e  persiste.
+-   A necessidade de refatorar componentes monolíticos como  persiste.
+-   O bug de status do WhatsApp continua a ser um problema.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Comunicação com Microserviços:** A arquitetura agora inclui a comunicação do backend FastAPI com um microserviço externo (Node.js) para a funcionalidade do WhatsApp.
--   **Camada de Serviço Unificada:** A criação do  e do  representa um passo importante para uma arquitetura mais limpa e centralizada, abstraindo a lógica de armazenamento.
--   **Encriptação de Credenciais:** O sistema foi projetado para encriptar e armazenar de forma segura as credenciais dos serviços cloud dos parceiros.
+-   **Centralized File Handling:** O uso bem-sucedido do  para abstrair a lógica de upload é uma melhoria arquitetónica significativa.
+-   **Dynamic UI from API:** A página Meu Plano agora renderiza componentes (módulos extra) com base numa resposta de API, tornando-a mais flexível e extensível.
+-   **Database Management:** Foi necessário interagir diretamente com a shell do MongoDB para limpar dados, destacando a importância de scripts de limpeza ou de uma gestão de dados de teste mais robusta.
 
 **key DB schema**
--   **parceiros:** Foi adicionada uma configuração de armazenamento para cada parceiro, contendo o  ('local', 'cloud', 'both'), o  (e.g., 'terabox') e as  encriptadas.
+-   **modulos:** Coleção agora contém documentos para os módulos extra disponíveis, marcados com , e inclui campos como , , .
+-   **parceiros:** Esta coleção precisará ser atualizada para armazenar os módulos extra que cada parceiro adquire.
 
 **All files of reference**
+-   **Heavily Updated/Refactored:**
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
 -   **Created:**
+    -    (atualmente uma página de configuração, a ser alterada)
+-   **To be modified:**
     -   
-    -   
-    -   
-    -   
-    -   
-    -   
--   **Updated Heavily:**
-    -    (passou por várias iterações)
-    -   
--   **Fixed:**
     -   
 
 **Areas that need refactoring**:
--   A implementação do  está incompleta e precisa ser preenchida com a lógica real de cada provedor.
--   Todos os endpoints de upload de ficheiros na aplicação precisam ser refatorados para usar o .
+-   A página  precisa ser refatorada para se tornar um dashboard, conforme solicitado.
+-   A autenticação em  é mockada e precisa ser implementada com as APIs reais dos provedores.
 
 **key api endpoints**
--   **Novos:**
-    -   : Para gerir as configurações de armazenamento.
-    -   : Para guardar as credenciais da cloud.
-    -   , : Para gerir a ligação com o WhatsApp.
--   **A Refatorar:**
-    -   
-    -   Todos os outros endpoints de upload de ficheiros em , , etc.
+-   **Refatorados:** Múltiplos endpoints de upload em  e  para usar o .
+-   **Criados:** .
+-   **A serem criados/modificados:**
+    -   Endpoints para alimentar o novo dashboard de comissões.
+    -   Um endpoint para processar a compra de um módulo extra por um parceiro.
+    -   O endpoint de geração de relatórios em PDF precisa ser modificado para incluir o NIF.
 
 **Critical Info for New Agent**
--   **Prioridade Máxima (P0): Concluir a Integração Cloud.** Esta é a tarefa principal. Comece por implementar a lógica de upload no  para pelo menos um provedor (ex: Google Drive). Em seguida, continue a refatorar todos os endpoints de upload de ficheiros para usarem o . Não se esqueça da funcionalidade de download.
--   **Bug Crítico (P0): Corrigir a Conexão do WhatsApp.** O utilizador não pode usar esta funcionalidade enquanto o estado não for atualizado na UI. A investigação deve focar-se na cadeia de comunicação: . Verifique onde a atualização do estado ready se perde.
--   **Preferências do Utilizador:** Lembre-se que o utilizador valoriza a simplicidade. A mudança de OAuth para email/password na configuração da cloud é um exemplo disso. Mantenha as soluções diretas e focadas no problema.
+-   **Prioridade do Utilizador:** O utilizador está focado em ajustes de funcionalidades e melhorias de UI. Siga as últimas solicitações: finalize a página de comissões e os relatórios antes de passar para problemas mais antigos, a menos que sejam bloqueantes.
+-   **Rework da Página de Comissões:** O pedido é claro: a página em  serve para **configurar** (e já está funcional). A página em  deve ser transformada num **dashboard** de visualização. O agente já ajustou os links, agora é preciso construir a UI e a lógica do dashboard.
+-   **Autenticação na Cloud está Mockada:** A integração de armazenamento na cloud foi validada, mas a autenticação real com Google Drive, Dropbox, etc., não está implementada. Este é um próximo passo técnico importante.
+-   **Nome da Base de Dados:** O nome correto da base de dados é . O agente anterior perdeu tempo a depurar um problema relacionado com um nome de base de dados incorreto.
 
 **documents and test reports created in this job**
 -   
--    (atualizado)
+-    (foi atualizado)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: Deu luz verde para continuar com a integração do sistema de upload com os serviços cloud. (Em progresso)
-2.  ****: Confirmou que o resumo da implementação da Parte 3 (integração dos uploads) estava correto. (Em progresso)
-3.  ****: Pedido para simplificar a conexão à cloud, usando email/password e permitindo apenas um provedor. (Concluído)
-4.  ****: Definiu a ordem de prioridades para a implementação da funcionalidade de cloud storage. (Em progresso)
-5.  ****: Pedido para que o admin possa configurar o armazenamento para cada parceiro. (Concluído)
-6.  ****: Perguntou sobre a funcionalidade de download, confirmando que é um requisito. (Pendente)
-7.  ****: Pediu esclarecimentos sobre os modos de armazenamento. (Esclarecido)
-8.  ****: Pedido inicial para a funcionalidade de armazenamento na cloud. (Em progresso)
-9.  ****: Reportou o bug na Loja de Planos. (Corrigido)
-10. ****: Apontou a falta do seletor de parceiros na nova página de configuração. (Corrigido)
+1.  ****: Pedido para adicionar NIF ao relatório e refatorar as páginas de comissões. (Em progresso)
+2.  ****: Pedido para confirmar o funcionamento da config. de relatórios e adicionar Comissões ao menu. (Concluído)
+3.  ****: Pedido para reorganizar o menu dropdown do parceiro. (Concluído)
+4.  ****: Pedido para mover um item de menu. (Concluído)
+5.  ****: Reportou que a adição de módulos não funciona, pediu para confirmar a lista de módulos e perguntou sobre a página Fornecedores. (UI concluída, backend pendente, pergunta respondida)
+6.  ****: Pedido para refatorar a página Meu Plano. (Concluído)
+7.  ****: Pedido para limpar dados de teste, mover a loja de planos e adicionar o módulo de comissões. (Concluído)
+8.  ****: Utilizador a apontar para dados de teste num screenshot. (Endereçado e resolvido)
+9.  ****: Pedido para renomear uma tab e melhorar a UI. (Concluído)
 
 **Project Health Check:**
--   **Broken:** A atualização do estado da conexão do WhatsApp está quebrada, impedindo o uso da funcionalidade.
--   **Mocked:** A lógica de upload no  está efetivamente mockada (é um esqueleto vazio) e precisa de implementação real.
--   **Code Health:** Melhorou com a introdução de camadas de serviço (), mas a dívida técnica em componentes antigos e a necessidade de completar a refatoração dos uploads são pontos de atenção.
+-   **Broken:** A atualização do estado da ligação WhatsApp na UI continua quebrada.
+-   **Mocked:** A autenticação real com os provedores de cloud está mockada. A lógica de backend para adicionar módulos extra a um plano de parceiro está em falta.
 
 **3rd Party Integrations**
--   **wppconnect-team/wppconnect:** Usado no microserviço Node.js para a integração com o WhatsApp Web.
--   **PyDrive2, dropbox, onedrivesdk:** Bibliotecas Python instaladas para as integrações com Google Drive, Dropbox e OneDrive, respetivamente.
+-   **wppconnect-team/wppconnect:** Utilizado para a integração com o WhatsApp Web (atualmente com bug).
+-   **PyDrive2, dropbox, onedrivesdk:** Bibliotecas Python instaladas para as integrações cloud, mas a sua lógica de autenticação ainda não foi implementada.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. Usado para validar a implementação inicial da API do WhatsApp.
--   **Test files created:** None.
--   **Known regressions:** A funcionalidade de conexão do WhatsApp, que passou nos testes do subagente, falhou no uso real pelo utilizador, indicando um bug que os testes automatizados não apanharam.
+-   **Testing agent used after significant changes:** YES (para a funcionalidade de Cloud Storage).
+-   **Test files created:** Nenhum.
+-   **Known regressions:** A funcionalidade de status do WhatsApp, que pode ter funcionado em testes anteriores, está agora a falhar no uso prático.
 
 **Credentials to test flow:**
 -   **App Admin User:**  / 
 -   **App Partner User (Zeny):**  / 
 
 **What agent forgot to execute**
-- O agente não implementou a funcionalidade de **download de ficheiros** a partir da cloud, um requisito que o utilizador mencionou explicitamente.
-- O agente não implementou a lógica real de conexão e upload no  para os provedores de cloud; criou apenas a estrutura.</analysis>
+-   O agente implementou a UI para adicionar módulos extra na página Meu Plano, mas esqueceu-se de implementar a lógica de **backend** para que o botão Adicionar efetivamente compre e ative o módulo para o parceiro.
+-   O agente não implementou a **autenticação real** para os serviços de armazenamento na cloud, deixando a funcionalidade mockada.
+-   O agente mudou o link do menu de comissões, mas não **construiu o dashboard** na página , que foi um pedido explícito do utilizador.</analysis>

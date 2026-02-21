@@ -13,7 +13,7 @@ import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path as SvgPath, Circle, G, Rect, Text as SvgText } from 'react-native-svg';
 
-const API_URL = 'https://cloud-fleet-manager.preview.emergentagent.com/api';
+const API_URL = 'https://fleet-reports-dash.preview.emergentagent.com/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ===== API SERVICE =====
@@ -1034,7 +1034,7 @@ const VistoriasFrotaScreen = ({ user }) => {
   if (selectedVistoria) {
     const v = selectedVistoria;
     const badge = getStatusBadge(v.status);
-    const API_BASE = 'https://cloud-fleet-manager.preview.emergentagent.com';
+    const API_BASE = 'https://fleet-reports-dash.preview.emergentagent.com';
     
     return (
       <ScrollView style={styles.screen}>
@@ -1521,7 +1521,7 @@ const TicketsScreen = ({ user }) => {
 
   // Modal de detalhe da vistoria para aceitar
   if (vistoriaSelecionada) {
-    const API_BASE = 'https://cloud-fleet-manager.preview.emergentagent.com';
+    const API_BASE = 'https://fleet-reports-dash.preview.emergentagent.com';
     
     return (
       <ScrollView style={styles.screen}>
