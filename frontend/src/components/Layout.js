@@ -237,7 +237,14 @@ const Layout = ({ children, user, onLogout }) => {
         ]
       },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
-      { path: '/whatsapp', icon: MessageCircle, label: 'WhatsApp' }
+      { 
+        label: 'WhatsApp', 
+        icon: MessageCircle,
+        submenu: [
+          { path: '/whatsapp', label: '📱 Ligação QR Code' },
+          { path: '/whatsapp-cloud', label: '☁️ Cloud API (Envio em Massa)' }
+        ]
+      }
     ];
 
     // Add Parceiros for admin and gestao
