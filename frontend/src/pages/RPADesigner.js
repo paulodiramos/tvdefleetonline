@@ -1001,17 +1001,17 @@ export default function RPADesigner({ user, onLogout }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-12 gap-4">
           {/* Painel Esquerdo - Configuração */}
-          <div className="col-span-3 space-y-4">
+          <div className="col-span-12 lg:col-span-3 space-y-3">
             {/* Seleção de Plataforma */}
             <Card className="bg-gray-800 border-gray-700">
-              <CardHeader className="pb-2">
+              <CardHeader className="py-3 px-4">
                 <CardTitle className="text-sm text-gray-300">Plataforma</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 pb-3">
                 <select
-                  className="w-full bg-gray-700 border-gray-600 rounded p-2 text-white"
+                  className="w-full bg-gray-700 border-gray-600 rounded-md p-2.5 text-white text-sm"
                   value={plataformaSelecionada?.id || ''}
                   onChange={(e) => {
                     const plat = plataformas.find(p => p.id === e.target.value);
@@ -1032,10 +1032,10 @@ export default function RPADesigner({ user, onLogout }) {
             {/* Seleção de Semana */}
             {plataformaSelecionada && (
               <Card className="bg-gray-800 border-gray-700">
-                <CardHeader className="pb-2">
+                <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm text-gray-300">Semana do Design</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 pb-3">
                   <div className="grid grid-cols-2 gap-2">
                     {[0, 1, 2, 3].map(s => {
                       const designExiste = designs.find(d => d.semana_offset === s);
@@ -1050,7 +1050,7 @@ export default function RPADesigner({ user, onLogout }) {
                               setPassos([]);
                             }
                           }}
-                          className={`p-2 rounded text-sm flex items-center justify-between ${
+                          className={`p-2 rounded-md text-xs flex items-center justify-between gap-1 ${
                             semanaSelecionada === s
                               ? 'bg-blue-600 text-white'
                               : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
@@ -1058,9 +1058,9 @@ export default function RPADesigner({ user, onLogout }) {
                         >
                           <span>{s === 0 ? 'Atual' : `Semana -${s}`}</span>
                           {designExiste ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-3.5 h-3.5 text-green-400" />
                           ) : (
-                            <AlertCircle className="w-4 h-4 text-orange-400" />
+                            <AlertCircle className="w-3.5 h-3.5 text-orange-400" />
                           )}
                         </button>
                       );
@@ -1072,20 +1072,20 @@ export default function RPADesigner({ user, onLogout }) {
 
             {/* Controles */}
             <Card className="bg-gray-800 border-gray-700">
-              <CardHeader className="pb-2">
+              <CardHeader className="py-3 px-4">
                 <CardTitle className="text-sm text-gray-300">Controles</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="px-4 pb-3 space-y-3">
                 {!gravando ? (
                   <>
                     {/* Usar sessão de parceiro */}
                     {plataformaSelecionada && (
-                      <div className="mb-3 p-2 bg-gray-700/50 rounded">
-                        <label className="text-xs text-gray-400 flex items-center gap-1 mb-1">
-                          <User className="w-3 h-3" /> Usar sessão de parceiro
+                      <div className="p-2.5 bg-gray-700/50 rounded-md space-y-2">
+                        <label className="text-xs text-gray-400 flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5" /> Usar sessão de parceiro
                         </label>
                         <select
-                          className="w-full bg-gray-700 border-gray-600 rounded p-2 text-sm text-white"
+                          className="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-sm text-white"
                           value={sessaoParceiroSelecionada?.parceiro_id || ''}
                           onChange={(e) => {
                             const sessao = sessoesParceiros.find(s => 
@@ -1114,13 +1114,13 @@ export default function RPADesigner({ user, onLogout }) {
                         </select>
                         
                         {sessaoParceiroSelecionada && (
-                          <p className="text-xs text-green-400 mt-1">
+                          <p className="text-xs text-green-400">
                             ✓ Vai usar cookies de {sessaoParceiroSelecionada.parceiro_nome} - sem CAPTCHA!
                           </p>
                         )}
                         
                         {!sessaoParceiroSelecionada && sessoesParceiros.length === 0 && (
-                          <p className="text-xs text-orange-400 mt-1">
+                          <p className="text-xs text-orange-400">
                             Nenhum parceiro fez login recente. O design começará do zero.
                           </p>
                         )}
@@ -1129,13 +1129,13 @@ export default function RPADesigner({ user, onLogout }) {
                     
                     {/* URL inicial customizada */}
                     {plataformaSelecionada && (
-                      <div className="mb-3">
-                        <label className="text-xs text-gray-400 mb-1 block">URL inicial (opcional)</label>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1.5 block">URL inicial (opcional)</label>
                         <Input
                           placeholder={plataformaSelecionada?.url_base || 'URL para começar...'}
                           value={urlInicial}
                           onChange={(e) => setUrlInicial(e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white text-sm"
+                          className="bg-gray-700 border-gray-600 text-white text-sm h-9"
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           Deixe vazio para usar URL base da plataforma
@@ -1145,9 +1145,9 @@ export default function RPADesigner({ user, onLogout }) {
                     
                     {/* Credenciais de teste - Campos compactos antes de iniciar */}
                     {plataformaSelecionada && (
-                      <div className="mb-3 p-3 bg-gray-700/50 rounded border border-gray-600">
-                        <label className="text-xs text-gray-400 mb-2 block flex items-center gap-1">
-                          <Key className="w-3 h-3" /> Credenciais de teste (opcional)
+                      <div className="p-2.5 bg-gray-700/50 rounded-md border border-gray-600 space-y-2">
+                        <label className="text-xs text-gray-400 flex items-center gap-1.5">
+                          <Key className="w-3.5 h-3.5" /> Credenciais de teste (opcional)
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                           <Input
