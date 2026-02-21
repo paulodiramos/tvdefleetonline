@@ -137,60 +137,51 @@ const Layout = ({ children, user, onLogout }) => {
       ];
     }
 
-    // Parceiro menu - filtrado por permissões
+    // Parceiro menu - por defeito tem acesso a TUDO até admin atribuir plano
     if (user.role === 'parceiro') {
-      const motoristasSubmenu = filtrarSubmenu([
+      const motoristasSubmenu = [
         { path: '/motoristas', label: 'Lista de Motoristas' },
+        { path: '/comissoes', label: '💰 Comissões' },
         { path: '/contratos', label: '📄 Gestão de Contratos' },
-        { path: '/criar-contrato', label: '➕ Criar Contrato' }
-      ]);
+        { path: '/criar-contrato', label: '➕ Criar Contrato' },
+        { path: '/progressoes-motoristas', label: '🏆 Progressões' }
+      ];
       
-      // Adicionar Progressões se módulo de comissões activo
-      if (temModuloComissoes()) {
-        motoristasSubmenu.push({ path: '/progressoes-motoristas', label: '🏆 Progressões' });
-      }
-      
-      const veiculosSubmenu = filtrarSubmenu([
+      const veiculosSubmenu = [
         { path: '/vehicles', label: 'Lista de Veículos' },
         { path: '/vistorias', label: 'Vistorias Agendadas' },
         { path: '/vistorias-mobile', label: '📱 Vistorias Móveis' },
         { path: '/inspetores', label: '👤 Inspetores' }
-      ]);
+      ];
       
-      const financeiroSubmenu = filtrarSubmenu([
+      const financeiroSubmenu = [
         { path: '/resumo-semanal', label: '📊 Resumo Semanal' },
         { path: '/gestao-extras', label: '💰 Extras/Dívidas' },
         { path: '/verificar-recibos', label: '✅ Verificar Recibos' },
         { path: '/pagamentos-parceiro', label: '💳 Pagamentos' },
         { path: '/arquivo-recibos', label: '📁 Arquivo de Recibos' },
         { path: '/alertas-custos', label: '🔔 Alertas de Custos' }
-      ]);
+      ];
       
       const items = [];
       
-      if (motoristasSubmenu.length > 0) {
-        items.push({ 
-          label: 'Motoristas', 
-          icon: Users,
-          submenu: motoristasSubmenu
-        });
-      }
+      items.push({ 
+        label: 'Motoristas', 
+        icon: Users,
+        submenu: motoristasSubmenu
+      });
       
-      if (veiculosSubmenu.length > 0) {
-        items.push({ 
-          label: 'Veículos', 
-          icon: Car,
-          submenu: veiculosSubmenu
-        });
-      }
+      items.push({ 
+        label: 'Veículos', 
+        icon: Car,
+        submenu: veiculosSubmenu
+      });
       
-      if (financeiroSubmenu.length > 0) {
-        items.push({ 
-          label: 'Financeiro', 
-          icon: DollarSign,
-          submenu: financeiroSubmenu
-        });
-      }
+      items.push({ 
+        label: 'Financeiro', 
+        icon: DollarSign,
+        submenu: financeiroSubmenu
+      });
       
       // Mensagens com Envio em Massa incluído
       items.push({ 
