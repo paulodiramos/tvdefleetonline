@@ -66,23 +66,8 @@ async def iniciar_browser_uber(
     try:
         from services.browser_interativo import get_browser
         
-        # Buscar credenciais guardadas (tentar credenciais_uber primeiro, depois credenciais_plataformas)
-        cred = await db.credenciais_uber.find_one({"parceiro_id": parceiro_id})
-        
-        # Fallback para credenciais_plataformas se não encontrar em credenciais_uber
-        if not cred or not cred.get("email"):
-            parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0, "credenciais_plataformas": 1})
-            if not parceiro:
-                parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0, "credenciais_plataformas": 1})
-            
-            if parceiro and parceiro.get("credenciais_plataformas"):
-                cp = parceiro["credenciais_plataformas"]
-                cred = {
-                    "email": cp.get("uber_email"),
-                    "password": cp.get("uber_password"),
-                    "telefone": cp.get("uber_telefone")
-                }
-                logger.info(f"Usando credenciais de credenciais_plataformas")
+        # Buscar credenciais guardadas (usa função centralizada)
+        cred = await get_uber_credentials(parceiro_id)
         
         browser = await get_browser(parceiro_id)
         await browser.navegar("https://auth.uber.com/v2/?next_url=https%3A%2F%2Fsupplier.uber.com%2F")
