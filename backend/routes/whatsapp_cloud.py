@@ -718,6 +718,109 @@ async def get_historico_envios(
     return {"envios": envios, "total": len(envios)}
 
 
+# ==================== AGENDAMENTO AUTOMÁTICO ====================
+
+class ConfiguracaoAgendamento(BaseModel):
+    hora: int = 9
+    dias_antecedencia: int = 30
+    habilitado: bool = False
+
+
+@router.get("/agendamento/config")
+async def get_agendamento_config(current_user: Dict = Depends(get_current_user)):
+    """Obtém configuração de agendamento automático"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    config = await db.configuracoes.find_one({"tipo": "agendamento_whatsapp"}, {"_id": 0})
+    if not config:
+        config = {
+            "tipo": "agendamento_whatsapp",
+            "hora": 9,
+            "dias_antecedencia": 30,
+            "habilitado": False,
+            "ultima_execucao": None
+        }
+    
+    return config
+
+
+@router.post("/agendamento/config")
+async def update_agendamento_config(
+    config: ConfiguracaoAgendamento,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualiza configuração de agendamento automático"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    await db.configuracoes.update_one(
+        {"tipo": "agendamento_whatsapp"},
+        {"$set": {
+            "tipo": "agendamento_whatsapp",
+            "hora": config.hora,
+            "dias_antecedencia": config.dias_antecedencia,
+            "habilitado": config.habilitado,
+            "atualizado_em": datetime.now().isoformat(),
+            "atualizado_por": current_user["id"]
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Configuração atualizada"}
+
+
+@router.get("/agendamento/historico")
+async def get_agendamento_historico(
+    limite: int = 20,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Lista histórico de execuções automáticas"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    historico = await db.tarefas_agendadas_log.find(
+        {"tarefa": "alertas_documentos"},
+        {"_id": 0}
+    ).sort("executado_em", -1).to_list(limite)
+    
+    return {"historico": historico, "total": len(historico)}
+
+
+@router.post("/agendamento/executar-agora")
+async def executar_alertas_agora(current_user: Dict = Depends(get_current_user)):
+    """Executa envio de alertas imediatamente (manual)"""
+    if current_user["role"] not in ["admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Buscar configuração
+    config = await db.configuracoes.find_one({"tipo": "agendamento_whatsapp"}, {"_id": 0})
+    dias = config.get("dias_antecedencia", 30) if config else 30
+    
+    # Reutilizar o endpoint existente de alertas
+    from routes.alertas import enviar_alertas_documentos_whatsapp
+    
+    # Criar um mock do current_user com o role correto
+    result = await enviar_alertas_documentos_whatsapp(
+        dias=dias,
+        apenas_motoristas=True,
+        current_user=current_user
+    )
+    
+    # Registar execução manual
+    await db.tarefas_agendadas_log.insert_one({
+        "tarefa": "alertas_documentos",
+        "tipo": "manual",
+        "executado_em": datetime.now().isoformat(),
+        "executado_por": current_user["id"],
+        "enviados": result.get("enviados", 0),
+        "falhas": result.get("falhas", 0),
+        "dias_antecedencia": dias
+    })
+    
+    return result
+
+
 # ==================== WEBHOOK ENDPOINTS ====================
 
 @router.get("/webhook")
