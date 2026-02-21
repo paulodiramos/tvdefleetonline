@@ -48,6 +48,7 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 | Financeiro | ✅ OK | Menu com opções |
 | Ficha Motorista | ✅ OK | |
 | Ficha Veículo | ✅ OK | |
+| WhatsApp Cloud | ✅ OK | Envio em Massa via Meta API |
 
 ### APIs Mockadas (não afectam deploy):
 - **OAuth Cloud Storage:** Credenciais em branco (Google/Dropbox/OneDrive)
