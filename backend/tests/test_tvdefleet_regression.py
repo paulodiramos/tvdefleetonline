@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 
 # Base URL from environment variable
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-reports-dash.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://motorista-cloud-sync.preview.emergentagent.com')
 
 # Test credentials
 PARCEIRO_CREDENTIALS = {

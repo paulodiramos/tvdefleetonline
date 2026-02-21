@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://fleet-reports-dash.preview.emergentagent.com/api"
+BACKEND_URL = "https://motorista-cloud-sync.preview.emergentagent.com/api"
 
 # Admin credentials from review request
 ADMIN_CREDS = {"email": "admin@tvdefleet.com", "password": "o72ocUHy"}

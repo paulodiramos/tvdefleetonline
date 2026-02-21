@@ -1,76 +1,61 @@
 <analysis>**original_problem_statement:**
 O utilizador pretende continuar a desenvolver a sua aplicação de gestão de frotas. As solicitações iniciais abrangiam melhorias na gestão de preços e correção de bugs. Durante as sessões, o âmbito expandiu-se para incluir: integração com WhatsApp, gestão avançada de armazenamento na cloud (Terabox, Google Drive, etc.), e uma série de melhorias de UI/UX e funcionalidades, como um módulo de comissões e uma loja de módulos extra.
 
-Os requisitos mais recentes do utilizador incluem:
-1.  **Limpeza de Dados:** Eliminar dados de teste (planos e categorias) da base de dados.
-2.  **Reorganização da UI:**
-    *   Mover a Loja de Planos para dentro da página Meu Plano.
-    *   Adicionar um módulo de Comissões para os motoristas.
-    *   Na página Meu Plano, remover a função Trocar Plano e, em vez disso, mostrar uma lista de Módulos Disponíveis Extra que podem ser adquiridos.
-    *   Confirmar que a Aplicação Móvel é um módulo.
-    *   Mover Empresas de Faturação para o menu Financeiro e reorganizar o painel do parceiro.
-3.  **Funcionalidades de Relatórios e Comissões:**
-    *   Adicionar os campos Nome do Parceiro, NIF do Parceiro e Número do Relatório ao relatório semanal em PDF.
-    *   Rework das páginas de comissões: a URL  deve ser a página de configuração, e  deve ser transformada num dashboard de visualização.
+Os requisitos mais recentes e críticos do utilizador incluem:
+1.  **Corrigir a Ligação WhatsApp:** A ligação é estabelecida no telemóvel do utilizador, mas o estado na plataforma nunca atualiza, bloqueando a funcionalidade.
+2.  **Corrigir o Download de Documentos:** Os motoristas que se inscrevem através do formulário de registo público não conseguem que os seus documentos em PDF sejam descarregados.
+3.  **Implementar a Autenticação Real na Cloud:** Ativar a ligação com Google Drive, Dropbox e OneDrive usando OAuth 2.0.
+4.  **Ferramentas de Administração:** Adicionar um painel de administrador para monitorizar o uso da base de dados e permitir a limpeza de dados não essenciais.
+5.  **Análise de Espaço em Disco:** Investigar e limpar o uso excessivo de espaço em disco no servidor.
 
 **User's preferred language**: Portuguese (Portugal)
 
 **what currently exists?**
 A aplicação full-stack (React/FastAPI/MongoDB) está largamente funcional.
-- A **Integração com Armazenamento Cloud** foi concluída. Todos os principais endpoints de upload (, , ) foram refatorados para usar um  centralizado. A UI permite que os parceiros configurem o seu modo de armazenamento e conectem-se a provedores (embora a autenticação real esteja mockada). Foi criado um endpoint de download.
-- Foram feitas várias **melhorias de UI/UX**. O menu de configurações do parceiro foi redesenhado, e os menus principais foram reorganizados para uma melhor navegação.
-- A página **Meu Plano** foi atualizada para listar dinamicamente os módulos extra disponíveis a partir de uma API, e a antiga funcionalidade de trocar plano foi removida.
-- Foi criado um novo **Módulo de Comissões** com uma página de configuração em  e um link no menu de motoristas.
-- Foi feita uma **limpeza na base de dados**, removendo dados de teste que poluíam a UI.
+- **Dashboard de Comissões:** A página  foi transformada com sucesso num dashboard visual, separada da página de configuração.
+- **Relatórios com NIF:** A geração de relatórios semanais em PDF foi atualizada para incluir opcionalmente o NIF do parceiro.
+- **Painel de Admin para Gestão de BD:** Foi criada uma nova secção na página de administração () que mostra estatísticas da base de dados (tamanho, principais coleções) e permite limpar dados transitórios (logs de RPA, notificações lidas).
+- **Fluxo de Autenticação OAuth para Cloud:** A UI de configuração de armazenamento foi refatorada para usar um fluxo OAuth 2.0. Foram implementados os endpoints de backend e um modal na UI com instruções para o utilizador obter as chaves de API necessárias para Google Drive, Dropbox e OneDrive. A funcionalidade está pronta, aguardando as credenciais no ficheiro .
+- **Limpeza de Disco:** Foram identificados e removidos com sucesso ~2.7GB de ficheiros de cache desnecessários.
+- **Lógica de Módulos Extra:** Foi confirmado que a funcionalidade para um parceiro adicionar módulos extra ao seu plano já estava implementada e a funcionar corretamente.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a implementar um conjunto de pedidos do utilizador. O último foco foi na funcionalidade de comissões e relatórios. O agente atualizou os links do menu para que Comissões apontasse para a página de configuração correta () e estava a preparar-se para modificar a geração do relatório semanal para incluir o NIF do parceiro e transformar a página  num dashboard.
+-   **Last item agent was working:** O agente estava a investigar e a resolver dois bugs críticos reportados pelo utilizador:
+    1.  **Bug do WhatsApp:** O agente determinou que, após o QR code ser lido, o microserviço Node.js não está a receber o evento  ou  da biblioteca , o que impede a atualização do estado na UI. Foram adicionados mais logs para depuração.
+    2.  **Bug do Download de Documentos:** O agente descobriu que o formulário de registo público guarda apenas um UUID do documento na base de dados, em vez do caminho completo do ficheiro. O endpoint de download falha porque não consegue localizar o ficheiro apenas com o UUID. O agente iniciou a correção do endpoint de download para conseguir construir o caminho a partir do UUID.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Both
-    - **Frontend:** Tirar screenshots da página de configuração de relatórios () para verificar o novo campo NIF do Parceiro. Verificar a página  para garantir que foi transformada num dashboard de visualização.
-    - **Backend:** Gerar um relatório em PDF para confirmar que o campo NIF é incluído corretamente quando a opção está ativa.
+-   **Which testing method agent to use?** both
+    - **Frontend:** Testar a página de ligação do WhatsApp para ver se o estado atualiza após ler o QR code. Para os documentos, registar um novo motorista através do formulário público e tentar descarregar os seus documentos na ficha do motorista.
+    - **Backend:** Testar o endpoint  com um motorista criado pelo formulário de registo para validar a correção.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Transformar a página  num dashboard de visualização (P0)
--   Issue 2: O estado da ligação WhatsApp não atualiza na UI (P0)
--   Issue 3: Adicionar o campo NIF do Parceiro ao relatório semanal (P1)
--   Issue 4: Continuar refatoração de  (P2)
--   Issue 5: Verificar se todas as categorias de planos são editáveis (P2)
--   Issue 6: Bug de navegação na página de ficha do veículo (P2)
+-   Issue 1: O estado da ligação WhatsApp não atualiza na UI (P0)
+-   Issue 2: O download de ficheiros falha para motoristas criados via registo público (P0)
+-   Issue 3: Continuar refatoração de  (P2)
+-   Issue 4: Verificar se todas as categorias de planos são editáveis (P2)
+-   Issue 5: Bug de navegação na página de ficha do veículo (P2)
 
 **Issues Detail:**
--   **Issue 1: Transformar a página  num dashboard de visualização (P0)**
-    -   **Attempted fixes:** O agente atualizou os links do menu em  para que o item Comissões aponte para a página de configuração já existente em .
+-   **Issue 1: O estado da ligação WhatsApp não atualiza na UI (P0)**
+    -   **Attempted fixes:** Foram adicionados logs detalhados ao microserviço Node.js () para rastrear os eventos de autenticação. A investigação aponta para um problema entre a biblioteca  e o ambiente de container (Puppeteer), onde os eventos de sucesso da ligação não são disparados.
     -   **Next debug checklist:**
-        1.  Reutilizar ou criar um novo ficheiro para a rota .
-        2.  Desenhar e implementar a UI de um dashboard dentro desse ficheiro para mostrar as principais métricas de comissões.
-        3.  Criar os endpoints de backend necessários para fornecer os dados a este novo dashboard.
-    -   **Why fix this issue and what will be achieved with the fix?** Cumpre um pedido explícito do utilizador para separar a configuração da visualização de dados, melhorando a usabilidade.
+        1.  Verificar os logs do  após uma tentativa de ligação para procurar os eventos ,  e .
+        2.  Pesquisar problemas conhecidos com  + Puppeteer em ambientes Docker/Kubernetes (ex: flags como ).
+        3.  Considerar atualizar a biblioteca  para uma versão mais recente.
+    -   **Why fix this issue and what will be achieved with the fix?** Desbloqueia uma funcionalidade crítica e recorrentemente problemática para o utilizador.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on other issue:** Não.
-
--   **Issue 2: O estado da ligação WhatsApp não atualiza na UI (P0)**
-    -   **Attempted fixes:** Limpeza de ficheiros de lock do Chromium (em forks anteriores).
-    -   **Next debug checklist:**
-        1.  Verificar os logs do microserviço  (Node.js) para confirmar a emissão do evento .
-        2.  Analisar o fluxo de comunicação: Frontend () -> Backend () -> Microserviço. Validar o polling do endpoint .
-        3.  Inspecionar a consola do browser por erros de CORS ou de rede.
-    -   **Why fix this issue and what will be achieved with the fix?** Desbloqueia a funcionalidade de WhatsApp, que é um requisito importante para o utilizador.
-    -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on other issue:** Não.
 
--   **Issue 3: Adicionar o campo NIF do Parceiro ao relatório semanal (P1)**
-    -   **Attempted fixes:** O agente identificou o ficheiro  como o local para a alteração da UI.
+-   **Issue 2: O download de ficheiros falha para motoristas criados via registo público (P0)**
+    -   **Attempted fixes:** O agente identificou a causa: o processo de registo guarda um UUID em vez de um caminho de ficheiro no campo do documento (ex: ). Foi iniciada uma modificação no endpoint de download em  para procurar o ficheiro na pasta de uploads usando o UUID.
     -   **Next debug checklist:**
-        1.  Em , adicionar uma checkbox para NIF do Parceiro ao estado .
-        2.  No backend (provavelmente em ), modificar a lógica de geração de PDF para obter o NIF do parceiro e incluí-lo no cabeçalho do relatório se a opção estiver selecionada.
-    -   **Why fix this issue and what will be achieved with the fix?** Adiciona informação fiscal importante aos relatórios, um requisito do negócio.
+        1.  Finalizar a correção no endpoint de download em  (função ) para construir o caminho do ficheiro (ex: ) quando  for um UUID.
+        2.  **Corrigir a causa raiz:** Modificar o endpoint de registo público () para garantir que guarda o caminho completo do ficheiro na base de dados, e não apenas o UUID.
+    -   **Why fix this issue and what will be achieved with the fix?** Permite que os administradores e parceiros acedam aos documentos de motoristas que se registam autonomamente.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both.
@@ -81,9 +66,7 @@ N/A
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P0) **Implementar a lógica de backend para adicionar módulos extra.** A UI na página Meu Plano está pronta, mas os botões Adicionar não têm funcionalidade. É preciso criar o endpoint que associa um módulo comprado a um parceiro.
-    *   (P1) **Implementar a autenticação real com os provedores de cloud** em . A lógica atual é um mock.
-    *   (P1) Implementar a funcionalidade de download para ficheiros armazenados na cloud.
+    *   (P1) **Ativar a autenticação real com os provedores de cloud.** O fluxo OAuth está pronto. O próximo passo é obter as credenciais (Client ID/Secret) do utilizador para Google Drive, Dropbox e OneDrive e inseri-las no ficheiro .
 *   **Future Tasks:**
     *   Implementar funcionalidades de Alertas Avançados.
     *   Criar um sistema para arquivar dados antigos da base de dados.
@@ -91,95 +74,96 @@ N/A
     *   Investigar a instabilidade do scraper da Prio.
 
 **Completed work in this session**
--   **Feature: Integração com Cloud Storage (Concluída):** Refatorados todos os principais endpoints de upload de ficheiros para usar um handler central. Foi criado um endpoint de download e toda a funcionalidade da UI de configuração foi testada e verificada.
--   **Feature: Refatoração da Página Meu Plano (Concluída):** A página foi redesenhada para remover a funcionalidade Trocar Plano e, em vez disso, listar dinamicamente os Módulos Disponíveis Extra a partir de uma API, incluindo a Aplicação Móvel.
--   **Feature: Módulo de Comissões e Reorganização da UI (Concluída):** Foi criada a base para o módulo de Comissões e vários menus (menu principal, menu financeiro, painel do parceiro) foram reorganizados para uma navegação mais intuitiva.
--   **Bugfix/Cleanup: Limpeza de Dados de Teste (Concluída):** Foram removidas com sucesso 22 categorias e 9 planos de teste da base de dados, limpando a UI da Loja de Planos.
+-   **Feature: Dashboard de Comissões (CONCLUÍDO):** A rota  foi transformada num dashboard de visualização com métricas, filtros e gráficos.
+-   **Feature: NIF do Parceiro no Relatório Semanal (CONCLUÍDO):** Adicionada a opção e a lógica de backend para incluir o NIF nos relatórios em PDF.
+-   **Feature: Painel de Administração da Base de Dados (CONCLUÍDO):** Adicionada uma secção no admin para visualizar estatísticas da BD e limpar dados transitórios com segurança.
+-   **Feature: Fluxo de Autenticação OAuth para Cloud (CONCLUÍDO):** Implementado todo o fluxo de frontend e backend para a ligação a Google Drive, Dropbox e OneDrive, aguardando apenas as chaves de API do utilizador.
+-   **Task: Limpeza de Espaço em Disco (CONCLUÍDO):** Foram libertados ~2.7GB de espaço em disco através da remoção de caches desnecessários.
+-   **Bugfix: Permissões de Download de Documentos (CONCLUÍDO):** Foi confirmado que a lógica de permissão de download estava correta; o problema de teste inicial era que o utilizador estava a tentar aceder a um documento de um motorista que não lhe pertencia.
+-   **Investigation: Lógica de Módulos Extra (CONCLUÍDO):** Confirmado que a funcionalidade de adicionar módulos extra já estava implementada e a funcionar.
 
 **Earlier issues found/mentioned but not fixed**
 - O bug do estado da ligação do WhatsApp é o principal problema não resolvido que transita entre sessões.
 
 **Known issue recurrence from previous fork**
--   A necessidade de refatorar componentes monolíticos como  persiste.
--   O bug de status do WhatsApp continua a ser um problema.
+-   **Bug do status do WhatsApp:** Continua a ser o problema mais persistente e de maior prioridade.
+-   **Refatoração de Componentes:** A necessidade de refatorar componentes monolíticos como  persiste como uma dívida técnica.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Centralized File Handling:** O uso bem-sucedido do  para abstrair a lógica de upload é uma melhoria arquitetónica significativa.
--   **Dynamic UI from API:** A página Meu Plano agora renderiza componentes (módulos extra) com base numa resposta de API, tornando-a mais flexível e extensível.
--   **Database Management:** Foi necessário interagir diretamente com a shell do MongoDB para limpar dados, destacando a importância de scripts de limpeza ou de uma gestão de dados de teste mais robusta.
+-   **OAuth 2.0 Integration:** A aplicação agora suporta o fluxo completo de autorização OAuth 2.0 para os principais provedores de cloud, aguardando apenas a configuração das credenciais.
+-   **Admin Tooling:** Foram criadas novas ferramentas de administração (endpoints e UI) para monitorização e manutenção da base de dados, uma melhoria importante para a gestão da aplicação.
+-   **Microservice Debugging:** A depuração do problema do WhatsApp está focada no microserviço Node.js, destacando a complexidade de interações entre diferentes serviços.
 
 **key DB schema**
--   **modulos:** Coleção agora contém documentos para os módulos extra disponíveis, marcados com , e inclui campos como , , .
--   **parceiros:** Esta coleção precisará ser atualizada para armazenar os módulos extra que cada parceiro adquire.
+-   **motoristas:** O campo  dentro de um documento de motorista é a fonte de um bug. Para motoristas do registo público, armazena um UUID em vez de um caminho de ficheiro, o que causa a falha no download.
 
 **All files of reference**
--   **Heavily Updated/Refactored:**
-    -   
-    -   
-    -   
-    -   
-    -   
-    -   
--   **Created:**
-    -    (atualmente uma página de configuração, a ser alterada)
--   **To be modified:**
-    -   
+-   **Ficheiros em Correção/Depuração:**
+    -    (correção do endpoint de download e, posteriormente, do endpoint de registo)
+    -    (depuração da ligação WhatsApp)
+-   **Ficheiros Modificados Recentemente:**
+    -    (nova UI de gestão de BD)
+    -    (novos endpoints de gestão de BD)
+    -    (nova UI de configuração de cloud com OAuth)
+    -    (endpoints de backend para OAuth)
+-   **Ficheiros Criados Recentemente:**
     -   
 
 **Areas that need refactoring**:
--   A página  precisa ser refatorada para se tornar um dashboard, conforme solicitado.
--   A autenticação em  é mockada e precisa ser implementada com as APIs reais dos provedores.
+-   O endpoint de registo público () em  precisa ser refatorado para guardar o caminho completo do ficheiro dos documentos, corrigindo a causa raiz do bug de download.
 
 **key api endpoints**
--   **Refatorados:** Múltiplos endpoints de upload em  e  para usar o .
--   **Criados:** .
--   **A serem criados/modificados:**
-    -   Endpoints para alimentar o novo dashboard de comissões.
-    -   Um endpoint para processar a compra de um módulo extra por um parceiro.
-    -   O endpoint de geração de relatórios em PDF precisa ser modificado para incluir o NIF.
+-   : O endpoint crítico que está a ser corrigido para suportar documentos de motoristas recém-registados.
+-   : O endpoint que precisa de ser corrigido para guardar os caminhos dos ficheiros corretamente.
+-   : Novo endpoint para as estatísticas da base de dados no painel de admin.
+-   : Novo endpoint para a limpeza de dados a partir do painel de admin.
+-   : Endpoint que inicia o fluxo de autenticação OAuth para a cloud.
+-   : Endpoint usado pelo frontend para fazer polling do estado da ligação WhatsApp.
 
 **Critical Info for New Agent**
--   **Prioridade do Utilizador:** O utilizador está focado em ajustes de funcionalidades e melhorias de UI. Siga as últimas solicitações: finalize a página de comissões e os relatórios antes de passar para problemas mais antigos, a menos que sejam bloqueantes.
--   **Rework da Página de Comissões:** O pedido é claro: a página em  serve para **configurar** (e já está funcional). A página em  deve ser transformada num **dashboard** de visualização. O agente já ajustou os links, agora é preciso construir a UI e a lógica do dashboard.
--   **Autenticação na Cloud está Mockada:** A integração de armazenamento na cloud foi validada, mas a autenticação real com Google Drive, Dropbox, etc., não está implementada. Este é um próximo passo técnico importante.
--   **Nome da Base de Dados:** O nome correto da base de dados é . O agente anterior perdeu tempo a depurar um problema relacionado com um nome de base de dados incorreto.
+-   **Prioridades Máximas:** Foque-se nos dois bugs reportados pelo utilizador, pois estão a bloquear funcionalidades importantes:
+    1.  **Bug do WhatsApp:** É um problema recorrente e de alta prioridade. A investigação aponta para um problema no microserviço Node.js/ em ambiente container.
+    2.  **Bug do Download de Documentos:** A solução tem duas partes: corrigir o endpoint de download para funcionar com os dados existentes e, mais importante, corrigir o endpoint de registo para que o problema não volte a ocorrer.
+-   **Autenticação Cloud Pronta a Configurar:** O trabalho de implementação OAuth está feito. A funcionalidade só precisa das chaves de API (Client ID/Secret) do utilizador no ficheiro .
 
 **documents and test reports created in this job**
 -   
--    (foi atualizado)
+-    (foi atualizado com as tarefas concluídas)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: Pedido para adicionar NIF ao relatório e refatorar as páginas de comissões. (Em progresso)
-2.  ****: Pedido para confirmar o funcionamento da config. de relatórios e adicionar Comissões ao menu. (Concluído)
-3.  ****: Pedido para reorganizar o menu dropdown do parceiro. (Concluído)
-4.  ****: Pedido para mover um item de menu. (Concluído)
-5.  ****: Reportou que a adição de módulos não funciona, pediu para confirmar a lista de módulos e perguntou sobre a página Fornecedores. (UI concluída, backend pendente, pergunta respondida)
-6.  ****: Pedido para refatorar a página Meu Plano. (Concluído)
-7.  ****: Pedido para limpar dados de teste, mover a loja de planos e adicionar o módulo de comissões. (Concluído)
-8.  ****: Utilizador a apontar para dados de teste num screenshot. (Endereçado e resolvido)
-9.  ****: Pedido para renomear uma tab e melhorar a UI. (Concluído)
+1.  ****: O utilizador reportou os dois bugs críticos atuais: a falha na ligação do WhatsApp e a falha no download de documentos para motoristas recém-registados. (EM PROGRESSO)
+2.  ****: Pergunta sobre como fazer deploy mantendo os dados de produção. O agente aconselhou a opção Use existing database. (CONCLUÍDO)
+3.  ****: O utilizador reportou o problema do download de ficheiros pela primeira vez. (EM PROGRESSO)
+4.  ****: Pergunta sobre como preparar os dados para deploy. O agente explicou a funcionalidade de backup/restauro. (CONCLUÍDO)
+5.  ****: O utilizador não via os botões de limpeza. O agente enviou uma screenshot que os mostrava. (CONCLUÍDO)
+6.  ****: O utilizador pediu um painel de admin para estatísticas e limpeza da BD. (CONCLUÍDO)
+7.  ****: Pergunta sobre a possibilidade de limpar dados da BD. (CONCLUÍDO)
+8.  ****: Pedido de informação sobre o tamanho da BD. (CONCLUÍDO)
+9.  ****: O utilizador deu autorização para limpar os caches do disco. (CONCLUÍDO)
+10. ****: O utilizador questionou o alto uso de disco. (CONCLUÍDO)
 
 **Project Health Check:**
--   **Broken:** A atualização do estado da ligação WhatsApp na UI continua quebrada.
--   **Mocked:** A autenticação real com os provedores de cloud está mockada. A lógica de backend para adicionar módulos extra a um plano de parceiro está em falta.
+-   **Broken:**
+    -   Atualização do estado da ligação WhatsApp na UI.
+    -   Download de documentos para motoristas criados através do registo público.
+-   **Mocked:**
+    -   A autenticação com os provedores de cloud (Google Drive, Dropbox, OneDrive) está implementada, mas requer as chaves de API reais do utilizador no ficheiro  para funcionar.
 
 **3rd Party Integrations**
--   **wppconnect-team/wppconnect:** Utilizado para a integração com o WhatsApp Web (atualmente com bug).
--   **PyDrive2, dropbox, onedrivesdk:** Bibliotecas Python instaladas para as integrações cloud, mas a sua lógica de autenticação ainda não foi implementada.
+-   **wppconnect-team/wppconnect:** Utilizado para a integração com o WhatsApp Web (atualmente com o bug de estado).
+-   **PyDrive2, dropbox, onedrivesdk:** Bibliotecas Python utilizadas para a integração cloud, cujo fluxo OAuth já está implementado.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (para a funcionalidade de Cloud Storage).
+-   **Testing agent used after significant changes:** SIM, foi executado um teste de regressão completo antes do último relatório de bugs do utilizador.
 -   **Test files created:** Nenhum.
--   **Known regressions:** A funcionalidade de status do WhatsApp, que pode ter funcionado em testes anteriores, está agora a falhar no uso prático.
+-   **Known regressions:** O problema do estado do WhatsApp persiste. Foi identificada uma nova regressão no download de documentos para novos registos.
 
 **Credentials to test flow:**
 -   **App Admin User:**  / 
 -   **App Partner User (Zeny):**  / 
 
 **What agent forgot to execute**
--   O agente implementou a UI para adicionar módulos extra na página Meu Plano, mas esqueceu-se de implementar a lógica de **backend** para que o botão Adicionar efetivamente compre e ative o módulo para o parceiro.
--   O agente não implementou a **autenticação real** para os serviços de armazenamento na cloud, deixando a funcionalidade mockada.
--   O agente mudou o link do menu de comissões, mas não **construiu o dashboard** na página , que foi um pedido explícito do utilizador.</analysis>
+-   O agente anterior identificou que o processo de registo guarda um UUID em vez de um caminho de ficheiro, mas focou-se apenas em corrigir o sintoma (o endpoint de download). O agente não corrigiu a **causa raiz** no endpoint de registo público. É crucial corrigir também o endpoint de registo para evitar que o problema se repita a cada novo motorista.</analysis>
