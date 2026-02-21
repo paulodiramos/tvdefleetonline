@@ -1073,6 +1073,63 @@ export default function RPADesigner({ user, onLogout }) {
               </Card>
             )}
 
+            {/* Tipo de Design - Login vs Extração */}
+            {plataformaSelecionada && (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm text-gray-300">Tipo de Design</CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        setTipoDesign('login');
+                        // Carregar passos de login se existirem
+                        const designLogin = designsLogin.find(d => d.semana_offset === semanaSelecionada);
+                        setPassos(designLogin?.passos || []);
+                      }}
+                      className={`p-3 rounded-md text-xs flex flex-col items-center gap-1.5 border-2 transition-all ${
+                        tipoDesign === 'login'
+                          ? 'bg-blue-600/30 border-blue-500 text-blue-300'
+                          : 'bg-gray-700 border-gray-600 hover:border-gray-500 text-gray-300'
+                      }`}
+                    >
+                      <Key className="w-5 h-5" />
+                      <span className="font-medium">Login</span>
+                      <span className="text-gray-400 text-[10px]">
+                        {designsLogin.filter(d => d.plataforma_id === plataformaSelecionada?.id).length} gravados
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setTipoDesign('extracao');
+                        // Carregar passos de extração se existirem
+                        const designExtr = designsExtracao.find(d => d.semana_offset === semanaSelecionada);
+                        setPassos(designExtr?.passos || []);
+                      }}
+                      className={`p-3 rounded-md text-xs flex flex-col items-center gap-1.5 border-2 transition-all ${
+                        tipoDesign === 'extracao'
+                          ? 'bg-green-600/30 border-green-500 text-green-300'
+                          : 'bg-gray-700 border-gray-600 hover:border-gray-500 text-gray-300'
+                      }`}
+                    >
+                      <Download className="w-5 h-5" />
+                      <span className="font-medium">Extração</span>
+                      <span className="text-gray-400 text-[10px]">
+                        {designsExtracao.filter(d => d.plataforma_id === plataformaSelecionada?.id).length} gravados
+                      </span>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    {tipoDesign === 'login' 
+                      ? '📝 Grave os passos para fazer login na plataforma' 
+                      : '📊 Grave os passos para extrair dados semanais'
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Controles */}
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader className="py-3 px-4">
