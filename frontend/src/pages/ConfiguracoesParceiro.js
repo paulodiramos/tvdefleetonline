@@ -665,11 +665,11 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
               WhatsApp
             </TabsTrigger>
             <TabsTrigger 
-              value="terabox" 
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-purple-700"
+              value="relatorios" 
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-amber-600"
             >
-              <HardDrive className="w-4 h-4" />
-              Armazenamento Cloud
+              <FileText className="w-4 h-4" />
+              Relatórios
             </TabsTrigger>
             <TabsTrigger 
               value="sincronizacao" 
