@@ -470,10 +470,19 @@ async def extrair_rendimentos_parceiro(
             now = datetime.now(timezone.utc)
             motoristas_importados = resultado.get("motoristas", [])
             
-            # Calcular período (última semana por defeito)
-            hoje = datetime.now()
-            periodo_fim = hoje.strftime('%Y-%m-%d')
-            periodo_inicio = (hoje - timedelta(days=7)).strftime('%Y-%m-%d')
+            # Calcular período (última semana completa por defeito)
+            # Semanas da Uber: Segunda a Domingo
+            hoje = datetime.now().date()
+            dias_desde_segunda = hoje.weekday()  # 0=segunda, 6=domingo
+            segunda_atual = hoje - timedelta(days=dias_desde_segunda)
+            # Última semana completa
+            segunda_da_semana = segunda_atual - timedelta(weeks=1)
+            domingo_da_semana = segunda_da_semana + timedelta(days=6)
+            
+            periodo_inicio = segunda_da_semana.strftime('%Y-%m-%d')
+            periodo_fim = domingo_da_semana.strftime('%Y-%m-%d')
+            
+            logger.info(f"Admin: Período calculado: {periodo_inicio} a {periodo_fim}")
             
             # Guardar cada motorista em ganhos_uber (para o resumo semanal)
             for mot in motoristas_importados:
