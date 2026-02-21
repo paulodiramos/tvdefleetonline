@@ -149,6 +149,7 @@ import ContabilidadePage from "@/pages/ContabilidadePage";
 import FornecedoresPage from "@/pages/FornecedoresPage";
 import GestaoContabilistas from "@/pages/GestaoContabilistas";
 import WhatsAppManager from "@/pages/WhatsAppManager";
+import WhatsAppCloudManager from "@/pages/WhatsAppCloudManager";
 import StorageConfig from "@/pages/StorageConfig";
 import ComissoesDashboard from "@/pages/ComissoesDashboard";
 import ComissoesConfig from "@/pages/Comissoes";
