@@ -691,37 +691,6 @@ const StorageConfig = ({ user, onLogout }) => {
             </CardContent>
           </Card>
         )}
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDisconnectProvider(provider.id);
-                          }}
-                        >
-                          <Unlink className="w-4 h-4 mr-1" />
-                          Desconectar
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedProvider(provider);
-                          setShowConnectModal(true);
-                        }}
-                      >
-                        <Link2 className="w-4 h-4 mr-2" />
-                        Conectar
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Sync Settings */}
         {(config?.modo === 'cloud' || config?.modo === 'both') && config?.cloud_provider && config?.cloud_provider !== 'none' && (
