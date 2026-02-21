@@ -46,7 +46,7 @@ async def get_minhas_credenciais(
     
     parceiro_id = current_user.get("parceiro_id") or current_user.get("id")
     
-    # Definir projeção baseada no parâmetro
+    # 1. Tentar da colecção dedicada primeiro
     projection = {"_id": 0}
     if not incluir_password:
         projection["password"] = 0
@@ -55,6 +55,21 @@ async def get_minhas_credenciais(
         {"parceiro_id": parceiro_id},
         projection
     )
+    
+    # 2. Se não encontrou, tentar das credenciais_plataformas
+    if not cred or not cred.get("email"):
+        parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+        if not parceiro:
+            parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+        
+        if parceiro and parceiro.get("credenciais_plataformas"):
+            cp = parceiro["credenciais_plataformas"]
+            cred = {
+                "email": cp.get("uber_email", ""),
+                "telefone": cp.get("uber_telefone", ""),
+            }
+            if incluir_password:
+                cred["password"] = cp.get("uber_password", "")
     
     return cred or {}
 
