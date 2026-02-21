@@ -554,29 +554,30 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
               <div className="space-y-4">
                 {/* Área do Screenshot - MAIOR */}
                 <div className={`relative rounded-xl overflow-hidden shadow-2xl border-4 ${loginConfirmado ? 'border-green-500 bg-green-900' : 'border-slate-700 bg-slate-900'}`}>
-                  {screenshot ? (
-                    <>
-                      <img
-                        ref={imgRef}
-                        src={`data:image/jpeg;base64,${screenshot}`}
-                        alt="Uber Fleet"
-                        className={`w-full cursor-crosshair ${loginConfirmado ? 'opacity-50' : ''}`}
-                        onClick={handleImageClick}
-                        style={{ minHeight: '450px', maxHeight: '600px', objectFit: 'contain', backgroundColor: '#1a1a2e' }}
-                      />
-                      
-                      {/* Overlay de Login Confirmado */}
-                      {loginConfirmado && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-green-600/80">
-                          <div className="text-center text-white">
-                            <CheckCircle className="w-24 h-24 mx-auto mb-4 animate-pulse" />
-                            <h3 className="text-3xl font-bold mb-2">LOGIN CONFIRMADO!</h3>
-                            <p className="text-xl">Sessão ativa com sucesso</p>
-                            <p className="text-sm mt-2 opacity-75">A fechar browser...</p>
-                          </div>
+                  {loginConfirmado ? (
+                    /* Mostrar mensagem de sucesso quando login confirmado */
+                    <div className="h-96 flex items-center justify-center bg-gradient-to-br from-green-600 to-emerald-700">
+                      <div className="text-center text-white p-8">
+                        <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <CheckCircle className="w-20 h-20 text-white" />
                         </div>
-                      )}
-                    </>
+                        <h2 className="text-4xl font-bold mb-3">🎉 Parabéns!</h2>
+                        <h3 className="text-2xl font-semibold mb-2">Login Uber Confirmado!</h3>
+                        <p className="text-lg opacity-90 mb-4">Sessão guardada por 30 dias</p>
+                        <div className="bg-white/20 rounded-lg px-6 py-3 inline-block">
+                          <p className="text-sm">Pode agora sincronizar os rendimentos da Uber</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : screenshot ? (
+                    <img
+                      ref={imgRef}
+                      src={`data:image/jpeg;base64,${screenshot}`}
+                      alt="Uber Fleet"
+                      className="w-full cursor-crosshair"
+                      onClick={handleImageClick}
+                      style={{ minHeight: '450px', maxHeight: '600px', objectFit: 'contain', backgroundColor: '#1a1a2e' }}
+                    />
                   ) : (
                     <div className="h-96 flex items-center justify-center bg-slate-800">
                       <div className="text-center">
@@ -594,7 +595,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                   )}
                   
                   {/* Botão refresh flutuante */}
-                  {!loginConfirmado && (
+                  {!loginConfirmado && screenshot && (
                     <Button 
                       onClick={atualizarScreenshot} 
                       variant="secondary" 
