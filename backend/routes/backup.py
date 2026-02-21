@@ -553,3 +553,293 @@ async def exportar_backup_parcial(
     backup_data["metadados"]["total_documentos"] = total_docs
     
     return backup_data
+
+
+
+# ==================== LIMPEZA DE DADOS ====================
+
+# Colecções que podem ser limpas com segurança (logs, caches, etc.)
+COLECOES_LIMPEZA = {
+    "logs_execucao": {
+        "colecoes": ["execucoes_rpa_viaverde", "rpa_execucoes", "sincronizacao_auto_execucoes", "logs_sistema", "logs_auditoria", "logs_importacao", "logs_sincronizacao_parceiro"],
+        "descricao": "Logs de execução de RPA e sincronização",
+        "manter_ultimos": 50
+    },
+    "emails_processados": {
+        "colecoes": ["email_queue"],
+        "descricao": "Fila de emails já processados",
+        "filtro": {"status": {"$in": ["sent", "failed"]}}
+    },
+    "notificacoes_lidas": {
+        "colecoes": ["notificacoes"],
+        "descricao": "Notificações já lidas",
+        "filtro": {"lida": True}
+    },
+    "trajetos_antigos": {
+        "colecoes": ["trajetos_gps"],
+        "descricao": "Trajetos GPS antigos (mais de 90 dias)",
+        "dias_antigos": 90
+    },
+    "colecoes_vazias": {
+        "colecoes": [],  # Dinâmico
+        "descricao": "Colecções sem dados"
+    },
+    "health_checks": {
+        "colecoes": ["playwright_health_checks"],
+        "descricao": "Logs de health checks do Playwright",
+        "manter_ultimos": 10
+    }
+}
+
+
+@router.get("/limpeza/analise")
+async def analisar_dados_para_limpeza(
+    current_user: dict = Depends(get_current_user)
+):
+    """Analisar dados que podem ser limpos com segurança"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    analise = {
+        "categorias": [],
+        "total_documentos_limpaveis": 0,
+        "espaco_estimado_mb": 0
+    }
+    
+    for categoria_id, config in COLECOES_LIMPEZA.items():
+        categoria_info = {
+            "id": categoria_id,
+            "nome": config["descricao"],
+            "colecoes": [],
+            "total_documentos": 0
+        }
+        
+        for colecao in config["colecoes"]:
+            try:
+                if config.get("filtro"):
+                    count = await db[colecao].count_documents(config["filtro"])
+                elif config.get("manter_ultimos"):
+                    total = await db[colecao].count_documents({})
+                    count = max(0, total - config["manter_ultimos"])
+                elif config.get("dias_antigos"):
+                    from datetime import timedelta
+                    data_limite = datetime.now(timezone.utc) - timedelta(days=config["dias_antigos"])
+                    count = await db[colecao].count_documents({
+                        "$or": [
+                            {"created_at": {"$lt": data_limite}},
+                            {"data": {"$lt": data_limite.isoformat()}}
+                        ]
+                    })
+                else:
+                    count = await db[colecao].count_documents({})
+                
+                if count > 0:
+                    categoria_info["colecoes"].append({
+                        "nome": colecao,
+                        "documentos": count
+                    })
+                    categoria_info["total_documentos"] += count
+            except:
+                continue
+        
+        # Verificar coleções vazias
+        if categoria_id == "colecoes_vazias":
+            for colecao in COLECOES_BACKUP:
+                try:
+                    count = await db[colecao].count_documents({})
+                    if count == 0:
+                        categoria_info["colecoes"].append({
+                            "nome": colecao,
+                            "documentos": 0
+                        })
+                except:
+                    continue
+        
+        if categoria_info["colecoes"]:
+            analise["categorias"].append(categoria_info)
+            analise["total_documentos_limpaveis"] += categoria_info["total_documentos"]
+    
+    # Estimar espaço (aproximado)
+    analise["espaco_estimado_mb"] = round(analise["total_documentos_limpaveis"] * 0.001, 2)
+    
+    return analise
+
+
+@router.post("/limpeza/executar/{categoria_id}")
+async def executar_limpeza(
+    categoria_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Executar limpeza de uma categoria específica"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    if categoria_id not in COLECOES_LIMPEZA and categoria_id != "colecoes_vazias":
+        raise HTTPException(status_code=400, detail="Categoria inválida")
+    
+    config = COLECOES_LIMPEZA.get(categoria_id, {})
+    resultado = {
+        "categoria": categoria_id,
+        "documentos_removidos": 0,
+        "colecoes_afetadas": [],
+        "erros": []
+    }
+    
+    colecoes = config.get("colecoes", [])
+    
+    # Colecções vazias - dinâmico
+    if categoria_id == "colecoes_vazias":
+        for colecao in COLECOES_BACKUP:
+            try:
+                count = await db[colecao].count_documents({})
+                if count == 0:
+                    await db.drop_collection(colecao)
+                    resultado["colecoes_afetadas"].append(colecao)
+            except Exception as e:
+                resultado["erros"].append(f"{colecao}: {str(e)}")
+        return resultado
+    
+    for colecao in colecoes:
+        try:
+            if config.get("filtro"):
+                result = await db[colecao].delete_many(config["filtro"])
+                count = result.deleted_count
+            elif config.get("manter_ultimos"):
+                # Manter apenas os últimos N documentos
+                total = await db[colecao].count_documents({})
+                if total > config["manter_ultimos"]:
+                    # Obter IDs dos documentos a manter
+                    docs_manter = await db[colecao].find({}, {"_id": 1}).sort("_id", -1).limit(config["manter_ultimos"]).to_list(config["manter_ultimos"])
+                    ids_manter = [d["_id"] for d in docs_manter]
+                    result = await db[colecao].delete_many({"_id": {"$nin": ids_manter}})
+                    count = result.deleted_count
+                else:
+                    count = 0
+            elif config.get("dias_antigos"):
+                from datetime import timedelta
+                data_limite = datetime.now(timezone.utc) - timedelta(days=config["dias_antigos"])
+                result = await db[colecao].delete_many({
+                    "$or": [
+                        {"created_at": {"$lt": data_limite}},
+                        {"data": {"$lt": data_limite.isoformat()}}
+                    ]
+                })
+                count = result.deleted_count
+            else:
+                result = await db[colecao].delete_many({})
+                count = result.deleted_count
+            
+            if count > 0:
+                resultado["colecoes_afetadas"].append({
+                    "nome": colecao,
+                    "documentos_removidos": count
+                })
+                resultado["documentos_removidos"] += count
+                
+        except Exception as e:
+            resultado["erros"].append(f"{colecao}: {str(e)}")
+    
+    # Registar limpeza
+    await db.backups.insert_one({
+        "id": str(uuid.uuid4()),
+        "tipo": "limpeza",
+        "categoria": categoria_id,
+        "executado_em": datetime.now(timezone.utc).isoformat(),
+        "executado_por": current_user["id"],
+        "documentos_removidos": resultado["documentos_removidos"],
+        "colecoes": [c["nome"] if isinstance(c, dict) else c for c in resultado["colecoes_afetadas"]]
+    })
+    
+    return resultado
+
+
+@router.post("/limpeza/reset-dados-teste")
+async def reset_dados_teste(
+    confirmar: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
+    """Reset completo de dados de teste (PERIGOSO - apenas para ambiente de teste)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    if not confirmar:
+        return {
+            "aviso": "ATENÇÃO: Esta operação irá remover TODOS os dados de teste!",
+            "instrucoes": "Adicione ?confirmar=true para executar",
+            "colecoes_afetadas": list(COLECOES_LIMPEZA.keys())
+        }
+    
+    resultado = {
+        "categorias_limpas": [],
+        "total_documentos_removidos": 0,
+        "erros": []
+    }
+    
+    # Limpar todas as categorias de limpeza
+    for categoria_id in COLECOES_LIMPEZA.keys():
+        try:
+            res = await executar_limpeza(categoria_id, current_user)
+            resultado["categorias_limpas"].append(categoria_id)
+            resultado["total_documentos_removidos"] += res.get("documentos_removidos", 0)
+        except Exception as e:
+            resultado["erros"].append(f"{categoria_id}: {str(e)}")
+    
+    return resultado
+
+
+@router.get("/armazenamento/estatisticas")
+async def estatisticas_armazenamento(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter estatísticas de armazenamento da base de dados"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    stats = {
+        "base_dados": "tvdefleet_db",
+        "colecoes": [],
+        "totais": {
+            "total_colecoes": 0,
+            "total_documentos": 0,
+            "tamanho_dados_mb": 0,
+            "tamanho_indices_mb": 0
+        },
+        "top_colecoes": [],
+        "colecoes_vazias": 0
+    }
+    
+    try:
+        # Estatísticas gerais da DB
+        db_stats = await db.command("dbStats")
+        stats["totais"]["tamanho_dados_mb"] = round(db_stats.get("dataSize", 0) / 1024 / 1024, 2)
+        stats["totais"]["tamanho_indices_mb"] = round(db_stats.get("indexSize", 0) / 1024 / 1024, 2)
+        stats["totais"]["total_colecoes"] = db_stats.get("collections", 0)
+        stats["totais"]["total_documentos"] = db_stats.get("objects", 0)
+    except:
+        pass
+    
+    # Estatísticas por coleção
+    colecoes_stats = []
+    for colecao in COLECOES_BACKUP:
+        try:
+            col_stats = await db.command("collStats", colecao)
+            count = col_stats.get("count", 0)
+            size_mb = round(col_stats.get("size", 0) / 1024 / 1024, 2)
+            
+            if count == 0:
+                stats["colecoes_vazias"] += 1
+            
+            colecoes_stats.append({
+                "nome": colecao,
+                "documentos": count,
+                "tamanho_mb": size_mb
+            })
+        except:
+            continue
+    
+    # Ordenar por tamanho
+    colecoes_stats.sort(key=lambda x: x["tamanho_mb"], reverse=True)
+    stats["colecoes"] = colecoes_stats
+    stats["top_colecoes"] = colecoes_stats[:10]
+    
+    return stats
