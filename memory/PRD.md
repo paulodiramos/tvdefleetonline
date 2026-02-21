@@ -58,6 +58,19 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
+### Session 2026-02-21 (Bugfixes - WhatsApp Lock Files + Document Downloads)
+- **Bugfix: WhatsApp Lock Files - FIXED:**
+  - **Problema:** Os lock files do Chromium (SingletonLock, SingletonCookie, SingletonSocket) estavam na pasta raiz da sessão, não na subpasta Default
+  - **Solução:** Actualizada a função `cleanupLockFiles()` para limpar locks em ambas as localizações
+  - **Resultado:** QR code agora é gerado correctamente após reinício do serviço
+  - **Ficheiro modificado:** `backend/whatsapp_service/index.js` (linhas 80-128)
+
+- **Verificação: Download de Documentos - VERIFIED WORKING:**
+  - **Investigação:** Verificado que o endpoint de download (`GET /api/motoristas/{id}/documento/{type}/download`) já suporta UUIDs
+  - **Como funciona:** Usa glob patterns para encontrar ficheiros com o padrão `{motorista_id}_{doc_type}_{uuid}.{ext}`
+  - **Testes:** Testado com sucesso via curl para vários tipos (license_photo, carta_conducao, cc_frente)
+  - **Ficheiro:** `backend/routes/motoristas.py` (linhas 1144-1224)
+
 ### Session 2026-02-21 (Dashboard de Comissões + NIF Relatórios + WhatsApp Debug + Cloud OAuth)
 - **Feature: Dashboard de Comissões - DONE:**
   - **Nova página:** `/comissoes` transformada em dashboard de visualização
