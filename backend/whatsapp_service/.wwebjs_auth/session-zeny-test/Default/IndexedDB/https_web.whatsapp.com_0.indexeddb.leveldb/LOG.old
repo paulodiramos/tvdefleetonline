@@ -1,0 +1,37 @@
+2026/02/21-10:37:44.739 93c Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/02/21-10:37:44.739 93c Recovering log #3
+2026/02/21-10:37:44.807 93c Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000003.log 
+2026/02/21-10:37:45.098 93f Manual compaction at level-0 from '\x00\x03\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x04\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.101 93f Level-0 table #5: started
+2026/02/21-10:37:45.117 93f Level-0 table #5: 734652 bytes OK
+2026/02/21-10:37:45.118 93f Delete type=0 #3
+2026/02/21-10:37:45.119 93c Manual compaction at level-0 from '\x00\x08\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x09\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.120 93f Manual compaction at level-0 from '\x00\x09\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0a\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.120 93f Manual compaction at level-1 from '\x00\x09\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0a\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.120 93f Manual compaction at level-0 from '\x00\x0a\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0b\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.120 93f Manual compaction at level-1 from '\x00\x0a\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0b\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.120 93f Manual compaction at level-0 from '\x00\x0c\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0d\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.120 93f Manual compaction at level-1 from '\x00\x0c\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0d\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.121 93f Level-0 table #7: started
+2026/02/21-10:37:45.123 93f Level-0 table #7: 6379 bytes OK
+2026/02/21-10:37:45.125 93f Delete type=0 #4
+2026/02/21-10:37:45.125 93c Manual compaction at level-0 from '\x00\x0d\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0e\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.125 93c Manual compaction at level-1 from '\x00\x0d\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0e\x00\x00\x00' @ 0 : 0; will stop at '\x00\x0e\x00\x00\xc8\x08\x00w\x00a\x00m\x00_\x00m\x00e\x00t\x00a' @ 24622 : 1
+2026/02/21-10:37:45.125 93c Compacting 1@1 + 1@2 files
+2026/02/21-10:37:45.135 93c Generated table #8@1: 4541 keys, 282156 bytes
+2026/02/21-10:37:45.135 93c Compacted 1@1 + 1@2 files => 282156 bytes
+2026/02/21-10:37:45.136 93c compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/02/21-10:37:45.137 93c Delete type=2 #7
+2026/02/21-10:37:45.173 93c Manual compaction at level-1 from '\x00\x0e\x00\x00\xc8\x08\x00w\x00a\x00m\x00_\x00m\x00e\x00t\x00a' @ 24622 : 1 .. '\x00\x0e\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.177 93c Level-0 table #10: started
+2026/02/21-10:37:45.199 93c Level-0 table #10: 170130 bytes OK
+2026/02/21-10:37:45.202 93c Delete type=0 #6
+2026/02/21-10:37:45.203 93c Delete type=2 #5
+2026/02/21-10:37:45.203 93c Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/02/21-10:37:45.204 93c Manual compaction at level-1 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at '\x00\x0e\x00\x00\xc8\x11\x00w\x00o\x00r\x00k\x00e\x00r\x00_\x00w\x00a\x00m\x00_\x00e\x00v\x00e\x00n\x00t\x00s' @ 24932 : 1
+2026/02/21-10:37:45.204 93c Compacting 1@1 + 1@2 files
+2026/02/21-10:37:45.208 93c Generated table #11@1: 328 keys, 4652 bytes
+2026/02/21-10:37:45.208 93c Compacted 1@1 + 1@2 files => 4652 bytes
+2026/02/21-10:37:45.211 93c compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/02/21-10:37:45.211 93c Delete type=2 #10
+2026/02/21-10:37:45.212 93c Manual compaction at level-1 from '\x00\x0e\x00\x00\xc8\x11\x00w\x00o\x00r\x00k\x00e\x00r\x00_\x00w\x00a\x00m\x00_\x00e\x00v\x00e\x00n\x00t\x00s' @ 24932 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)

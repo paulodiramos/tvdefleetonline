@@ -1,2 +1,3 @@
-2026/02/21-03:25:24.547 1826 Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/shared_proto_db since it was missing.
-2026/02/21-03:25:24.552 1826 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/shared_proto_db/MANIFEST-000001
+2026/02/21-11:50:31.314 933 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/shared_proto_db/MANIFEST-000001
+2026/02/21-11:50:31.314 933 Recovering log #3
+2026/02/21-11:50:31.316 933 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/shared_proto_db/000003.log 

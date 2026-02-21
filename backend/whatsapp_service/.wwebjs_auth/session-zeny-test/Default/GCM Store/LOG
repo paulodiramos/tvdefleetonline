@@ -1,2 +1,3 @@
-2026/02/21-03:25:33.061 181b Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/GCM Store since it was missing.
-2026/02/21-03:25:33.069 181b Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/GCM Store/MANIFEST-000001
+2026/02/21-11:50:34.443 934 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/GCM Store/MANIFEST-000001
+2026/02/21-11:50:34.444 934 Recovering log #3
+2026/02/21-11:50:34.444 934 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-zeny-test/Default/GCM Store/000003.log 
