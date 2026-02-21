@@ -229,6 +229,33 @@ export default function RPADesigner({ user, onLogout }) {
     }
   };
 
+  // Buscar credenciais de um parceiro específico
+  const carregarCredenciaisParceiro = async (parceiroId, plataforma) => {
+    try {
+      // Tentar buscar credenciais Uber primeiro
+      if (plataforma === 'uber' || plataforma?.toLowerCase().includes('uber')) {
+        const res = await fetch(`${API_URL}/api/rpa-designer/credenciais-parceiro/${parceiroId}?plataforma=uber`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.email || data.password || data.telefone) {
+            setCredenciaisTeste(prev => ({
+              ...prev,
+              email: data.email || prev.email,
+              password: data.password || prev.password,
+              telefone: data.telefone || prev.telefone
+            }));
+            toast.success(`Credenciais de ${data.parceiro_nome || 'parceiro'} carregadas`);
+            return;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar credenciais:', error);
+    }
+  };
+
   // Carregar designs quando plataforma ou tipo muda
   useEffect(() => {
     if (plataformaSelecionada) {
