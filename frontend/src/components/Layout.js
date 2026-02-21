@@ -528,28 +528,12 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <div className="px-2 py-1.5">
-                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
-                          <Settings className="w-3 h-3" />
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracoes-parceiro" className="flex items-center space-x-2 cursor-pointer">
+                          <Settings className="w-4 h-4" />
                           <span>Configurações</span>
-                        </div>
-                      </div>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracoes-parceiro" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>📧 Email & Comunicações</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracao-relatorios" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>📊 Relatórios</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/armazenamento" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-armazenamento">
-                          <span>☁️ Armazenamento Cloud</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to="/copia-seguranca" className="flex items-center space-x-2 cursor-pointer" data-testid="link-copia-seguranca">
                           <HardDrive className="w-4 h-4" />
