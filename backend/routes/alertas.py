@@ -529,3 +529,138 @@ async def get_documentos_expirar(
         "total_a_expirar": len(a_expirar)
     }
 
+
+@router.post("/documentos-expirar/enviar-whatsapp")
+async def enviar_alertas_documentos_whatsapp(
+    dias: int = 30,
+    apenas_motoristas: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Envia alertas de documentos a expirar por WhatsApp
+    
+    Args:
+        dias: Quantos dias de antecedência para alertar
+        apenas_motoristas: Se True, envia apenas para motoristas (ignora veículos)
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    from routes.whatsapp_cloud import send_template_message
+    
+    now = datetime.now(timezone.utc)
+    limite_data = now + timedelta(days=dias)
+    
+    # Filtro de parceiro
+    parceiro_filter = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        parceiro_filter = {"$or": [
+            {"parceiro_id": current_user["id"]},
+            {"parceiro_atribuido": current_user["id"]}
+        ]}
+    
+    # Documentos de motoristas
+    motorista_docs = [
+        ("carta_conducao", "carta_conducao_validade", "Carta de Condução"),
+        ("cartao_cidadao", "cartao_cidadao_validade", "Cartão de Cidadão"),
+        ("certificado_tvde", "certificado_tvde_validade", "Certificado TVDE"),
+        ("registo_criminal", "registo_criminal_validade", "Registo Criminal"),
+    ]
+    
+    motoristas = await db.motoristas.find(
+        {**parceiro_filter, "ativo": True},
+        {"_id": 0, "id": 1, "name": 1, "nome": 1, "email": 1, "phone": 1, "whatsapp": 1,
+         "carta_conducao": 1, "carta_conducao_validade": 1,
+         "cartao_cidadao": 1, "cartao_cidadao_validade": 1,
+         "certificado_tvde": 1, "certificado_tvde_validade": 1,
+         "registo_criminal": 1, "registo_criminal_validade": 1}
+    ).to_list(500)
+    
+    resultados = {
+        "enviados": [],
+        "falhas": [],
+        "sem_telefone": [],
+        "documentos_alertados": 0
+    }
+    
+    for m in motoristas:
+        telefone = m.get("whatsapp") or m.get("phone")
+        nome = m.get("name") or m.get("nome", "Motorista")
+        
+        if not telefone:
+            continue
+        
+        for doc_field, validade_field, doc_nome in motorista_docs:
+            if m.get(doc_field) and m.get(validade_field):
+                try:
+                    validade = datetime.fromisoformat(m[validade_field].replace('Z', '+00:00')) if isinstance(m[validade_field], str) else m[validade_field]
+                    if validade.tzinfo is None:
+                        validade = validade.replace(tzinfo=timezone.utc)
+                    
+                    # Apenas documentos a expirar (não já expirados)
+                    if now < validade < limite_data:
+                        dias_restantes = (validade - now).days
+                        data_formatada = validade.strftime("%d/%m/%Y")
+                        
+                        parameters = [
+                            {"type": "text", "text": nome},
+                            {"type": "text", "text": doc_nome},
+                            {"type": "text", "text": str(dias_restantes)},
+                            {"type": "text", "text": data_formatada}
+                        ]
+                        
+                        try:
+                            result = await send_template_message(
+                                recipient_phone=telefone,
+                                template_name="documento_expirar",
+                                parameters=parameters
+                            )
+                            
+                            if result.get("success"):
+                                resultados["enviados"].append({
+                                    "motorista_id": m["id"],
+                                    "nome": nome,
+                                    "documento": doc_nome,
+                                    "dias_restantes": dias_restantes,
+                                    "message_id": result.get("message_id")
+                                })
+                                resultados["documentos_alertados"] += 1
+                            else:
+                                resultados["falhas"].append({
+                                    "motorista_id": m["id"],
+                                    "nome": nome,
+                                    "documento": doc_nome,
+                                    "erro": result.get("error")
+                                })
+                        except Exception as e:
+                            resultados["falhas"].append({
+                                "motorista_id": m["id"],
+                                "nome": nome,
+                                "documento": doc_nome,
+                                "erro": str(e)
+                            })
+                except Exception:
+                    pass
+    
+    # Registar na BD
+    await db.whatsapp_alertas_enviados.insert_one({
+        "id": str(uuid.uuid4()),
+        "tipo": "documentos_expirar",
+        "dias_antecedencia": dias,
+        "enviados": len(resultados["enviados"]),
+        "falhas": len(resultados["falhas"]),
+        "documentos_alertados": resultados["documentos_alertados"],
+        "enviado_por": current_user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "success": True,
+        "mensagem": f"Alertas enviados para documentos a expirar nos próximos {dias} dias",
+        "enviados": len(resultados["enviados"]),
+        "falhas": len(resultados["falhas"]),
+        "documentos_alertados": resultados["documentos_alertados"],
+        "detalhes": resultados
+    }
+
+
