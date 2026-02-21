@@ -553,16 +553,30 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
             ) : (
               <div className="space-y-4">
                 {/* Área do Screenshot - MAIOR */}
-                <div className="relative rounded-xl overflow-hidden bg-slate-900 shadow-2xl border-4 border-slate-700">
+                <div className={`relative rounded-xl overflow-hidden shadow-2xl border-4 ${loginConfirmado ? 'border-green-500 bg-green-900' : 'border-slate-700 bg-slate-900'}`}>
                   {screenshot ? (
-                    <img
-                      ref={imgRef}
-                      src={`data:image/jpeg;base64,${screenshot}`}
-                      alt="Uber Fleet"
-                      className="w-full cursor-crosshair"
-                      onClick={handleImageClick}
-                      style={{ minHeight: '450px', maxHeight: '600px', objectFit: 'contain', backgroundColor: '#1a1a2e' }}
-                    />
+                    <>
+                      <img
+                        ref={imgRef}
+                        src={`data:image/jpeg;base64,${screenshot}`}
+                        alt="Uber Fleet"
+                        className={`w-full cursor-crosshair ${loginConfirmado ? 'opacity-50' : ''}`}
+                        onClick={handleImageClick}
+                        style={{ minHeight: '450px', maxHeight: '600px', objectFit: 'contain', backgroundColor: '#1a1a2e' }}
+                      />
+                      
+                      {/* Overlay de Login Confirmado */}
+                      {loginConfirmado && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-green-600/80">
+                          <div className="text-center text-white">
+                            <CheckCircle className="w-24 h-24 mx-auto mb-4 animate-pulse" />
+                            <h3 className="text-3xl font-bold mb-2">LOGIN CONFIRMADO!</h3>
+                            <p className="text-xl">Sessão ativa com sucesso</p>
+                            <p className="text-sm mt-2 opacity-75">A fechar browser...</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="h-96 flex items-center justify-center bg-slate-800">
                       <div className="text-center">
@@ -572,7 +586,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                     </div>
                   )}
                   
-                  {atualizando && (
+                  {atualizando && !loginConfirmado && (
                     <div className="absolute top-3 right-3 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       A processar...
@@ -580,14 +594,15 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                   )}
                   
                   {/* Botão refresh flutuante */}
-                  <Button 
-                    onClick={atualizarScreenshot} 
-                    variant="secondary" 
-                    size="icon"
-                    className="absolute top-3 left-3 bg-white/90 hover:bg-white shadow-lg"
-                    title="Atualizar imagem"
-                  >
-                    <RefreshCw className="w-5 h-5" />
+                  {!loginConfirmado && (
+                    <Button 
+                      onClick={atualizarScreenshot} 
+                      variant="secondary" 
+                      size="icon"
+                      className="absolute top-3 left-3 bg-white/90 hover:bg-white shadow-lg"
+                      title="Atualizar imagem"
+                    >
+                      <RefreshCw className="w-5 h-5" />
                   </Button>
                 </div>
 
