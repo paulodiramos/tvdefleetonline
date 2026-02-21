@@ -1,1 +1,0 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"47ff88c40dbf4f8c99eb29af405ac102","collectionName":"rpa_execucoes","type":"collection"}
