@@ -273,6 +273,19 @@ class UberScraper(BaseScraper):
             logger.warning(f"⚠️ Erro ao verificar login Uber: {e}")
             return False
     
+    async def close(self):
+        """Fechar browser - contexto persistente ou normal"""
+        try:
+            if self.context:
+                await self.context.close()
+            if hasattr(self, 'browser') and self.browser:
+                await self.browser.close()
+            if self.playwright:
+                await self.playwright.stop()
+            logger.info("🔒 UberScraper: Browser fechado")
+        except Exception as e:
+            logger.error(f"Erro ao fechar UberScraper browser: {e}")
+    
     async def login(self, email: str, password: str, **kwargs) -> Dict:
         """
         Login na Uber - requer sessão guardada pelo parceiro.
