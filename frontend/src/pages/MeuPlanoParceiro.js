@@ -227,25 +227,133 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
-        {/* Modules */}
+        {/* Modules Incluídos */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5" />
-              Módulos Incluídos ({modulos.length})
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              Módulos Incluídos no Plano ({modulos.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {modulos.map((modulo) => (
-                <div key={modulo.codigo} className="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-slate-800">{modulo.nome}</h4>
-                    <p className="text-sm text-slate-600">{modulo.descricao}</p>
+            {modulos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {modulos.map((modulo) => (
+                  <div key={modulo.codigo} className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-slate-800">{modulo.nome}</h4>
+                      <p className="text-sm text-slate-600">{modulo.descricao}</p>
+                    </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-500 text-center py-4">Nenhum módulo incluído no seu plano atual</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Módulos Disponíveis Extra */}
+        <Card className="border-purple-200">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-white">
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-purple-600" />
+              Módulos Disponíveis Extra
+            </CardTitle>
+            <p className="text-sm text-slate-600">Adicione funcionalidades extra ao seu plano</p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Módulo Contabilidade */}
+              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <Badge variant="outline" className="text-purple-600 border-purple-300">+4.99€/mês</Badge>
                 </div>
-              ))}
+                <h4 className="font-semibold text-slate-800 mb-1">Contabilidade Avançada</h4>
+                <p className="text-sm text-slate-600 mb-3">Relatórios financeiros, exportação para contabilistas, IVA automático</p>
+                <Button size="sm" variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-50">
+                  Adicionar
+                </Button>
+              </div>
+
+              {/* Módulo Alertas */}
+              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <Badge variant="outline" className="text-orange-600 border-orange-300">+2.99€/mês</Badge>
+                </div>
+                <h4 className="font-semibold text-slate-800 mb-1">Alertas Avançados</h4>
+                <p className="text-sm text-slate-600 mb-3">Notificações SMS, WhatsApp, alertas de manutenção e documentos</p>
+                <Button size="sm" variant="outline" className="w-full border-orange-300 text-orange-700 hover:bg-orange-50">
+                  Adicionar
+                </Button>
+              </div>
+
+              {/* Módulo Comissões */}
+              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <Percent className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <Badge variant="outline" className="text-emerald-600 border-emerald-300">+3.99€/mês</Badge>
+                </div>
+                <h4 className="font-semibold text-slate-800 mb-1">Gestão de Comissões</h4>
+                <p className="text-sm text-slate-600 mb-3">Cálculo automático de comissões, relatórios por motorista</p>
+                <Button size="sm" variant="outline" className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                  Adicionar
+                </Button>
+              </div>
+
+              {/* Módulo Cloud Storage */}
+              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <HardDrive className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <Badge variant="outline" className="text-blue-600 border-blue-300">+1.99€/mês</Badge>
+                </div>
+                <h4 className="font-semibold text-slate-800 mb-1">Cloud Storage</h4>
+                <p className="text-sm text-slate-600 mb-3">Armazenamento na cloud, backup automático de documentos</p>
+                <Button size="sm" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
+                  Adicionar
+                </Button>
+              </div>
+
+              {/* Módulo API */}
+              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <Code className="w-5 h-5 text-slate-600" />
+                  </div>
+                  <Badge variant="outline" className="text-slate-600 border-slate-300">+9.99€/mês</Badge>
+                </div>
+                <h4 className="font-semibold text-slate-800 mb-1">API & Integrações</h4>
+                <p className="text-sm text-slate-600 mb-3">Acesso à API, webhooks, integração com sistemas externos</p>
+                <Button size="sm" variant="outline" className="w-full border-slate-300 text-slate-700 hover:bg-slate-50">
+                  Adicionar
+                </Button>
+              </div>
+
+              {/* Módulo Relatórios */}
+              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                    <BarChart className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <Badge variant="outline" className="text-indigo-600 border-indigo-300">+5.99€/mês</Badge>
+                </div>
+                <h4 className="font-semibold text-slate-800 mb-1">Relatórios Avançados</h4>
+                <p className="text-sm text-slate-600 mb-3">Dashboards personalizados, exportação Excel, análises detalhadas</p>
+                <Button size="sm" variant="outline" className="w-full border-indigo-300 text-indigo-700 hover:bg-indigo-50">
+                  Adicionar
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -256,77 +364,6 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
           onAdicaoCompleta={fetchMeuPlano}
         />
       </div>
-
-      {/* Modal Trocar Plano */}
-      <Dialog open={showTrocarPlano} onOpenChange={setShowTrocarPlano}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Escolher Novo Plano</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {planosDisponiveis.map((p) => (
-                <Card 
-                  key={p.id} 
-                  className={`cursor-pointer transition-all ${
-                    planoSelecionado === p.id ? 'border-blue-500 shadow-md' : 'hover:border-blue-300'
-                  }`}
-                  onClick={() => setPlanoSelecionado(p.id)}
-                >
-                  <CardHeader>
-                    <CardTitle className="text-lg">{p.nome}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-slate-600 mb-4">{p.descricao}</p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Semanal:</span>
-                        <span className="font-bold">{p.precos?.semanal?.preco_com_iva || 0}€</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Mensal:</span>
-                        <span className="font-bold">{p.precos?.mensal?.preco_com_iva || 0}€</span>
-                      </div>
-                    </div>
-                    <Badge className="mt-4" variant="outline">
-                      {p.modulos?.length || 0} módulos
-                    </Badge>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {planoSelecionado && (
-              <div>
-                <label className="block text-sm font-medium mb-2">Periodicidade</label>
-                <Select value={periodicidadeSelecionada} onValueChange={setPeriodicidadeSelecionada}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="semanal">Semanal</SelectItem>
-                    <SelectItem value="mensal">Mensal</SelectItem>
-                    <SelectItem value="trimestral">Trimestral</SelectItem>
-                    <SelectItem value="semestral">Semestral</SelectItem>
-                    <SelectItem value="anual">Anual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowTrocarPlano(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleTrocarPlano} disabled={!planoSelecionado}>
-                Confirmar Troca
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </Layout>
   );
 };
