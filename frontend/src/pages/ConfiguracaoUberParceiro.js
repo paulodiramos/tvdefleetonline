@@ -318,14 +318,20 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
       });
       
       if (response.data.logado) {
-        toast.success('Login confirmado! Sessão ativa por ~30 dias.');
-        fecharBrowser();
-        carregarDados();
+        setLoginConfirmado(true);
+        toast.success('✅ Login confirmado com sucesso! Sessão ativa.');
+        // Esperar 2 segundos para mostrar a confirmação visual
+        setTimeout(() => {
+          fecharBrowser();
+          carregarDados();
+        }, 2000);
       } else {
-        toast.info('Ainda não está logado. Continue o processo.');
+        setLoginConfirmado(false);
+        toast.warning('⏳ Login ainda não detectado. Continue o processo de login na página.');
       }
     } catch (error) {
-      toast.error('Erro ao verificar');
+      setLoginConfirmado(false);
+      toast.error('Erro ao verificar estado do login');
     } finally {
       setAtualizando(false);
     }

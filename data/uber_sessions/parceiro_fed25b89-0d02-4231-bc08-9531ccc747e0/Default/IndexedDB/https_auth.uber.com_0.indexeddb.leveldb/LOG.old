@@ -1,3 +1,3 @@
-2026/02/21-20:59:04.500 a69 Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/02/21-20:59:04.500 a69 Recovering log #4
-2026/02/21-20:59:04.501 a69 Reusing old log /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/000004.log 
+2026/02/21-21:01:03.040 a69 Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/02/21-21:01:03.040 a69 Recovering log #4
+2026/02/21-21:01:03.044 a69 Reusing old log /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/IndexedDB/https_auth.uber.com_0.indexeddb.leveldb/000004.log 
