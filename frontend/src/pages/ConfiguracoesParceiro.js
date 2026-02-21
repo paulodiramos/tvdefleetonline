@@ -649,7 +649,7 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="inline-flex h-12 items-center justify-start rounded-xl bg-white p-1.5 shadow-sm border border-slate-200 gap-1 w-auto">
+          <TabsList className="inline-flex h-12 items-center justify-start rounded-xl bg-white p-1.5 shadow-sm border border-slate-200 gap-1 w-auto flex-wrap">
             <TabsTrigger 
               value="email" 
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-blue-700"
@@ -670,6 +670,13 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             >
               <FileText className="w-4 h-4" />
               Relatórios
+            </TabsTrigger>
+            <TabsTrigger 
+              value="armazenamento" 
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-slate-50 data-[state=active]:hover:bg-purple-700"
+            >
+              <HardDrive className="w-4 h-4" />
+              Armazenamento
             </TabsTrigger>
             <TabsTrigger 
               value="sincronizacao" 
