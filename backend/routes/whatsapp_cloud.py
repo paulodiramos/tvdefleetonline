@@ -1,472 +1,582 @@
-"""WhatsApp Cloud API Integration for TVDEFleet
-Official Meta/Facebook WhatsApp Business Cloud API
-Each partner configures their own WhatsApp Business credentials
+"""
+WhatsApp Cloud API Integration - Meta Official
+Suporta envio de mensagens template com variáveis dinâmicas
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, List, Optional
-from datetime import datetime, timezone
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from fastapi.responses import PlainTextResponse
+from typing import Dict, List, Optional, Any
+from datetime import datetime
 import httpx
-import logging
+import hmac
+import hashlib
+import json
 import os
+import logging
 
-from models.user import UserRole
 from utils.auth import get_current_user
-from utils.database import get_database
 
-router = APIRouter()
-db = get_database()
+router = APIRouter(prefix="/whatsapp-cloud", tags=["WhatsApp Cloud API"])
+
+# Configuração
+WHATSAPP_API_URL = "https://graph.facebook.com/v21.0"
+ACCESS_TOKEN = os.environ.get("WHATSAPP_CLOUD_ACCESS_TOKEN", "")
+PHONE_NUMBER_ID = os.environ.get("WHATSAPP_CLOUD_PHONE_NUMBER_ID", "")
+WABA_ID = os.environ.get("WHATSAPP_CLOUD_WABA_ID", "")
+VERIFY_TOKEN = os.environ.get("WHATSAPP_CLOUD_VERIFY_TOKEN", "tvdefleet-webhook-verify-2025")
+APP_SECRET = os.environ.get("WHATSAPP_CLOUD_APP_SECRET", "")
+
 logger = logging.getLogger(__name__)
 
-# WhatsApp Cloud API Base URL
-WHATSAPP_API_URL = "https://graph.facebook.com/v18.0"
+# Templates pré-definidos para TVDEFleet
+TEMPLATES = {
+    "relatorio_semanal": {
+        "name": "relatorio_semanal",
+        "description": "Relatório semanal com valores detalhados",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "semana", "total_viagens", "valor_bruto", "comissoes", "valor_liquido"],
+        "preview": """Olá {nome}! 📊
+
+O seu relatório da Semana {semana} está disponível:
+
+🚗 Total de viagens: {total_viagens}
+💵 Valor bruto: €{valor_bruto}
+📉 Comissões/Descontos: €{comissoes}
+💰 Valor líquido: €{valor_liquido}
+
+Aceda à plataforma para ver detalhes completos."""
+    },
+    "documento_expirar": {
+        "name": "documento_expirar",
+        "description": "Alerta de documento a expirar",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "tipo_documento", "dias", "data_expiracao"],
+        "preview": """⚠️ Aviso Importante, {nome}!
+
+O seu documento {tipo_documento} expira em {dias} dias ({data_expiracao}).
+
+Por favor actualize na plataforma para evitar bloqueios na sua actividade."""
+    },
+    "boas_vindas": {
+        "name": "boas_vindas",
+        "description": "Boas-vindas a novo motorista",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "empresa", "link_plataforma"],
+        "preview": """Bem-vindo(a), {nome}! 🚗
+
+A sua conta na {empresa} foi aprovada com sucesso.
+
+Aceda à plataforma em: {link_plataforma}
+
+Qualquer dúvida, contacte o seu gestor de frota."""
+    },
+    "vistoria_agendada": {
+        "name": "vistoria_agendada",
+        "description": "Notificação de vistoria agendada",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "data_vistoria", "hora", "local", "veiculo"],
+        "preview": """📋 Vistoria Agendada, {nome}!
+
+O seu veículo {veiculo} tem vistoria marcada:
+📅 Data: {data_vistoria}
+🕐 Hora: {hora}
+📍 Local: {local}
+
+Não se esqueça de levar toda a documentação necessária."""
+    },
+    "revisao_veiculo": {
+        "name": "revisao_veiculo",
+        "description": "Alerta de revisão do veículo",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "veiculo", "km_actual", "km_revisao", "tipo_revisao"],
+        "preview": """🔧 Revisão Necessária, {nome}!
+
+O veículo {veiculo} está a aproximar-se da {tipo_revisao}:
+📊 Km actual: {km_actual}
+🎯 Km revisão: {km_revisao}
+
+Por favor agende a revisão o mais brevemente possível."""
+    },
+    "pagamento_efetuado": {
+        "name": "pagamento_efetuado",
+        "description": "Confirmação de pagamento",
+        "language": "pt_PT",
+        "category": "UTILITY",
+        "variables": ["nome", "valor", "referencia", "data_pagamento"],
+        "preview": """✅ Pagamento Confirmado, {nome}!
+
+O pagamento de €{valor} foi processado com sucesso.
+📝 Referência: {referencia}
+📅 Data: {data_pagamento}
+
+Obrigado pela sua pontualidade!"""
+    }
+}
 
 
-class WhatsAppCloudConfig(BaseModel):
-    """Configuration for WhatsApp Cloud API"""
-    phone_number_id: str
-    access_token: str
-    business_account_id: Optional[str] = None
-    waba_id: Optional[str] = None
-    ativo: bool = False
-
-
-class WhatsAppMessage(BaseModel):
-    """Model for sending WhatsApp message"""
-    phone_number: str
-    message: str
-
-
-class WhatsAppBulkMessage(BaseModel):
-    """Model for bulk WhatsApp messages"""
-    motorista_ids: List[str]
-    message_type: str  # relatorio, status, vistoria, custom
-    custom_message: Optional[str] = None
-    semana: Optional[int] = None
-    ano: Optional[int] = None
-
-
-def get_parceiro_id(current_user: Dict) -> str:
-    """Get parceiro_id from current user"""
-    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
-        return current_user["id"]
-    elif current_user["role"] in [UserRole.GESTAO, "gestao"]:
-        return current_user.get("parceiro_id") or current_user["id"]
-    else:  # Admin
-        return current_user.get("parceiro_id") or "admin"
-
-
-async def get_whatsapp_credentials(parceiro_id: str) -> Optional[Dict]:
-    """Get WhatsApp Cloud API credentials for a partner"""
-    # Try parceiros collection first
-    parceiro = await db.parceiros.find_one(
-        {"id": parceiro_id},
-        {"_id": 0, "config_whatsapp_cloud": 1}
-    )
-    if parceiro and parceiro.get("config_whatsapp_cloud"):
-        return parceiro["config_whatsapp_cloud"]
+def verify_webhook_signature(body: bytes, signature: str) -> bool:
+    """Valida assinatura HMAC-SHA256 do webhook"""
+    if not APP_SECRET:
+        logger.warning("APP_SECRET não configurado - a ignorar validação de assinatura")
+        return True
     
-    # Try users collection
-    user = await db.users.find_one(
-        {"id": parceiro_id},
-        {"_id": 0, "config_whatsapp_cloud": 1}
-    )
-    if user and user.get("config_whatsapp_cloud"):
-        return user["config_whatsapp_cloud"]
+    expected_signature = "sha256=" + hmac.new(
+        APP_SECRET.encode(),
+        body,
+        hashlib.sha256
+    ).hexdigest()
     
-    return None
+    return hmac.compare_digest(signature, expected_signature)
 
 
-async def send_whatsapp_cloud_message(
-    phone_number: str,
-    message: str,
-    parceiro_id: str
-) -> Dict:
-    """Send message via WhatsApp Cloud API"""
-    
-    # Get credentials
-    config = await get_whatsapp_credentials(parceiro_id)
-    
-    if not config:
-        return {
-            "success": False,
-            "error": "WhatsApp não configurado. Configure as credenciais da Cloud API nas definições."
-        }
-    
-    if not config.get("ativo"):
-        return {
-            "success": False,
-            "error": "WhatsApp está desativado. Ative nas definições."
-        }
-    
-    phone_number_id = config.get("phone_number_id")
-    access_token = config.get("access_token")
-    
-    if not phone_number_id or not access_token:
-        return {
-            "success": False,
-            "error": "Credenciais WhatsApp incompletas. Configure Phone Number ID e Access Token."
-        }
-    
-    # Format phone number (remove spaces, dashes, and ensure country code)
-    phone = phone_number.replace(" ", "").replace("-", "").replace("+", "")
+def format_phone_number(phone: str) -> str:
+    """Formata número de telefone para formato E.164 (sem +)"""
+    phone = phone.strip().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    if phone.startswith("+"):
+        phone = phone[1:]
+    if phone.startswith("00"):
+        phone = phone[2:]
+    # Se começar com 9 (PT móvel), adicionar 351
     if phone.startswith("9") and len(phone) == 9:
         phone = "351" + phone
-    elif not phone.startswith("351") and len(phone) == 9:
-        phone = "351" + phone
-    
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{WHATSAPP_API_URL}/{phone_number_id}/messages",
-                headers={
-                    "Authorization": f"Bearer {access_token}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "messaging_product": "whatsapp",
-                    "recipient_type": "individual",
-                    "to": phone,
-                    "type": "text",
-                    "text": {
-                        "preview_url": False,
-                        "body": message
-                    }
-                },
-                timeout=30.0
-            )
-            
-            data = response.json()
-            
-            if response.status_code == 200 and data.get("messages"):
-                message_id = data["messages"][0].get("id")
-                
-                # Log success
-                await db.whatsapp_logs.insert_one({
-                    "tipo": "envio",
-                    "parceiro_id": parceiro_id,
-                    "telefone": phone,
-                    "mensagem": message[:500],
-                    "status": "enviado",
-                    "message_id": message_id,
-                    "api": "cloud",
-                    "data": datetime.now(timezone.utc)
-                })
-                
-                logger.info(f"WhatsApp Cloud message sent to {phone}, ID: {message_id}")
-                return {"success": True, "message_id": message_id}
-            else:
-                error_msg = data.get("error", {}).get("message", "Erro desconhecido")
-                error_code = data.get("error", {}).get("code", 0)
-                
-                # Log error
-                await db.whatsapp_logs.insert_one({
-                    "tipo": "envio",
-                    "parceiro_id": parceiro_id,
-                    "telefone": phone,
-                    "mensagem": message[:500],
-                    "status": "erro",
-                    "erro": f"[{error_code}] {error_msg}",
-                    "api": "cloud",
-                    "data": datetime.now(timezone.utc)
-                })
-                
-                logger.error(f"WhatsApp Cloud error: {error_code} - {error_msg}")
-                return {"success": False, "error": error_msg, "code": error_code}
-                
-    except httpx.RequestError as e:
-        logger.error(f"WhatsApp Cloud request error: {e}")
-        return {"success": False, "error": f"Erro de conexão: {str(e)}"}
-    except Exception as e:
-        logger.error(f"WhatsApp Cloud error: {e}")
-        return {"success": False, "error": str(e)}
+    return phone
 
 
-# ==================== API ENDPOINTS ====================
-
-@router.get("/whatsapp/config")
-async def get_whatsapp_config(current_user: Dict = Depends(get_current_user)):
-    """Get WhatsApp Cloud API configuration for current partner"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
-        raise HTTPException(status_code=403, detail="Não autorizado")
+async def send_template_message(
+    recipient_phone: str,
+    template_name: str,
+    template_language: str = "pt_PT",
+    parameters: Optional[List[Dict]] = None,
+    header_parameters: Optional[List[Dict]] = None
+) -> Dict:
+    """
+    Envia mensagem template via WhatsApp Cloud API
     
-    parceiro_id = get_parceiro_id(current_user)
-    config = await get_whatsapp_credentials(parceiro_id)
+    Args:
+        recipient_phone: Número em formato E.164 (ex: "351912345678")
+        template_name: Nome do template aprovado no Meta
+        template_language: Código do idioma (ex: "pt_PT")
+        parameters: Lista de parâmetros para o corpo da mensagem
+        header_parameters: Lista de parâmetros para o cabeçalho (opcional)
     
-    if config:
-        # Don't return full access token for security
-        safe_config = {
-            "phone_number_id": config.get("phone_number_id", ""),
-            "access_token_configured": bool(config.get("access_token")),
-            "business_account_id": config.get("business_account_id", ""),
-            "ativo": config.get("ativo", False)
-        }
-        return safe_config
-    
-    return {
-        "phone_number_id": "",
-        "access_token_configured": False,
-        "business_account_id": "",
-        "ativo": False
-    }
-
-
-@router.put("/whatsapp/config")
-async def update_whatsapp_config(
-    config: WhatsAppCloudConfig,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Update WhatsApp Cloud API configuration"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
-        raise HTTPException(status_code=403, detail="Não autorizado")
-    
-    parceiro_id = get_parceiro_id(current_user)
-    
-    config_data = {
-        "phone_number_id": config.phone_number_id,
-        "access_token": config.access_token,
-        "business_account_id": config.business_account_id,
-        "waba_id": config.waba_id,
-        "ativo": config.ativo,
-        "updated_at": datetime.now(timezone.utc),
-        "updated_by": current_user["id"]
-    }
-    
-    # Update in parceiros collection
-    result = await db.parceiros.update_one(
-        {"id": parceiro_id},
-        {"$set": {"config_whatsapp_cloud": config_data}}
-    )
-    
-    # If not found in parceiros, try users
-    if result.matched_count == 0:
-        await db.users.update_one(
-            {"id": parceiro_id},
-            {"$set": {"config_whatsapp_cloud": config_data}}
+    Returns:
+        Resposta da API com message_id em caso de sucesso
+    """
+    if not ACCESS_TOKEN or not PHONE_NUMBER_ID:
+        raise HTTPException(
+            status_code=503,
+            detail="WhatsApp Cloud API não configurada. Configure ACCESS_TOKEN e PHONE_NUMBER_ID no .env"
         )
     
-    return {"message": "Configuração WhatsApp guardada com sucesso"}
-
-
-@router.post("/whatsapp/test")
-async def test_whatsapp_connection(
-    current_user: Dict = Depends(get_current_user)
-):
-    """Test WhatsApp Cloud API connection by checking phone number status"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
-        raise HTTPException(status_code=403, detail="Não autorizado")
+    formatted_phone = format_phone_number(recipient_phone)
     
-    parceiro_id = get_parceiro_id(current_user)
-    config = await get_whatsapp_credentials(parceiro_id)
+    components = []
     
-    if not config:
-        raise HTTPException(status_code=400, detail="WhatsApp não configurado")
+    # Adicionar parâmetros do header se existirem
+    if header_parameters:
+        components.append({
+            "type": "header",
+            "parameters": header_parameters
+        })
     
-    phone_number_id = config.get("phone_number_id")
-    access_token = config.get("access_token")
+    # Adicionar parâmetros do body
+    if parameters:
+        components.append({
+            "type": "body",
+            "parameters": parameters
+        })
     
-    if not phone_number_id or not access_token:
-        raise HTTPException(status_code=400, detail="Credenciais incompletas")
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": formatted_phone,
+        "type": "template",
+        "template": {
+            "name": template_name,
+            "language": {
+                "code": template_language
+            }
+        }
+    }
+    
+    if components:
+        payload["template"]["components"] = components
+    
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    
+    url = f"{WHATSAPP_API_URL}/{PHONE_NUMBER_ID}/messages"
     
     try:
-        async with httpx.AsyncClient() as client:
-            # Verify phone number
-            response = await client.get(
-                f"{WHATSAPP_API_URL}/{phone_number_id}",
-                headers={"Authorization": f"Bearer {access_token}"},
-                timeout=15.0
-            )
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, json=payload, headers=headers)
             
             if response.status_code == 200:
-                data = response.json()
+                result = response.json()
+                logger.info(f"Mensagem enviada com sucesso para {formatted_phone}")
                 return {
                     "success": True,
-                    "message": "Conexão verificada com sucesso!",
-                    "phone_number": data.get("display_phone_number", ""),
-                    "verified_name": data.get("verified_name", ""),
-                    "quality_rating": data.get("quality_rating", ""),
-                    "status": data.get("status", "")
+                    "message_id": result.get("messages", [{}])[0].get("id"),
+                    "recipient": formatted_phone,
+                    "timestamp": datetime.now().isoformat()
                 }
             else:
                 error_data = response.json()
-                error_msg = error_data.get("error", {}).get("message", "Erro desconhecido")
-                raise HTTPException(status_code=400, detail=f"Erro na API: {error_msg}")
+                logger.error(f"Erro ao enviar mensagem: {error_data}")
+                return {
+                    "success": False,
+                    "error": error_data,
+                    "recipient": formatted_phone
+                }
                 
-    except httpx.RequestError as e:
-        raise HTTPException(status_code=500, detail=f"Erro de conexão: {str(e)}")
+    except httpx.ConnectError as e:
+        logger.error(f"Erro de conexão com WhatsApp API: {e}")
+        raise HTTPException(status_code=503, detail="Não foi possível conectar à API do WhatsApp")
+    except Exception as e:
+        logger.error(f"Erro ao enviar mensagem WhatsApp: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/whatsapp/send")
-async def send_whatsapp_message_endpoint(
-    message: WhatsAppMessage,
+# ==================== ENDPOINTS ====================
+
+@router.get("/status")
+async def get_status(current_user: Dict = Depends(get_current_user)):
+    """Verifica estado da configuração da API"""
+    is_configured = bool(ACCESS_TOKEN and PHONE_NUMBER_ID)
+    
+    return {
+        "configured": is_configured,
+        "has_access_token": bool(ACCESS_TOKEN),
+        "has_phone_number_id": bool(PHONE_NUMBER_ID),
+        "has_waba_id": bool(WABA_ID),
+        "has_app_secret": bool(APP_SECRET),
+        "api_version": "v21.0",
+        "templates_available": len(TEMPLATES)
+    }
+
+
+@router.get("/templates")
+async def get_templates(current_user: Dict = Depends(get_current_user)):
+    """Lista todos os templates disponíveis"""
+    return {
+        "templates": list(TEMPLATES.values()),
+        "total": len(TEMPLATES)
+    }
+
+
+@router.get("/templates/{template_name}")
+async def get_template(template_name: str, current_user: Dict = Depends(get_current_user)):
+    """Obtém detalhes de um template específico"""
+    if template_name not in TEMPLATES:
+        raise HTTPException(status_code=404, detail=f"Template '{template_name}' não encontrado")
+    
+    return TEMPLATES[template_name]
+
+
+@router.post("/send/relatorio-semanal")
+async def send_relatorio_semanal(
+    telefone: str,
+    nome: str,
+    semana: str,
+    total_viagens: int,
+    valor_bruto: float,
+    comissoes: float,
+    valor_liquido: float,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Send a WhatsApp message"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
-        raise HTTPException(status_code=403, detail="Não autorizado")
+    """
+    Envia relatório semanal por WhatsApp
     
-    parceiro_id = get_parceiro_id(current_user)
-    result = await send_whatsapp_cloud_message(
-        message.phone_number,
-        message.message,
-        parceiro_id
+    Exemplo de uso:
+    POST /api/whatsapp-cloud/send/relatorio-semanal
+    {
+        "telefone": "912345678",
+        "nome": "João Silva",
+        "semana": "8/2025",
+        "total_viagens": 45,
+        "valor_bruto": 850.50,
+        "comissoes": 170.10,
+        "valor_liquido": 680.40
+    }
+    """
+    parameters = [
+        {"type": "text", "text": nome},
+        {"type": "text", "text": semana},
+        {"type": "text", "text": str(total_viagens)},
+        {"type": "text", "text": f"{valor_bruto:.2f}"},
+        {"type": "text", "text": f"{comissoes:.2f}"},
+        {"type": "text", "text": f"{valor_liquido:.2f}"}
+    ]
+    
+    return await send_template_message(
+        recipient_phone=telefone,
+        template_name="relatorio_semanal",
+        parameters=parameters
     )
-    
-    if not result["success"]:
-        raise HTTPException(status_code=400, detail=result["error"])
-    
-    return result
 
 
-@router.post("/whatsapp/send-relatorio/{motorista_id}")
-async def send_relatorio_whatsapp(
-    motorista_id: str,
-    semana: Optional[int] = None,
-    ano: Optional[int] = None,
+@router.post("/send/documento-expirar")
+async def send_documento_expirar(
+    telefone: str,
+    nome: str,
+    tipo_documento: str,
+    dias: int,
+    data_expiracao: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Send weekly report to a driver via WhatsApp"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
-        raise HTTPException(status_code=403, detail="Não autorizado")
+    """Envia alerta de documento a expirar"""
+    parameters = [
+        {"type": "text", "text": nome},
+        {"type": "text", "text": tipo_documento},
+        {"type": "text", "text": str(dias)},
+        {"type": "text", "text": data_expiracao}
+    ]
     
-    parceiro_id = get_parceiro_id(current_user)
-    
-    # Get driver info
-    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
-    if not motorista:
-        raise HTTPException(status_code=404, detail="Motorista não encontrado")
-    
-    # Get phone number
-    telefone = motorista.get("whatsapp") or motorista.get("phone") or motorista.get("telefone")
-    if not telefone:
-        raise HTTPException(status_code=400, detail="Motorista não tem número de telefone")
-    
-    nome = motorista.get("name") or motorista.get("nome", "Motorista")
-    
-    # Get current week if not specified
-    if not semana or not ano:
-        from datetime import date
-        today = date.today()
-        semana = today.isocalendar()[1]
-        ano = today.year
-    
-    # Build message
-    mensagem = f"""📊 *Relatório Semanal - Semana {semana}/{ano}*
+    return await send_template_message(
+        recipient_phone=telefone,
+        template_name="documento_expirar",
+        parameters=parameters
+    )
 
-Olá {nome}!
 
-O seu relatório semanal já está disponível na plataforma TVDEFleet.
-
-Aceda à sua conta para ver os detalhes completos das suas corridas e ganhos.
-
-Qualquer dúvida, entre em contacto connosco.
-
-_Mensagem enviada automaticamente pelo TVDEFleet_"""
+@router.post("/send/boas-vindas")
+async def send_boas_vindas(
+    telefone: str,
+    nome: str,
+    empresa: str,
+    link_plataforma: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Envia mensagem de boas-vindas a novo motorista"""
+    parameters = [
+        {"type": "text", "text": nome},
+        {"type": "text", "text": empresa},
+        {"type": "text", "text": link_plataforma}
+    ]
     
-    result = await send_whatsapp_cloud_message(telefone, mensagem, parceiro_id)
+    return await send_template_message(
+        recipient_phone=telefone,
+        template_name="boas_vindas",
+        parameters=parameters
+    )
+
+
+@router.post("/send/vistoria")
+async def send_vistoria(
+    telefone: str,
+    nome: str,
+    data_vistoria: str,
+    hora: str,
+    local: str,
+    veiculo: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Envia notificação de vistoria agendada"""
+    parameters = [
+        {"type": "text", "text": nome},
+        {"type": "text", "text": data_vistoria},
+        {"type": "text", "text": hora},
+        {"type": "text", "text": local},
+        {"type": "text", "text": veiculo}
+    ]
     
-    if not result["success"]:
-        raise HTTPException(status_code=400, detail=result["error"])
+    return await send_template_message(
+        recipient_phone=telefone,
+        template_name="vistoria_agendada",
+        parameters=parameters
+    )
+
+
+@router.post("/send/revisao")
+async def send_revisao(
+    telefone: str,
+    nome: str,
+    veiculo: str,
+    km_actual: int,
+    km_revisao: int,
+    tipo_revisao: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Envia alerta de revisão do veículo"""
+    parameters = [
+        {"type": "text", "text": nome},
+        {"type": "text", "text": veiculo},
+        {"type": "text", "text": str(km_actual)},
+        {"type": "text", "text": str(km_revisao)},
+        {"type": "text", "text": tipo_revisao}
+    ]
+    
+    return await send_template_message(
+        recipient_phone=telefone,
+        template_name="revisao_veiculo",
+        parameters=parameters
+    )
+
+
+@router.post("/send/pagamento")
+async def send_pagamento(
+    telefone: str,
+    nome: str,
+    valor: float,
+    referencia: str,
+    data_pagamento: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Envia confirmação de pagamento"""
+    parameters = [
+        {"type": "text", "text": nome},
+        {"type": "text", "text": f"{valor:.2f}"},
+        {"type": "text", "text": referencia},
+        {"type": "text", "text": data_pagamento}
+    ]
+    
+    return await send_template_message(
+        recipient_phone=telefone,
+        template_name="pagamento_efetuado",
+        parameters=parameters
+    )
+
+
+@router.post("/send/custom")
+async def send_custom_template(
+    telefone: str,
+    template_name: str,
+    parameters: List[str],
+    language: str = "pt_PT",
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Envia template personalizado
+    
+    Exemplo:
+    POST /api/whatsapp-cloud/send/custom
+    {
+        "telefone": "912345678",
+        "template_name": "meu_template",
+        "parameters": ["valor1", "valor2", "valor3"],
+        "language": "pt_PT"
+    }
+    """
+    formatted_params = [{"type": "text", "text": p} for p in parameters]
+    
+    return await send_template_message(
+        recipient_phone=telefone,
+        template_name=template_name,
+        template_language=language,
+        parameters=formatted_params
+    )
+
+
+# ==================== WEBHOOK ENDPOINTS ====================
+
+@router.get("/webhook")
+async def verify_webhook(
+    hub_mode: str = Query(None, alias="hub.mode"),
+    hub_verify_token: str = Query(None, alias="hub.verify_token"),
+    hub_challenge: str = Query(None, alias="hub.challenge")
+):
+    """
+    Endpoint de verificação de webhook chamado pelo Meta
+    Retorna o challenge token se a verificação for bem sucedida
+    """
+    logger.info(f"Webhook verification: mode={hub_mode}, token={hub_verify_token}")
+    
+    if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN:
+        logger.info("Webhook verified successfully")
+        return PlainTextResponse(hub_challenge)
+    
+    logger.warning("Webhook verification failed")
+    return PlainTextResponse("Forbidden", status_code=403)
+
+
+@router.post("/webhook")
+async def handle_webhook(request: Request):
+    """
+    Recebe eventos de webhook do Meta WhatsApp
+    Processa mensagens recebidas e actualizações de estado
+    """
+    raw_body = await request.body()
+    signature = request.headers.get("x-hub-signature-256", "")
+    
+    # Validar assinatura
+    if APP_SECRET and not verify_webhook_signature(raw_body, signature):
+        logger.warning("Webhook signature validation failed")
+        return {"status": "error", "message": "Invalid signature"}, 401
+    
+    try:
+        body = json.loads(raw_body)
+        
+        # Processar eventos
+        for entry in body.get("entry", []):
+            for change in entry.get("changes", []):
+                value = change.get("value", {})
+                
+                # Processar mensagens recebidas
+                for message in value.get("messages", []):
+                    sender = message.get("from")
+                    message_id = message.get("id")
+                    message_type = message.get("type", "unknown")
+                    timestamp = message.get("timestamp")
+                    
+                    logger.info(f"Mensagem recebida de {sender}: tipo={message_type}")
+                    
+                    if message_type == "text":
+                        text_content = message.get("text", {}).get("body", "")
+                        logger.info(f"Texto: {text_content}")
+                        # TODO: Processar resposta do cliente
+                
+                # Processar actualizações de estado
+                for status in value.get("statuses", []):
+                    message_id = status.get("id")
+                    delivery_status = status.get("status")
+                    recipient_id = status.get("recipient_id")
+                    
+                    logger.info(f"Status update: {message_id} -> {delivery_status} para {recipient_id}")
+                    # TODO: Actualizar estado da mensagem na BD
+        
+        return {"status": "ok"}
+        
+    except Exception as e:
+        logger.error(f"Erro ao processar webhook: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+# ==================== GESTÃO DE TEMPLATES ====================
+
+@router.post("/templates/add")
+async def add_custom_template(
+    name: str,
+    description: str,
+    variables: List[str],
+    preview: str,
+    language: str = "pt_PT",
+    category: str = "UTILITY",
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Adiciona um template personalizado à lista local
+    Nota: O template deve ser criado e aprovado no Meta Business Manager
+    """
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores podem adicionar templates")
+    
+    TEMPLATES[name] = {
+        "name": name,
+        "description": description,
+        "language": language,
+        "category": category,
+        "variables": variables,
+        "preview": preview
+    }
     
     return {
         "success": True,
-        "message": f"Relatório enviado para {nome}",
-        "motorista": nome,
-        "message_id": result.get("message_id")
+        "message": f"Template '{name}' adicionado. Certifique-se de criar o mesmo template no Meta Business Manager.",
+        "template": TEMPLATES[name]
     }
-
-
-@router.post("/whatsapp/send-bulk")
-async def send_bulk_whatsapp(
-    request: WhatsAppBulkMessage,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Send WhatsApp messages to multiple drivers"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
-        raise HTTPException(status_code=403, detail="Não autorizado")
-    
-    parceiro_id = get_parceiro_id(current_user)
-    
-    results = {
-        "total": len(request.motorista_ids),
-        "enviados": 0,
-        "erros": 0,
-        "detalhes": []
-    }
-    
-    for motorista_id in request.motorista_ids:
-        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
-        if not motorista:
-            results["erros"] += 1
-            results["detalhes"].append({"id": motorista_id, "erro": "Não encontrado"})
-            continue
-        
-        telefone = motorista.get("whatsapp") or motorista.get("phone") or motorista.get("telefone")
-        if not telefone:
-            results["erros"] += 1
-            results["detalhes"].append({"id": motorista_id, "erro": "Sem telefone"})
-            continue
-        
-        nome = motorista.get("name") or motorista.get("nome", "Motorista")
-        
-        # Build message based on type
-        if request.message_type == "custom" and request.custom_message:
-            mensagem = request.custom_message.replace("{nome}", nome)
-        else:
-            mensagem = f"Olá {nome}! Mensagem do TVDEFleet."
-        
-        result = await send_whatsapp_cloud_message(telefone, mensagem, parceiro_id)
-        
-        if result["success"]:
-            results["enviados"] += 1
-            results["detalhes"].append({"id": motorista_id, "nome": nome, "sucesso": True})
-        else:
-            results["erros"] += 1
-            results["detalhes"].append({"id": motorista_id, "nome": nome, "erro": result["error"]})
-    
-    return results
-
-
-@router.get("/whatsapp/status")
-async def get_whatsapp_status(current_user: Dict = Depends(get_current_user)):
-    """Get WhatsApp integration status"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
-        raise HTTPException(status_code=403, detail="Não autorizado")
-    
-    parceiro_id = get_parceiro_id(current_user)
-    config = await get_whatsapp_credentials(parceiro_id)
-    
-    if not config:
-        return {
-            "configured": False,
-            "active": False,
-            "message": "WhatsApp não configurado"
-        }
-    
-    return {
-        "configured": bool(config.get("phone_number_id") and config.get("access_token")),
-        "active": config.get("ativo", False),
-        "message": "WhatsApp configurado" if config.get("ativo") else "WhatsApp desativado"
-    }
-
-
-@router.get("/whatsapp/logs")
-async def get_whatsapp_logs(
-    limit: int = 50,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Get WhatsApp send logs"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
-        raise HTTPException(status_code=403, detail="Não autorizado")
-    
-    parceiro_id = get_parceiro_id(current_user)
-    
-    query = {"parceiro_id": parceiro_id} if parceiro_id != "admin" else {}
-    
-    logs = await db.whatsapp_logs.find(
-        query,
-        {"_id": 0}
-    ).sort("data", -1).limit(limit).to_list(length=limit)
-    
-    return logs
