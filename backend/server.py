@@ -1555,6 +1555,7 @@ class RelatorioConfig(BaseModel):
     incluir_data_emissao: bool = True
     incluir_periodo: bool = True
     incluir_nome_parceiro: bool = True
+    incluir_nif_parceiro: bool = False  # NIF do parceiro no cabeçalho
     incluir_nome_motorista: bool = True
     incluir_veiculo: bool = True  # Marca, modelo e matrícula
     
