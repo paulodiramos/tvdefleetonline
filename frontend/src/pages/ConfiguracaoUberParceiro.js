@@ -587,86 +587,7 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                 {/* PAINEL DE CONTROLOS */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   
-                  {/* Coluna Esquerda - Login */}
-                  <div className="space-y-3">
-                    {/* Preenchimento Automático */}
-                    <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                        <User className="w-5 h-5" />
-                        Preenchimento Automático
-                      </h4>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={preencherEmail} 
-                          className="flex-1 bg-white text-blue-600 hover:bg-blue-50 font-semibold"
-                          size="lg"
-                        >
-                          📧 Email
-                        </Button>
-                        <Button 
-                          onClick={preencherPassword} 
-                          className="flex-1 bg-white text-blue-600 hover:bg-blue-50 font-semibold"
-                          size="lg"
-                        >
-                          🔑 Password
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Código SMS */}
-                    <div className="p-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl shadow-lg">
-                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                        <Phone className="w-5 h-5" />
-                        Código SMS (4 dígitos)
-                      </h4>
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          maxLength={4}
-                          placeholder="0000"
-                          value={codigoSMS}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                            setCodigoSMS(val);
-                          }}
-                          onKeyPress={(e) => e.key === 'Enter' && enviarCodigoSMS()}
-                          className="w-28 text-center text-2xl font-mono tracking-[0.5em] bg-white border-0 shadow-inner"
-                        />
-                        <Button 
-                          onClick={enviarCodigoSMS} 
-                          className="flex-1 bg-white text-orange-600 hover:bg-orange-50 font-semibold"
-                          size="lg"
-                          disabled={codigoSMS.length !== 4 || atualizando}
-                        >
-                          Enviar →
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Texto Manual */}
-                    <div className="p-4 bg-slate-100 rounded-xl border-2 border-slate-200">
-                      <h4 className="text-slate-700 font-semibold mb-3 flex items-center gap-2">
-                        <Keyboard className="w-5 h-5" />
-                        Escrever Manualmente
-                      </h4>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Digite aqui..."
-                          value={textoInput}
-                          onChange={(e) => setTextoInput(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && enviarTexto()}
-                          className="flex-1"
-                        />
-                        <Button onClick={enviarTexto} className="bg-slate-700 hover:bg-slate-800">
-                          Enviar
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Coluna Direita - Navegação */}
+                  {/* Coluna Esquerda - Navegação/Setas */}
                   <div className="space-y-3">
                     {/* Setas para CAPTCHA - Design Simples */}
                     <div className="p-5 bg-white rounded-xl shadow-lg border-2 border-slate-200">
@@ -743,6 +664,85 @@ const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
                           className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-xl text-lg"
                         >
                           APAGAR
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Coluna Direita - Login/SMS */}
+                  <div className="space-y-3">
+                    {/* Preenchimento Automático */}
+                    <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        <User className="w-5 h-5" />
+                        Preenchimento Automático
+                      </h4>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={preencherEmail} 
+                          className="flex-1 bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+                          size="lg"
+                        >
+                          📧 Email
+                        </Button>
+                        <Button 
+                          onClick={preencherPassword} 
+                          className="flex-1 bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+                          size="lg"
+                        >
+                          🔑 Password
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Código SMS */}
+                    <div className="p-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl shadow-lg">
+                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        <Phone className="w-5 h-5" />
+                        Código SMS (4 dígitos)
+                      </h4>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={4}
+                          placeholder="0000"
+                          value={codigoSMS}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                            setCodigoSMS(val);
+                          }}
+                          onKeyPress={(e) => e.key === 'Enter' && enviarCodigoSMS()}
+                          className="w-28 text-center text-2xl font-mono tracking-[0.5em] bg-white border-0 shadow-inner"
+                        />
+                        <Button 
+                          onClick={enviarCodigoSMS} 
+                          className="flex-1 bg-white text-orange-600 hover:bg-orange-50 font-semibold"
+                          size="lg"
+                          disabled={codigoSMS.length !== 4 || atualizando}
+                        >
+                          Enviar →
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Texto Manual */}
+                    <div className="p-4 bg-slate-100 rounded-xl border-2 border-slate-200">
+                      <h4 className="text-slate-700 font-semibold mb-3 flex items-center gap-2">
+                        <Keyboard className="w-5 h-5" />
+                        Escrever Manualmente
+                      </h4>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Digite aqui..."
+                          value={textoInput}
+                          onChange={(e) => setTextoInput(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && enviarTexto()}
+                          className="flex-1"
+                        />
+                        <Button onClick={enviarTexto} className="bg-slate-700 hover:bg-slate-800">
+                          Enviar
                         </Button>
                       </div>
                     </div>
