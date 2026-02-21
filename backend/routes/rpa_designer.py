@@ -1718,6 +1718,74 @@ async def obter_execucao(
 
 # ==================== CREDENCIAIS POR PLATAFORMA ====================
 
+@router.get("/credenciais-parceiro/{parceiro_id}")
+async def obter_credenciais_parceiro(
+    parceiro_id: str,
+    plataforma: str = "uber",
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter credenciais de um parceiro específico (admin only)
+    
+    Usado pelo RPA Designer para mostrar as credenciais do parceiro
+    seleccionado antes de iniciar a gravação.
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode ver credenciais de parceiros")
+    
+    # Buscar nome do parceiro
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0, "nome": 1, "nome_empresa": 1})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id}, {"_id": 0, "name": 1})
+    
+    parceiro_nome = None
+    if parceiro:
+        parceiro_nome = parceiro.get("nome_empresa") or parceiro.get("nome") or parceiro.get("name")
+    
+    # Buscar credenciais dependendo da plataforma
+    if plataforma == "uber":
+        # 1. Primeiro tentar da colecção dedicada credenciais_uber
+        cred = await db.credenciais_uber.find_one({"parceiro_id": parceiro_id}, {"_id": 0})
+        if cred and cred.get("email"):
+            return {
+                "parceiro_id": parceiro_id,
+                "parceiro_nome": parceiro_nome,
+                "plataforma": "uber",
+                "email": cred.get("email", ""),
+                "password": cred.get("password", ""),
+                "telefone": cred.get("telefone", ""),
+                "fonte": "credenciais_uber"
+            }
+        
+        # 2. Tentar de credenciais_plataformas no parceiro
+        parceiro_full = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+        if not parceiro_full:
+            parceiro_full = await db.users.find_one({"id": parceiro_id}, {"_id": 0})
+        
+        if parceiro_full and parceiro_full.get("credenciais_plataformas"):
+            cp = parceiro_full["credenciais_plataformas"]
+            if cp.get("uber_email"):
+                return {
+                    "parceiro_id": parceiro_id,
+                    "parceiro_nome": parceiro_nome,
+                    "plataforma": "uber",
+                    "email": cp.get("uber_email", ""),
+                    "password": cp.get("uber_password", ""),
+                    "telefone": cp.get("uber_telefone", ""),
+                    "fonte": "credenciais_plataformas"
+                }
+    
+    # Sem credenciais encontradas
+    return {
+        "parceiro_id": parceiro_id,
+        "parceiro_nome": parceiro_nome,
+        "plataforma": plataforma,
+        "email": "",
+        "password": "",
+        "telefone": "",
+        "fonte": None
+    }
+
+
 @router.get("/credenciais/{plataforma_id}")
 async def obter_credenciais_plataforma(
     plataforma_id: str,
