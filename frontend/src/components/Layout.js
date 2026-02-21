@@ -206,6 +206,7 @@ const Layout = ({ children, user, onLogout }) => {
         submenu: [
           { path: '/motoristas', label: 'Lista de Motoristas' },
           { path: '/progressoes-motoristas', label: '🏆 Progressões' },
+          { path: '/comissoes', label: '💰 Comissões' },
           { path: '/contratos', label: '📄 Gestão de Contratos' },
           { path: '/criar-contrato', label: '➕ Criar Contrato' }
         ]
