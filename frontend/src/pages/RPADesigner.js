@@ -4,7 +4,7 @@ import {
   Play, Pause, Square, Save, Plus, Trash2, Settings, 
   Monitor, MousePointer, Type, Clock, Download, Eye,
   ChevronRight, RefreshCw, CheckCircle, XCircle, AlertCircle,
-  User, Key, ArrowLeft
+  User, Key, ArrowLeft, List
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
