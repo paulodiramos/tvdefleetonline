@@ -105,6 +105,9 @@ async def importar_ganhos_uber(
                 pago_total = parse_float(row.get('Pago a si', '0'))
                 rendimentos_total = parse_float(row.get('Pago a si : Os seus rendimentos', '0'))
                 
+                # Nome completo
+                nome_completo = f"{row.get('Nome próprio do motorista', '')} {row.get('Apelido do motorista', '')}".strip()
+                
                 ganho = {
                     'id': str(uuid.uuid4()),
                     'uuid_motorista_uber': uuid_motorista,
@@ -112,12 +115,14 @@ async def importar_ganhos_uber(
                     'parceiro_id': parceiro_id,
                     'nome_motorista': row.get('Nome próprio do motorista', ''),
                     'apelido_motorista': row.get('Apelido do motorista', ''),
+                    'nome': nome_completo,
                     'periodo_inicio': periodo_inicio,
                     'periodo_fim': periodo_fim,
                     'semana': semana_calc,
                     'ano': ano_calc,
                     'pago_total': pago_total,
                     'rendimentos_total': rendimentos_total,
+                    'ganhos': pago_total,  # Alias para compatibilidade
                     'dinheiro_recebido': parse_float(row.get('Pago a si : Saldo da viagem : Pagamentos : Dinheiro recebido', '0')),
                     'tarifa_total': parse_float(row.get('Pago a si : Os seus rendimentos : Tarifa', '0')),
                     'tarifa_base': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Tarifa', '0')),
@@ -128,10 +133,15 @@ async def importar_ganhos_uber(
                     'uber_priority': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:UberX Priority', '0')),
                     'tempo_espera': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Tempo de espera na recolha', '0')),
                     'taxa_servico': parse_float(row.get('Pago a si:Os seus rendimentos:Taxa de serviço', '0')),
+                    'ajuste_taxa_servico': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Ajuste da taxa de serviço', '0')),
                     'imposto_tarifa': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Imposto sobre a tarifa', '0')),
+                    'impostos': parse_float(row.get('Pago a si : Os seus rendimentos : Impostos', '0')),
                     'taxa_aeroporto': parse_float(row.get('Pago a si:Os seus rendimentos:Outros rendimentos:Taxa de aeroporto', '0')),
                     'gratificacao': parse_float(row.get('Pago a si:Os seus rendimentos:Gratificação', '0')),
+                    'gorjetas': parse_float(row.get('Pago a si:Os seus rendimentos:Gratificação', '0')),  # Alias
                     'portagens': parse_float(row.get('Pago a si:Saldo da viagem:Reembolsos:Portagem', '0')),
+                    'imposto_saldo_viagem': parse_float(row.get('Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa', '0')),
+                    'transferido_banco': parse_float(row.get('Pago a si:Saldo da viagem:Pagamentos:Transferido para uma conta bancária', '0')),
                     'ajustes': parse_float(row.get('Pago a si:Os seus rendimentos:Outros rendimentos:Ajuste', '0')),
                     'plataforma': 'uber',
                     'fonte': 'csv_import',
