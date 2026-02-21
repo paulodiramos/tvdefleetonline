@@ -85,6 +85,7 @@ Sistema de gestão de frotas TVDE (Uber, Bolt, etc.) com funcionalidades complet
 /app
 ├── backend/
 │   ├── routes/          # Endpoints API
+│   │   └── uber_sync.py # Sincronização Uber (corrigido)
 │   ├── services/        # Lógica de negócio
 │   ├── models/          # Modelos Pydantic
 │   └── server.py        # Entry point
@@ -98,8 +99,8 @@ Sistema de gestão de frotas TVDE (Uber, Bolt, etc.) com funcionalidades complet
 ---
 
 ## Credenciais de Teste
-- **Admin:** admin@tvdefleet.com / Admin123!
-- **Parceiro:** geral@zmbusines.com / Admin123!
+- **Admin:** admin@tvdefleet.com / 123456
+- **Parceiro:** geral@zmbusines.com / 123456
 
 ---
 
@@ -107,3 +108,4 @@ Sistema de gestão de frotas TVDE (Uber, Bolt, etc.) com funcionalidades complet
 - A integração WhatsApp Cloud está completa mas inativa (falta token da Meta)
 - Ficheiros de deployment prontos em `/app/deployment/`
 - VPS alvo: 94.46.171.222
+- **Cálculo de datas Uber corrigido** - usar semana_index para seleccionar semana
