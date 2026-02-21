@@ -275,6 +275,16 @@ function App() {
             }
           />
           <Route
+            path="/comissoes"
+            element={
+              user && (user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') ? (
+                <Comissoes user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/motoristas/arquivo"
             element={
               user ? <ArquivoExMotoristas user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
