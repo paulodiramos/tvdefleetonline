@@ -10,7 +10,7 @@ import {
   Car, CheckCircle, AlertCircle, Loader2, Shield, Key, 
   Lock, Clock, FileText, Calendar, Users, DollarSign,
   Monitor, Play, Square, RefreshCw, Keyboard, Download,
-  Eye, EyeOff
+  Eye, EyeOff, User, Phone
 } from 'lucide-react';
 
 const ConfiguracaoUberParceiro = ({ user, onLogout }) => {
