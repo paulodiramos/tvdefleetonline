@@ -74,7 +74,8 @@ class TestWhatsAppCloudStatus:
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
-        return response.json().get("token")
+        data = response.json()
+        return data.get("access_token") or data.get("token")
 
     def test_status_endpoint_exists(self, admin_token):
         """Test status endpoint returns successfully"""
@@ -130,7 +131,8 @@ class TestWhatsAppCloudTemplates:
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
-        return response.json().get("token")
+        data = response.json()
+        return data.get("access_token") or data.get("token")
 
     def test_templates_endpoint_exists(self, admin_token):
         """Test templates endpoint returns successfully"""
@@ -198,7 +200,8 @@ class TestWhatsAppCloudMassaSending:
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
-        return response.json().get("token")
+        data = response.json()
+        return data.get("access_token") or data.get("token")
 
     def test_vistoria_massa_endpoint_exists(self, admin_token):
         """Test vistoria-massa endpoint returns expected error without credentials"""
@@ -244,7 +247,8 @@ class TestWhatsAppAgendamentoConfig:
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
-        return response.json().get("token")
+        data = response.json()
+        return data.get("access_token") or data.get("token")
 
     def test_get_agendamento_config(self, admin_token):
         """Test GET /api/whatsapp-cloud/agendamento/config"""
@@ -312,7 +316,8 @@ class TestRelatorioWhatsApp:
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
-        return response.json().get("token")
+        data = response.json()
+        return data.get("access_token") or data.get("token")
 
     def test_enviar_whatsapp_relatorio_invalid_id(self, admin_token):
         """Test endpoint with invalid relatorio ID returns 404"""
@@ -336,7 +341,8 @@ class TestAlertasDocumentosWhatsApp:
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
-        return response.json().get("token")
+        data = response.json()
+        return data.get("access_token") or data.get("token")
 
     def test_get_documentos_expirar(self, admin_token):
         """Test GET /api/alertas/documentos-expirar endpoint exists"""
@@ -386,7 +392,8 @@ class TestWhatsAppHistoricoEnvios:
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
-        return response.json().get("token")
+        data = response.json()
+        return data.get("access_token") or data.get("token")
 
     def test_historico_envios_endpoint(self, admin_token):
         """Test historico-envios endpoint returns successfully"""
@@ -413,7 +420,8 @@ class TestMotoristasList:
             f"{BASE_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
-        return response.json().get("token")
+        data = response.json()
+        return data.get("access_token") or data.get("token")
 
     def test_get_motoristas(self, admin_token):
         """Test GET /api/motoristas returns list"""
