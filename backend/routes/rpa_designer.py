@@ -1713,10 +1713,12 @@ async def listar_sessoes_parceiros(
     
     # Verificar sessões existentes
     for parceiro_id, info in todos_parceiros.items():
-        # Verificar Uber
-        uber_session_path = f"/tmp/uber_sessao_{parceiro_id}.json"
-        if os.path.exists(uber_session_path):
-            mtime = os.path.getmtime(uber_session_path)
+        # Verificar Uber - Nova localização (sessão persistente)
+        uber_persistent_path = f"/app/data/uber_sessions/parceiro_{parceiro_id}"
+        uber_cookies_path = os.path.join(uber_persistent_path, "Default", "Cookies")
+        
+        if os.path.exists(uber_cookies_path):
+            mtime = os.path.getmtime(uber_cookies_path)
             idade_dias = (datetime.now().timestamp() - mtime) / 86400
             
             if idade_dias < 30:  # Sessão válida por 30 dias
@@ -1726,10 +1728,30 @@ async def listar_sessoes_parceiros(
                     "parceiro_email": info["email"],
                     "plataforma": "uber",
                     "plataforma_nome": "Uber Fleet",
-                    "session_path": uber_session_path,
+                    "session_path": uber_persistent_path,
+                    "session_type": "persistent",
                     "idade_dias": round(idade_dias, 1),
                     "valida": True
                 })
+        else:
+            # Fallback para localização antiga
+            uber_session_path = f"/tmp/uber_sessao_{parceiro_id}.json"
+            if os.path.exists(uber_session_path):
+                mtime = os.path.getmtime(uber_session_path)
+                idade_dias = (datetime.now().timestamp() - mtime) / 86400
+                
+                if idade_dias < 30:
+                    sessoes.append({
+                        "parceiro_id": parceiro_id,
+                        "parceiro_nome": info["nome"],
+                        "parceiro_email": info["email"],
+                        "plataforma": "uber",
+                        "plataforma_nome": "Uber Fleet",
+                        "session_path": uber_session_path,
+                        "session_type": "legacy",
+                        "idade_dias": round(idade_dias, 1),
+                        "valida": True
+                    })
         
         # Verificar Bolt (se existir)
         bolt_session_path = f"/tmp/bolt_sessao_{parceiro_id}.json"
@@ -1745,6 +1767,7 @@ async def listar_sessoes_parceiros(
                     "plataforma": "bolt",
                     "plataforma_nome": "Bolt Partner",
                     "session_path": bolt_session_path,
+                    "session_type": "legacy",
                     "idade_dias": round(idade_dias, 1),
                     "valida": True
                 })
