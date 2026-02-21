@@ -219,12 +219,17 @@ async function getOrCreateClient(parceiro_id) {
     
     // Authenticated event
     client.on('authenticated', () => {
-        console.log(`WhatsApp authenticated for partner ${parceiro_id}`);
+        console.log(`🔐 WhatsApp AUTHENTICATED for partner ${parceiro_id}`);
         const status = clientStatus.get(parceiro_id) || {};
         status.connected = true;
         status.error = null;
         status.lastActivity = new Date();
         clientStatus.set(parceiro_id, status);
+    });
+    
+    // Loading screen event (shows authentication progress)
+    client.on('loading_screen', (percent, message) => {
+        console.log(`📱 WhatsApp loading for ${parceiro_id}: ${percent}% - ${message}`);
     });
     
     // Auth failure event
