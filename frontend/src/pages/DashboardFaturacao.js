@@ -577,4 +577,10 @@ export default function DashboardFaturacao({ user, onLogout }) {
       </Card>
     </div>
   );
+
+  return (
+    <Layout user={user} onLogout={onLogout}>
+      {content}
+    </Layout>
+  );
 }
