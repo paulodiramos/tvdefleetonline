@@ -250,102 +250,72 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
           <CardHeader className="bg-gradient-to-r from-purple-50 to-white">
             <CardTitle className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-purple-600" />
-              Módulos Disponíveis Extra
+              Módulos Disponíveis Extra ({modulosExtras.length})
             </CardTitle>
             <p className="text-sm text-slate-600">Adicione funcionalidades extra ao seu plano</p>
           </CardHeader>
           <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Módulo Contabilidade */}
-              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <Badge variant="outline" className="text-purple-600 border-purple-300">+4.99€/mês</Badge>
-                </div>
-                <h4 className="font-semibold text-slate-800 mb-1">Contabilidade Avançada</h4>
-                <p className="text-sm text-slate-600 mb-3">Relatórios financeiros, exportação para contabilistas, IVA automático</p>
-                <Button size="sm" variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-50">
-                  Adicionar
-                </Button>
+            {modulosExtras.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {modulosExtras.map((modulo) => {
+                  // Definir cor baseada no código do módulo
+                  const cores = {
+                    contabilidade: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-300', hover: 'hover:bg-purple-50' },
+                    alertas: { bg: 'bg-orange-100', text: 'text-orange-600', border: 'border-orange-300', hover: 'hover:bg-orange-50' },
+                    comissoes: { bg: 'bg-emerald-100', text: 'text-emerald-600', border: 'border-emerald-300', hover: 'hover:bg-emerald-50' },
+                    cloud_storage: { bg: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-300', hover: 'hover:bg-blue-50' },
+                    api_integracoes: { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300', hover: 'hover:bg-slate-50' },
+                    relatorios_avancados: { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-300', hover: 'hover:bg-indigo-50' },
+                    app_movel: { bg: 'bg-green-100', text: 'text-green-600', border: 'border-green-300', hover: 'hover:bg-green-50' },
+                    whatsapp: { bg: 'bg-teal-100', text: 'text-teal-600', border: 'border-teal-300', hover: 'hover:bg-teal-50' },
+                    progressoes: { bg: 'bg-amber-100', text: 'text-amber-600', border: 'border-amber-300', hover: 'hover:bg-amber-50' }
+                  };
+                  const cor = cores[modulo.codigo] || { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-300', hover: 'hover:bg-purple-50' };
+                  
+                  // Ícones por tipo
+                  const icones = {
+                    contabilidade: <DollarSign className={`w-5 h-5 ${cor.text}`} />,
+                    alertas: <AlertTriangle className={`w-5 h-5 ${cor.text}`} />,
+                    comissoes: <Percent className={`w-5 h-5 ${cor.text}`} />,
+                    cloud_storage: <HardDrive className={`w-5 h-5 ${cor.text}`} />,
+                    api_integracoes: <Code className={`w-5 h-5 ${cor.text}`} />,
+                    relatorios_avancados: <BarChart className={`w-5 h-5 ${cor.text}`} />,
+                    app_movel: <Smartphone className={`w-5 h-5 ${cor.text}`} />,
+                    whatsapp: <MessageCircle className={`w-5 h-5 ${cor.text}`} />,
+                    progressoes: <TrendingUp className={`w-5 h-5 ${cor.text}`} />
+                  };
+                  
+                  return (
+                    <div key={modulo.id || modulo.codigo} className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className={`w-10 h-10 rounded-lg ${cor.bg} flex items-center justify-center`}>
+                          {icones[modulo.codigo] || <Zap className={`w-5 h-5 ${cor.text}`} />}
+                        </div>
+                        <Badge variant="outline" className={`${cor.text} ${cor.border}`}>
+                          +{modulo.preco_mensal?.toFixed(2) || '0.00'}€/mês
+                        </Badge>
+                      </div>
+                      <h4 className="font-semibold text-slate-800 mb-1">{modulo.nome}</h4>
+                      <p className="text-sm text-slate-600 mb-3">{modulo.descricao}</p>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className={`w-full ${cor.border} ${cor.text} ${cor.hover}`}
+                        onClick={() => handleAdicionarModulo(modulo.codigo)}
+                        disabled={adicionandoModulo === modulo.codigo}
+                      >
+                        {adicionandoModulo === modulo.codigo ? 'A adicionar...' : 'Adicionar'}
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
-
-              {/* Módulo Alertas */}
-              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <Badge variant="outline" className="text-orange-600 border-orange-300">+2.99€/mês</Badge>
-                </div>
-                <h4 className="font-semibold text-slate-800 mb-1">Alertas Avançados</h4>
-                <p className="text-sm text-slate-600 mb-3">Notificações SMS, WhatsApp, alertas de manutenção e documentos</p>
-                <Button size="sm" variant="outline" className="w-full border-orange-300 text-orange-700 hover:bg-orange-50">
-                  Adicionar
-                </Button>
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                <p className="text-slate-600">Já tem todos os módulos disponíveis!</p>
               </div>
-
-              {/* Módulo Comissões */}
-              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                    <Percent className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <Badge variant="outline" className="text-emerald-600 border-emerald-300">+3.99€/mês</Badge>
-                </div>
-                <h4 className="font-semibold text-slate-800 mb-1">Gestão de Comissões</h4>
-                <p className="text-sm text-slate-600 mb-3">Cálculo automático de comissões, relatórios por motorista</p>
-                <Button size="sm" variant="outline" className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50">
-                  Adicionar
-                </Button>
-              </div>
-
-              {/* Módulo Cloud Storage */}
-              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <HardDrive className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <Badge variant="outline" className="text-blue-600 border-blue-300">+1.99€/mês</Badge>
-                </div>
-                <h4 className="font-semibold text-slate-800 mb-1">Cloud Storage</h4>
-                <p className="text-sm text-slate-600 mb-3">Armazenamento na cloud, backup automático de documentos</p>
-                <Button size="sm" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
-                  Adicionar
-                </Button>
-              </div>
-
-              {/* Módulo API */}
-              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <Code className="w-5 h-5 text-slate-600" />
-                  </div>
-                  <Badge variant="outline" className="text-slate-600 border-slate-300">+9.99€/mês</Badge>
-                </div>
-                <h4 className="font-semibold text-slate-800 mb-1">API & Integrações</h4>
-                <p className="text-sm text-slate-600 mb-3">Acesso à API, webhooks, integração com sistemas externos</p>
-                <Button size="sm" variant="outline" className="w-full border-slate-300 text-slate-700 hover:bg-slate-50">
-                  Adicionar
-                </Button>
-              </div>
-
-              {/* Módulo Relatórios */}
-              <div className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 transition-colors bg-white">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                    <BarChart className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <Badge variant="outline" className="text-indigo-600 border-indigo-300">+5.99€/mês</Badge>
-                </div>
-                <h4 className="font-semibold text-slate-800 mb-1">Relatórios Avançados</h4>
-                <p className="text-sm text-slate-600 mb-3">Dashboards personalizados, exportação Excel, análises detalhadas</p>
-                <Button size="sm" variant="outline" className="w-full border-indigo-300 text-indigo-700 hover:bg-indigo-50">
-                  Adicionar
-                </Button>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
