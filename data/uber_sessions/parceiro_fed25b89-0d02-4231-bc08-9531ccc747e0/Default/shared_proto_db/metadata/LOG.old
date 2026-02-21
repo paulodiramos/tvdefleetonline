@@ -1,3 +1,3 @@
-2026/02/21-19:45:38.264 26cd Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/shared_proto_db/metadata/MANIFEST-000001
-2026/02/21-19:45:38.265 26cd Recovering log #3
-2026/02/21-19:45:38.265 26cd Reusing old log /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/shared_proto_db/metadata/000003.log 
+2026/02/21-20:59:03.648 a69 Reusing MANIFEST /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/shared_proto_db/metadata/MANIFEST-000001
+2026/02/21-20:59:03.648 a69 Recovering log #3
+2026/02/21-20:59:03.649 a69 Reusing old log /app/data/uber_sessions/parceiro_fed25b89-0d02-4231-bc08-9531ccc747e0/Default/shared_proto_db/metadata/000003.log 
