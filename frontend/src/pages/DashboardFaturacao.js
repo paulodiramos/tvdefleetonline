@@ -134,16 +134,18 @@ export default function DashboardFaturacao({ user, onLogout }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]" data-testid="loading-dashboard">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-      </div>
+      <Layout user={user} onLogout={onLogout}>
+        <div className="flex items-center justify-center min-h-[400px]" data-testid="loading-dashboard">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        </div>
+      </Layout>
     );
   }
 
   const barChartData = prepareBarChartData();
   const pieChartData = preparePieChartData();
 
-  return (
+  const content = (
     <div className="container mx-auto py-6 px-4" data-testid="dashboard-faturacao-page">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
