@@ -27,6 +27,36 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
 
 ## What's Been Implemented
 
+### Session 2026-02-21 (Cloud Storage Integration - Parte 3)
+- **Feature: Integração de Uploads com Cloud Storage - DONE:**
+  - **Refatoração de Endpoints de Upload:**
+    - Todos os endpoints de upload de veículos usam agora `FileUploadHandler`
+    - Uploads de vistorias integrados com cloud storage
+    - Upload de documentos de motoristas já usava `FileUploadHandler`
+  - **Endpoints de Upload Refatorados:**
+    - `POST /api/vehicles/{id}/upload-photo` - Fotos de veículos
+    - `POST /api/vehicles/{id}/upload-foto` - Fotos alternativas
+    - `POST /api/vehicles/{id}/upload-seguro-doc` - Documentos de seguro
+    - `POST /api/vehicles/{id}/upload-inspecao-doc` - Documentos de inspeção
+    - `POST /api/vehicles/{id}/upload-extintor-doc` - Certificados de extintor
+    - `POST /api/vehicles/{id}/upload-carta-verde` - Carta verde
+    - `POST /api/vehicles/{id}/upload-condicoes` - Condições
+    - `POST /api/vehicles/{id}/upload-recibo-seguro` - Recibos de seguro
+    - `POST /api/vehicles/{id}/upload-documento-inspecao` - Documentos de inspeção
+    - `POST /api/vehicles/{id}/upload-dua-frente` - DUA frente
+    - `POST /api/vehicles/{id}/upload-dua-verso` - DUA verso
+    - `POST /api/vehicles/{id}/vistorias/{vid}/upload-foto` - Fotos de vistorias
+  - **Novos Endpoints de Download:**
+    - `GET /api/storage-config/download` - Download de ficheiros da cloud
+    - `GET /api/storage-config/download-url` - Obter URL de download
+    - `GET /api/storage-config/files` - Listar ficheiros na cloud
+  - **Comportamento:**
+    - Se modo=local: Ficheiros guardados apenas no servidor
+    - Se modo=cloud: Ficheiros vão para a cloud (fallback local se falhar)
+    - Se modo=both: Ficheiros no servidor + backup na cloud
+    - Cada upload retorna `cloud_synced: true/false` para feedback
+  - **Testes:** 100% backend (17/17) + 100% frontend (iteration_60.json)
+
 ### Session 2026-02-21 (Cloud Storage Integration)
 - **Feature: Sistema de Armazenamento Cloud por Parceiro - DONE:**
   - **Parte 1: Configuração por Parceiro**
