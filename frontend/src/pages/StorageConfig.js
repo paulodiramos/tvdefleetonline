@@ -818,56 +818,12 @@ const StorageConfig = ({ user, onLogout }) => {
             Guardar Configuração
           </Button>
         </div>
+      </>
+    );
+  }
+};
 
-        {/* Connect Provider Modal */}
-        <Dialog open={showConnectModal} onOpenChange={setShowConnectModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {selectedProvider && getProviderIcon(selectedProvider.id)}
-                Conectar {selectedProvider?.nome}
-              </DialogTitle>
-              <DialogDescription>
-                {selectedProvider?.id === 'terabox' 
-                  ? 'Introduza as credenciais da sua conta Terabox'
-                  : 'Será redirecionado para autorizar o acesso'}
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedProvider?.id === 'terabox' ? (
-              <div className="space-y-4">
-                <div>
-                  <Label>Email Terabox</Label>
-                  <Input
-                    value={connectForm.email}
-                    onChange={(e) => setConnectForm({ ...connectForm, email: e.target.value })}
-                    placeholder="seu@email.com"
-                  />
-                </div>
-                <div>
-                  <Label>API Key ou Token de Sessão</Label>
-                  <Input
-                    value={connectForm.access_token}
-                    onChange={(e) => setConnectForm({ ...connectForm, access_token: e.target.value })}
-                    placeholder="Token de acesso"
-                    type="password"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Obtenha o token nas definições da sua conta Terabox
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <Cloud className="w-16 h-16 mx-auto text-blue-500 mb-4" />
-                <p className="text-slate-600">
-                  Clique em "Conectar" para ser redirecionado para {selectedProvider?.nome} 
-                  e autorizar o acesso aos seus ficheiros.
-                </p>
-              </div>
-            )}
-            
-            <DialogFooter>
+export default StorageConfig;
               <Button variant="outline" onClick={() => setShowConnectModal(false)}>
                 Cancelar
               </Button>
