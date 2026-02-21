@@ -108,9 +108,49 @@ class BrowserInterativo:
         return True
         
     async def escrever(self, texto: str):
-        """Escrever texto"""
+        """Escrever texto - com suporte especial para códigos SMS de 4 dígitos"""
         if not self.page:
             return False
+        
+        # Verificar se é um código SMS de 4 dígitos
+        if len(texto) == 4 and texto.isdigit():
+            # Tentar encontrar campos de input para código SMS (4 campos separados)
+            sms_inputs = await self.page.locator('input[type="text"], input[type="tel"], input[type="number"]').all()
+            
+            # Filtrar apenas inputs visíveis e pequenos (campos de dígitos)
+            valid_inputs = []
+            for inp in sms_inputs:
+                try:
+                    if await inp.is_visible():
+                        box = await inp.bounding_box()
+                        # Campos de dígito único são geralmente pequenos (menos de 100px de largura)
+                        if box and box['width'] < 100:
+                            valid_inputs.append(inp)
+                except:
+                    continue
+            
+            logger.info(f"Encontrados {len(valid_inputs)} campos de input para SMS")
+            
+            if len(valid_inputs) >= 4:
+                # 4 campos separados - inserir um dígito em cada
+                logger.info(f"A preencher 4 campos separados com código SMS: {texto}")
+                for i, digit in enumerate(texto[:4]):
+                    if i < len(valid_inputs):
+                        await valid_inputs[i].click()
+                        await asyncio.sleep(0.1)
+                        await valid_inputs[i].fill(digit)
+                        await asyncio.sleep(0.15)
+                logger.info("Código SMS inserido nos 4 campos separados")
+                return True
+            elif len(valid_inputs) >= 1:
+                # Campo único - digitar o código completo
+                logger.info(f"A preencher campo único com código SMS: {texto}")
+                await valid_inputs[0].click()
+                await asyncio.sleep(0.1)
+                await valid_inputs[0].fill(texto)
+                return True
+        
+        # Comportamento normal para outro texto
         await self.page.keyboard.type(texto, delay=50)
         return True
         
