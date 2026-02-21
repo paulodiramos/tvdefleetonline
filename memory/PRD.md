@@ -474,6 +474,11 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - Todos os endpoints de upload refatorados para usar FileUploadHandler
   - Endpoints de download da cloud implementados
   - Testes: 100% backend (17/17) + 100% frontend
+- [x] **Dashboard de Comissões** - **DONE** (2026-02-21)
+  - Nova página `/comissoes` com métricas, filtros e gráficos
+  - Testes: 100% backend (9/9) + 100% frontend
+- [x] **NIF do Parceiro no Relatório Semanal** - **DONE** (2026-02-21)
+  - Campo `incluir_nif_parceiro` adicionado à configuração de relatórios
 - [ ] **Bug WhatsApp** - Estado da conexão não atualiza na UI
 
 ### P1 - High Priority
@@ -500,14 +505,17 @@ Sistema de gestão de frotas completo para empresas TVDE (Transporte Individual 
   - Promoção automática de motoristas elegíveis
   - Notificação via app quando motorista sobe de nível
   - Botão "Progressões" no admin para recalcular todas
+- [ ] Implementar lógica de backend para adicionar módulos extra ao parceiro
 - [ ] Continuar refatoração do FichaVeiculo.js (hooks criados, falta migrar componente)
 
 ### P2 - Medium Priority
-- [ ] Integração WhatsApp
+- [ ] Bug WhatsApp - Estado da conexão não atualiza na UI
+- [ ] Implementar autenticação real com provedores de cloud (Google Drive, Dropbox, etc.)
 - [ ] Base de dados de produção - sincronizar com nova DB
 
 ### P3 - Low Priority
-- [ ] Alertas Avançados e Comissões Avançadas
+- [ ] Alertas Avançados
+- [ ] Sistema de arquivo de dados antigos
 - [ ] Sistema de arquivo de dados antigos
 
 ## Technical Architecture
