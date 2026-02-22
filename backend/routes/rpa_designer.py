@@ -2301,9 +2301,9 @@ async def websocket_design_browser(
                 elif data.get("tipo") == "type" or data.get("tipo") == "inserir_texto":
                     texto = data.get("texto", "")
                     
-                    # Verificar se é um código SMS de 4 dígitos
-                    if len(texto) == 4 and texto.isdigit():
-                        # Tentar encontrar campos de input para SMS (4 campos separados)
+                    # Verificar se é um código SMS (4-6 dígitos)
+                    if len(texto) >= 4 and len(texto) <= 6 and texto.isdigit():
+                        # Tentar encontrar campos de input para SMS
                         sms_inputs = await page.locator('input[type="text"], input[type="tel"], input[type="number"]').all()
                         
                         # Filtrar apenas inputs visíveis e pequenos (campos de dígitos)
@@ -2317,10 +2317,10 @@ async def websocket_design_browser(
                             except:
                                 continue
                         
-                        if len(valid_inputs) >= 4:
-                            # 4 campos separados - inserir um dígito em cada
-                            logger.info(f"WebSocket: A preencher 4 campos SMS com: {texto}")
-                            for i, digit in enumerate(texto[:4]):
+                        if len(valid_inputs) >= len(texto):
+                            # Campos separados - inserir um dígito em cada
+                            logger.info(f"WebSocket: A preencher {len(texto)} campos SMS com: {texto}")
+                            for i, digit in enumerate(texto):
                                 if i < len(valid_inputs):
                                     await valid_inputs[i].click()
                                     await asyncio.sleep(0.1)
