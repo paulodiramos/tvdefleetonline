@@ -314,27 +314,36 @@ async def sincronizar_uber(
             motoristas_importados = resultado.get("motoristas", [])
             
             # Calcular período baseado na semana selecionada
-            # A Uber usa semanas de pagamento de DOMINGO a SÁBADO
-            # Exemplo: 1 de fevereiro (Domingo) a 7 de fevereiro (Sábado)
-            # Mas na interface mostra até dia 8 (Domingo seguinte) como fim inclusivo
-            hoje = datetime.now().date()
+            # A Uber usa semanas de pagamento de SEGUNDA 4:03 AM a SEGUNDA 4:00 AM
+            # Exemplo: Segunda 26 Jan 4:03 AM a Segunda 2 Fev 4:00 AM
+            # Na interface aparece como "Jan 26, 2026-4:03AM - Feb 2, 2026-4:01AM"
+            hoje = datetime.now()
             
-            # Encontrar o último domingo (início da semana Uber)
-            # weekday(): 0=segunda, 6=domingo
-            # Para Domingo: se hoje é domingo (6), dias_desde_domingo = 0
-            # Se hoje é segunda (0), dias_desde_domingo = 1, etc.
-            dias_desde_domingo = (hoje.weekday() + 1) % 7
-            domingo_atual = hoje - timedelta(days=dias_desde_domingo)
+            # Encontrar a última segunda-feira (início da semana Uber)
+            # weekday(): 0=segunda, 1=terça, ..., 6=domingo
+            dias_desde_segunda = hoje.weekday()  # 0 se hoje é segunda
+            
+            # Se estamos antes das 4:03 de segunda, ainda é a semana anterior
+            hora_atual = hoje.hour + hoje.minute / 60
+            if hoje.weekday() == 0 and hora_atual < 4.05:  # 4:03 = 4.05
+                dias_desde_segunda = 7  # Considerar semana anterior
+            
+            segunda_atual = hoje.date() - timedelta(days=dias_desde_segunda)
             
             # Retroceder N semanas conforme semana_index
-            domingo_da_semana = domingo_atual - timedelta(weeks=data.semana_index)
-            # A Uber mostra o intervalo até o domingo seguinte (8 dias no display)
-            domingo_seguinte = domingo_da_semana + timedelta(days=7)
+            segunda_da_semana = segunda_atual - timedelta(weeks=data.semana_index)
+            # Fim da semana é a segunda seguinte
+            segunda_seguinte = segunda_da_semana + timedelta(days=7)
             
-            periodo_inicio = domingo_da_semana.strftime('%Y-%m-%d')
-            periodo_fim = domingo_seguinte.strftime('%Y-%m-%d')
+            # Formato para busca/armazenamento (apenas data, sem hora)
+            periodo_inicio = segunda_da_semana.strftime('%Y-%m-%d')
+            periodo_fim = segunda_seguinte.strftime('%Y-%m-%d')
             
-            logger.info(f"Período Uber calculado: {periodo_inicio} a {periodo_fim} (semana_index={data.semana_index})")
+            # Formato completo com hora para display/comparação
+            periodo_inicio_completo = f"{segunda_da_semana.strftime('%Y-%m-%d')} 04:03"
+            periodo_fim_completo = f"{segunda_seguinte.strftime('%Y-%m-%d')} 04:00"
+            
+            logger.info(f"Período Uber calculado: {periodo_inicio_completo} a {periodo_fim_completo} (semana_index={data.semana_index})")
             
             # Guardar cada motorista em ganhos_uber
             for mot in motoristas_importados:
