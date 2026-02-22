@@ -1,263 +1,194 @@
-# 🚀 TVDEFleet - Guia de Instalação VPS
+# TVDEFleet - Guia de Instalação VPS
 
-## Servidor Alvo
-- **IP:** 94.46.171.222
-- **Sistema:** Ubuntu 22.04 LTS (recomendado)
+## Requisitos Mínimos
 
----
+- **SO:** Ubuntu 22.04 LTS ou Debian 11+
+- **RAM:** 4GB (recomendado 8GB para RPA)
+- **Disco:** 40GB SSD
+- **CPU:** 2 vCPUs
 
-## 📋 Pré-requisitos
+## Instalação Rápida
 
-Antes de começar, certifique-se que tem:
-- Acesso SSH ao servidor (root ou sudo)
-- Domínio apontado para o IP (opcional, mas recomendado)
-- Credenciais de email SMTP
-- Credenciais WhatsApp Cloud API (opcional)
-
----
-
-## 🔧 Instalação Passo a Passo
-
-### 1. Aceder ao Servidor
+### 1. Conectar ao VPS
 
 ```bash
-ssh root@94.46.171.222
+ssh root@SEU_IP_VPS
 ```
 
-### 2. Instalar Dependências
+### 2. Baixar e Instalar
 
 ```bash
-# Atualizar sistema
-apt update && apt upgrade -y
+# Clonar repositório (ou copiar ficheiros)
+cd /opt
+git clone https://seu-repo/tvdefleet.git
+cd tvdefleet
 
-# Instalar Docker
-curl -fsSL https://get.docker.com | sh
-
-# Instalar Docker Compose
-apt install docker-compose-plugin -y
-
-# Verificar instalação
-docker --version
-docker compose version
+# Executar instalação
+chmod +x deployment/install-vps.sh
+sudo ./deployment/install-vps.sh
 ```
 
-### 3. Criar Diretório da Aplicação
+### 3. Configurar
 
 ```bash
-mkdir -p /opt/tvdefleet
-cd /opt/tvdefleet
-```
-
-### 4. Transferir Ficheiros
-
-**Opção A: Via SCP (do seu computador local)**
-```bash
-# No seu computador local, execute:
-scp -r /caminho/para/tvdefleet/* root@94.46.171.222:/opt/tvdefleet/
-```
-
-**Opção B: Via Git (se tiver repositório)**
-```bash
-git clone https://github.com/seu-usuario/tvdefleet.git .
-```
-
-**Opção C: Via SFTP**
-Use um cliente como FileZilla para transferir os ficheiros.
-
-### 5. Configurar Variáveis de Ambiente
-
-```bash
-cd /opt/tvdefleet
-
-# Copiar exemplo
-cp deployment/.env.example .env
-
 # Editar configuração
-nano .env
-```
+nano /opt/tvdefleet/deployment/.env
 
-**Configurações importantes a alterar:**
-
-```env
-# Domínio (altere para o seu)
+# Definir domínio e chaves
 DOMAIN=tvdefleet.com
-
-# Segurança - GERE UMA NOVA CHAVE!
-JWT_SECRET=sua-chave-super-secreta-minimo-32-caracteres
-
-# Email
-SMTP_PASSWORD=sua_password_real
-
-# WhatsApp (se tiver)
-WHATSAPP_CLOUD_ACCESS_TOKEN=seu_token
-WHATSAPP_CLOUD_PHONE_NUMBER_ID=seu_phone_id
+JWT_SECRET=sua-chave-segura
 ```
 
-### 6. Iniciar a Aplicação
+### 4. Iniciar
 
 ```bash
-cd /opt/tvdefleet
-
-# Construir imagens
-docker compose build
-
-# Iniciar serviços
-docker compose up -d
+# Iniciar aplicação
+systemctl start tvdefleet
 
 # Verificar estado
-docker compose ps
-```
-
-### 7. Configurar SSL (HTTPS) - Recomendado
-
-```bash
-chmod +x deployment/setup-ssl.sh
-./deployment/setup-ssl.sh tvdefleet.com admin@tvdefleet.com
+./status.sh
 ```
 
 ---
 
-## 🔍 Verificação
+## Auto-Start
 
-### Testar Backend
+A aplicação inicia automaticamente quando o servidor reinicia:
+
 ```bash
-curl http://94.46.171.222:8001/api/health
-```
+# Verificar se está habilitado
+systemctl is-enabled tvdefleet
 
-### Testar Frontend
-Abra no navegador: `http://94.46.171.222:3000`
-
-### Ver Logs
-```bash
-# Todos os serviços
-docker compose logs -f
-
-# Apenas backend
-docker compose logs -f backend
-
-# Apenas MongoDB
-docker compose logs -f mongodb
+# Habilitar auto-start
+systemctl enable tvdefleet
 ```
 
 ---
 
-## 📊 Comandos Úteis
+## Comandos Úteis
+
+| Comando | Descrição |
+|---------|-----------|
+| `systemctl start tvdefleet` | Iniciar aplicação |
+| `systemctl stop tvdefleet` | Parar aplicação |
+| `systemctl restart tvdefleet` | Reiniciar aplicação |
+| `systemctl status tvdefleet` | Ver estado |
+| `./status.sh` | Ver estado detalhado |
+| `./backup-db.sh` | Fazer backup da BD |
+| `./restore-db.sh` | Restaurar backup |
+| `docker compose logs -f` | Ver logs em tempo real |
+
+---
+
+## Persistência de Dados
+
+### ✅ Dados Persistentes (NÃO são apagados):
+
+- **MongoDB:** Volume `tvdefleet_mongodb_data`
+- **Uploads:** Volume `tvdefleet_uploads`
+- **Sessões RPA:** Volume `tvdefleet_rpa_sessions`
+- **Backups:** `/opt/tvdefleet/backups/`
+
+### ⚠️ Importante:
+
+- Nunca execute `docker volume rm` nos volumes TVDEFleet
+- Use `docker compose down` (sem `-v`) para parar sem apagar dados
+- Faça backups regulares com `./backup-db.sh`
+
+---
+
+## Configurar SSL (HTTPS)
+
+### 1. Configurar DNS
+
+Aponte o domínio para o IP do VPS:
+- `tvdefleet.com` → `SEU_IP_VPS`
+- `www.tvdefleet.com` → `SEU_IP_VPS`
+
+### 2. Gerar Certificado
 
 ```bash
-# Usar o script de deploy
-chmod +x deployment/deploy.sh
+cd /opt/tvdefleet/deployment
+./setup-ssl.sh
+```
 
-./deploy.sh start      # Iniciar
-./deploy.sh stop       # Parar
-./deploy.sh restart    # Reiniciar
-./deploy.sh status     # Ver estado
-./deploy.sh logs       # Ver logs
-./deploy.sh backup     # Fazer backup da BD
-./deploy.sh update     # Atualizar aplicação
+### 3. Verificar
+
+```bash
+curl https://tvdefleet.com/api/health
 ```
 
 ---
 
-## 🔒 Segurança Recomendada
+## Backups Automáticos
 
-### 1. Firewall
+### Configurar Cron
+
 ```bash
-ufw allow 22/tcp    # SSH
-ufw allow 80/tcp    # HTTP
-ufw allow 443/tcp   # HTTPS
-ufw enable
-```
-
-### 2. Fail2Ban (proteção contra brute force)
-```bash
-apt install fail2ban -y
-systemctl enable fail2ban
-```
-
-### 3. Mudar Porta SSH (opcional)
-```bash
-nano /etc/ssh/sshd_config
-# Alterar: Port 22 para Port 2222
-systemctl restart sshd
-```
-
----
-
-## 💾 Backups
-
-### Backup Manual
-```bash
-./deploy.sh backup
-```
-
-### Backup Automático (cron)
-```bash
+# Editar crontab
 crontab -e
 
-# Adicionar linha (backup diário às 3h da manhã):
-0 3 * * * /opt/tvdefleet/deployment/deploy.sh backup
-```
-
-### Restaurar Backup
-```bash
-# Listar backups
-ls -la /opt/tvdefleet/backups/
-
-# Restaurar
-docker compose exec -T mongodb mongorestore --archive --gzip < /opt/tvdefleet/backups/nome_do_backup.gz
+# Adicionar backup diário às 3h da manhã
+0 3 * * * /opt/tvdefleet/deployment/backup-db.sh >> /var/log/tvdefleet-backup.log 2>&1
 ```
 
 ---
 
-## ❓ Resolução de Problemas
+## Troubleshooting
 
 ### Container não inicia
+
 ```bash
-docker compose logs backend
-docker compose logs mongodb
+# Ver logs detalhados
+docker compose logs --tail 100 backend
+
+# Verificar se MongoDB está saudável
+docker exec tvdefleet-mongodb mongosh --eval "db.adminCommand('ping')"
 ```
 
-### Erro de conexão MongoDB
-```bash
-# Verificar se MongoDB está a correr
-docker compose ps mongodb
+### Sessões RPA não persistem
 
-# Reiniciar MongoDB
-docker compose restart mongodb
+```bash
+# Verificar volume
+docker volume inspect tvdefleet_rpa_sessions
+
+# Verificar permissões dentro do container
+docker exec tvdefleet-backend ls -la /app/data/
 ```
 
-### Erro de permissões
-```bash
-chown -R 1000:1000 /opt/tvdefleet/backend/uploads
-```
+### Falta de espaço
 
-### Falta de memória
 ```bash
-# Verificar uso
-free -h
-docker stats
-
-# Limpar cache Docker
+# Limpar imagens não usadas
 docker system prune -a
+
+# Ver uso de disco por volume
+docker system df -v
 ```
 
 ---
 
-## 📞 Contactos
+## Actualizar Aplicação
 
-- **Suporte técnico:** info@tvdefleet.com
-- **Documentação:** Ver ficheiros na pasta `/docs`
+```bash
+cd /opt/tvdefleet
+
+# Parar aplicação
+systemctl stop tvdefleet
+
+# Actualizar código
+git pull
+
+# Reconstruir containers
+cd deployment
+docker compose build
+
+# Reiniciar
+systemctl start tvdefleet
+```
 
 ---
 
-## ✅ Checklist Final
+## Contacto
 
-- [ ] Docker e Docker Compose instalados
-- [ ] Ficheiros transferidos para /opt/tvdefleet
-- [ ] Ficheiro .env configurado
-- [ ] Containers a correr (`docker compose ps`)
-- [ ] Backend acessível (porta 8001)
-- [ ] Frontend acessível (porta 3000 ou 80/443)
-- [ ] SSL configurado (opcional)
-- [ ] Firewall configurado
-- [ ] Backup automático configurado
+Para suporte, contacte a equipa de desenvolvimento.
