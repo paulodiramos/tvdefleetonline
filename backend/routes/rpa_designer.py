@@ -776,31 +776,37 @@ async def websocket_parceiro_login(websocket: WebSocket, session_id: str):
                 elif data.get("tipo") == "type" or data.get("tipo") == "inserir_texto":
                     texto = data.get("texto", "")
                     
-                    # Verificar se é um código SMS de 4 dígitos
-                    if len(texto) == 4 and texto.isdigit():
+                    # Verificar se é um código SMS (4-6 dígitos)
+                    if len(texto) >= 4 and len(texto) <= 6 and texto.isdigit():
+                        # Procurar campos de input para código SMS
                         sms_inputs = await page.locator('input[type="text"], input[type="tel"], input[type="number"]').all()
                         valid_inputs = []
                         for inp in sms_inputs:
                             try:
                                 if await inp.is_visible():
                                     box = await inp.bounding_box()
+                                    # Campos individuais de dígitos geralmente são pequenos (<100px)
                                     if box and box['width'] < 100:
                                         valid_inputs.append(inp)
                             except:
                                 continue
                         
-                        if len(valid_inputs) >= 4:
-                            for i, digit in enumerate(texto[:4]):
+                        # Se encontrou campos individuais para cada dígito
+                        if len(valid_inputs) >= len(texto):
+                            for i, digit in enumerate(texto):
                                 if i < len(valid_inputs):
                                     await valid_inputs[i].click()
                                     await asyncio.sleep(0.1)
                                     await valid_inputs[i].fill(digit)
                                     await asyncio.sleep(0.15)
+                        # Se encontrou apenas 1 campo, preencher com o código completo
                         elif len(valid_inputs) >= 1:
                             await valid_inputs[0].fill(texto)
+                        # Senão, digitar normalmente
                         else:
                             await page.keyboard.type(texto, delay=50)
                     else:
+                        # Texto normal - digitar caractere a caractere
                         await page.keyboard.type(texto, delay=50)
                     
                 elif data.get("tipo") == "press" or data.get("tipo") == "tecla":
