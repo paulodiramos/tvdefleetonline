@@ -896,9 +896,31 @@ export default function RPADesigner({ user, onLogout }) {
                 'codigo_sms': 'campo-sms'
               };
               const input = document.getElementById(ids[campo]);
-              if (input && input.value && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ tipo: 'inserir_texto', texto: input.value }));
+              
+              if (!input) {
+                alert('Campo não encontrado: ' + campo);
+                return;
               }
+              
+              if (!input.value) {
+                alert('Preencha o campo ' + campo + ' primeiro');
+                input.focus();
+                return;
+              }
+              
+              if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('WebSocket não está conectado. Aguarde a conexão.');
+                return;
+              }
+              
+              // Enviar texto
+              ws.send(JSON.stringify({ tipo: 'inserir_texto', texto: input.value }));
+              
+              // Feedback visual
+              input.style.borderColor = '#22c55e';
+              setTimeout(function() {
+                input.style.borderColor = '#1a3a5c';
+              }, 500);
             }
             
             function enviarTexto() {
