@@ -760,7 +760,7 @@ export default function RPADesigner({ user, onLogout }) {
               <div class="field-group">
                 <label>📲 Código SMS</label>
                 <div class="field-row">
-                  <input type="text" id="campo-sms" placeholder="Código..." maxlength="6" value="${credenciaisParaPopup.codigo_sms}" />
+                  <input type="text" id="campo-sms" placeholder="Código SMS..." value="${credenciaisParaPopup.codigo_sms}" />
                   <button class="green" onclick="inserirCampo('codigo_sms')">Enviar</button>
                 </div>
               </div>
