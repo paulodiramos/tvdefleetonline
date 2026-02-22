@@ -1,27 +1,39 @@
 version: '3.8'
 
+# TVDEFleet - Docker Compose para VPS
+# Auto-start: todos os serviços iniciam automaticamente com o servidor
+
 services:
-  # MongoDB Database
+  # ==================== MongoDB Database ====================
   mongodb:
-    image: mongo:4.4
+    image: mongo:7.0
     container_name: tvdefleet-mongodb
     restart: always
     ports:
       - "27017:27017"
     volumes:
+      # Volume persistente para dados - NÃO será apagado com docker-compose down
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
+      # Backup local (opcional)
+      - ./backups/mongodb:/backup
     environment:
       - MONGO_INITDB_DATABASE=tvdefleet_db
     networks:
       - tvdefleet-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Backend FastAPI
+  # ==================== Backend FastAPI + Playwright ====================
   backend:
     build:
       context: ../backend
@@ -53,10 +65,19 @@ services:
       - WHATSAPP_CLOUD_VERIFY_TOKEN=${WHATSAPP_CLOUD_VERIFY_TOKEN}
       - WHATSAPP_CLOUD_APP_SECRET=${WHATSAPP_CLOUD_APP_SECRET}
       - EMERGENT_LLM_KEY=${EMERGENT_LLM_KEY}
+      # Playwright config
+      - PLAYWRIGHT_BROWSERS_PATH=/app/browsers
     volumes:
+      # Uploads e ficheiros
       - backend_uploads:/app/uploads
       - backend_screenshots:/app/screenshots
       - backend_downloads:/app/rpa_downloads
+      # Sessões RPA (cookies, etc) - PERSISTENTES
+      - rpa_sessions:/app/data/uber_sessions
+      - rpa_sessions:/app/data/bolt_sessions
+      - rpa_sessions:/app/data/viaverde_sessions
+      # Browsers Playwright
+      - playwright_browsers:/app/browsers
     networks:
       - tvdefleet-network
     healthcheck:
@@ -64,8 +85,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
-  # Frontend React
+  # ==================== Frontend React ====================
   frontend:
     build:
       context: ../frontend
@@ -80,23 +107,36 @@ services:
       - backend
     networks:
       - tvdefleet-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Nginx Reverse Proxy (sem SSL por agora)
+  # ==================== Nginx Reverse Proxy ====================
   nginx:
     image: nginx:alpine
     container_name: tvdefleet-nginx
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx-nossl.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/letsencrypt:ro
+      - certbot_data:/var/www/certbot:ro
     depends_on:
       - frontend
       - backend
     networks:
       - tvdefleet-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Certbot para SSL (opcional)
+  # ==================== Certbot para SSL ====================
   certbot:
     image: certbot/certbot
     container_name: tvdefleet-certbot
@@ -105,14 +145,46 @@ services:
       - certbot_data:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
+  # ==================== Watchtower - Auto Update (opcional) ====================
+  watchtower:
+    image: containrrr/watchtower
+    container_name: tvdefleet-watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400
+    profiles:
+      - autoupdate
+
 networks:
   tvdefleet-network:
     driver: bridge
 
 volumes:
+  # MongoDB - DADOS PERSISTENTES
   mongodb_data:
+    name: tvdefleet_mongodb_data
   mongodb_config:
+    name: tvdefleet_mongodb_config
+  
+  # Backend
   backend_uploads:
+    name: tvdefleet_uploads
   backend_screenshots:
+    name: tvdefleet_screenshots
   backend_downloads:
+    name: tvdefleet_downloads
+  
+  # RPA Sessions - CRÍTICO para manter logins
+  rpa_sessions:
+    name: tvdefleet_rpa_sessions
+  
+  # Playwright browsers
+  playwright_browsers:
+    name: tvdefleet_playwright
+  
+  # Certbot
   certbot_data:
+    name: tvdefleet_certbot
