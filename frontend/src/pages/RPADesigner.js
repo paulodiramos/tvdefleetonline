@@ -1665,9 +1665,8 @@ export default function RPADesigner({ user, onLogout }) {
                         <div className="flex gap-1">
                           <Input
                             id="campo-sms"
-                            placeholder="Código..."
+                            placeholder="Código SMS..."
                             className="bg-gray-700 border-gray-600 text-sm"
-                            maxLength={6}
                           />
                           <Button 
                             size="sm"
@@ -1679,6 +1678,8 @@ export default function RPADesigner({ user, onLogout }) {
                                 enviarAcao('type', { texto: codigo });
                                 document.getElementById('campo-sms').value = '';
                                 toast.success('Código SMS inserido');
+                              } else {
+                                toast.error('Preencha o código SMS primeiro');
                               }
                             }}
                           >
