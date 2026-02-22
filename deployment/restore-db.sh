@@ -1,17 +1,66 @@
 #!/bin/bash
-# Script para restaurar a base de dados automaticamente
-# Todas as passwords dos utilizadores são: 123456
+# ================================================================
+# TVDEFleet - Script de Restauração MongoDB
+# Executa: ./restore-db.sh [ficheiro_backup]
+# ================================================================
 
-echo "=== Restaurando base de dados TVDEFleet ==="
+BACKUP_DIR="${BACKUP_DIR:-/opt/tvdefleet/backups/mongodb}"
 
-# Copiar dump para o container MongoDB
-docker cp /opt/tvdefleet/dump tvdefleet-mongodb:/tmp/
+echo "🗄️ TVDEFleet - Restaurar MongoDB"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Restaurar a base de dados
-docker exec tvdefleet-mongodb mongorestore --drop /tmp/dump/tvdefleet_db --db tvdefleet_db
+# Listar backups disponíveis
+echo "📋 Backups disponíveis:"
+echo ""
+ls -lh $BACKUP_DIR/*.tar.gz 2>/dev/null | nl
+echo ""
 
-# Garantir que as passwords estão corretas (hash para "123456")
-docker exec tvdefleet-mongodb mongo tvdefleet_db --eval "db.users.updateMany({}, {\$set: {password: '\$2b\$12\$fGqhLFCbGX4eqCl9Ml82ZuLwiqhxsdIMjm6e1gpjLQCiXOmHnsMHC'}})"
+if [ -z "$1" ]; then
+    read -p "Digite o número do backup a restaurar (ou caminho completo): " CHOICE
+    
+    if [[ "$CHOICE" =~ ^[0-9]+$ ]]; then
+        BACKUP_FILE=$(ls -t $BACKUP_DIR/*.tar.gz 2>/dev/null | sed -n "${CHOICE}p")
+    else
+        BACKUP_FILE="$CHOICE"
+    fi
+else
+    BACKUP_FILE="$1"
+fi
 
-echo "=== Base de dados restaurada com sucesso! ==="
-echo "=== Password de todos os utilizadores: 123456 ==="
+if [ ! -f "$BACKUP_FILE" ]; then
+    echo "❌ Ficheiro não encontrado: $BACKUP_FILE"
+    exit 1
+fi
+
+echo ""
+echo "⚠️ ATENÇÃO: Isto vai SUBSTITUIR todos os dados atuais!"
+read -p "Tem a certeza? (s/n): " CONFIRM
+
+if [ "$CONFIRM" != "s" ] && [ "$CONFIRM" != "S" ]; then
+    echo "❌ Cancelado"
+    exit 0
+fi
+
+echo ""
+echo "📦 A restaurar $BACKUP_FILE..."
+
+# Copiar para dentro do container
+FILENAME=$(basename "$BACKUP_FILE")
+docker cp "$BACKUP_FILE" tvdefleet-mongodb:/tmp/
+
+# Extrair e restaurar
+docker exec tvdefleet-mongodb bash -c "
+    cd /tmp
+    tar -xzvf $FILENAME
+    FOLDER=\$(basename $FILENAME .tar.gz)
+    mongorestore --db tvdefleet_db --drop /tmp/\$FOLDER/tvdefleet_db
+    rm -rf /tmp/\$FOLDER /tmp/$FILENAME
+"
+
+echo ""
+echo "✅ Restauração concluída!"
+echo ""
+echo "🔄 Reiniciando backend para aplicar mudanças..."
+docker restart tvdefleet-backend
+
+echo "✅ Pronto!"
