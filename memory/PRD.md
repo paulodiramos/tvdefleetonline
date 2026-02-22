@@ -142,5 +142,26 @@ Sistema de gestão de frotas TVDE (Uber, Bolt, etc.) com funcionalidades complet
 - **RPA Designer:** A funcionalidade de "Login" vs "Extração" permite criar designs separados para cada fase. O design de Login pode ser executado manualmente para resolver CAPTCHA, e o de Extração pode correr automatizado.
 - **CAPTCHA Uber:** O sistema ainda requer intervenção manual para resolver CAPTCHA. A separação Login/Extração facilita este processo.
 - A integração WhatsApp Cloud está completa mas inativa (falta token da Meta)
-- **Risco:** Base de dados é apagada ao executar `docker-compose down` - verificar volumes MongoDB
+- **✅ RESOLVIDO:** Volumes MongoDB agora são persistentes (não serão apagados com docker-compose down)
 - VPS alvo: 94.46.171.222
+
+---
+
+## Deployment VPS (22 Fevereiro 2026)
+
+### ✅ Configuração Auto-Start Implementada:
+- `docker-compose.yml` - Todos os serviços com `restart: always`
+- `install-vps.sh` - Script de instalação completo
+- `backup-db.sh` / `restore-db.sh` - Scripts de backup MongoDB
+- `status.sh` - Script de monitorização
+- Serviço systemd `tvdefleet.service` para auto-start no boot
+- Volumes nomeados para persistência de dados:
+  - `tvdefleet_mongodb_data` - Dados MongoDB
+  - `tvdefleet_rpa_sessions` - Sessões de login RPA
+  - `tvdefleet_uploads` - Ficheiros enviados
+
+### RPA Uber:
+- **Design de Login** (9 passos) - Para autenticação manual
+- **Design de Extração** (17 passos) - Para gerar e descarregar relatórios
+- **Cálculo de datas** corrigido para formato Uber (Segunda 4:03 AM a Segunda 4:00 AM)
+
