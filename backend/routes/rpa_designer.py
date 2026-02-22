@@ -1043,6 +1043,109 @@ async def obter_designs_sincronizacao(
     }
 
 
+# ==================== TESTAR EXTRAÇÃO UBER ====================
+
+class TestarExtracaoRequest(BaseModel):
+    """Request para testar extração Uber"""
+    parceiro_id: str
+    semana_index: int = 0
+
+@router.post("/testar-extracao-uber")
+async def testar_extracao_uber(
+    data: TestarExtracaoRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Testa a extração Uber usando o design RPA.
+    Executa os passos gravados e tenta descarregar o relatório.
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode testar")
+    
+    # Verificar sessão do parceiro
+    session_path = f"/tmp/uber_sessao_{data.parceiro_id}.json"
+    
+    import os
+    if not os.path.exists(session_path):
+        return {
+            "sucesso": False,
+            "erro": "Sessão não encontrada. Faça login manual primeiro no RPA Designer.",
+            "requer_login": True,
+            "instrucoes": [
+                "1. Ir ao RPA Designer",
+                "2. Seleccionar Uber Fleet e o parceiro",
+                "3. Clicar em 'Abrir Preview'",
+                "4. Fazer login manual (resolver SMS/WhatsApp)",
+                "5. Guardar sessão"
+            ]
+        }
+    
+    # Buscar design de extração
+    design = await db.designs_rpa.find_one({
+        "plataforma_id": "ba0f947c-b7d5-4127-8383-817b13ec406d",  # Uber Fleet
+        "tipo_design": "extracao",
+        "ativo": True
+    })
+    
+    if not design:
+        return {
+            "sucesso": False,
+            "erro": "Design de extração não encontrado"
+        }
+    
+    # Buscar dados do parceiro
+    parceiro = await db.parceiros.find_one({"id": data.parceiro_id})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": data.parceiro_id})
+    
+    parceiro_nome = ""
+    if parceiro:
+        parceiro_nome = parceiro.get("nome_empresa") or parceiro.get("nome") or parceiro.get("name", "")
+    
+    # Buscar credenciais
+    cred = await db.credenciais_uber.find_one({"parceiro_id": data.parceiro_id})
+    if not cred:
+        return {"sucesso": False, "erro": "Credenciais não encontradas"}
+    
+    try:
+        from services.rpa_executor import RPAExecutor
+        
+        executor = RPAExecutor(data.parceiro_id, design["plataforma_id"])
+        await executor.iniciar(usar_sessao=True)
+        
+        # Definir variáveis
+        variaveis = {
+            "SEMANA_INDEX": data.semana_index + 1,  # Lista começa em 1
+            "PARCEIRO_NOME": parceiro_nome,
+            "EMAIL": cred.get("email", ""),
+            "PASSWORD": cred.get("password", "")
+        }
+        
+        # Executar design
+        resultado = await executor.executar_design(design, cred, variaveis)
+        
+        await executor.fechar()
+        
+        return {
+            "sucesso": resultado.get("sucesso", False),
+            "design": design.get("nome"),
+            "parceiro": parceiro_nome,
+            "semana_index": data.semana_index,
+            "passos_executados": resultado.get("passos_executados", 0),
+            "passos_total": resultado.get("passos_total", 0),
+            "ficheiro": resultado.get("ficheiro"),
+            "logs": resultado.get("logs", [])[-10:],  # Últimos 10 logs
+            "erro": resultado.get("erro")
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro no teste de extração: {e}")
+        return {
+            "sucesso": False,
+            "erro": str(e)
+        }
+
+
 # ==================== MOTOR DE EXECUÇÃO RPA ====================
 
 class ExecutarDesignRequest(BaseModel):
